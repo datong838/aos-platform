@@ -1,0 +1,43 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-restored-directory-preparation-reader-20261013-r2",
+    "task_id": "qyh-restored-directory-preparation-reader-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "129a1fb6a5eda78ee97a28fe3a87d32fd19d3c88",
+      "authority_revision": "AOS-002002",
+      "files": {
+        ".evidence/qyh-restored-directory-preparation-reader-20261013/material-0.txt": "5790db70c2fc43be1777638009683898a8e8785d59f6fc83657c110ea6e71e61",
+        ".evidence/qyh-restored-directory-preparation-reader-20261013/material-1.txt": "599ee1187347b9ac2d7f640257ac10140395154da7a41e73e692a184f458fd2d",
+        ".evidence/qyh-restored-directory-preparation-reader-20261013/material-2.txt": "71dcf9a5b54eae8c8c044bf3aa7de4b17c01075000c6bbb14cfc42d3a687edde",
+        ".evidence/qyh-restored-directory-preparation-reader-20261013/material-3.txt": "7025fee403ed5f9d1c0a15ba710c1a05e62b6b433cca2360c4cb783d67cb1ed1",
+        ".evidence/qyh-restored-directory-preparation-reader-20261013/material-4.txt": "9b03e23103d4027139a1d2931d615c3ed4bff8d966963b5d5dca482c224d7d8f",
+        ".evidence/qyh-restored-directory-preparation-reader-20261013/material-5.txt": "a4652bf22bba5b85c5aadab91c88cb865bce83eb457cc665ae9721b2cf61793e"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Restored PREPARATION_ONLY now uses original PostgresRuntimeTenantDirectory bound server function instead of forbidden raw Host table SELECT; no grants, role changes, invented HostId or changes to legacy/full path.",
+        "evidence": "material-1.txt: require_restored_preparation_directory creates PostgresRuntimeTenantDirectory(connect=directory_connection, build_assignment=lambda **_: None) and calls directory.read_descriptors(); require_current_host_and_candidates contains the forbidden direct host_assignment/host_identity JOIN that is not called in restored mode. material-2.txt: tests verify query contains FROM extension_runtime_read_host_assignments() and asserts 'host_identity ' not in query and 'host_assignment ' not in query; result contains 'directoryAssignmentScope' and no 'hostId'. material-0.txt states '原function不公开' and '无新增Owner读SQL'.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Exact unique targetscope/revision and fresh original native restored identity/zero enabled bindings are required, while runtime configuration candidates remain explicitly unverified/null. Negative scope/duplicate/binding/physicaldrift tests and legacy/wiring adjacent tests passed111.",
+        "evidence": "material-2.txt: test_wrong_missing_or_duplicate_scope_rejected_without_inventory_read verifies 4 invalid scope rows; test_inventory_binding_or_physical_drift_rejected verifies 4 drift states including enabled=1 and cluster='other'; test_restored_projection_uses_original_directory_and_preserves_unverified_configuration checks assignmentRevision==1, enabledBindings==0, candidateCounts is None, configurationCandidatesVerified is False. material-3.txt: CLI outcome CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN with exact scope org-org/dev-project. material-5.txt: 111 passed.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Actual current CLI now passes original signed release/3identity/physicalauthority/projection/zeroBinding checks, current650/schema/ACL/roles/memberships/sequences unchanged. No runtime launch, eight page or natural chain acceptance is claimed.",
+        "evidence": "material-3.txt: CLI output shows authorization PREFLIGHT_ONLY_NO_RUNTIME_START, runtimeHostEnabled False implied by PREPARATION_ONLY mode, databaseAuthority [172.17.0.2/32, 5432, aos_meta_head], zeroBindings via inventory. material-4.txt: current650TablesSchemaAclRolesMembershipSequenceUnchanged=true, newGrants=false, newRoles=false, candidateCountsNotVerified=true, configurationCandidatesVerified=false, hostActivated=false, eightPagesAccepted=false, validation reads 'CLI original actual reader now GREEN'.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前PREPARATION_ONLY冻结状态继续m1API freeze流程；不得将candidateCounts=null解读为配置已验收，不得启动runtime host，不得将只读预检GREEN宣称为八页面或完整恢复。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

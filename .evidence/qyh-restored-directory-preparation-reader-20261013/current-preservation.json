@@ -1,0 +1,15 @@
+{
+  "actualOriginalDirectoryProjectionScope": [
+    "org-org",
+    "dev-project"
+  ],
+  "current650TablesSchemaAclRolesMembershipSequenceUnchanged": true,
+  "newGrants": false,
+  "newRoles": false,
+  "candidateCountsNotVerified": true,
+  "configurationCandidatesVerified": false,
+  "hostActivated": false,
+  "eightPagesAccepted": false,
+  "sourceHEADScriptSHA256": "599ee1187347b9ac2d7f640257ac10140395154da7a41e73e692a184f458fd2d",
+  "validation": "CLI original actual reader now GREEN; parent current credentials reused not reissued"
+}

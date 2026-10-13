@@ -1,0 +1,22 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-restored-directory-preparation-reader-20261013-r2",
+  "task_id": "qyh-restored-directory-preparation-reader-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "129a1fb6a5eda78ee97a28fe3a87d32fd19d3c88",
+    "authority_revision": "AOS-002002",
+    "files": {
+      ".evidence/qyh-restored-directory-preparation-reader-20261013/material-0.txt": "5790db70c2fc43be1777638009683898a8e8785d59f6fc83657c110ea6e71e61",
+      ".evidence/qyh-restored-directory-preparation-reader-20261013/material-1.txt": "599ee1187347b9ac2d7f640257ac10140395154da7a41e73e692a184f458fd2d",
+      ".evidence/qyh-restored-directory-preparation-reader-20261013/material-2.txt": "71dcf9a5b54eae8c8c044bf3aa7de4b17c01075000c6bbb14cfc42d3a687edde",
+      ".evidence/qyh-restored-directory-preparation-reader-20261013/material-3.txt": "7025fee403ed5f9d1c0a15ba710c1a05e62b6b433cca2360c4cb783d67cb1ed1",
+      ".evidence/qyh-restored-directory-preparation-reader-20261013/material-4.txt": "9b03e23103d4027139a1d2931d615c3ed4bff8d966963b5d5dca482c224d7d8f",
+      ".evidence/qyh-restored-directory-preparation-reader-20261013/material-5.txt": "a4652bf22bba5b85c5aadab91c88cb865bce83eb457cc665ae9721b2cf61793e"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "406e30c144cb25cb47b81a037ccaf0eba979ce4309d770861b2dfc326bc17b66",
+  "transport_sha256": "ab167f12bd5529f8172378d1e6ea3a1192facffa16b1b18c48d3f38bfb3ee47b"
+}

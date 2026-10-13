@@ -1,0 +1,7 @@
+{
+  "strictJSONFailed": true,
+  "nativeTransportExit": 0,
+  "resultNotConsumed": true,
+  "currentDatabaseWrites": false,
+  "retryWaitSeconds": 33
+}

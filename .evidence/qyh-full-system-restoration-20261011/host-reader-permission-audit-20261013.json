@@ -1,0 +1,33 @@
+{
+  "nativePrivilege": {
+    "session_user": "aos_a0v_directory_20260912",
+    "current_user": "aos_a0v_directory_20260912",
+    "directory_member": true,
+    "can_read_assignments": true,
+    "can_raw_read_assignment": false
+  },
+  "originalDirectoryRows": [
+    {
+      "org_id": "org-org",
+      "project_id": "dev-project",
+      "assignment_revision": 1
+    }
+  ],
+  "nativeTableAcl": [
+    {
+      "relname": "extension_runtime_host_assignment",
+      "relacl": null,
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "extension_runtime_host_identity",
+      "relacl": null,
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    }
+  ],
+  "currentDatabaseWrites": false,
+  "roleMembershipChanged": false,
+  "originalMigrationContract": "ar1_003 explicitly revokes raw table reads and exposes bound readonly SECURITY DEFINER directory function"
+}

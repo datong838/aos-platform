@@ -1,0 +1,32 @@
+{
+  "admissionMode": "PREPARATION_ONLY",
+  "assignmentRevision": 1,
+  "authorization": "PREFLIGHT_ONLY_NO_RUNTIME_START",
+  "candidateCounts": null,
+  "configurationCandidatesVerified": false,
+  "credentialFileGeneration": [
+    16777229,
+    49895244,
+    1029,
+    1791849033734997958,
+    1791849033734997958
+  ],
+  "database": "aos_meta_head",
+  "databaseAuthority": [
+    "172.17.0.2/32",
+    5432,
+    "aos_meta_head"
+  ],
+  "directoryAssignmentScope": [
+    "org-org",
+    "dev-project"
+  ],
+  "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+  "outcome": "CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN",
+  "scope": [
+    "org-org",
+    "dev-project"
+  ],
+  "signedRoot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/selected-public-bundles",
+  "trustRoots": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/restoration-public-trust-roots.json"
+}

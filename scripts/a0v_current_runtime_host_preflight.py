@@ -12,6 +12,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from contextlib import contextmanager
 
 import psycopg
 from psycopg.conninfo import conninfo_to_dict
@@ -90,7 +91,9 @@ def preflight_restored(*, identity_file: Path, installation_id: str,
     except Exception:
         raise HostPreflightBlocked('RESTORED_INSTALLATION_INVALID') from None
     return _preflight_identities(parameters=parameters, signed=signed,
-                                credential_file=credential_file, preparation_only=True)
+                                credential_file=credential_file, preparation_only=True,
+                                restored_initial_report=report,
+                                restored_report_reader=lambda: restored.preflight(identity_file))
 
 
 def require_current_dsn_targets(dsns: dict[str, str], target: str) -> None:
@@ -147,6 +150,40 @@ def require_current_host_and_candidates(
             "admissionMode": "PREPARATION_ONLY" if preparation_only else "FULL"}
 
 
+def require_restored_preparation_directory(conn, *, initial_report, read_report):
+    """Use the original host-bound projection without granting raw table reads."""
+    from aos_api.extension_runtime.runtime_directory import PostgresRuntimeTenantDirectory
+
+    @contextmanager
+    def directory_connection():
+        yield conn
+
+    try:
+        directory = PostgresRuntimeTenantDirectory(
+            connect=directory_connection,
+            build_assignment=lambda **_: None,  # No materialization or Host creation.
+        )
+        descriptors = directory.read_descriptors()
+    except Exception:
+        raise HostPreflightBlocked('RESTORED_DIRECTORY_PROJECTION_INVALID') from None
+    target = TenantScope(org_id='org-org', project_id='dev-project')
+    if len(descriptors) != 1 or descriptors[0].scope != target:
+        raise HostPreflightBlocked('RESTORED_DIRECTORY_SCOPE_INVALID')
+    try:
+        current_report = read_report()
+        if current_report['identity'] != initial_report['identity']:
+            raise ValueError('physical restored identity changed')
+        enabled = current_report['inventory']['enabledBindings']
+        if type(enabled) is not int or enabled != 0:
+            raise ValueError('preparation requires zero enabled bindings')
+    except Exception:
+        raise HostPreflightBlocked('RESTORED_PREPARATION_INVENTORY_INVALID') from None
+    return {'directoryAssignmentScope': list(target.key),
+            'assignmentRevision': descriptors[0].assignment_revision,
+            'candidateCounts': None, 'configurationCandidatesVerified': False,
+            'admissionMode': 'PREPARATION_ONLY'}
+
+
 def preflight(*, signed_receipt: Path, credential_file: Path | None,
               preparation_only: bool = False) -> dict[str, object]:
     if type(preparation_only) is not bool:
@@ -163,8 +200,13 @@ def preflight(*, signed_receipt: Path, credential_file: Path | None,
                                 credential_file=credential_file, preparation_only=preparation_only)
 
 
-def _preflight_identities(*, parameters, signed, credential_file, preparation_only):
-    """One unchanged database identity/admission gate for either signed reader."""
+def _preflight_identities(*, parameters, signed, credential_file, preparation_only,
+                          restored_initial_report=None, restored_report_reader=None):
+    """Share original identity checks; restored preparation uses its bound projection."""
+    restored_mode = restored_report_reader is not None or restored_initial_report is not None
+    if restored_mode and (preparation_only is not True or not callable(restored_report_reader)
+                          or type(restored_initial_report) is not dict):
+        raise HostPreflightBlocked('RESTORED_PREPARATION_READER_INVALID')
     try:
         dsns, credential_generation = _runtime_file_dsns(
             credential_file, with_generation=True)
@@ -196,8 +238,13 @@ def _preflight_identities(*, parameters, signed, credential_file, preparation_on
                             web_conn, protected_relations=_PROTECTED_RELATIONS)
                 require_current_identities(directory=directory, runtime=runtime,
                                            web=web, authority=authority)
-                host = require_current_host_and_candidates(
-                    current, directory, preparation_only=preparation_only)
+                if restored_mode:
+                    host = require_restored_preparation_directory(
+                        directory_conn, initial_report=restored_initial_report,
+                        read_report=restored_report_reader)
+                else:
+                    host = require_current_host_and_candidates(
+                        current, directory, preparation_only=preparation_only)
     except HostPreflightBlocked:
         raise
     except Exception:
