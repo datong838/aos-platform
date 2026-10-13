@@ -1,0 +1,10 @@
+{
+  "candidateHead": "25b8a87ca69d7b412d531624e9a0d5e471f38a5e",
+  "exitCode": 0,
+  "lastOutput": "{\"frozenProductionPreflightAccepted\": true, \"hostStarted\": false, \"apiStarted\": false}",
+  "stderr": "",
+  "sourcePathValidatedByOriginalCandidateReader": true,
+  "initialInvocationPositionalKeywordErrorPreserved": true,
+  "apiStarted": false,
+  "currentDatabaseWrites": false
+}

@@ -1,0 +1,9 @@
+{
+  "candidateHead": "25b8a87ca69d7b412d531624e9a0d5e471f38a5e",
+  "exitCode": 1,
+  "lastOutput": "",
+  "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nTypeError: _current_a0v_host_preflight() takes 0 positional arguments but 1 positional argument (and 2 keyword-only arguments) were given\n",
+  "sourcePathValidatedByOriginalCandidateReader": true,
+  "apiStarted": false,
+  "currentDatabaseWrites": false
+}
