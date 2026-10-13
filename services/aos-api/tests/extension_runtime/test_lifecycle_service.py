@@ -100,7 +100,7 @@ def test_planning_validator_does_not_replace_execution_gate(action):
 def test_installation_uninstall_calls_runtime_guard_before_append(guard_fails):
     from aos_api.asset_registry.installation_service import InstallationService
 
-    store=MagicMock();guard=MagicMock();locked=MagicMock();conn=MagicMock()
+    store=MagicMock();guard=MagicMock();locked=MagicMock();conn=MagicMock();lock=MagicMock()
     locked.org_id="org-org";locked.project_id="dev-project"
     locked.record.installation_id=str(uuid4());locked.record.current.revision=5
     service=InstallationService(store=store,composition_store=MagicMock(),
@@ -114,14 +114,14 @@ def test_installation_uninstall_calls_runtime_guard_before_append(guard_fails):
     with patch("aos_api.asset_registry.installation_service._evidence",return_value=MagicMock()):
         if guard_fails:
             with pytest.raises(RuntimeConflict,match="unresolved"):
-                service._append_uninstall(conn,locked,MagicMock(reason="retire"),"operator",MagicMock())
+                service._append_uninstall(conn,locked,MagicMock(reason="retire"),"operator",lock)
             store.read_control_clock_in_transaction.assert_not_called()
             store.append_uninstall_in_transaction.assert_not_called()
         else:
-            service._append_uninstall(conn,locked,MagicMock(reason="retire"),"operator",MagicMock())
+            service._append_uninstall(conn,locked,MagicMock(reason="retire"),"operator",lock)
             guard.before_uninstall.assert_called_once_with(conn,org_id="org-org",
                 project_id="dev-project",installation_id=locked.record.installation_id,
-                expected_installation_revision=5,actor="operator")
+                expected_installation_revision=5,actor="operator",lock=lock)
             store.append_uninstall_in_transaction.assert_called_once()
             names=[call[0] for call in sequence.mock_calls]
             assert names.index("leaf") < names.index("runtime") < names.index("append")

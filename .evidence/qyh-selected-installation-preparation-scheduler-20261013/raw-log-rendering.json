@@ -1,0 +1,16 @@
+{
+  ".evidence/qyh-selected-installation-preparation-scheduler-20261013/red.log": {
+    "rawSHA256": "6f2dea13f3af2e4f826e7479804dbcfd59cdbbe1b4083aa7670e11e6bf90663a",
+    "rendered": ".evidence/qyh-selected-installation-preparation-scheduler-20261013/red-rendered.log",
+    "renderedSHA256": "0081f93bfb665709b16358944eda8bdedcba6d0fa9d603477f17d16ddea2bc1f",
+    "onlyTrailingWhitespaceRemoved": true,
+    "rawRetained": true
+  },
+  ".evidence/qyh-selected-installation-preparation-scheduler-20261013/preexisting-uninstall-baseline-red.log": {
+    "rawSHA256": "6789176d9df0bbc3d8201413e652043437208cc31e38c7f5b4398017c167f470",
+    "rendered": ".evidence/qyh-selected-installation-preparation-scheduler-20261013/preexisting-uninstall-baseline-red-rendered.log",
+    "renderedSHA256": "1a029aa7ecdc97805c6e947eb202076cd54a517bdab6300b40ad9895f379b872",
+    "onlyTrailingWhitespaceRemoved": true,
+    "rawRetained": true
+  }
+}

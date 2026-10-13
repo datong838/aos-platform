@@ -1,0 +1,12 @@
+{
+  "exitCode": 1,
+  "baselineHead": "25b8a87ca69d7b412d531624e9a0d5e471f38a5e",
+  "baselineUnchangedFiles": {
+    "services/aos-api/aos_api/asset_registry/installation_service.py": true,
+    "services/aos-api/tests/extension_runtime/test_lifecycle_service.py": true
+  },
+  "failure": "existing uninstall guard test expects no lock argument while original production passes lock",
+  "selectedSchedulerCalledByThisTest": false,
+  "currentDatabaseWrites": false,
+  "fullCumulativeGreenClaimed": false
+}

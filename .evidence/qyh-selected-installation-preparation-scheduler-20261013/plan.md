@@ -1,0 +1,4 @@
+# 指定安装的原准备Scheduler入口
+Rules：用户既有恢复/安装授权、231原Lease/CAS/幂等/签名/租户合同，唯一m1，先方案/登记后RED与最小代码。方案先登记在parent current-api-candidate-and-installation-next-plan-20261013.md；本Task仅原live_installation_scheduler.py、新test_selected_live_installation_scheduler.py和本目录。
+真实隔离原runtime-apply成功但只factory生成的owner不进入原scheduler.find_owner；全scope会读旧407成功未ACK outbox。新增run_selected_once(UUID)，只从原native bounded目录中构造/登记selected原Owner；既有owner延续原verify行为。共享原tick互斥/async shield/closing/stop语义，默认run_once仍原全scope。禁止捏造descriptor/手工map/假verify admission/旧Run/Source/Provider/current库写。
+9条真实缺入口RED→53专项/首组相邻GREEN，新增Owner实际进入原RuntimeHost.has_current_preparation_assignment verify门的测试通过，117条原8文件累计GREEN（纯单元、不冒充PG验收）。扩大时旧uninstall断言漏lock，在25b8冻结代码实际同失败；独立Task校正only该测试具名lock并exact身份assert，原卸载不改。模型独立review当前格式/超时局部未完，不宣称PASS或Task最终完成。当前修改m1精确提交以供原Git冻结器纳入真实副本验收；保持Task active直到新冻结下原reset/apply/verify连续演练/独立复审与Delivery。

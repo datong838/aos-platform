@@ -1,0 +1,1 @@
+旧fixture漏不可变lock参数，冻结25b8原产品复现该failure。仅为原2分支具名lock与精确guard.assert锁对象，无product卸载变更。累计117通过，事实和范围复审通过；最终Delivery随源review接续。

@@ -1,0 +1,72 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_installation_uninstall_calls_runtime_guard_before_append[False] _____
+
+guard_fails = False
+
+    @pytest.mark.parametrize("guard_fails", [False, True])
+    def test_installation_uninstall_calls_runtime_guard_before_append(guard_fails):
+        from aos_api.asset_registry.installation_service import InstallationService
+
+        store=MagicMock();guard=MagicMock();locked=MagicMock();conn=MagicMock()
+        locked.org_id="org-org";locked.project_id="dev-project"
+        locked.record.installation_id=str(uuid4());locked.record.current.revision=5
+        service=InstallationService(store=store,composition_store=MagicMock(),
+            revalidator=MagicMock(),runtime_uninstall_guard=guard)
+        sequence=MagicMock()
+        sequence.attach_mock(store.guard_no_active_replacement_in_transaction,"leaf")
+        sequence.attach_mock(guard.before_uninstall,"runtime")
+        sequence.attach_mock(store.append_uninstall_in_transaction,"append")
+        if guard_fails:
+            guard.before_uninstall.side_effect=RuntimeConflict("resources unresolved")
+        with patch("aos_api.asset_registry.installation_service._evidence",return_value=MagicMock()):
+            if guard_fails:
+                with pytest.raises(RuntimeConflict,match="unresolved"):
+                    service._append_uninstall(conn,locked,MagicMock(reason="retire"),"operator",MagicMock())
+                store.read_control_clock_in_transaction.assert_not_called()
+                store.append_uninstall_in_transaction.assert_not_called()
+            else:
+                service._append_uninstall(conn,locked,MagicMock(reason="retire"),"operator",MagicMock())
+>               guard.before_uninstall.assert_called_once_with(conn,org_id="org-org",
+                    project_id="dev-project",installation_id=locked.record.installation_id,
+                    expected_installation_revision=5,actor="operator")
+
+../../../../services/aos-api/tests/extension_runtime/test_lifecycle_service.py:122:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/unittest/mock.py:951: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <MagicMock name='mock.runtime' id='4480118096'>
+args = (<MagicMock id='4480071120'>,)
+kwargs = {'org_id': 'org-org', 'project_id': 'dev-project', 'installation_id': '1a188d78-5cee-4904-a521-75661ea8ef27', 'expected_installation_revision': 5, ...}
+
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: runtime(<MagicMock id='4480071120'>, org_id='org-org', project_id='dev-project', installation_id='1a188d78-5cee-4904-a521-75661ea8ef27', expected_installation_revision=5, actor='operator')
+E             Actual: runtime(<MagicMock id='4480071120'>, org_id='org-org', project_id='dev-project', installation_id='1a188d78-5cee-4904-a521-75661ea8ef27', expected_installation_revision=5, actor='operator', lock=<MagicMock id='4480161552'>)
+
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/unittest/mock.py:939: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../services/aos-api/tests/extension_runtime/test_lifecycle_service.py::test_installation_uninstall_calls_runtime_guard_before_append[False]
+1 failed in 0.30s

@@ -55,7 +55,7 @@ class LiveInstallationScheduler:
             raise TypeError("exact installation identity required")
         return self._owners.get(installation_id)
 
-    async def _run(self) -> LiveInstallationSchedulerTick:
+    async def _run(self, selected_installation: UUID | None = None) -> LiveInstallationSchedulerTick:
         descriptors = await _settled(
             asyncio.to_thread(self.directory.read_descriptors)
         )
@@ -65,6 +65,13 @@ class LiveInstallationScheduler:
             or any(type(item) is not PendingPreparationDescriptor for item in descriptors)
         ):
             raise TypeError("bounded pending preparation descriptors required")
+        if selected_installation is not None:
+            installations = tuple(item.installation_id for item in descriptors)
+            if (len(installations) != len(set(installations))
+                    or any(item.scope != self.directory.scope for item in descriptors)):
+                raise ValueError("selected preparation descriptors must be unique and same-scope")
+            descriptors = tuple(item for item in descriptors
+                                if item.installation_id == selected_installation)
         for descriptor in descriptors:
             installation = descriptor.installation_id
             if installation not in self._owners:
@@ -77,6 +84,8 @@ class LiveInstallationScheduler:
 
         deliveries = []
         for installation, owner in self.owners:
+            if selected_installation is not None and installation != selected_installation:
+                continue
             result = await _settled(owner.run_once())
             if type(result) is not LiveInstallationTick:
                 raise TypeError("live installation owner returned invalid tick")
@@ -84,11 +93,20 @@ class LiveInstallationScheduler:
         return LiveInstallationSchedulerTick(tuple(deliveries))
 
     async def run_once(self) -> LiveInstallationSchedulerTick:
+        return await self._start_tick()
+
+    async def run_selected_once(self, installation_id: UUID) -> LiveInstallationSchedulerTick:
+        """Retain and advance only a native-directory-selected installation owner."""
+        if type(installation_id) is not UUID:
+            raise TypeError("exact installation UUID required")
+        return await self._start_tick(installation_id)
+
+    async def _start_tick(self, selected_installation: UUID | None = None) -> LiveInstallationSchedulerTick:
         if self._closing or self._revoking:
             raise RuntimeError("live installation scheduler is closing")
         if self._current_tick is not None and not self._current_tick.done():
             raise RuntimeError("live installation scheduler tick already in progress")
-        self._current_tick = asyncio.create_task(self._run())
+        self._current_tick = asyncio.create_task(self._run(selected_installation))
         self._current_tick.add_done_callback(_observe)
         return await asyncio.shield(self._current_tick)
 

@@ -1,0 +1,21 @@
+{
+  "scope": [
+    "services/aos-api/aos_api/extension_runtime/live_installation_scheduler.py",
+    "services/aos-api/tests/extension_runtime/test_selected_live_installation_scheduler.py"
+  ],
+  "files": {
+    "services/aos-api/aos_api/extension_runtime/live_installation_scheduler.py": "cb90145fce2b0ee604c90a15d0a46f72a6ca153fd22159d2d9d80b48c0b5564a",
+    "services/aos-api/tests/extension_runtime/test_selected_live_installation_scheduler.py": "404af6ba8c87260471e49fe7d21a6adaf2ebc814106fc7d4e548e43572a0c31e"
+  },
+  "red": "9 missing selected entry failures",
+  "green": "117 pure unit and adjacent cases passed",
+  "legacyAllScopePreserved": true,
+  "realNativeDescriptorRequired": true,
+  "sameOriginalOwnerUsedByOriginalHostVerifyAdmissionTest": true,
+  "sharedTickCancellationAndClosingGuard": true,
+  "noProductionPrivilegesOrSQLChanged": true,
+  "currentDatabaseWrites": false,
+  "independentModelReview": "PENDING_FORMAT_FAILURE_AND_TIMEOUT_RECONCILIATION",
+  "realFrozenLabApplyVerify": "PENDING",
+  "eightPagesAccepted": false
+}

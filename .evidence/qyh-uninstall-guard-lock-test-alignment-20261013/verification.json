@@ -1,0 +1,7 @@
+{
+  "originalFrozenBaselineReproduced": true,
+  "currentCumulativeTestsPassed": 117,
+  "productUninstallChanged": false,
+  "lockObjectIdentityAsserted": true,
+  "fixtureFile": "services/aos-api/tests/extension_runtime/test_lifecycle_service.py"
+}
