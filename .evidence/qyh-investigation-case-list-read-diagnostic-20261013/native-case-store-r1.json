@@ -1,0 +1,11 @@
+{
+  "sourceHead": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+  "actualManagementIdentityReadOnly": true,
+  "superuser": false,
+  "bypassRls": false,
+  "applicationNotConstructed": true,
+  "rawCustomerDataPersisted": false,
+  "businessComplete": false,
+  "status": "READ_OK",
+  "caseCount": 2
+}

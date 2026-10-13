@@ -1,0 +1,16 @@
+{
+  "apiSource": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+  "authority": "AOS-002019",
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "normalReadonlyListRefresh": true,
+  "responseMetadata": [
+    {
+      "path": "/api/v1/ecommerce/investigations/cases",
+      "status": 401,
+      "code": "AUTH_INVALID",
+      "itemCount": null
+    }
+  ],
+  "rawCustomerRowsPersisted": false,
+  "businessComplete": false
+}

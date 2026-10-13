@@ -1,0 +1,11 @@
+{
+  "head": "3e57d9c073c9f7b285891388d59d6d02c3d6b183",
+  "authority": "AOS-002019",
+  "route": "GET /v1/ecommerce/investigations/cases via extension_dispatch read-only GET/HEAD include;not same Workshop catalog dependency",
+  "caseStoreList": "validates1..200;one scoped SELECT head/current revision join;no writes;then model_validate authority_data;bad rows fail whole read,not skipped",
+  "constructorAudit": "Reviewed eager App dependencies:Case/Run/Schedule/Compilation/Data stores retain factories;RuntimeBinder/DataRequester/Saga/ProjectionBuilder retain readers;ReviewService EvalRunner/EvalAuthority/EvalPackRegistry/ProductionStore construct stores only;Growth approval/AnalystAuthority retainstore+clock;Handoff/Cockpit/AgentRegistry/catalog/loader allocate dependency refs and local allowlist path checks;CaseSelection readiness/shop/profile/composition constructors retainfactories/staticcatalog. No method read/compile/execute/run invoked by list except CaseStore.list.",
+  "nextSafeAction": "direct original CaseStore with exact original management readonly identity,metadata-only errors/counts;not instantiate Application or write services yet",
+  "normalApiDefaultConnect": "original db.connect readwrite characteristics but original managementDSN forces default_transaction_read_only=on;diagnostic will assert actual readonly",
+  "businessComplete": false,
+  "actualEndToEnd": "normal authenticated HTTP200/count2 corroborates original Application factory and CaseStore result;frontend originalparser TypeError blocksrender,not App initialization fault"
+}

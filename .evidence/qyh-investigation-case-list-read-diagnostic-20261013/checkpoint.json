@@ -4,7 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "qyh-investigation-case-list-read-diagnostic-20261013",
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
-  "authority_revision": "AOS-002019",
+  "authority_revision": "AOS-002020",
   "task_base_revision": "AOS-002019",
-  "step": "1/8 registered evidence-only readonly diagnostic;next full list call audit before action/code"
+  "step": "8/8 diagnostic only Delivery complete/Prime PASS;real2 records valid,frontend optionalnull mismatch;no parser/code/data/ACL repair yet",
+  "nextAction": "review diagnostic evidence,propose only parser.ts/parser.test.ts optionalnull compatibility,mandatory receipt/unknownkeys/hash/tenant rejection unchanged;no data/ACL/Run effects",
+  "nextTask": "qyh-investigation-null-receipt-parser-20261013"
 }

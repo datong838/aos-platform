@@ -1,0 +1,14 @@
+{
+  "sourceHead": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+  "authority": "AOS-002019",
+  "backendNativeStore": "READ_OK2 cases validated original model,readonly/noSUPER/BYPASS",
+  "realHttp": "normalOIDC token/me200,cases2002/count2/same tenant",
+  "frontendOriginalFailure": "TypeError case.priorRef.receiptId must nonempty boundedstring",
+  "wireProof": "priorRef and other references actually have receiptId:null;onlyfieldmetadata persisted",
+  "backendContract": "InvestigationExactRef.receipt_id:str|None Field(default=None,min_length1,max_length240)",
+  "frontendContract": "receiptId?:string;parser ref accepts optional undefined,but calls text() when explicitnull",
+  "rootCause": "frontend wire null/optional representation mismatch,not missing rows/not unreadable DB/not new permission prerequisite",
+  "noRecordSkipOrDataRepair": true,
+  "codeNotModified": true,
+  "businessComplete": false
+}

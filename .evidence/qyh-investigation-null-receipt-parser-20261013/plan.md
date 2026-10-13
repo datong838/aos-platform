@@ -1,0 +1,6 @@
+# Investigation可选Receipt null表征兼容与真实Case显示
+Rules：用户AGENTS/AOS工程交付/231及BI-W4-06现有技术合同；唯一m1写者/先方案TaskLease RED后最小编码/保护dirty/原650表只读/Host worker Provider OFF/未知与旧12Run不重放。Authority2020，前诊断独立PASS消费，只确诊不已修复。
+已证据：原普通API身份native CaseStore2 valid，正常OIDC HTTP2002；原前端TypeError case.priorRef.receiptId。metadata-only证明explicitnull，后端InvestigationExactRef receipt_id OptionalNone(min1/max240)，前端type receiptId可选string但ref对null调用text拒绝。不是缺记录/权限不足，不改原数据/seed/跳坏行。
+文件计划：apps/web/src/api/ecommerceInvestigation/parser.ts的ref仅把null同undefined归一为absence，其他字段exact/类型/revision/hash/receipt非null文本边界/租户/原schema/priorRef关系不改；parser.test.ts追加后端canonical nullable引用及absence/nonempty/empty/数值/对象/越界/未知字段/原tenant negative验证，复习现有Case/Run/workbench tests保留mandatory Receipt专门门。contracts.ts及backend不改；不生成Receipt、不伪ACK、不改ready/approval/budget/dispatch/Run控制。
+步骤：产品技术合同复习→RED真实fieldnull失败→最小修复→parser/Client/Tab相邻与typecheck适用验证→代码精确Prime PASS消费→维护parent精确最新source/Web或完整同原卷更新(不重放旧intent，保护81203及API1234)，真实OIDC Case2渲染/原Run状态只读，不点任何命令→原650保持/livePrime PASS→准确Delivery/Authority+AOS/Prime→下一生产前置。每日aos最新原卷完整PG/API/Web职责不变，若仅Web更新准确标记局部更新。
+风险：common ref覆盖Case/Run/view引用，需完整相邻而非只一个priorRef；nullable absence不能变成mandatoryReceipt成立；新前端可能暴露下一级Run/view合同缺口，逐项记录/另scope，不以空集合/示例隐藏。全部自然firstchain/Source/预算/八台/观察发布仍待。

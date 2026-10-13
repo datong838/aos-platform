@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-investigation-case-list-read-diagnostic-20261013-r1",
+    "task_id": "qyh-investigation-case-list-read-diagnostic-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "3e57d9c073c9f7b285891388d59d6d02c3d6b183",
+      "authority_revision": "AOS-002019",
+      "files": {
+        ".evidence/qyh-investigation-case-list-read-diagnostic-20261013/review-package-r1.txt": "35e39ef90d4b05abca0c52f9c14b4a0e191ab9a90e8eebc35fa21155d0004957"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "原管理普通身份READ ONLY/noSUPER/BYPASS的CaseStore读取2条且原后端模型校验通过，真实OIDC token/me200后API Cases200/count2/同租户，页面仍失败；未改ACL/数据/生产代码，未保存原业务行。",
+        "evidence": "plan.md确认路径CaseStore→Application.list_cases→CaseStore.list与DTO，case-store-read-audit.json声明no writes/validates1..200/bad rows fail whole read；native-case-store-r1.json显示actualManagementIdentityReadOnly=true/superuser=false/bypassRls=false/status=READ_OK/caseCount=2；browser-authenticated-parser-r1.json显示auth 200/caseResponseMetadata count=2 same tenant/originalClientParser TypeError；root-cause.json断言backendNativeStore=READ_OK2 cases validated original model,readonly/noSUPER/BYPASS/realHttp normalOIDC token/me200,cases2002/count2/same tenant/frontendOriginalFailure TypeError/codNotModified=true/noRecordSkipOrDataRepair=true/businessComplete=false",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原前端客户端报case.priorRef.receiptId非空字符串TypeError，实际wire字段元数据确认receiptId:null；后端共享ExactRef允许None但非null需有界string，前端ref对显式null调用text而拒绝。诊断根因为可选Receipt null表征不兼容；不是缺记录，不以空集合掩盖，不声称新Case自然生成或业务闭环。",
+        "evidence": "browser-authenticated-parser-r1.json originalClientParser message=case.priorRef.receiptId 必须是非空有界字符串；wire-null-receipt-fields.json wireProof priorRef receiptFieldPresent:true receiptIsNull:true(其他refs同);root-cause.json backendContract InvestigationExactRef.receipt_id:str|None Field(default=None,min_length1,max_length240)/frontendContract receiptId?:string;parser ref accepts optional undefined,but calls text() when explicitnull/rootCause frontend wire null/optional representation mismatch,not missing rows/not unreadable DB/not new permission prerequisite/businessComplete=false;parser.ts lines 74-84 ref函数在receiptId===undefined时返回undefined否则text(raw.receiptId,...)导致null被送text并触发最小长度1失败;services/aos-api/aos_api/business_investigation_shared_contracts.py line 40 receipt_id:str|None min_length=1确认None允许但null经前端text后拒绝",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "在apps/web/src/api/ecommerceInvestigation/parser.ts的ref函数中将explicit null视为undefined处理（如const receiptId = raw.receiptId == null ? undefined : text(raw.receiptId,...)），保留所有其他校验门及min/max验证，仅做可选null表征兼容修复。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

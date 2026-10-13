@@ -1,0 +1,106 @@
+{
+  "response": [
+    {
+      "status": 200,
+      "count": 2,
+      "items": [
+        {
+          "revision": 4,
+          "refs": [
+            {
+              "field": "priorRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "channelRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "businessEntityRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "entityChannelBindingRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "investigationProfileRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "scopeRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "schedulePolicyRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            }
+          ]
+        },
+        {
+          "revision": 14,
+          "refs": [
+            {
+              "field": "priorRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "channelRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "businessEntityRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "entityChannelBindingRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "investigationProfileRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "scopeRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            },
+            {
+              "field": "schedulePolicyRef",
+              "refIsNull": false,
+              "receiptFieldPresent": true,
+              "receiptIsNull": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "rawRefIdsOrPayloadsPersisted": false,
+  "businessComplete": false
+}

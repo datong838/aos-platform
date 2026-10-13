@@ -1,0 +1,51 @@
+{
+  "authority": "AOS-002019",
+  "apiSource": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+  "auth": [
+    {
+      "path": "/api/v1/auth/token",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "status": 200
+    }
+  ],
+  "caseResponseMetadata": [
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 2,
+      "itemCount": 2
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 2,
+      "itemCount": 2
+    },
+    {
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 2,
+      "itemCount": 2
+    }
+  ],
+  "originalClientParser": {
+    "errorType": "TypeError",
+    "status": null,
+    "code": null,
+    "message": "case.priorRef.receiptId 必须是非空有界字符串"
+  },
+  "rawCustomerRowsPersisted": false,
+  "businessComplete": false
+}

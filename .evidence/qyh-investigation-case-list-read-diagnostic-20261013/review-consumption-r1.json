@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-investigation-case-list-read-diagnostic-20261013-r1",
+  "task_id": "qyh-investigation-case-list-read-diagnostic-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "3e57d9c073c9f7b285891388d59d6d02c3d6b183",
+    "authority_revision": "AOS-002019",
+    "files": {
+      ".evidence/qyh-investigation-case-list-read-diagnostic-20261013/review-package-r1.txt": "35e39ef90d4b05abca0c52f9c14b4a0e191ab9a90e8eebc35fa21155d0004957"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "6bd25caaf427f54e22e343fc1445e2f7f33a4abba0385baf86a65fb32b4110d9",
+  "transport_sha256": "c24648375f67c908d888aeca1eb4e9856158c54ea5ecd7aebab30d3b41f0a865"
+}
