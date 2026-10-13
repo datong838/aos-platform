@@ -1833,7 +1833,7 @@ def execute_media_internal_workflow(
 def list_media_internal_workflows(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     workflow: MediaInternalWorkflowDependency,
 ) -> MediaInternalWorkflowListResponse:
     _reject_query_parameters(request)
@@ -1944,7 +1944,7 @@ def create_media_delivery_publish_proposal(
 def get_ecommerce_workshop_media_studio_full_production_scenario(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     scenario: FullVideoScenarioDependency,
 ) -> FullVideoScenarioContribution:
     _reject_unknown_query_parameters(request, allowed=frozenset())
