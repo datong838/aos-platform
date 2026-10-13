@@ -15,3 +15,7 @@ Rules：用户正式移交和原完整恢复/日常最新重启授权、AGENTS.m
 验证/重试/停止：每个操作new intent、精确target、一次执行、独立readback；若已有intent先调和terminal不重复。启动失败先保留原错误与safe readonly状态，诊断/修复继续。权限/模型局部问题只限相应动作，不缩Goal；真人登录过期或CAPTCHA等工具不能安全完成时请求外部处理。Root GET的最新运行与HTTP代码一致性及独立Prime材料复审后准确Delivery/Authority/Prime，立即辅助GET/预算下一登记波。
 
 准备工具复核：Git Web归档存在仓库环境文件；按原已验证freeze流程排除全部.env*文件，不复制它们、不读取其值。首个prepare在intent/源目录创建及服务动作之前被断言拒绝，确认无intent后修复再执行，不是未知操作重发。native诊断工具的派生__pycache__清理只限新冻结源中未列入manifest的自身pyc，216项摘要已记录，所有8662声明源文件逐项未变；后续sys.dont_write_bytecode及进程PYTHONDONTWRITEBYTECODE=1保持。
+
+## 下一只读波的API-only刷新（不冒充重复PG/Web全重启）
+
+Operations两helper代码972c16c5e已55相邻/精确Prime r2消费；原frozen2324 helper正常runtime READ ONLY实际读取CaseWorkspace=ready、169refs/50候选/0Cases，commands6blocked，无创建Case。只读API现在需载入新增两GET注入，Web内容与本波HEAD的apps/web/packages树未变；本波新一次性ops-api-reload intent精确旧PID81071/CWD2324→original guarded CLI/新当前Git冻结972。不重启PG/Web/Chrome，不重放旧restart-controller阶段或凭TTL迁锁。当前维护owner/Lease复核，sourceguard通过、18080唯一旧PID/原cwd再次核验后单次SIGTERM、portFree记录，再Popen原supported management入口保存新PID、未知结果仅对账。停止或新启动失败诊断修复单独新attempt，不能重发已知/未知旧操作。原每日/每次aos最新全PG/API/Web协议保持，原本波全重启2324证据保留为其截止面。

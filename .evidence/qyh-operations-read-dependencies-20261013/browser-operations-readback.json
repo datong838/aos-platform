@@ -1,0 +1,123 @@
+{
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "url": "http://127.0.0.1:18434/workshop/operations",
+  "requests": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.operations-view/v1"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations/cases",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.operation-case-workspace/v1"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.operation-command-readiness/v1"
+    }
+  ],
+  "commands": [
+    {
+      "id": "classify",
+      "status": "blocked",
+      "blockers": [
+        "EXACT_ACTION_CHAIN_REQUIRED"
+      ]
+    },
+    {
+      "id": "createCase",
+      "status": "blocked",
+      "blockers": [
+        "EXACT_ACTION_CHAIN_REQUIRED"
+      ]
+    },
+    {
+      "id": "changeMembership",
+      "status": "blocked",
+      "blockers": [
+        "EXACT_ACTION_CHAIN_REQUIRED"
+      ]
+    },
+    {
+      "id": "manageSla",
+      "status": "blocked",
+      "blockers": [
+        "EXACT_ACTION_CHAIN_REQUIRED"
+      ]
+    },
+    {
+      "id": "automationKill",
+      "status": "blocked",
+      "blockers": [
+        "EXACT_ACTION_CHAIN_REQUIRED"
+      ]
+    },
+    {
+      "id": "refund",
+      "status": "blocked",
+      "blockers": [
+        "EXTERNAL_ACTION_GATE_NOT_BOUND"
+      ]
+    }
+  ],
+  "workspace": {
+    "status": "ready",
+    "cases": 0,
+    "candidates": 50,
+    "availableRefs": 169,
+    "sources": [
+      {
+        "id": "orders",
+        "status": "ready",
+        "count": 50
+      },
+      {
+        "id": "inventory",
+        "status": "ready",
+        "count": 50
+      },
+      {
+        "id": "shipments",
+        "status": "ready",
+        "count": 19
+      },
+      {
+        "id": "aftersaleEvents",
+        "status": "ready",
+        "count": 0
+      },
+      {
+        "id": "payments",
+        "status": "ready",
+        "count": 50
+      },
+      {
+        "id": "operationCases",
+        "status": "ready",
+        "count": 0
+      }
+    ],
+    "externalEffectAllowed": false
+  },
+  "readFailedText": false,
+  "visibleStateText": "统一运营 · 正式业务处理视图\n重新读取\n业务待办\n7\n七类正式视图\n正式可读\n7\n来源闭合\n需业务复核\n0\n不替代为已处理\n来源总量\n219\n七类业务合计\n已挂接\n169\n当前页 169\n数据差异\n50\n未匹配 + 冲突\n数据截止\n2026/10/13 19:04:59\n评估 2026/10/13 19:04:59\nAI\n跨域运营分诊\n\n按正式订单、库存、履约、支付、售后和运营工单核对待办，并形成可审计的内部处理提案。\n\n外部动作需独立审批\n⌕\n全部\n7\n订单与履约\n4\n库存与告警\n1\n售后与工单\n2\n统一待办 · 内部处理\n50 项建议处理\n库存资料待核对\nProductSku · niushop:1:68\n1\n优先核对\n库存资料待核对\nProductSku · niushop:1:67\n2\n优先核对\n库存资料待核对\nProductSku · niushop:1:74\n3\n优先核对\n库存资料待核对\nProductSku · niushop:1:60\n4\n优先核对\n库存资料待核对\nProductSku · niushop:1:59\n5\n优先核对\n库存资料待核对\nProductSku · niushop:1:58\n6\n优先核对\n库存资料待核对\nProductSku · niushop:1:57\n7\n优先核对\n库存资料待核对\nProductSku · niushop:1:56\n8\n优先核对\n库存资料待核对\nProductSku · niushop:1:54\n9\n优先核对\n库存资料待核对\nProductSku · niushop:1:48\n10\n优先核对\n库存资料待核对\nProductSku · niushop:1:47\n11\n优先核对\n库存资料待核对\nProductSku · niushop:1:38\n12\n优先核对\n库存资料待核对\nProductSku · niushop:1:29\n13\n优先核对\n库存资料待核对\nProductSku · niushop:1:30\n14\n优先核对\n库存资料待核对\nProductSku · niushop:1:31\n15\n优先核对\n库存资料待核对\nProductSku · niushop:1:32\n16\n优先核对\n库存资料待核对\nProductSku · niushop:1:33\n17\n优先核对\n库存资料待核对\nProductSku · niushop:1:34\n18\n优先核对\n库存资料待核对\nProductSku · niushop:1:73\n19\n优先核对\n库存资料待核对\nProductSku · niushop:1:72\n20\n优先核对\n库存资料待核对\nProductSku · niushop:1:28\n21\n优先核对\n库存资料待核对\nProductSku · niushop:1:66\n22\n优先核对\n库存资料待核对\nProductSku · niushop:1:65\n23\n优先核对\n库存资料待核对\nProductSku · niushop:1:64\n24\n优先核对\n库存资料待核对\nProductSku · niushop:1:26\n25\n优先核对\n库存资料待核对\nProductSku · niushop:1:71\n26\n优先核对\n库存资料待核对\nProductSku · niushop:1:70\n27\n优先核对\n库存资料待核对\nProductSku · niushop:1:69\n28\n优先核对\n库存资料待核对\nProductSku · niushop:1:61\n29\n优先核对\n库存资料待核对\nProductSku · niushop:1:35\n30\n优先核对\n库存资料待核对\nProductSku · niushop:1:20\n31\n优先核对\n库存资料待核对\nProductSku · niushop:1:",
+  "bodyCharacters": 3179,
+  "settled": true,
+  "tokenExported": false,
+  "postCommandsExecuted": false,
+  "businessFirstChainAccepted": false
+}

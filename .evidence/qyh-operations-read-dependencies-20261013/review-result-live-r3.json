@@ -1,0 +1,37 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-operations-read-dependencies-20261013-live-r3",
+    "task_id": "qyh-operations-read-dependencies-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "972c16c5e955b82db242a6bcbf19ffe77a11dec7",
+      "authority_revision": "AOS-002015",
+      "files": {
+        ".evidence/qyh-operations-read-dependencies-20261013/live-material-verification-live.json.txt": "d9b1674cf65b9dbb8c2f884e6a266f37489be9d0a8a76d03e17975fa818b3785",
+        ".evidence/qyh-operations-read-dependencies-20261013/live-material-browser-operations-readback.json.txt": "a338a5815c8b7cf8e116fe22fed578272f8c9e57fd5dc99eb67cd0a9d1e9e758",
+        ".evidence/qyh-operations-read-dependencies-20261013/live-material-navigation-focus-reconciliation.json.txt": "fc69c6e6a29a1b5eb221f4b373036a885ee5a9d9e5edfa036b825067e8092fb5",
+        ".evidence/qyh-operations-read-dependencies-20261013/live-material-session-recovery-terminal.json.txt": "67ce40f8e7063060fc18045ed1dbef9615f693f681432a1376f2877bdd640c58",
+        ".evidence/qyh-operations-read-dependencies-20261013/live-material-native-helpers-r1.json.txt": "ce1723ae8c04f730f36e0ab8d6566f3d4bf077ccd4db344652195efd95b11e7c"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "当前冻结读back材料记录新972API载入后Operations三项GET200/同租户、原页面读取失败消失，169事实引用/50只读候选/0Case及原六commands blocked；仅交付只读视图切片，不宣称新建Case、执行或经营首链通过。",
+        "evidence": "文件 .evidence/qyh-operations-read-dependencies-20261013/live-material-verification-live.json.txt 字段：apiOnlyReload=true, newFullPgWebRestartClaimed=false, operationsReadFailedGone=true, original6CommandsBlocked=true, virtualCandidates=50, availableFactRefs=169, persistedOperationsCases=0, tokenExported=false, businessFirstChainAccepted=false; 文件 .evidence/qyh-operations-read-dependencies-20261013/live-material-browser-operations-readback.json.txt 字段：requests 三项路径 /views/operations、/views/operations/cases、/commands/operations/readiness 均为 status 200 且 tenant.orgId=org-org、tenant.projectId=dev-project；workspace.candidates=50、workspace.availableRefs=169、workspace.cases=0、workspace.externalEffectAllowed=false；commands 六项（classify/createCase/changeMembership/manageSla/automationKill/refund）全部 status=blocked；bodyCharacters=3179、settled=true、postCommandsExecuted=false、tokenExported=false、businessFirstChainAccepted=false; 文件 .evidence/qyh-operations-read-dependencies-20261013/live-material-native-helpers-r1.json.txt 字段：databaseWrites=false、externalEffectAllowed=false、caseCount=0、candidateCount=50、availableRefCount=169、businessComplete=false",
+        "assessment": "supported"
+      },
+      {
+        "claim": "材料区分原2324全PG/API/Web重启与本波API-only刷新，Web源树与最新相同且650表指纹不变；过期401及观察超时先对账、最终auth/token与me200确认，普通导航仅验证customer/operations，未导出token或把初始点击误报成产品缺陷。",
+        "evidence": "文件 .evidence/qyh-operations-read-dependencies-20261013/live-material-verification-live.json.txt 字段：previousSameVolumeFullRestartCutoff=2324ba3916b39ed81d6527577f4d20ab3bd86071、webOriginalHead=2324ba3916b39ed81d6527577f4d20ab3bd86071、webSourceTreeEqualLatestHead=true、all650FingerprintsEqualBeforeAfter=true、sessionExpiryKnown401RecoveredThroughExistingAppUi=true、rootMenuEarlierControlFailureNotProductBug=true、ordinaryMenuClicksWithOwnedFocusVerifiedForCustomerAndOperations=true、noAllEightMenuClickClaim=true; 文件 .evidence/qyh-operations-read-dependencies-20261013/live-material-navigation-focus-reconciliation.json.txt 字段：normalCustomerMenuNavigated=true、normalOperationsMenuNavigated=true、earlierUnfocusedClicksNotProductBugProof=true、allEightMenuClicksProven=false、tokenReadOrExported=false; 文件 .evidence/qyh-operations-read-dependencies-20261013/live-material-session-recovery-terminal.json.txt 字段：expiredTokenReadOrExported=false、cookieStorageAuthHeaderReadOrExported=false、oldSessionKnownExpired=true、meHttp=200、freshLoginHttp=200、agentRequestedPageReload=false、timestampVerified=2026-10-13T11:04:55.990735+00:00; 文件 .evidence/qyh-operations-read-dependencies-20261013/live-material-browser-operations-readback.json.txt 字段：tokenExported=false",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "在当前 972c16c5e955b82db242a6bcbf19ffe77a11dec7 基线继续只做只读操作：用 /commands/operations/readiness 200 作为健康检查，用 /views/operations/cases 确认 operationCases 仍为 0 且 unapplied candidates 未因静默写入变化；如需进入业务处理链，必须先申请新的测试目标与明确变更审批，不得在此只读基线上直接执行 classify/createCase/refund 等 blocked commands。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

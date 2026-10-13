@@ -1,0 +1,20 @@
+{
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "method": "existing app clearAccessToken interface then original LocalLoginGate form",
+  "expiredTokenReadOrExported": false,
+  "cookieStorageAuthHeaderReadOrExported": false,
+  "pageReloaded": false,
+  "freshLoginHttp": 200,
+  "freshCredentialAttemptCount": 1,
+  "oldSessionKnownExpired": true,
+  "unknownBusinessReplay": false,
+  "timestamp": "2026-10-13T10:50:22.063878+00:00",
+  "terminalVerified": true,
+  "observation": "response wait timed out;HTTP200 was prematurely written by following shell step and is superseded pending readonly reconciliation",
+  "meHttp": 200,
+  "evidence": "independent owned page performance responseStatus auth/token200+me200;login form absent;actual Operations readonly view tenant confirmed",
+  "observedSuccessfulTokenRequestsInCurrentDocument": 1,
+  "agentRequestedPageReload": false,
+  "unexpectedDocumentReloadNotClaimedAbsent": true,
+  "timestampVerified": "2026-10-13T11:04:55.990735+00:00"
+}

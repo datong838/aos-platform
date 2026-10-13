@@ -1,0 +1,95 @@
+{
+  "frozenHelperSourceHead": "2324ba3916b39ed81d6527577f4d20ab3bd86071",
+  "candidateRouteNotYetLoaded": true,
+  "normalRole": "aos_a0v_runtime_20260912",
+  "superuser": false,
+  "bypassRls": false,
+  "transactionReadOnly": true,
+  "realAdminMembershipVerified": true,
+  "installationRevision": 5,
+  "installedReadiness": "disabled",
+  "commandStatuses": [
+    {
+      "id": "classify",
+      "status": "blocked",
+      "blockers": [
+        "EXACT_ACTION_CHAIN_REQUIRED"
+      ]
+    },
+    {
+      "id": "createCase",
+      "status": "blocked",
+      "blockers": [
+        "EXACT_ACTION_CHAIN_REQUIRED"
+      ]
+    },
+    {
+      "id": "changeMembership",
+      "status": "blocked",
+      "blockers": [
+        "EXACT_ACTION_CHAIN_REQUIRED"
+      ]
+    },
+    {
+      "id": "manageSla",
+      "status": "blocked",
+      "blockers": [
+        "EXACT_ACTION_CHAIN_REQUIRED"
+      ]
+    },
+    {
+      "id": "automationKill",
+      "status": "blocked",
+      "blockers": [
+        "EXACT_ACTION_CHAIN_REQUIRED"
+      ]
+    },
+    {
+      "id": "refund",
+      "status": "blocked",
+      "blockers": [
+        "EXTERNAL_ACTION_GATE_NOT_BOUND"
+      ]
+    }
+  ],
+  "workspaceStatus": "ready",
+  "sources": [
+    {
+      "id": "orders",
+      "status": "ready",
+      "count": 50
+    },
+    {
+      "id": "inventory",
+      "status": "ready",
+      "count": 50
+    },
+    {
+      "id": "shipments",
+      "status": "ready",
+      "count": 19
+    },
+    {
+      "id": "aftersaleEvents",
+      "status": "ready",
+      "count": 0
+    },
+    {
+      "id": "payments",
+      "status": "ready",
+      "count": 50
+    },
+    {
+      "id": "operationCases",
+      "status": "ready",
+      "count": 0
+    }
+  ],
+  "caseCount": 0,
+  "candidateCount": 50,
+  "availableRefCount": 169,
+  "externalEffectAllowed": false,
+  "databaseWrites": false,
+  "businessComplete": false,
+  "scriptSha256": "9d9f7a1eea179af19efcef4cb3bfc20446343d9206d5ee5dc91d981611fbbf18"
+}

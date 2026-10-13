@@ -1,0 +1,66 @@
+{
+  "schema": "aos-operations-aux-read-delivery/v1",
+  "head": "972c16c5e955b82db242a6bcbf19ffe77a11dec7",
+  "authority": "AOS-002015",
+  "apiPid": 86349,
+  "apiPort": 18080,
+  "apiSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-972c16c5e955b82db242a6bcbf19ffe77a11dec7",
+  "apiOnlyReload": true,
+  "newFullPgWebRestartClaimed": false,
+  "previousSameVolumeFullRestartCutoff": "2324ba3916b39ed81d6527577f4d20ab3bd86071",
+  "webOriginalHead": "2324ba3916b39ed81d6527577f4d20ab3bd86071",
+  "webSourceTreeEqualLatestHead": true,
+  "normalRoleNativeHelpersRead": true,
+  "realHumanBrowserAll3Get200": true,
+  "operationsReadFailedGone": true,
+  "original6CommandsBlocked": true,
+  "virtualCandidates": 50,
+  "availableFactRefs": 169,
+  "persistedOperationsCases": 0,
+  "sourceCounts": [
+    {
+      "id": "orders",
+      "status": "ready",
+      "count": 50
+    },
+    {
+      "id": "inventory",
+      "status": "ready",
+      "count": 50
+    },
+    {
+      "id": "shipments",
+      "status": "ready",
+      "count": 19
+    },
+    {
+      "id": "aftersaleEvents",
+      "status": "ready",
+      "count": 0
+    },
+    {
+      "id": "payments",
+      "status": "ready",
+      "count": 50
+    },
+    {
+      "id": "operationCases",
+      "status": "ready",
+      "count": 0
+    }
+  ],
+  "all650FingerprintsEqualBeforeAfter": true,
+  "currentDatabaseWrites": false,
+  "newCaseCreated": false,
+  "externalEffectAllowed": false,
+  "tokenExported": false,
+  "ordinaryMenuClicksWithOwnedFocusVerifiedForCustomerAndOperations": true,
+  "noAllEightMenuClickClaim": true,
+  "sessionExpiryKnown401RecoveredThroughExistingAppUi": true,
+  "rootMenuEarlierControlFailureNotProductBug": true,
+  "businessFirstChainAccepted": false,
+  "otherAuxInterfacesRemainPending": true,
+  "testResults": "55 passed,7 warnings,12.74s",
+  "independentCodeReview": "r2 PASS2/2 strict consumed",
+  "liveMaterialReview": "r3 PASS2/2 strict consumed"
+}

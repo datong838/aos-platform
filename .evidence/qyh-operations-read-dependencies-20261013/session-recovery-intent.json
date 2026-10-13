@@ -1,0 +1,9 @@
+{
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "settledError": "AUTH_INVALID: Signature has expired",
+  "normalUserMenuLogoutUnavailable": true,
+  "supportedAppInterface": "api/tenant.ts clearAccessToken -> aos-auth-updated -> existing LocalLoginGate",
+  "scope": "Clear only known expired in-memory token in this owned app,then existing real local human login;no cookie/storage/header read/export,no reload,no unknown business replay",
+  "credentials": "existing private input,not copied",
+  "timestamp": "2026-10-13T10:47:55.993081+00:00"
+}

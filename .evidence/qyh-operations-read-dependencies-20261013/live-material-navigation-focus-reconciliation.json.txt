@@ -1,0 +1,9 @@
+{
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "ownedTabFocused": true,
+  "normalCustomerMenuNavigated": true,
+  "normalOperationsMenuNavigated": true,
+  "earlierUnfocusedClicksNotProductBugProof": true,
+  "allEightMenuClicksProven": false,
+  "tokenReadOrExported": false
+}

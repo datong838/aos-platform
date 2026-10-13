@@ -1,0 +1,222 @@
+{
+  "head": "972c16c5e955b82db242a6bcbf19ffe77a11dec7",
+  "stage": "initial content/call review;transitive helper proof pending,not no-effect acceptance",
+  "entries": [
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_feedback_read_model.py",
+      "name": "__init__",
+      "line": 42,
+      "sha256": "3c16c94a31164b20223e673d3120fcfe0334f8848f8e968477927d176dd73a17",
+      "calls": []
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_feedback_read_model.py",
+      "name": "_target_refs",
+      "line": 46,
+      "sha256": "e4311cea0e707388e251c1aedaa7dfe72c35e8ed29b2cad7a71b5b8be932c07c",
+      "calls": [
+        "BoundDailyReviewTarget",
+        "BoundImprovementPendingTarget",
+        "BoundMemoryCandidateTarget",
+        "EcommerceGrowthFeedbackConflict",
+        "FeedbackExactRef.model_validate",
+        "FeedbackSegmentView",
+        "_strict_exact_ref",
+        "enumerate",
+        "payload.get",
+        "payload['businessSummary'].strip",
+        "payload['businessTitle'].strip",
+        "reader",
+        "receipts.append",
+        "type",
+        "views.append",
+        "zip"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_feedback_read_model.py",
+      "name": "_original_run",
+      "line": 91,
+      "sha256": "c60ba69670ce9ffdc21e29f28423bc0ecde87042238668818a0dd09089a7e98a",
+      "calls": [
+        "EcommerceGrowthFeedbackConflict",
+        "_strict_exact_ref",
+        "transaction.execute",
+        "transaction.execute(\"SELECT a.content_hash,a.family_revision,r.status AS run_status,t.status AS task_status\\n                 FROM public.aip_artifact a\\n                 JOIN public.aip_task_run r ON r.org_id=a.org_id AND r.project_id=a.project_id\\n                  AND r.run_id=a.run_id AND r.task_id=%s\\n                 JOIN public.aip_task t ON t.org_id=r.org_id AND t.project_id=r.project_id\\n                  AND t.task_id=r.task_id\\n                WHERE a.org_id=%s AND a.project_id=%s AND a.artifact_id=%s\\n                  AND a.artifact_type='ecommerce_content'\", (task['resourceId'], *scope.key, artifact['resourceId'])).fetchone"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_feedback_read_model.py",
+      "name": "_formal_review",
+      "line": 113,
+      "sha256": "08db516205e2afd90b4e5a76c166b85bacc37c492c9f98e2ab725c0113cc2eda",
+      "calls": [
+        "EffectReviewOwner._existing",
+        "EffectReviewOwner._verify_review",
+        "FeedbackExactRef"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_feedback_read_model.py",
+      "name": "_candidate_status",
+      "line": 127,
+      "sha256": "ff3f5849b66f27feaf93d10f848b0ca6b687aa178dc6d2664c667be8346b380e",
+      "calls": [
+        "EcommerceGrowthFeedbackConflict",
+        "len",
+        "transaction.execute",
+        "transaction.execute('SELECT memory_item_id FROM public.aip_memory_item_revision\\n                    WHERE org_id=%s AND project_id=%s AND candidate_id=%s', (*scope.key, third_receipt.resource_id)).fetchall",
+        "transaction.execute('SELECT status FROM public.aip_memory_candidate\\n                WHERE org_id=%s AND project_id=%s AND candidate_id=%s', (*scope.key, third_receipt.resource_id)).fetchall"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_feedback_read_model.py",
+      "name": "read",
+      "line": 147,
+      "sha256": "e75c3191e659751433ad08a2a0fcbf0ce2b98f1779879b58244353cc14f0fe00",
+      "calls": [
+        "BoundDailyReviewTarget",
+        "BoundEcommerceGrowthFeedbackPort",
+        "BoundImprovementPendingTarget",
+        "BoundMemoryCandidateTarget",
+        "EcommerceGrowthFeedbackConflict",
+        "FeedbackAuditDetails",
+        "FeedbackBusinessItem",
+        "FeedbackExactRef.model_validate",
+        "FeedbackReadEnvelope",
+        "FeedbackReadUnavailable",
+        "HostTransaction",
+        "TenantContext",
+        "ValueError",
+        "_strict_exact_ref",
+        "items.append",
+        "len",
+        "port.read",
+        "self._candidate_status",
+        "self._connect",
+        "self._formal_review",
+        "self._original_run",
+        "self._target_refs",
+        "transaction.execute",
+        "transaction.execute(\"SELECT command_id,created_at FROM public.ecommerce_growth_feedback_command\\n                        WHERE org_id=%s AND project_id=%s AND decision='ACCEPT'\\n                          AND created_at<=%s\\n                        ORDER BY created_at DESC,command_id DESC LIMIT %s\", (*scope.key, cutoff, limit + 1)).fetchall",
+        "transaction.execute('SELECT transaction_timestamp() AS cutoff').fetchone",
+        "type"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_dispatch_scenario.py",
+      "name": "dispatch_binding_hash",
+      "line": 42,
+      "sha256": "849a3f58ee88ab54707c9d23397b3d81bc5455ca91841729098b8ee60d90d75f",
+      "calls": [
+        "'|'.join",
+        "'|'.join(identities).encode",
+        "identities.extend",
+        "sha256",
+        "sha256('|'.join(identities).encode()).hexdigest"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_dispatch_scenario.py",
+      "name": "read_scenario",
+      "line": 39,
+      "sha256": "65337b54cc8611c47d88db8ecf309b7a1040c0a0f84edcb8be3a05f86ed1c757",
+      "calls": []
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_dispatch_scenario.py",
+      "name": "__init__",
+      "line": 70,
+      "sha256": "973a6d1f5856110c7c5b33ee61e57a70161f270bf90c81105ed95a516b8f7c2b",
+      "calls": []
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_dispatch_scenario.py",
+      "name": "read",
+      "line": 73,
+      "sha256": "dbb6210838059344c5253ef857217e2013cad4d30a4d489da3f6e17ae614c84b",
+      "calls": [
+        "DispatchScenarioCommands",
+        "DispatchScenarioContribution",
+        "ValueError",
+        "blockers.extend",
+        "cutoff.utcoffset",
+        "dispatch_binding_hash",
+        "list",
+        "self._blocked",
+        "self._reader.read_scenario"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_dispatch_scenario.py",
+      "name": "_blocked",
+      "line": 123,
+      "sha256": "6e1b64609b2a0cec767b16201aaf55e5173cc39a275326a08b165f7fa0f435a7",
+      "calls": [
+        "DispatchScenarioBlocker",
+        "DispatchScenarioContribution",
+        "DispatchScenarioDecisionLedger",
+        "DispatchScenarioOutcomeAxis",
+        "DispatchScenarioStage"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_batch_scenario.py",
+      "name": "batch_start_binding_hash",
+      "line": 46,
+      "sha256": "f8b389166ba54f00c4cf22d362652364c0c6066744e9dd91e2e8c6dddb749f56",
+      "calls": [
+        "'|'.join",
+        "'|'.join(identities).encode",
+        "identities.append",
+        "identities.extend",
+        "sha256",
+        "sha256('|'.join(identities).encode()).hexdigest"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_batch_scenario.py",
+      "name": "read_scenario",
+      "line": 43,
+      "sha256": "d97d84253968f3f0c5a80a6bee147de162f7d0f7615f7492c0bc364a67bf7429",
+      "calls": []
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_batch_scenario.py",
+      "name": "__init__",
+      "line": 63,
+      "sha256": "dd1779daf1c00756e78cdaeafc47215d11f2e629941f94d338cd761326665049",
+      "calls": []
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_batch_scenario.py",
+      "name": "read",
+      "line": 66,
+      "sha256": "401f60eb493aefbebcbfc57c6973d9dd4b94c73744b9da59637259bdf6bfa769",
+      "calls": [
+        "BatchScenarioCommands",
+        "BatchScenarioContribution",
+        "ValueError",
+        "batch_start_binding_hash",
+        "blockers.extend",
+        "cutoff.utcoffset",
+        "list",
+        "self._blocked",
+        "self._reader.read_scenario"
+      ]
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_workshop_batch_scenario.py",
+      "name": "_blocked",
+      "line": 99,
+      "sha256": "ec3eb275f7c91fbd6334c8b583e8452d84fe8d88f9fcadc759077dd086cb6166",
+      "calls": [
+        "BatchScenarioBlocker",
+        "BatchScenarioContribution",
+        "BatchScenarioLedger",
+        "BatchScenarioOutcomeAxis",
+        "BatchScenarioStage"
+      ]
+    }
+  ]
+}

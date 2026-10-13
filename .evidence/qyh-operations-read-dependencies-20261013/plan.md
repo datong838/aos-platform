@@ -13,3 +13,14 @@ Rules：AGENTS.md、AOS工程交付、231/D-wave、完整Goal、单m1写者；�
 3～8/8：HTTP专项RED→仅2注入→相邻root/Operations/CaseWorkspace tests→正常runtime私有冻结只读helper DTO→通过受支持current sourceguard API-only切换并原owned SPA重新读取（不将API-only称新fullPGrestart；aos提醒仍每次fullPG/API/Web同卷）→真实Commands6blocked、workspace来源/未知解释，页面Promise.all进入真实视图→精确冻结Prime/合法消费/Delivery和Authority/Prime，立即下一已登记helper波。最新snapshot不得包括dirty，旧unknown操作/Root脚本不重跑。新的source更换只在维护Task既有授权范围，由当前唯一owner串行。
 
 风险/回滚：只读门误用于执行的风险以明确10GET图级scope、POST保留及commandblocked合同保证；新helper发现SQL/Reader/schema问题先真实RED、另精确scope最小修复，不吞错误或放宽dataScope/legacy谓词。回滚仅两处类型注入，不改原数据/全局Role/签名/发布状态，不reset覆盖用户dirty。
+
+
+## 7/8实际验证与收口边界
+
+972c16c5e精确提交，55专项/相邻、独立代码r2 PASS2/2消费。正常原runtime READ ONLY只读helper实际169refs/50候选/0Cases、6commands blocked。最新guarded API-only载入PID86349/18080，PG/Web/Chrome未由该刷新动作重启；此前完整同卷PG/API/Web2324验收为原截止面，Web2324 apps/web树与当前972完全相同。
+
+实际浏览器最先遇401 Signature has expired，属于确定过期token，不是新路由失败。原UI用户菜单无logout；仅用原public app clearAccessToken触发原LocalLoginGate，未读取/导出token/cookie/storage/header。鼠标/键盘观察超时、内核reset时先只读对账，未将观察超时当成功；一度提前写200的未验证记录已更正，后独立performance.auth/token200+me200及UI/新HTTP读back才确认当前成功。旧密码未清只能提示submit handler未进入，不能独立证明无请求；原开发只读答复再次确认此边界。无需重复凭据后的原tab焦点/normal UI行为成功。普通customer与operations菜单在owned focus核验后可导航，原无焦点click不是产品菜单缺陷。其余8菜单未逐一声明pointer成功。
+
+原Operations3GET均200/同org-org dev-project，原组件无.is-loading且“读取失败”消失。Workspace只读sources orders50/inventory50/shipments19/payments50/aftersale0/cases0，169refs与50虚拟库存资料候选；界面明确source219/attached169/unmatched50/conflict0，读链可读不授权处理。六commands原blocked/exact chain及退款external门均保留。650表原前后全相等；没有新Case、运行/收费/外部效果。其他工作台辅助缺口/来源/预算/首链/发布仍未收口。
+
+后续：先做当前正式读取证据独立精确复核并范围Delivery，随即登记TaskCockpit feedback/dispatch/batch的单条只读审计或SourceReadiness当前缺口，不一次替换全部privateGET。过期登录UI自动正确回退/焦点与观察等待的工程改进另登记，不改本波backend安全门、不会自动重放POST。

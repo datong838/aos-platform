@@ -1,0 +1,22 @@
+{
+  "actualReadonlyGetResults": [
+    {
+      "path": "/views/operations",
+      "status": 401
+    },
+    {
+      "path": "/views/operations/cases",
+      "status": 401
+    },
+    {
+      "path": "/commands/operations/readiness",
+      "status": 401
+    }
+  ],
+  "code": "AUTH_INVALID",
+  "reason": "Signature has expired",
+  "candidateLivePagePassed": false,
+  "businessOperationAttempted": false,
+  "unknownBusinessResend": false,
+  "freshKnownLoginScope": "Existing private local real account,original session success documented;current invalid session settled,not unknown login replay"
+}
