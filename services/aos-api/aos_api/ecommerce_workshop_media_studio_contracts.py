@@ -254,7 +254,9 @@ class WorkshopMediaStudioViewEnvelope(AipContractModel):
         if self.lifecycle_status == "blocked" and (self.lifecycle is not None or not self.lifecycle_blockers):
             raise ValueError("blocked media lifecycle requires blockers and no contribution")
         if self.schema_version != MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION and self.lifecycle is not None:
-            if self.schema_version != MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION:
+            if self.schema_version not in {
+                MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION, MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION,
+            }:
                 raise ValueError("legacy media view cannot carry v4 lifecycle contribution")
         if self.publish_status == "ready" and self.publish_blockers:
             raise ValueError("ready media publish projection cannot contain blockers")
