@@ -1,0 +1,202 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collected 49 items
+
+services/aos-api/tests/test_ecommerce_source_read_visibility.py .FF...FF [ 16%]
+.F                                                                       [ 20%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py ......... [ 38%]
+.....FF                                                                  [ 53%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py ...........F [ 77%]
+...........                                                              [100%]
+
+=================================== FAILURES ===================================
+__ test_zero_legacy_uses_real_selected_grant_and_preserves_canonical_blockers __
+
+    def test_zero_legacy_uses_real_selected_grant_and_preserves_canonical_blockers():
+        client, _, _, source, canonical, _ = setup()
+        response = client.get('/v1/ecommerce-workshop/source-readiness')
+>       assert response.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_source_read_visibility.py:65: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T14:53:10.938020+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T14:53:11.049535+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=WORKSHOP_NOT_INSTALLED status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T14:53:11.050134+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/source-readiness \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=WORKSHOP_NOT_INSTALLED status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/source-readiness "HTTP/1.1 404 Not Found"
+________ test_zero_legacy_success_cannot_bypass_missing_selected_grant _________
+
+    def test_zero_legacy_success_cannot_bypass_missing_selected_grant():
+        client, legacy, _, source, canonical, _ = setup(granted=False)
+        legacy.get_readiness = lambda **scope: object()
+        response = client.get('/v1/ecommerce-workshop/source-readiness')
+        assert response.status_code == 404
+        assert response.json()['code'] == 'WORKSHOP_NOT_INSTALLED'
+>       assert source.calls
+E       assert []
+E        +  where [] = <tests.asset_registry.test_ecommerce_installed_readonly_catalog.RuntimeCandidates object at 0x11ce42710>.calls
+
+services/aos-api/tests/test_ecommerce_source_read_visibility.py:77: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T14:53:11.127427+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T14:53:11.245933+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=WORKSHOP_NOT_INSTALLED status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T14:53:11.246480+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/source-readiness \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=WORKSHOP_NOT_INSTALLED status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/source-readiness "HTTP/1.1 404 Not Found"
+_ test_integrity_error_stops_without_canonical_read_or_later_admission[selected] _
+
+error_at = 'selected'
+
+    @pytest.mark.parametrize('error_at', ['legacy', 'selected'])
+    def test_integrity_error_stops_without_canonical_read_or_later_admission(error_at):
+        client, legacy, selected, source, canonical, _ = setup()
+        attempts = []
+        def corrupt(**scope):
+            attempts.append(scope)
+            raise RegistryIntegrityCorruptError()
+        if error_at == 'legacy':
+            legacy.list_modules = corrupt
+        else:
+            selected.get_installed_readiness = corrupt
+        response = client.get('/v1/ecommerce-workshop/source-readiness')
+>       assert response.status_code == 500
+E       assert 404 == 500
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_source_read_visibility.py:100: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T14:53:11.731703+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T14:53:11.847027+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=WORKSHOP_NOT_INSTALLED status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T14:53:11.847689+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/source-readiness \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=WORKSHOP_NOT_INSTALLED status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/source-readiness "HTTP/1.1 404 Not Found"
+__ test_first_module_invisible_can_try_later_selected_module_with_same_scope ___
+
+    def test_first_module_invisible_can_try_later_selected_module_with_same_scope():
+        client, _, selected, _, canonical, _ = setup()
+        attempts = []
+>       original = selected.get_installed_readiness
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'EcommerceWorkshopReadCatalog' object has no attribute 'get_installed_readiness'
+
+services/aos-api/tests/test_ecommerce_source_read_visibility.py:109: AttributeError
+________ test_selected_admission_does_not_weaken_canonical_tenant_check ________
+
+    def test_selected_admission_does_not_weaken_canonical_tenant_check():
+        client, _, _, _, canonical, _ = setup(drift=True)
+        response = client.get('/v1/ecommerce-workshop/source-readiness')
+>       assert response.status_code == 500
+E       assert 404 == 500
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_source_read_visibility.py:133: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T14:53:12.049343+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T14:53:12.164498+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=WORKSHOP_NOT_INSTALLED status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T14:53:12.165095+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/source-readiness \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=WORKSHOP_NOT_INSTALLED status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/source-readiness "HTTP/1.1 404 Not Found"
+______________ test_installed_only_does_not_accept_legacy_success ______________
+
+    def test_installed_only_does_not_accept_legacy_success():
+        c, _ = make(granted=False)
+        c._legacy = SimpleNamespace(get_readiness=lambda **kw: object())
+        with pytest.raises(AssetNotFoundError):
+>           c.get_installed_readiness(**ARGS)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'EcommerceWorkshopReadCatalog' object has no attribute 'get_installed_readiness'
+
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py:102: AttributeError
+______ test_installed_only_keeps_disabled_result_and_does_not_call_legacy ______
+
+    def test_installed_only_keeps_disabled_result_and_does_not_call_legacy():
+        c, source = make()
+        def forbidden(**kw):
+            pytest.fail('installed-only entry must not consult legacy readiness')
+        c._legacy = SimpleNamespace(get_readiness=forbidden)
+>       result = c.get_installed_readiness(**ARGS)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'EcommerceWorkshopReadCatalog' object has no attribute 'get_installed_readiness'
+
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py:110: AttributeError
+________ test_read_dependency_only_reaches_explicit_audited_get_routes _________
+
+    def test_read_dependency_only_reaches_explicit_audited_get_routes():
+        actual = set()
+        for route in routes.router.routes:
+            uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                            for d in route.dependant.dependencies)
+            if uses_read:
+                assert route.methods == {'GET'}
+                actual.add(route.path)
+>       assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+            '/v1/ecommerce-workshop/source-readiness',
+            '/v1/ecommerce-workshop/views/operations/cases',
+            '/v1/ecommerce-workshop/commands/operations/readiness',
+            '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+            '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+            '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+            '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+        }
+E       AssertionError: assert {'/v1/ecommer...ustomer', ...} == {'/v1/ecommer...-growth', ...}
+E         
+E         Extra items in the right set:
+E         '/v1/ecommerce-workshop/source-readiness'
+E         Use -v to get more diff
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:73: AssertionError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_source_read_visibility.py::test_zero_legacy_uses_real_selected_grant_and_preserves_canonical_blockers
+FAILED services/aos-api/tests/test_ecommerce_source_read_visibility.py::test_zero_legacy_success_cannot_bypass_missing_selected_grant
+FAILED services/aos-api/tests/test_ecommerce_source_read_visibility.py::test_integrity_error_stops_without_canonical_read_or_later_admission[selected]
+FAILED services/aos-api/tests/test_ecommerce_source_read_visibility.py::test_first_module_invisible_can_try_later_selected_module_with_same_scope
+FAILED services/aos-api/tests/test_ecommerce_source_read_visibility.py::test_selected_admission_does_not_weaken_canonical_tenant_check
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installed_only_does_not_accept_legacy_success
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installed_only_keeps_disabled_result_and_does_not_call_legacy
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes
+=================== 8 failed, 41 passed, 7 warnings in 5.51s ===================

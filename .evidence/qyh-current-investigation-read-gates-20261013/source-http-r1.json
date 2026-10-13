@@ -1,0 +1,17 @@
+{
+  "authority": "AOS-002021",
+  "actualOriginalOIDCSession": true,
+  "sourceApi": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+  "originalClient": {
+    "status": 401,
+    "code": null
+  },
+  "http": [
+    {
+      "status": 401,
+      "code": "AUTH_INVALID"
+    }
+  ],
+  "noMutations": true,
+  "businessComplete": false
+}

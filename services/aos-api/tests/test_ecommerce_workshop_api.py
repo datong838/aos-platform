@@ -431,6 +431,14 @@ def test_source_readiness_zero_visible_modules_and_tenant_drift_fail_closed() ->
 
     unread = FakeSourceReadiness()
     with _client(EmptyCatalog(), unread) as client:
+        # Explicitly absent selected admission; EmptyCatalog's unrelated fake
+        # get_readiness success must not make its empty list an authorization.
+        class MissingSelected:
+            def get_installed_readiness(self, **scope):
+                raise AssetNotFoundError("no selected installation in this fixture")
+        client.app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_workshop_read_catalog
+        ] = lambda: MissingSelected()
         missing = client.get("/v1/ecommerce-workshop/source-readiness")
         assert missing.status_code == 404
         assert missing.json()["code"] == "WORKSHOP_NOT_INSTALLED"

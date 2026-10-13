@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-source-read-visibility-exact-admission-20261013-code-r5",
+    "task_id": "qyh-source-read-visibility-exact-admission-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "29d876a6eb87072ac8575d756a3fdf44e506b5c0",
+      "authority_revision": "AOS-002022",
+      "files": {
+        ".evidence/qyh-source-read-visibility-exact-admission-20261013/code-review-package-r5.txt": "404a945452266f74fe1fc6c2db09115e5b863b38479b5d516027271df1532f24"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Installed-only extraction preserves the original exact grant predicate and legacy behavior.",
+        "evidence": "文件aos_api/ecommerce_workshop_read_catalog.py; 新增方法get_installed_readiness逐字移植原有installed/permissions.data_scopes/dependency_refs/DataScopeGrant revision+lock_hash+authority谓词与disallowed blockers判定; 原get_readiness在AssetNotFoundError后仅调用get_installed_readiness，legacy成功分支保持原位。一致性声明installedPredicateTailExact=true且predicateSha256匹配。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Source GET alone uses zero-list selected admission and preserves errors, tenant checks and blocked facts.",
+        "evidence": "文件aos_api/routers/ecommerce_workshop.py函数get_ecommerce_workshop_source_readiness_envelope与新增_require_visible_read_workshop_installation; 旧_nonempty legacy路径短路返回，非空时不构造selected; 零可见时按固定八module顺序调用get_installed_readiness且只捕获AssetNotFoundError继续，其余错误经_invoke失败关闭; 之后由EcommerceWorkshopSourceReadiness.read完成tenant mismatch检查并透传canonical envelope的sources/blockers。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "RED and 74 adjacent tests support this scoped code change without granting execution or business completion.",
+        "evidence": "证据包中GREEN显示74项全通过（test_ecommerce_source_read_visibility/test_ecommerce_workshop_read_catalog/test_ecommerce_workshop_read_http/test_ecommerce_workshop_api等）; CONSIDERATIONS明确业务完成=false且仅为只读可见性入口; test_read_dependency_only_reaches_explicit_audited_get_routes白名单只增source-readiness路由; test_installed_only_does_not_accept_legacy_success与test_installed_only_keeps_disabled_result_and_does_not_call_legacy验证legacy成功不可绕过installed-only且disabled状态保留。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前只读变更范围，等待父维护Task基于本次PASS更新最新只读API文档与依赖注册; 不推进live部署或任何POST/执行路径，直到独立budget/currentSource/newproducer条件再次评审通过。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

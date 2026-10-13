@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-source-read-visibility-exact-admission-20261013-plan-r3",
+    "task_id": "qyh-source-read-visibility-exact-admission-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "29d876a6eb87072ac8575d756a3fdf44e506b5c0",
+      "authority_revision": "AOS-002022",
+      "files": {
+        ".evidence/qyh-source-read-visibility-exact-admission-20261013/plan-review-package-r3.txt": "9609bde7d39e2139ab1aea57855ce05c6645d7d0252c4760c66ab0b7c18fe77e"
+      }
+    },
+    "verdict": "REWORK",
+    "findings": [
+      {
+        "claim": "The proposed PLAN reuses the exact installed-only grant checks without changing legacy admission.",
+        "evidence": "材料中 PROPOSED DIFF 显示在 ecommerce_workshop_read_catalog.py 新增 get_installed_readiness，并将原 get_readiness 的 legacy 成功分支后的 fallback 改为调用新方法：'return self.get_installed_readiness(**scope)'；同时方案说明‘把现有get_readiness的installed factory与原exactgrant/allowedblocker校验代码原样提取到此方法’。BASELINE 中 get_readiness 在 AssetNotFound 后直接展开 installed 校验逻辑，PROPOSED 将其移位进新方法。",
+        "assessment": "contradicted"
+      },
+      {
+        "claim": "The proposed PLAN scopes the new zero-list fallback to Source GET and preserves blocked facts and command gates.",
+        "evidence": "材料中 PROPOSED DIFF 对 routers/ecommerce_workshop.py 的 Source GET 端点注入 _require_visible_read_workshop_installation 并新增 read_catalog 依赖，且方案声称‘源服务/SourceReady判断/全部POST/其他GET不改，原blocked12保持’；测试计划声称‘actualcanonicalfacade 12blocked envelope unchanged’。但 PROPOSED DIFF 未包含 Source facade 当前实现以核对 blocked 保留机制，也未给出命令门（command gates）不变的任何行级证据，且方案正文与 diff 对命令端点是否受新 helper 影响表述不一致。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "修正 claim 1 的矛盾：在 plan-review-package-r3.txt 中明确说明 get_installed_readiness 为提取方法、原 get_readiness 不再重复执行 installed-only 校验，并附提取前后代码对照行号；同时提供 routers/ecommerce_workshop.py 命令端点依赖列表与 blocked 保留证据，或确认命令端点不受新 helper 影响的具体行引用。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

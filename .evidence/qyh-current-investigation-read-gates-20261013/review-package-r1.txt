@@ -1,0 +1,333 @@
+
+FILE plan.md
+# 当前生意探究只读运行门诊断及新首链前置
+Rules：AGENTS/AOS工程交付/231完整Goal/单m1writer/原650表只读/Host worker Provider OFF/unknown与旧12Run不重放。Authority2021；前端nullableReceipt兼容已准确Delivery，Web7590/code2bd，API1234/code6af，Case2/runs0+1/view200，原Run PREPARING/CANCELLED/0waves，stage-review409与SourceReadinessfailed保留。
+本Task仅证据/D-wave，不授代码/ACL/数据/恢复/重新执行权限。先审GET stage-review→review service projection/_runtime_source等完整read链及SourceReadiness服务/projection失败映射，再当前原正常OIDC/role只读核原绑定、签名字段/时间/健康/所需schema和错误原因，区分合理门/身份-plane/读取缺陷。保存metadata与cause，不输出私有数据/凭据；不改期望、补0成功、放宽receipt/root/generation/health条件。
+后继必须推进新受支持自然首链条件（Source/current producer/预算/实际批准/InstanceToolBinding等）而不是重放旧Run；任何修复先另精确文件Scope/方案/RED/相邻/真实/独立Prime/准确Delivery。原Goal安装完整生命周期/自然CaseRun至人审续跑/Wiki/八真实场景/观察发布全部保留。每日aos最新原卷全PG/API/Web义务不变，本波Web-only不替代。
+
+FILE read-audit.json
+{
+  "review": "projection\u2192_runtime_source:RunStore.get/CaseStore.get scoped SELECT/model checks;first currentCase revision/hash mismatch blocks RUN_CASE_REF_DRIFTED before receipt/projection/eval reads. Constructors only store factories/readers;no review_stage/transition calls",
+  "source": "facade read delegates canonical SourceReadiness.read;Postgres fact reader scoped REPEATABLE READ READ ONLY, only bounded pipeline/source/schedule/ingest/eval SELECT;schema/mapping/policy files local read only,missing refs remainblocked;no fetch source/fulfill/transport",
+  "httpVisibility": "source-readiness currently CatalogDependency and _require_visible_workshop_installation\u2192legacy list_modules count0\u2192404. ReadCatalogDependency does not currently support list_modules;cannot blindlyreplace annotation",
+  "noCodeChanges": true,
+  "businessComplete": false
+}
+
+FILE native-read-gates-r1.json
+{
+  "sourceHead": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+  "actualManagementIdentityReadonly": true,
+  "superuser": false,
+  "bypassRls": false,
+  "businessComplete": false,
+  "reviewObservations": [
+    {
+      "currentCaseRevision": 14,
+      "runCaseRefRevision": 9,
+      "caseHashMatches": false,
+      "lifecycle": "PREPARING",
+      "control": "CANCELLED",
+      "status": "BLOCKED",
+      "exceptionType": "BusinessInvestigationReviewCommandBlocked",
+      "blockedCode": "RUN_CASE_REF_DRIFTED"
+    }
+  ],
+  "canonicalSourceReadiness": {
+    "status": "blocked",
+    "sources": [
+      {
+        "pipelineId": "P01-shop-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P02-product-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P03-product-sku-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P04-category-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P05-order-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P06-order-line-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P07-shipment-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P08-customer-lite-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P09-weapp-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P10-system-config-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P11-product-review-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P12-payment-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      }
+    ]
+  }
+}
+
+FILE source-http-authenticated.json
+{
+  "authority": "AOS-002021",
+  "apiSource": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+  "prior401ExpiryConfirmed": true,
+  "auth": [
+    {
+      "path": "/api/v1/auth/token",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "status": 200
+    }
+  ],
+  "sourceReadinessHttp": [
+    {
+      "status": 404,
+      "code": "WORKSHOP_NOT_INSTALLED"
+    },
+    {
+      "status": 404,
+      "code": "WORKSHOP_NOT_INSTALLED"
+    }
+  ],
+  "loginSubmitOnce": true,
+  "noBusinessEffects": true,
+  "businessComplete": false
+}
+
+FILE root-cause.json
+{
+  "authority": "AOS-002021",
+  "stageReview": "expected exact gate:currentCase14 versus originalRunCaseRef9,hash mismatch,originalRunCancelled;do not rewrite ref or resume",
+  "sourceCanonical": "original normal management readonly identity succeeds,12 pipelines blocked,query capability absent/Schedule disabled/cron policy and source-ref mismatch",
+  "sourceHttp": "actual normalOIDC token/me200 then404 WORKSHOP_NOT_INSTALLED;legacy CatalogDependency/list_modules count0,not canonical reader failure",
+  "frontendFailed": "SourceReadinessContext maps404 into failed;not canonical readiness status",
+  "neededReadBridge": "ReadCatalog lacks list_modules;cannot blindly change only annotation. Need audited count0 legacy fallback→exact selected readonly catalog list,nonempty legacy preserved,all grant/hash/tenant checks retained",
+  "noCodeOrAclDataChanges": true,
+  "notSourceReadyOrBusinessComplete": true
+}
+
+ACTUAL SOURCE services/aos-api/aos_api/ecommerce_business_investigation_review_command.py:265
+def _runtime_source(
+        self, scope: TenantScope, run_id: str
+    ) -> tuple[BusinessInvestigationProjectionSource, str]:
+        run = self._runs.get(scope, run_id)
+        case = self._cases.get(scope, run.authority.case_ref.resource_id)
+        if (
+            case.revision != run.authority.case_ref.revision
+            or case.content_hash != run.authority.case_ref.content_hash
+        ):
+            raise BusinessInvestigationReviewCommandBlocked("RUN_CASE_REF_DRIFTED")
+        run_ref = InvestigationExactRef(
+            resource_type="BusinessInvestigationRun",
+            resource_id=run.authority.run_id,
+            revision=run.authority.version,
+            content_hash=run.authority.content_hash,
+        )
+        receipt = self._receipts.get_for_run(scope, run_ref)
+        source = self._projection.read(scope, run_id)
+        runtime = source.runtime
+        if (
+            runtime is None
+            or runtime.task_run_id is None
+            or runtime.task_run_version is None
+            or runtime.task_id != receipt.task_id
+            or runtime.plan_ref.resource_id != receipt.plan_ref.resource_id
+            or runtime.plan_ref.revision != receipt.plan_ref.revision
+            or runtime.plan_ref.content_hash != f"sha256:{receipt.plan_ref.content_hash}"
+        ):
+            raise BusinessInvestigationReviewCommandBlocked("RUNTIME_LINEAGE_DRIFTED")
+        return source, runtime.task_run_id
+ACTUAL SOURCE services/aos-api/aos_api/routers/ecommerce_workshop.py:1087
+def _require_visible_workshop_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    projection = _invoke(
+        lambda: catalog.list_modules(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+    if projection.count == 0:
+        raise ApiError(
+            code="WORKSHOP_NOT_INSTALLED",
+            message="No active ecommerce Workshop module is visible",
+            status_code=404,
+        )
+ACTUAL SOURCE services/aos-api/aos_api/routers/ecommerce_workshop.py:1350
+def get_ecommerce_workshop_source_readiness_envelope(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    source_readiness: SourceReadinessDependency,
+) -> SourceReadinessEnvelope:
+    _reject_query_parameters(request)
+    _require_visible_workshop_installation(principal=principal, catalog=catalog)
+    try:
+        return source_readiness.read(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+        )
+    except SourceReadinessTenantMismatchError as exc:
+        raise ApiError(
+            code="SOURCE_READINESS_TENANT_MISMATCH",
+            message="SourceReadiness dependency failed closed",
+            status_code=500,
+        ) from exc
+CURRENT READ CATALOG WHOLE SOURCE
+"""GET admission candidate over a current, signed, explicitly selected installation.
+
+This adapter does not activate HTTP routes or grant runtime readiness. Legacy
+admission is preserved; selected installed assets require actual exact scope grants.
+"""
+from __future__ import annotations
+
+from aos_api.asset_registry.errors import AssetNotFoundError
+from aos_api.ecommerce_workshop_contracts import WorkshopDependencyType
+
+
+class EcommerceWorkshopReadCatalog:
+    def __init__(self, *, legacy, installed=None, installed_factory=None) -> None:
+        self._legacy = legacy
+        self._installed = installed
+        self._installed_factory = installed_factory
+
+    def get_readiness(self, **scope):
+        try:
+            return self._legacy.get_readiness(**scope)
+        except AssetNotFoundError:
+            # Integrity, signature and availability errors never permit fallback.
+            pass
+        installed = (
+            self._installed_factory() if self._installed_factory is not None
+            else self._installed
+        )
+        result = installed.get_readiness(**scope)
+        item = result.item
+        installation = item.installation_ref
+        required = set(item.permissions.data_scopes)
+        expected_revision = (
+            f'installation:{installation.revision}/lock:{installation.lock_revision}'
+        )
+        granted = {
+            ref.resource_id for ref in item.dependency_refs
+            if ref.resource_type == 'DataScopeGrant'
+            and ref.revision == expected_revision
+            and ref.content_hash == installation.lock_hash
+            and ref.authority == 'postgres:bundle_composition_lock'
+        }
+        permitted_gap_types = {
+            WorkshopDependencyType.OBJECT,
+            WorkshopDependencyType.CAPABILITY,
+            WorkshopDependencyType.AIP_FEATURE,
+        }
+        disallowed = any(
+            blocker.dependency_type not in permitted_gap_types
+            and not (
+                blocker.dependency_type == WorkshopDependencyType.INSTALLATION
+                and blocker.reason_code == 'INSTALLED_ASSET_READONLY'
+                and blocker.dependency_id == installation.installation_id
+            )
+            for blocker in item.blockers
+        )
+        if 'ecommerce.workshop.read' not in required or not required <= granted or disallowed:
+            raise AssetNotFoundError('Workshop module is not installed for scoped reading')
+        # Keep the original disabled state and every runtime/authority gap intact.
+        return result

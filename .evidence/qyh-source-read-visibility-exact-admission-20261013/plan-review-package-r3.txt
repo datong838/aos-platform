@@ -1,0 +1,338 @@
+THIS IS PRE-CODING PLAN REVIEW ONLY. NO CLAIM OF IMPLEMENTED CODE OR GREEN TESTS. Current files are BASELINE and expected NOT to contain new methods. Review concrete proposed diff below for design correctness. Prior REWORK requested proposed implementations; supplied here as proposal only. Do not require RED/GREEN/live before approving PLAN; those are subsequent mandatory gates.
+# SourceReadiness只读可见性与新自然首链前置
+Rules：用户AGENTS/AOS工程交付/231完整Goal/唯一m1writer/先方案独立评审及RED后最小编码/原650表READONLY/Host worker Provider OFF/旧Run和未知操作不重放。Authority2022；诊断PASS仅确诊：旧RunCaseRef9不匹配当前Case14/hash，409正确；原canonicalSourceReadiness可读12blocked，真实HTTP404是legacy可见性0，不能强置ready。
+具体方案：保留旧_require_visible_workshop_installation供所有原端点。Source GET新增专门只读可见性helper及read_catalog依赖，旧catalog.list_modules非空原样允许；旧list错误不捕获绕过；只有明确零可见时逐个原八module调用既有ReadCatalog.get_readiness，借用其真实selected ACTIVE/角色/tenant/signed hash/exact DataScopeGrant约束，至少一合法read admission才允许原canonical reader。AssetNotFound只说明该模块不可读；全部不可读仍404，integrity/signature/availability等错误原样失败。不是借readonlycatalog.list_modules直接计数，不新增或复制grant/authority校验，不把ReadCatalog当不存在的list_modules接口。源服务/SourceReady判断/全部POST/其他GET不改，原blocked12保持。
+文件计划：routers/ecommerce_workshop.py新helper及Source唯一GET依赖，test_ecommerce_workshop_read_http.py明确白名单增此GET，新test_ecommerce_source_read_visibility.py验证旧非空行为不触发selected、旧零才exactread、全deny/错误传播/tenant/unknownQuery/source调用边界。不改readCatalog原安全谓词、不改backendSource facts/策略/Schedules/ACL/数据。
+步骤：复习SourceReadiness产品技术合同与factory/read完整audit→冻结独立planreview→RED→最小实现/相邻/原角色canonical12blocked→codePASS合法消费后父维护Task仅最新只读API更新→真实OIDCHTTP200/block12、页面failed转换为真实blocked而非ready、原650保持→livePrime/scopedDelivery/Authority+AOS/Prime同步→独立budget/currentSource/newproducer条件，不恢复旧取消Run。
+风险：global visibility不能从任意无grant目录count提升权限；非空legacy保持原合同；only exact read of sameprincipal scope允许，任何错误不得变可信空或成功。桥接仅可读不授新自然Case/Run/能力调用/人工审批/Wiki/观察发布；完整Goal不缩小。部署仍本机readonly，PASS不当生产或执行授权，controller须assert verdict/消费status/canonicalSHA。
+
+## 方案修订：零可见必须选定安装路径
+原计划发现legacy list0与get_readiness成功可能不一致，不能让既有legacy-first方法授权这个零列表路径。新增ReadCatalog.get_installed_readiness(**scope)，把现有get_readiness的installed factory与原exactgrant/allowedblocker校验代码原样提取到此方法；既有get_readiness只在原AssetNotFound后调用新方法，所有原legacy成功/错误语义不变。专用Source helper只有旧listcount0时调用get_installed_readiness，原八module按固定顺序，首个合法只读入场返回；只捕获AssetNotFound，其他错误经原_invoke失败关闭。此入口不新增/复制权限判据。
+具体新增文件范围：services/aos-api/aos_api/ecommerce_workshop_read_catalog.py（原安全谓词逐字移位），services/aos-api/tests/test_ecommerce_workshop_read_catalog.py（legacy成功也不能绕过installed-only），services/aos-api/tests/test_ecommerce_workshop_api.py（原EmptyCatalog无安装fixture显式覆盖read目录deny，保持真实404而非依赖不一致fake）。加上原router/read_http/newsourcevisibility tests。
+验证必须用真实既有installed catalog fixture测试DataScope缺失、lock hash/rev/authority错、role/marking/tenant/revocation/corrupt拒绝；HTTP新入口用原canonical facade维持12blocked，unknownquery拒绝前不读catalog/source，zero全deny不读source，旧列表错误不读selected，selected错误不能continue后续成功，其他路由不新增dependency。
+本波rollback仅恢复自己的router/catalog代码并只切换自有API；不改数据或permission。独立plan PASS之前不编码；code/live PASS不当Source ready或执行授权。
+
+PROPOSED DIFF, NOT APPLIED
+--- services/aos-api/aos_api/ecommerce_workshop_read_catalog.py
++++ services/aos-api/aos_api/ecommerce_workshop_read_catalog.py
+@@ -21,6 +21,10 @@
+         except AssetNotFoundError:
+             # Integrity, signature and availability errors never permit fallback.
+             pass
++        return self.get_installed_readiness(**scope)
++
++    def get_installed_readiness(self, **scope):
++        """Check only the selected installation with the existing exact read gate."""
+         installed = (
+             self._installed_factory() if self._installed_factory is not None
+             else self._installed
+--- services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ services/aos-api/aos_api/routers/ecommerce_workshop.py
+@@ -10,7 +10,7 @@
+ from fastapi import APIRouter, Depends, Header, Path, Query, Request, Security
+ from fastapi.security import HTTPBearer
+ 
+-from aos_api.asset_registry.errors import AssetRegistryError
++from aos_api.asset_registry.errors import AssetNotFoundError, AssetRegistryError
+ from aos_api.auth import Principal, require_principal
+ from aos_api.ecommerce_workshop_read_catalog import EcommerceWorkshopReadCatalog
+ from aos_api.ecommerce_workshop_catalog import (
+@@ -1084,6 +1084,38 @@
+     checks[module](principal=principal, catalog=catalog)
+ 
+ 
++def _require_visible_read_workshop_installation(
++    *, principal: Principal, catalog: EcommerceWorkshopCatalog,
++    read_catalog: EcommerceWorkshopReadCatalog,
++) -> None:
++    projection = _invoke(lambda: catalog.list_modules(
++        org_id=principal.org_id, project_id=principal.project_id,
++        roles=principal.roles, markings=principal.markings,
++    ))
++    if projection.count != 0:
++        return
++    def selected_admission():
++        for module in (
++            "task-cockpit", "operations", "content-campaign", "creator-growth",
++            "media-studio", "analyst", "price-governance", "customer",
++        ):
++            try:
++                read_catalog.get_installed_readiness(
++                    module_id=f"ecommerce.{module}",
++                    org_id=principal.org_id, project_id=principal.project_id,
++                    roles=principal.roles, markings=principal.markings,
++                )
++                return
++            except AssetNotFoundError:
++                continue
++        raise ApiError(
++            code="WORKSHOP_NOT_INSTALLED",
++            message="No active ecommerce Workshop module is visible",
++            status_code=404,
++        )
++    _invoke(selected_admission)
++
++
+ def _require_visible_workshop_installation(
+     *, principal: Principal, catalog: EcommerceWorkshopCatalog
+ ) -> None:
+@@ -1351,10 +1383,13 @@
+     request: Request,
+     principal: PrincipalDependency,
+     catalog: CatalogDependency,
++    read_catalog: ReadCatalogDependency,
+     source_readiness: SourceReadinessDependency,
+ ) -> SourceReadinessEnvelope:
+     _reject_query_parameters(request)
+-    _require_visible_workshop_installation(principal=principal, catalog=catalog)
++    _require_visible_read_workshop_installation(
++        principal=principal, catalog=catalog, read_catalog=read_catalog
++    )
+     try:
+         return source_readiness.read(
+             org_id=principal.org_id,
+
+BASELINE ENTIRE READCATALOG
+"""GET admission candidate over a current, signed, explicitly selected installation.
+
+This adapter does not activate HTTP routes or grant runtime readiness. Legacy
+admission is preserved; selected installed assets require actual exact scope grants.
+"""
+from __future__ import annotations
+
+from aos_api.asset_registry.errors import AssetNotFoundError
+from aos_api.ecommerce_workshop_contracts import WorkshopDependencyType
+
+
+class EcommerceWorkshopReadCatalog:
+    def __init__(self, *, legacy, installed=None, installed_factory=None) -> None:
+        self._legacy = legacy
+        self._installed = installed
+        self._installed_factory = installed_factory
+
+    def get_readiness(self, **scope):
+        try:
+            return self._legacy.get_readiness(**scope)
+        except AssetNotFoundError:
+            # Integrity, signature and availability errors never permit fallback.
+            pass
+        installed = (
+            self._installed_factory() if self._installed_factory is not None
+            else self._installed
+        )
+        result = installed.get_readiness(**scope)
+        item = result.item
+        installation = item.installation_ref
+        required = set(item.permissions.data_scopes)
+        expected_revision = (
+            f'installation:{installation.revision}/lock:{installation.lock_revision}'
+        )
+        granted = {
+            ref.resource_id for ref in item.dependency_refs
+            if ref.resource_type == 'DataScopeGrant'
+            and ref.revision == expected_revision
+            and ref.content_hash == installation.lock_hash
+            and ref.authority == 'postgres:bundle_composition_lock'
+        }
+        permitted_gap_types = {
+            WorkshopDependencyType.OBJECT,
+            WorkshopDependencyType.CAPABILITY,
+            WorkshopDependencyType.AIP_FEATURE,
+        }
+        disallowed = any(
+            blocker.dependency_type not in permitted_gap_types
+            and not (
+                blocker.dependency_type == WorkshopDependencyType.INSTALLATION
+                and blocker.reason_code == 'INSTALLED_ASSET_READONLY'
+                and blocker.dependency_id == installation.installation_id
+            )
+            for blocker in item.blockers
+        )
+        if 'ecommerce.workshop.read' not in required or not required <= granted or disallowed:
+            raise AssetNotFoundError('Workshop module is not installed for scoped reading')
+        # Keep the original disabled state and every runtime/authority gap intact.
+        return result
+
+BASELINE SOURCE FACADE
+"""Fail-closed Workshop facade over canonical SourceReadiness.
+
+This adapter owns no readiness facts.  It delegates one principal-scoped read
+to the Data/Adapter owner and rejects any tenant drift in the returned
+envelope.
+"""
+
+from __future__ import annotations
+
+from typing import Protocol
+
+from aos_api.source_readiness_contracts import SourceReadinessEnvelope
+
+
+class CanonicalSourceReadinessReader(Protocol):
+    def read(self, *, org_id: str, project_id: str) -> SourceReadinessEnvelope: ...
+
+
+class SourceReadinessTenantMismatchError(RuntimeError):
+    """The canonical reader returned facts for a different tenant."""
+
+
+class EcommerceWorkshopSourceReadiness:
+    """Expose canonical readiness without persisting or reclassifying it."""
+
+    def __init__(self, reader: CanonicalSourceReadinessReader) -> None:
+        self._reader = reader
+
+    def read(self, *, org_id: str, project_id: str) -> SourceReadinessEnvelope:
+        envelope = self._reader.read(org_id=org_id, project_id=project_id)
+        if (
+            envelope.tenant.org_id != org_id
+            or envelope.tenant.project_id != project_id
+        ):
+            raise SourceReadinessTenantMismatchError(
+                "canonical SourceReadiness tenant does not match principal scope"
+            )
+        return envelope
+
+READ-SCOPE WHITELIST BASELINE
+"""HTTP scope fence: only explicitly audited GETs use installed read admission."""
+from __future__ import annotations
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from aos_api.asset_registry.errors import AssetNotFoundError
+from aos_api.auth import Principal, require_principal
+from aos_api.errors import register_exception_handlers
+from aos_api.routers import ecommerce_workshop as routes
+
+ROOTS = {
+    'task-cockpit', 'operations', 'content-campaign', 'creator-growth',
+    'media-studio', 'analyst', 'price-governance', 'customer',
+}
+
+
+class RejectingCatalog:
+    def __init__(self):
+        self.calls = []
+
+    def get_readiness(self, **scope):
+        self.calls.append(scope)
+        raise AssetNotFoundError('not installed in current scoped catalog')
+
+
+def client_with_catalogs():
+    app = FastAPI()
+    register_exception_handlers(app)
+    app.include_router(routes.router)
+    legacy, reader = RejectingCatalog(), RejectingCatalog()
+    app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+    app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+    app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='scope-test', org_id='org-org', project_id='dev-project',
+        roles=['admin'], markings=[],
+    )
+    return TestClient(app), legacy, reader
+
+
+@pytest.mark.parametrize('module', sorted(ROOTS))
+def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+    client, legacy, reader = client_with_catalogs()
+    response = client.get(f'/v1/ecommerce-workshop/views/{module}')
+    assert response.status_code == 404
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+    assert reader.calls[0] == dict(module_id=f'ecommerce.{module}',
+        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+
+
+@pytest.mark.parametrize('path', [
+    '/views/customer/contributions', '/views/creator-growth/contributions',
+    '/modules/ecommerce.operations/readiness',
+])
+def test_unreviewed_get_still_uses_legacy_admission(path):
+    client, legacy, reader = client_with_catalogs()
+    response = client.get('/v1/ecommerce-workshop' + path)
+    assert response.status_code == 404
+    assert legacy.calls
+    assert not reader.calls
+
+
+def test_read_dependency_only_reaches_explicit_audited_get_routes():
+    actual = set()
+    for route in routes.router.routes:
+        uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                        for d in route.dependant.dependencies)
+        if uses_read:
+            assert route.methods == {'GET'}
+            actual.add(route.path)
+    assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+        '/v1/ecommerce-workshop/views/operations/cases',
+        '/v1/ecommerce-workshop/commands/operations/readiness',
+        '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+        '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+        '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+        '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+    }
+
+
+def test_unknown_query_rejected_before_catalog_call():
+    client, legacy, reader = client_with_catalogs()
+    assert client.get('/v1/ecommerce-workshop/views/operations?orgId=dev-org').status_code == 400
+    assert not legacy.calls and not reader.calls
+
+
+class ReadReached(RuntimeError):
+    pass
+
+
+@pytest.mark.parametrize('module', sorted(ROOTS))
+def test_admitted_root_reaches_reader_with_authenticated_tenant(module):
+    client, legacy, reader = client_with_catalogs()
+    def admit(**scope):
+        reader.calls.append(scope)
+    reader.get_readiness = admit
+    factory = getattr(routes, 'get_ecommerce_workshop_' + module.replace('-', '_'))
+    class ProbeReader:
+        def read(self, **scope):
+            assert scope['org_id'] == 'org-org'
+            assert scope['project_id'] == 'dev-project'
+            raise ReadReached(module)
+        read_core = read
+    client.app.dependency_overrides[factory] = lambda: ProbeReader()
+    with pytest.raises(ReadReached, match=module):
+        client.get('/v1/ecommerce-workshop/views/' + module)
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+
+
+def test_legacy_success_does_not_build_installed_configuration(monkeypatch):
+    from aos_api import ecommerce_installed_readonly_catalog as installed
+    sentinel = object()
+    class Legacy:
+        def get_readiness(self, **scope):
+            return sentinel
+    def forbidden():
+        pytest.fail('successful legacy must not inspect selected configuration')
+    monkeypatch.setattr(installed, 'build_installed_readonly_catalog', forbidden)
+    catalog = routes.get_ecommerce_workshop_read_catalog(Legacy())
+    assert catalog.get_readiness(module_id='ecommerce.operations') is sentinel
+
+
+def test_installed_factory_is_deferred_until_legacy_not_found(monkeypatch):
+    from aos_api import ecommerce_installed_readonly_catalog as installed
+    calls = []
+    def selected():
+        calls.append('selected')
+        raise ValueError('configuration sentinel')
+    monkeypatch.setattr(installed, 'build_installed_readonly_catalog', selected)
+    catalog = routes.get_ecommerce_workshop_read_catalog(RejectingCatalog())
+    assert not calls
+    with pytest.raises(ValueError, match='configuration sentinel'):
+        catalog.get_readiness(module_id='ecommerce.operations')
+    assert calls == ['selected']
+
+PRODUCT CONTRACT:canonical Data/Adapter owns SourceReadiness; Workshop no secondSource/SQL; blocked remains blocked. SourceReadiness service/fact reader all unchanged; server management POST405 and Host/worker/Provider OFF untouched. Run CASE14-vs9 expectedgate not altered. No implementation/execution authority implied by PLAN PASS.
+TEST PLAN: actual signed installed fixture grants exactrev/hash/authority,missinggrant,tenant,roles,revocation,corrupterror; legacy-list0/legacy-getsuccess must still fail if selected absent; count1 must not callselected; selected denied first module then later admissible; othererrors muststop withoutsource;unknownquery beforecatalog;actualcanonicalfacade 12blocked envelope unchanged and tenantdrift500;originalall16GET whitelist only adds sourceGET.

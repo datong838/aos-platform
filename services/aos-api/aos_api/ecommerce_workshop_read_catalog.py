@@ -21,6 +21,10 @@ class EcommerceWorkshopReadCatalog:
         except AssetNotFoundError:
             # Integrity, signature and availability errors never permit fallback.
             pass
+        return self.get_installed_readiness(**scope)
+
+    def get_installed_readiness(self, **scope):
+        """Check only the selected installation with the existing exact read gate."""
         installed = (
             self._installed_factory() if self._installed_factory is not None
             else self._installed

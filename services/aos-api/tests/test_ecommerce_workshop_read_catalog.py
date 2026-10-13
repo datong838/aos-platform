@@ -93,3 +93,20 @@ def test_metadata_projection_with_registry_blocker_cannot_open_business_read():
     blocker = WorkshopReadinessBlocker(dependencyType='registry', dependencyId='bundle', state='blocked', reasonCode='REGISTRY_REVOKED', recoverable=False, requiredAction='Current registration required')
     c._installed = SimpleNamespace(get_readiness=lambda **kw: result.model_copy(update={'item':result.item.model_copy(update={'blockers':[*result.item.blockers,blocker]})}))
     with pytest.raises(AssetNotFoundError): c.get_readiness(**ARGS)
+
+
+def test_installed_only_does_not_accept_legacy_success():
+    c, _ = make(granted=False)
+    c._legacy = SimpleNamespace(get_readiness=lambda **kw: object())
+    with pytest.raises(AssetNotFoundError):
+        c.get_installed_readiness(**ARGS)
+
+
+def test_installed_only_keeps_disabled_result_and_does_not_call_legacy():
+    c, source = make()
+    def forbidden(**kw):
+        pytest.fail('installed-only entry must not consult legacy readiness')
+    c._legacy = SimpleNamespace(get_readiness=forbidden)
+    result = c.get_installed_readiness(**ARGS)
+    assert result.item.readiness.value == 'disabled'
+    assert len(source.calls) == 1

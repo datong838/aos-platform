@@ -1,0 +1,29 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-source-read-visibility-exact-admission-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002022",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_source_read_visibility.py",
+    "aos-platform/.evidence/qyh-source-read-visibility-exact-admission-20261013",
+    "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md",
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_read_catalog.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_catalog.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_api.py"
+  ],
+  "excluded_scope": [
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+    "aos-platform/.evidence/qyh-full-system-restoration-20261011",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Installed-only read facade entry factoring unchanged exactgrant predicate;legacy successful zero-list cannot bypass selected gate",
+    "Plan/code/live independent strictPASS consumed;RED+adjacent+original readonlyOIDC/source12blocked/650 unchanged;all commands/Source facts/schedules/oldRuns intact"
+  ],
+  "lease_expires_at": "2026-10-13T17:47:30.453665+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-13T22:47:30+08:00"
+}

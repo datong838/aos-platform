@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-investigation-read-gates-20261013-r1",
+    "task_id": "qyh-current-investigation-read-gates-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "29d876a6eb87072ac8575d756a3fdf44e506b5c0",
+      "authority_revision": "AOS-002021",
+      "files": {
+        ".evidence/qyh-current-investigation-read-gates-20261013/review-package-r1.txt": "6f9b4de9551629db394e16b5b180a5feabe19ef094cf84f027d480602381cd73"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "原普通管理身份只读核到Case当前r14与原Run绑定r9且hash不一致，stageReview原门RUN_CASE_REF_DRIFTED正确阻断，原PREPARING/CANCELLED保留；没有恢复、改引用或重放任何旧Run。",
+        "evidence": "review-package-r1.txt: read-audit.json claims RunStore.get/CaseStore.get scoped SELECT/model checks with case.revision != run.authority.case_ref.revision blocks RUN_CASE_REF_DRIFTED; native-read-gates-r1.json asserts actualManagementIdentityReadonly=true, superuser=false, bypassRls=false, currentCaseRevision=14, runCaseRefRevision=9, caseHashMatches=false, lifecycle=PREPARING, control=CANCELLED, blockedCode=RUN_CASE_REF_DRIFTED; plan.md states StageReview409 and SourceReadiness failed preserved, original Run PREPARING/CANCELLED/0waves preserved, unknown and old 12 runs not replayed",
+        "assessment": "supported"
+      },
+      {
+        "claim": "canonical SourceReadiness可真实只读返回12管线blocked及原门，正常OIDC HTTP却404 WORKSHOP_NOT_INSTALLED，当前旧目录可见性list_modules零导致frontend failed。ReadCatalog没有list_modules，不能直接仅改参数；诊断未改代码/ACL/数据/Source门，不声称ready或经营完成。",
+        "evidence": "review-package-r1.txt: read-audit.json states facade read delegates canonical SourceReadiness.read with schema/mapping/policy files local read only, no fetch source/fulfill/transport, and httpVisibility lists legacy list_modules count0->404 while ReadCatalogDependency does not currently support list_modules; native-read-gates-r1.json canonicalSourceReadiness status=blocked with 12 pipelines (P01-P12) each having blockers QUERY_CAPABILITY_REF_MISSING, SCHEDULE_CRON_POLICY_MISMATCH, SCHEDULE_DISABLED, SCHEDULE_SOURCE_REF_MISMATCH; source-http-authenticated.json shows OIDC /api/v1/auth/token and /api/v1/me return 200 but sourceReadinessHttp returns 404 WORKSHOP_NOT_INSTALLED twice; root-cause.json states legacy CatalogDependency/list_modules count0, not canonical reader failure, frontend Failed maps 404 into failed, neededReadBridge requires auditing count0 fallback, noCodeOrAclDataChanges=true, notSourceReadyOrBusinessComplete=true; actual source for ecommerce_workshop.py:1087 _require_visible_workshop_installation and :1350 get_ecommerce_workshop_source_readiness_envelope confirm catalog.list_modules guard before source_readiness.read; EcommerceWorkshopReadCatalog source confirms no list_modules method and preserves disabled state/blockers",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留原 gate 阻断与 404，推进新首链评估：基于 root-cause.json 审计 legacy list_modules=0 的只读目录桥接方案（非空 legacy 保留、grant/hash/tenant 检查保留），在不修改代码/ACL/数据/Source 门的前提下，明确新受支持的自然首链条件（InstanceToolBinding/预算/实际批准）并获取独立 Prime 评审。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

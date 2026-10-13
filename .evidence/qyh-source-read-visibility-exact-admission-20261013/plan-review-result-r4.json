@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-source-read-visibility-exact-admission-20261013-plan-r4",
+    "task_id": "qyh-source-read-visibility-exact-admission-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "29d876a6eb87072ac8575d756a3fdf44e506b5c0",
+      "authority_revision": "AOS-002022",
+      "files": {
+        ".evidence/qyh-source-read-visibility-exact-admission-20261013/plan-review-package-r4.txt": "11e5b92ef5190b6396d7faee2e0c7d20d8e5f1ee4575178f7a0429f1be6442fa"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The plan extracts the existing installed validation into one method and preserves legacy success and error behavior.",
+        "evidence": "proposal in plan-review-package-r4.txt: `get_installed_readiness` is introduced in `ecommerce_workshop_read_catalog.py`; its body begins with the original `installed = (...)` pattern and applies the existing exact grant/authority/lock checks. Existing `get_readiness` retains its `try/except AssetNotFoundError` legacy path and calls the new method only after legacy raises `AssetNotFoundError`. No new permission predicates are added.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The plan changes admission only for Source GET, retaining canonical blocked facts and all other endpoint dependencies.",
+        "evidence": "proposal in plan-review-package-r4.txt: diff adds `read_catalog` dependency only to `get_ecommerce_workshop_source_readiness_envelope`, replaces `_require_visible_workshop_installation` with `_require_visible_read_workshop_installation` there, and lists 112 baseline endpoints explicitly as unchanged. Document also states that Source facade, POST routes, canonical 12blocked facts, and non-source dependencies are retained.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "run the proposed RED gate by loading baseline `ecommerce_workshop_read_catalog` and `ecommerce_workshop` fixtures, assert only `get_ecommerce_workshop_source_readiness_envelope` picks up `ReadCatalogDependency`, then verify a zero-list/selected-deny Source GET returns 404 while canonical 12blocked envelope and all non-source GET AST hashes remain unchanged."
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

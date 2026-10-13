@@ -1,0 +1,10 @@
+{
+  "authority": "AOS-002021",
+  "stageReview": "expected exact gate:currentCase14 versus originalRunCaseRef9,hash mismatch,originalRunCancelled;do not rewrite ref or resume",
+  "sourceCanonical": "original normal management readonly identity succeeds,12 pipelines blocked,query capability absent/Schedule disabled/cron policy and source-ref mismatch",
+  "sourceHttp": "actual normalOIDC token/me200 then404 WORKSHOP_NOT_INSTALLED;legacy CatalogDependency/list_modules count0,not canonical reader failure",
+  "frontendFailed": "SourceReadinessContext maps404 into failed;not canonical readiness status",
+  "neededReadBridge": "ReadCatalog lacks list_modules;cannot blindly change only annotation. Need audited count0 legacy fallback→exact selected readonly catalog list,nonempty legacy preserved,all grant/hash/tenant checks retained",
+  "noCodeOrAclDataChanges": true,
+  "notSourceReadyOrBusinessComplete": true
+}

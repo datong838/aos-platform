@@ -1,0 +1,28 @@
+{
+  "authority": "AOS-002021",
+  "apiSource": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+  "prior401ExpiryConfirmed": true,
+  "auth": [
+    {
+      "path": "/api/v1/auth/token",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "status": 200
+    }
+  ],
+  "sourceReadinessHttp": [
+    {
+      "status": 404,
+      "code": "WORKSHOP_NOT_INSTALLED"
+    },
+    {
+      "status": 404,
+      "code": "WORKSHOP_NOT_INSTALLED"
+    }
+  ],
+  "loginSubmitOnce": true,
+  "noBusinessEffects": true,
+  "businessComplete": false
+}

@@ -10,7 +10,7 @@ from typing import Annotated, Literal, TypeVar
 from fastapi import APIRouter, Depends, Header, Path, Query, Request, Security
 from fastapi.security import HTTPBearer
 
-from aos_api.asset_registry.errors import AssetRegistryError
+from aos_api.asset_registry.errors import AssetNotFoundError, AssetRegistryError
 from aos_api.auth import Principal, require_principal
 from aos_api.ecommerce_workshop_read_catalog import EcommerceWorkshopReadCatalog
 from aos_api.ecommerce_workshop_catalog import (
@@ -1084,6 +1084,38 @@ def _require_three_module_installation(
     checks[module](principal=principal, catalog=catalog)
 
 
+def _require_visible_read_workshop_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog,
+    read_catalog: EcommerceWorkshopReadCatalog,
+) -> None:
+    projection = _invoke(lambda: catalog.list_modules(
+        org_id=principal.org_id, project_id=principal.project_id,
+        roles=principal.roles, markings=principal.markings,
+    ))
+    if projection.count != 0:
+        return
+    def selected_admission():
+        for module in (
+            "task-cockpit", "operations", "content-campaign", "creator-growth",
+            "media-studio", "analyst", "price-governance", "customer",
+        ):
+            try:
+                read_catalog.get_installed_readiness(
+                    module_id=f"ecommerce.{module}",
+                    org_id=principal.org_id, project_id=principal.project_id,
+                    roles=principal.roles, markings=principal.markings,
+                )
+                return
+            except AssetNotFoundError:
+                continue
+        raise ApiError(
+            code="WORKSHOP_NOT_INSTALLED",
+            message="No active ecommerce Workshop module is visible",
+            status_code=404,
+        )
+    _invoke(selected_admission)
+
+
 def _require_visible_workshop_installation(
     *, principal: Principal, catalog: EcommerceWorkshopCatalog
 ) -> None:
@@ -1351,10 +1383,13 @@ def get_ecommerce_workshop_source_readiness_envelope(
     request: Request,
     principal: PrincipalDependency,
     catalog: CatalogDependency,
+    read_catalog: ReadCatalogDependency,
     source_readiness: SourceReadinessDependency,
 ) -> SourceReadinessEnvelope:
     _reject_query_parameters(request)
-    _require_visible_workshop_installation(principal=principal, catalog=catalog)
+    _require_visible_read_workshop_installation(
+        principal=principal, catalog=catalog, read_catalog=read_catalog
+    )
     try:
         return source_readiness.read(
             org_id=principal.org_id,

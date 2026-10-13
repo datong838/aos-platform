@@ -1,0 +1,144 @@
+{
+  "sourceHead": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+  "actualManagementIdentityReadonly": true,
+  "superuser": false,
+  "bypassRls": false,
+  "businessComplete": false,
+  "reviewObservations": [
+    {
+      "currentCaseRevision": 14,
+      "runCaseRefRevision": 9,
+      "caseHashMatches": false,
+      "lifecycle": "PREPARING",
+      "control": "CANCELLED",
+      "status": "BLOCKED",
+      "exceptionType": "BusinessInvestigationReviewCommandBlocked",
+      "blockedCode": "RUN_CASE_REF_DRIFTED"
+    }
+  ],
+  "canonicalSourceReadiness": {
+    "status": "blocked",
+    "sources": [
+      {
+        "pipelineId": "P01-shop-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P02-product-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P03-product-sku-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P04-category-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P05-order-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P06-order-line-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P07-shipment-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P08-customer-lite-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P09-weapp-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P10-system-config-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P11-product-review-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      },
+      {
+        "pipelineId": "P12-payment-qyh",
+        "status": "blocked",
+        "blockers": [
+          "QUERY_CAPABILITY_REF_MISSING",
+          "SCHEDULE_CRON_POLICY_MISMATCH",
+          "SCHEDULE_DISABLED",
+          "SCHEDULE_SOURCE_REF_MISMATCH"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-source-read-visibility-exact-admission-20261013-plan-r4",
+  "task_id": "qyh-source-read-visibility-exact-admission-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "29d876a6eb87072ac8575d756a3fdf44e506b5c0",
+    "authority_revision": "AOS-002022",
+    "files": {
+      ".evidence/qyh-source-read-visibility-exact-admission-20261013/plan-review-package-r4.txt": "11e5b92ef5190b6396d7faee2e0c7d20d8e5f1ee4575178f7a0429f1be6442fa"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "18dfcfd03d5223d5d06726ecce52dedf6021c18bcf4d712be7347d88ef04dbf8",
+  "transport_sha256": "99cd1dce72427b7b367e637a0ebb820edfb46580f89bb8cdc3ee2aaabe6b47a1"
+}

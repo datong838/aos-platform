@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-current-investigation-read-gates-20261013-r1",
+  "task_id": "qyh-current-investigation-read-gates-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "29d876a6eb87072ac8575d756a3fdf44e506b5c0",
+    "authority_revision": "AOS-002021",
+    "files": {
+      ".evidence/qyh-current-investigation-read-gates-20261013/review-package-r1.txt": "6f9b4de9551629db394e16b5b180a5feabe19ef094cf84f027d480602381cd73"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "39e3c6c2dc8eabe47046711957723a90d27c68c2def0ac644745d175e1e2f212",
+  "transport_sha256": "f2361f4139b4ebb6da511c3a0a29e80ad6d34f182966a3f062b6bd3e0accd96c"
+}

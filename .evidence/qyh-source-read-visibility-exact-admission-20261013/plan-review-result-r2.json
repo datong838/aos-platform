@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-source-read-visibility-exact-admission-20261013-plan-r2",
+    "task_id": "qyh-source-read-visibility-exact-admission-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "29d876a6eb87072ac8575d756a3fdf44e506b5c0",
+      "authority_revision": "AOS-002022",
+      "files": {
+        ".evidence/qyh-source-read-visibility-exact-admission-20261013/plan-review-package-r1.txt": "ccb79a1d6fb081217689e2747d855c7bf937079e133affb1ff3883dae64c5979"
+      }
+    },
+    "verdict": "REWORK",
+    "findings": [
+      {
+        "claim": "Installed-only admission reuses unchanged exact grant checks.",
+        "evidence": "材料中FILE services/aos-api/aos_api/ecommerce_workshop_read_catalog.py展示了get_readiness实现：当legacy抛出AssetNotFoundError时，fallback到installed路径。代码片段显示检查required data_scopes、expected_revision、granted refs的content_hash和authority，以及disallowed blockers判断。然而，方案中提到'把现有get_readiness的installed factory与原exactgrant/allowedblocker校验代码原样提取到此方法'，但提供的代码展示的是完整方法体而非分离的方法调用。材料未提供'原'方法的确切内容以验证'原样提取'。此外，PLAN提到'专用Source helper只有旧listcount0时调用get_installed_readiness'，但代码文件中未见get_installed_readiness方法定义，仅有get_readiness一个方法。这存在不一致：声称提取新方法但未在代码中体现独立方法。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "Nonempty legacy behavior is preserved; zero uses selected admission only.",
+        "evidence": "材料中ROUTER 1087显示_require_visible_workshop_installation函数保留旧逻辑，检查catalog.list_modules count。新GET端点（ROUTER 1343附近）包含_require_visible_workshop_installation调用。方案声称'旧catalog.list_modules非空原样允许；旧list错误不捕获绕过；只有明确零可见时逐个原八module调用既有ReadCatalog.get_readiness'。代码中_source_readiness端点确实先调用_require_visible_workshop_installation，如果count非零则继续，零则抛出404。然而，材料未展示Source helper的完整实现，特别是'逐个原八module调用'逻辑。test_ecommerce_workshop_read_catalog.py中test_legacy_success_is_preserved_without_reading_candidate测试表明legacy成功直接返回，不读installed。但'零可见时'的具体路由逻辑未在提供的代码片段中完整展示。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "Source facts, blocked states, tenant checks and command gates remain unchanged.",
+        "evidence": "材料PLAN声称'源服务/SourceReady判断/全部POST/其他GET不改，原blocked12保持'。代码片段显示SourceReadinessTenantMismatchError定义和reader.read调用中的tenant检查。然而，'命令门控'指代不明。材料未提供'command gates'的明确定义或证据。此外，blocked states指'原canonical12blocked'，但未展示这些blocked状态如何保持。tenant checks在_source_readiness端点中有实现，但未验证是否'保持不变'相对于基线。材料缺少对原有command gates和blocked states的引用比较。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "补充提供原 ecommerce_workshop_read_catalog.py 中 get_readiness 方法的完整代码（作为基线对比），以及新定义的 get_installed_readiness 方法代码片段，以验证提取是否原样完成；同时提供 Source helper 的完整实现代码，展示零可见时逐个 module 调用的逻辑；提供 command gates 的定义及保持不变的证据。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

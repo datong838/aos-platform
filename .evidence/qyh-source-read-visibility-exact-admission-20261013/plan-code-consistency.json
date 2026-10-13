@@ -1,0 +1,13 @@
+{
+  "installedPredicateTailExact": true,
+  "predicateSha256": "0623d932facbaec3a124e019c2d9f2d21d6734c1d86d7eb15090e38f0cfe9aa2",
+  "onlyChangedExistingRouterFunction": [
+    "get_ecommerce_workshop_source_readiness_envelope"
+  ],
+  "onlyAddedRouterFunction": [
+    "_require_visible_read_workshop_installation"
+  ],
+  "unchangedRouterFunctionCount": 161,
+  "noSourceServiceChanges": true,
+  "businessComplete": false
+}

@@ -1,0 +1,7 @@
+{
+  "review": "projection\u2192_runtime_source:RunStore.get/CaseStore.get scoped SELECT/model checks;first currentCase revision/hash mismatch blocks RUN_CASE_REF_DRIFTED before receipt/projection/eval reads. Constructors only store factories/readers;no review_stage/transition calls",
+  "source": "facade read delegates canonical SourceReadiness.read;Postgres fact reader scoped REPEATABLE READ READ ONLY, only bounded pipeline/source/schedule/ingest/eval SELECT;schema/mapping/policy files local read only,missing refs remainblocked;no fetch source/fulfill/transport",
+  "httpVisibility": "source-readiness currently CatalogDependency and _require_visible_workshop_installation\u2192legacy list_modules count0\u2192404. ReadCatalogDependency does not currently support list_modules;cannot blindlyreplace annotation",
+  "noCodeChanges": true,
+  "businessComplete": false
+}
