@@ -1,0 +1,62 @@
+{
+  "outcome": "CURRENT_THREE_PLANE_NATIVE_SCRAM_ORIGINAL_IDENTITY_GATES_GREEN",
+  "nativeIdentities": {
+    "directory": {
+      "sessionUser": "aos_a0v_directory_20260912",
+      "roleOid": 16385,
+      "authority": [
+        "172.17.0.2/32",
+        5432,
+        "aos_meta_head"
+      ],
+      "directoryMember": true,
+      "runtimeMember": false,
+      "privileged": false,
+      "ownsProtectedRelation": false
+    },
+    "runtime": {
+      "sessionUser": "aos_a0v_runtime_20260912",
+      "roleOid": 16387,
+      "authority": [
+        "172.17.0.2/32",
+        5432,
+        "aos_meta_head"
+      ],
+      "directoryMember": false,
+      "runtimeMember": true,
+      "privileged": false,
+      "ownsProtectedRelation": false
+    },
+    "web": {
+      "sessionUser": "aos_a0v_web_20260912",
+      "roleOid": 16388,
+      "authority": [
+        "172.17.0.2/32",
+        5432,
+        "aos_meta_head"
+      ],
+      "directoryMember": false,
+      "runtimeMember": false,
+      "privileged": false,
+      "ownsProtectedRelation": false
+    }
+  },
+  "credentialReference": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/current-runtime-host-identities-20261013.json",
+  "credentialFileGeneration": [
+    16777229,
+    49895244,
+    1029,
+    1791849033734997958,
+    1791849033734997958
+  ],
+  "correctSCRAMLogins": 3,
+  "wrongPasswordsRejected": 3,
+  "source650TablesUnchanged": true,
+  "schemaRoleFlagsMembershipSequencesUnchanged": true,
+  "onlyExistingThreeRoleCredentialsChanged": true,
+  "sourceVolumeAndProcessUnchanged": true,
+  "hostActivated": false,
+  "eightWorkbenchesAccepted": false,
+  "secretsPrinted": false,
+  "passwordTransactionReplayed": false
+}

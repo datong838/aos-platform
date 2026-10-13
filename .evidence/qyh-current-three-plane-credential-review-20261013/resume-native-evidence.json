@@ -1,0 +1,76 @@
+{
+  "rawNativeSelectResult": {
+    "hba_file": "/etc/qyh_pg_hba.conf",
+    "schema": "a0v_161",
+    "tables": 650,
+    "enabledBindings": 0,
+    "otherSessions": 0,
+    "roles": [
+      {
+        "role": "aos_a0v_directory_20260912",
+        "hasCredential": true,
+        "super": false,
+        "inherit": false,
+        "bypass": false
+      },
+      {
+        "role": "aos_a0v_runtime_20260912",
+        "hasCredential": true,
+        "super": false,
+        "inherit": false,
+        "bypass": false
+      },
+      {
+        "role": "aos_a0v_web_20260912",
+        "hasCredential": true,
+        "super": false,
+        "inherit": false,
+        "bypass": false
+      }
+    ]
+  },
+  "nativeInspectSubset": {
+    "container": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "mounts": [
+      {
+        "Type": "volume",
+        "Name": "aos-qyh-history159-prepared-data-20261011",
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-qyh-history159-prepared-data-20261011/_data",
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "RW": true,
+        "Propagation": ""
+      }
+    ],
+    "ports": {
+      "5432/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "18446"
+        }
+      ]
+    },
+    "startedAt": "2026-10-12T12:25:24.538377567Z"
+  },
+  "nativeHbaDeniedThreeCurrentLogins": [
+    {
+      "plane": "directory",
+      "SQLSTATE": null,
+      "nativeHbaDenied": true
+    },
+    {
+      "plane": "runtime",
+      "SQLSTATE": null,
+      "nativeHbaDenied": true
+    },
+    {
+      "plane": "web",
+      "SQLSTATE": null,
+      "nativeHbaDenied": true
+    }
+  ],
+  "noPasswordResend": true,
+  "hbaExecuteIntentAbsent": true
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-three-plane-credential-review-20261013-r5",
+    "task_id": "qyh-current-three-plane-credential-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "63660283c9d814380af946827d0c38019dfa8f1d",
+      "authority_revision": "AOS-002001",
+      "files": {
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-0.txt": "d92225834979595cb70e02d313f325bb86af6ffaed481bbfb2abcf2105a79929",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-1.txt": "4a371a301143c903dd106b6962f7404bf3ee2d6f60f279979afefc2f183f7d97",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-2.txt": "d55d0a3b8e2ea3a778f6c189b83768f9b3ef13b2687e7c9f3d330a10ff1ab3e3",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-3.txt": "2351a166cea2fa1db8718f9975ca08463063aa8c4816da72a168b73699a07156",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-4.txt": "d6102280bda5e0d1b039750d2eef7703eec7e9890af49fad6ce1a97201293a98",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-5.txt": "78637e53f03fffb961d5de4b858e110c39a78719c359f486d98f1274a48f55a9",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-6.txt": "134c28b166b897ea8d8e1d7c0edd3718b3391c669cc00c65f85f4f5e569d58ba"
+      }
+    },
+    "verdict": "NEED_DECISION",
+    "findings": [
+      {
+        "claim": "Actual native SELECT shows current650 tables/a0v161/zero enabled bindings/zero other sessions and three existing bounded roles have credentials; original password transaction is not replayed and saved secret file remains private.",
+        "evidence": "resume-material-4.txt 原生 JSON 显示 schema a0v_161、tables 650、enabledBindings 0、otherSessions 0、三个 role 均 hasCredential=true；resume-material-2.txt passwordTransactionCompleted=true、credentialFileHashMatchesOriginalPrivateIntent=true；resume-material-1.txt 脚本 assert 包含 passwordTransactionCompleted、hbaNeverModified、credential 文件 SHA 与 credential-intent.json 一致、文件模式 0o600。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Native SHOW hba_file and actual file text identify the exact current HBA reject barrier; all three real current credential connections are currently denied by that barrier. Proposed single scoped rule preserves every other byte and original ownership/mode/loopback port, enabling the planned post-change SCRAM test.",
+        "evidence": "resume-material-4.txt rawNativeSelectResult.hba_file=/etc/qyh_pg_hba.conf；resume-material-5.txt actualActiveHbaText 为 local trust + 两 host SCRAM + 全 IPv4 reject + 全 IPv6 reject；proposedActiveHbaText 在 reject 前插入一条 host aos_meta_head 三角色 SCRAM；exactOneNewRule 精确匹配；otherBytesExactPreserved=true；ownership 501:20:644；resume-material-1.txt 脚本确认 c.read('SHOW hba_file;')==HBA、lines 中 reject 位置唯一、规则拼接与预期一致、端口 18446/127.0.0.1 保持。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The unexecuted continuation is bound to active parent authority/lease/source identity/frozen review/EXCL HBA intent and never resets credentials; code checks original3plane identities, wrongpassword rejection,650preservation and zero enabled bindings afterward. Host activation and eight pages remain outside this scoped fix.",
+        "evidence": "resume-material-1.txt 脚本顶层断言 project_revision==AOS-002001、lease.task_id=='qyh-full-system-restoration-20261011'、lease.owner 与 r.OWNER 一致且未过期、source Id/Image/Running/Mounts/Ports 与原合同一致；assert con['status']=='CONSUMED_MATERIAL_REVIEW' 且 execution_authorized==False，确认依赖冻结审阅结论；assert not (OUT/'hba-execute-intent.json').exists() 确认 HBA 未执行；noPasswordResend=true、hbaExecuteIntentAbsent=true（material-4）、passwordsMustNotBeRepeated=true（material-3）、rootIsContainerConfigMaintenanceOnlyNotDatabaseRoleGrant=true（material-3）；verification.json 预期字段包含 hostActivated=False、eightWorkbenchesAccepted=False、secretsPrinted=False、passwordTransactionReplayed=False。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "材料已支撑前两项断言，第三项要求‘代码在 HBA 写入后检查三平面身份、错误密码拒绝、650 保持、零启用绑定且排除 host 激活与八页’——此检查属于 pending 的 continuation 执行产物，但本审阅阶段 resume-material-2 明确 hbaNeverModified=true、resume-material-4 明确 hbaExecuteIntentAbsent=true，material-6 亦声明‘Pre-execution HBA continuation, not final acceptance’。因此缺少执行后的 verification.json 真实结果与日志。建议：(1) 由 Owner 决定本次是否仅审阅到 HBA 意图与原子脚本正确性为止并签发 NEARLY_PASS 边界结论；或 (2) 由 Owner 授权执行 continuation 后再用新 baseline 重新提交最终 PASS 审阅。两者均需用户在‘接受 scoped HBA 修复就绪但未验收 Post-change SCRAM’与‘要求完整闭环后再审阅’之间作出选择。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

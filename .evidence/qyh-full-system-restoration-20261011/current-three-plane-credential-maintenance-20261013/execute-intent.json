@@ -1,0 +1,11 @@
+{
+  "source": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "roles": {
+    "directory": "aos_a0v_directory_20260912",
+    "runtime": "aos_a0v_runtime_20260912",
+    "web": "aos_a0v_web_20260912"
+  },
+  "credentialReference": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/current-runtime-host-identities-20261013.json",
+  "passwordPrinted": false,
+  "hostActivation": false
+}

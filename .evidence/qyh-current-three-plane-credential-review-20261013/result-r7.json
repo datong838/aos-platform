@@ -1,0 +1,42 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-three-plane-credential-review-20261013-r7",
+    "task_id": "qyh-current-three-plane-credential-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "63660283c9d814380af946827d0c38019dfa8f1d",
+      "authority_revision": "AOS-002001",
+      "files": {
+        ".evidence/qyh-current-three-plane-credential-review-20261013/post-material-0.txt": "de58b495b62403fbf29c6f3d6cf6331fe8133d1defefbe5def319734f6c671dc",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/post-material-1.txt": "4a371a301143c903dd106b6962f7404bf3ee2d6f60f279979afefc2f183f7d97",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/post-material-2.txt": "4b7f4ff41f21dd490ae22a6fee92809e479e4b83191d82f0157b82aa3a3df719",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/post-material-3.txt": "d1e08e35b794387f0f2af0ffc59dc38964601517b593dec9e2366e0bc859944a",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/post-material-4.txt": "549993e107f552532032921c2c045ff73e6ab8fbe7177846553b8ab5bad06d41"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Current3 original bounded identities actually authenticated via native SCRAM and original production probe/isolation checker;3 wrongpasswords were rejected. Current650/schema/roleflags/membership/sequence remain unchanged, and only exact role credentials/one HBA rule were maintained.",
+        "evidence": "post-material-2.txt outcome=CURRENT_THREE_PLANE_NATIVE_SCRAM_ORIGINAL_IDENTITY_GATES_GREEN；correctSCRAMLogins=3、wrongPasswordsRejected=3、source650TablesUnchanged=true、schemaRoleFlagsMembershipSequencesUnchanged=true、onlyExistingThreeRoleCredentialsChanged=true。post-material-4.txt显示三条原角色在新增规则中error=null。post-material-1.txt代码路径验证native身份探针对每个plane调用probe_runtime_database_identity与require_isolated_runtime_identities，并对三个原角色用KnownWrongNegativeCredential连接均捕获异常未提升。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The failed default-HBA assumption stopped before HBA effects; reconciled continuation changed only actual native /etc path with one exact rule/old rules/owner/mode/process preserved, and never replayed password transaction.",
+        "evidence": "post-material-0.txt记录实际active HBA为/etc/qyh_pg_hba.conf（SHOW hba_file确认），非默认data目录模板，并明确“此项取代上文‘任何HBA变更只在clone’的初始假设”。post-material-1.txt断言read('SHOW hba_file;').strip()==HBA、old==prior['text']、owner==prior['ownershipMode']、hash一致；执行atomic mv后断言新文件==new且rules所有error=null；同时断言hbaNeverModified在前期readonly阶段为true而本阶段才写入，且passwordTransactionNotRepeated=true。post-material-4.txt existingRulesPreserved=true、noProcessRestart=true。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Actual current Host preparation remains RED at readonly API reader42501 for host_assignment SELECT after3 identities/physicalauthority passed; no Host activation,8workbench or natural chain completion is claimed. This scoped identity recovery does not resolve that reader permission gap.",
+        "evidence": "post-material-3.txt stage=current_host_and_candidates、sqlstate=42501、safeNativeError=permission denied for table extension_runtime_host_assignment、threeOriginalProbesPassed=true、physicalAuthorityMatched=true。post-material-2.txt hostActivated=false、eightWorkbenchesAccepted=false。post-material-0.txt明确表述“这个read-only reader合同缺口单独登记，不能放宽Root/预算/Host启动，不能说八台已恢复”。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前冻结状态与AOS-002001基线；不要重启进程、不要重发密码事务、不要修改HBA或扩权角色。针对qyh_restored_api_login对extension_runtime_host_assignment的42501权限缺口，走单独的READER_PERMISSION_GAP任务登记并申请授权修复（例如授予该角色对extension_runtime_host_assignment的SELECT，或在reader容器外提供具备该权限的独立读账号），验收后才可推进Host activation与八台目录/页面链路。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

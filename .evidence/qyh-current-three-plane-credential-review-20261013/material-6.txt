@@ -1,0 +1,20 @@
+{
+  "stage": "PRE_EXECUTION_BACKUP_QUALIFICATION_ONLY",
+  "native": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161",
+    "enabled": 0,
+    "otherSessions": 0,
+    "user": "aos_app",
+    "oidMatches": true
+  },
+  "actual650FingerprintsEqualPrepared": true,
+  "schemaRolesMembershipsSequenceEqualPrepared": true,
+  "freshBackupSHA256sEqualRecorded": true,
+  "credentialDestinationDoesNotExistYet": true,
+  "privateParentMode": "0o700",
+  "executeIntentAbsent": true,
+  "priorFullRestoreProof": "DURABLE_FULL_RESTORE_AND_CLONE_HOST_OID_REBIND_GREEN"
+}
+
+本审阅对象是未执行方案与候选脚本，而不是已经完成维护的验收。旧r2第三项insufficient仅要求未来execute完成证据、未来自己的consumption与未建立credential stat，属于阶段误读；不通过放宽代码来绕过。此时必须credential不存在，不能提前声称current身份已恢复。本轮真实已完成的是readonly backup资格与isolated test；判断方案/候选脚本是否保留边界即可，执行后另验收。现在要求current已完成才能前审PASS会产生循环。请不将后执行证据当作前审资格，保留未完成标签。

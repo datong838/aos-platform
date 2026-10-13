@@ -1,0 +1,10 @@
+{
+  "negativeGates": [
+    "wrongshape",
+    "duplicateprincipal",
+    "historicalOrLabDatabaseRejectedByCurrentTargetGate"
+  ],
+  "current650TablesUnchanged": true,
+  "currentCredentialsModified": false,
+  "cloneCredentialsAreNotCurrentFormalAuthority": true
+}

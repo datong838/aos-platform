@@ -1,0 +1,45 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-three-plane-credential-review-20261013-r6",
+    "task_id": "qyh-current-three-plane-credential-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "63660283c9d814380af946827d0c38019dfa8f1d",
+      "authority_revision": "AOS-002001",
+      "files": {
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-0.txt": "d92225834979595cb70e02d313f325bb86af6ffaed481bbfb2abcf2105a79929",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-1.txt": "4a371a301143c903dd106b6962f7404bf3ee2d6f60f279979afefc2f183f7d97",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-2.txt": "d55d0a3b8e2ea3a778f6c189b83768f9b3ef13b2687e7c9f3d330a10ff1ab3e3",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-3.txt": "2351a166cea2fa1db8718f9975ca08463063aa8c4816da72a168b73699a07156",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-4.txt": "d6102280bda5e0d1b039750d2eef7703eec7e9890af49fad6ce1a97201293a98",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-5.txt": "78637e53f03fffb961d5de4b858e110c39a78719c359f486d98f1274a48f55a9",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-6.txt": "134c28b166b897ea8d8e1d7c0edd3718b3391c669cc00c65f85f4f5e569d58ba",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-7.txt": "e2941c33040730d335e4256f202beafa41715f5ffe1c3512139d3aeba1c65cd6"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Actual native readonly evidence reports source650/a0v161/zero enabled bindings/zero other sessions and three original bounded-role credentials present; password transaction is not resent.",
+        "evidence": "材料 resume-material-4.txt (rawNativeSelectResult) 显示 tables: 650, schema: a0v_161, enabledBindings: 0, otherSessions: 0。三个角色 (directory/runtime/web_20260912) 均有 hasCredential: true。noPasswordResend: true。resume-material-2.txt 确认 passwordTransactionCompleted: true。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Proposed active HBA file patch inserts only one exact aos_meta_head/3role SCRAM line, preserving all old rules, physical loopback port and original501:20:644 ownership. This is an unexecuted candidate, not post-change authentication acceptance.",
+        "evidence": "材料 resume-material-5.txt 详细对比 actual 与 proposed HBA，显示新增 exactOneNewRule 为 host aos_meta_head 三个角色 0.0.0.0/0 scram-sha-256，otherBytesExactPreserved 为 true。ownership 保持 501:20:644。resume-material-3.txt 确认 stage 为 HBA_UNEXECUTED_CONTINUATION_ONLY，currentHbaStillOriginalReject: true。resume-material-1.txt 代码逻辑显示在 insert 前检查 hbaNeverModified 和 hba-execute-intent.json 不存在。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Static candidate code contains exact parent lease/authority/source/volume/port guards, frozen material SHA checks and exclusive HBA intent; it contains no ALTER ROLE/password reset/GRANT/runtime activation calls. Human already authorized this recovery scope; future post-change probes remain pending.",
+        "evidence": "材料 resume-material-1.txt 代码包含：mc.load_authority() 检查 AOS-002001；lease 检查 task_id 和 owner；source inspect 检查容器 ID、镜像、Volume 名称、端口 18446；baseline SHA 校验；hba-execute-intent.json 不存在断言；credential file SHA 校验。代码中无 ALTER ROLE/GRANT 等语句。resume-material-7.txt 记录用户授权原文，明确当前为执行前静态审阅，future post-change probes 待执行后独立回读。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前未执行状态，待实际 HBA 修改执行并 pg_reload_conf 生效后，再进行独立的 post-change SCRAM 登录验证和 650 表指纹回读对账。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

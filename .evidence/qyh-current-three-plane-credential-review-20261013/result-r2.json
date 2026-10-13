@@ -1,0 +1,43 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-three-plane-credential-review-20261013-r2",
+    "task_id": "qyh-current-three-plane-credential-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "63660283c9d814380af946827d0c38019dfa8f1d",
+      "authority_revision": "AOS-002001",
+      "files": {
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-0.txt": "2c3937a71396aa61666d1f71f4cd957f6998552a2f5055be099de4d981bd1072",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-1.txt": "add5261dbdc6add87b0eacb7378d7cfa41580338d4bf03e3660a719243c25a1d",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-2.txt": "6062b196503a5e499ea8a7d62eb0edb94ea59e7d5a47da92e2c3fc9171e9af3b",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-3.txt": "6b03cee7e6ce80254611e78eb2746afcba0218a8ed6ada8bdebf2e48845d825e",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-4.txt": "104f0fd9dbf49c8d96ab4609dcf02326b84fdf000add9c22f5629009377ba327",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-5.txt": "05e9d6dbcfcfced31296488bf8385ddd62198f566f76f1604eed4f6cc70b3e85"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "The pre-execution plan preserves original3nonprivileged/nonowner roles, permissions, memberships and tables; secret values are private0700/0600 journaled and never model inputs, logs, ENV or command arguments.",
+        "evidence": "material-0.txt方案描述private目录0700/文件0600，密码不入ENV/CLI/日志；material-2.txt中roles记录三个角色的rolcanlogin=true、无rolsuper/rolinherit/rolbypassrls/rolcreaterole/rolcreatedb/rolreplication且has_credential=false；material-1.txt中prepare()的guards()对相同字段assert，execute()中写CREDENTIAL使用secrets.token_urlsafe并write(..., private=True)。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Current exact HBA reject gate requires a single exact database/3role SCRAM rule; old rules/rejects and current loopback port/process are preserved, with native reload/readback and correct/wrongpassword checks planned.",
+        "evidence": "material-0.txt声明‘一条仅aos_meta_head、三个原精确bounded角色、IPv4 SCRAM规则插入原全reject之前’及现有两登录规则/IPv6及其他角色reject原字节不变、端口仍127.0.0.1:18446；material-1.txt execute()中插入前assert保留reject行位置、写入后pg_reload_conf、读回assert actualhba==newhba、assert pg_hba_file_rules error为None、并断言错误密码拒绝。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Fresh full decoded double backups/current650 match the passed recovery baseline, original3plane nativeSCRAM/file/target tests passed in isolation, and current writes are guarded by existing human authorization/parent lease/exact identity/frozen review plus noUnknownReplay. No Host or eight-workbench completion is claimed.",
+        "evidence": "material-1.txt prepare()中current.dump/globals.sql各写second副本并assert hash相等；material-2.txt backupHashes中两份backup各自相等、sourceTables=650、preparedFileSHA256=b86890...；material-3.txt为隔离实验室结果actualSCRAM=true、nativeIdentities三个角色、negativeGates涵盖duplicatePrincipal/crossPlaneMembership/symlink/wrongMode/wrongSecretNativeSCRAMRejected等，且currentDatabaseWrites=false、eightWorkbenchesAccepted=false、secretsPrinted=false；material-1.txt execute()开头读取consumption-r1.json并assert status=='CONSUMED_MATERIAL_REVIEW' and execution_authorized is False，断言所有review baseline files digest匹配；material-5.txt称‘PRE-EXECUTION REVIEW ONLY...No current role passwords or HBA changed yet...This is not final runtime/8page acceptance’；material-4.txt确认currentCredentialsModified=false。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "补充当前execute阶段的关键证据：(1) 提供 .evidence/qyh-current-three-plane-credential-review-20261013/consumption-r1.json 文本以验证 review 已 CONSUMED 且 execution_authorized=False；(2) 提供 .private/current-runtime-host-identities-20261013.json 的存在性/权限元数据证明（如 ls -la 输出或 stat 文本），确认 CREDENTIAL 文件实际处于0600/0700约束；(3) 提供 prepared.json 全文，核对其 preparedFileSHA256 与 material-2.txt 一致、且 hbaBeforeSHA256 与材料记录一致；(4) 提供 verification.json 全文以确认 execute 已真正完成并获得 CURRENT_THREE_PLANE_NATIVE_SCRAM_ORIGINAL_IDENTITY_GATES_GREEN 结果。当前材料4仅含隔离实验室结果与preparation/clone状态，不足以判定本任务实际已完成原子恢复步骤。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

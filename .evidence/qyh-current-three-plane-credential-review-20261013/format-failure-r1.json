@@ -1,0 +1,7 @@
+{
+  "strictJSONFailed": true,
+  "resultNotConsumed": true,
+  "currentExecuteIntentAbsent": true,
+  "automaticRetryDisabled": true,
+  "nextFreshRequestAfterSeconds": 33
+}

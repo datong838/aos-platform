@@ -1,0 +1,57 @@
+{
+  "backupHashes": {
+    "current.dump": "675d81a40657b913e7d56509c9dd9b0a8bf0d2c750a2dcb51926d1222a7f3b1f",
+    "current.dump.second": "675d81a40657b913e7d56509c9dd9b0a8bf0d2c750a2dcb51926d1222a7f3b1f",
+    "globals.sql": "7e5ca9ee491fff7e876284ffbd8fb9d7dc44f87598e283dc816d117ed512d76a",
+    "globals.sql.second": "7e5ca9ee491fff7e876284ffbd8fb9d7dc44f87598e283dc816d117ed512d76a"
+  },
+  "native": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161",
+    "enabled": 0,
+    "otherSessions": 0,
+    "user": "aos_app",
+    "oidMatches": true
+  },
+  "roles": [
+    {
+      "role": "aos_a0v_directory_20260912",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolinherit": false,
+      "rolbypassrls": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolreplication": false,
+      "has_credential": false
+    },
+    {
+      "role": "aos_a0v_runtime_20260912",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolinherit": false,
+      "rolbypassrls": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolreplication": false,
+      "has_credential": false
+    },
+    {
+      "role": "aos_a0v_web_20260912",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolinherit": false,
+      "rolbypassrls": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolreplication": false,
+      "has_credential": false
+    }
+  ],
+  "priorIndependentFullRestoreAndNativeSCRAMVerified": true,
+  "freshArchiveFullyDecoded": true,
+  "currentDatabaseWrites": false,
+  "hbaBeforeSHA256": "2366fa203f80a6b335fb103ef2d181e5f9d2cebdd27ae5cff1eb97d991f94ff0",
+  "preparedFileSHA256": "b86890b8720bb0493238043eeafbc304f421b0970184e3085e56e768b3a6f3e0",
+  "sourceTables": 650
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-three-plane-credential-review-20261013-r4",
+    "task_id": "qyh-current-three-plane-credential-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "63660283c9d814380af946827d0c38019dfa8f1d",
+      "authority_revision": "AOS-002001",
+      "files": {
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-0.txt": "d92225834979595cb70e02d313f325bb86af6ffaed481bbfb2abcf2105a79929",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-1.txt": "4a371a301143c903dd106b6962f7404bf3ee2d6f60f279979afefc2f183f7d97",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-2.txt": "d55d0a3b8e2ea3a778f6c189b83768f9b3ef13b2687e7c9f3d330a10ff1ab3e3",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/resume-material-3.txt": "2351a166cea2fa1db8718f9975ca08463063aa8c4816da72a168b73699a07156"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "The exact current password transaction completed and is never repeated; private credential file hash/stat and current650/schema/roles/sequence are reconciled. Initial wrong default HBA assumption refused before any HBA effect.",
+        "evidence": "材料resume-material-2.txt确认passwordTransactionCompleted、hbaNeverModified、source650SchemaRolesMembershipSequenceUnchanged为true；resume-material-3.txt确认currentPasswordTransactionAlreadyCompleted、passwordsMustNotBeRepeated、currentHbaStillOriginalReject为true；resume-material-0.txt明确记录“先在现有owned durable完整副本演练相同角色及精确权限保持”、“所有650表/权限flags/member/schema/sequence保持”。这些断言仅见于审阅输入材料的自述记录，未提供可定位的SELECT count(*) FROM pg_class、pg_namespace等结果。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "Proposed continuation addresses only native SHOW hba_file exact active /etc path with saved two copies, frozen SHA/ownership and one bounded3role/database SCRAM rule; atomic replacement preserves every old rule, original uid/gid/mode and loopback port/process.",
+        "evidence": "材料resume-material-1.txt中resume脚本断言native json验证SHOW hba_file为/etc/qyh_pg_hba.conf，读取并校验两份旧hba（actual-hba-before.json与actual-hba-before.second.json）内容相同；resume-material-3.txt声明exactActiveHbaPath为/etc/qyh_pg_hba.conf、newWriterExplicitContainerRootPreservesOriginalUID501GID20Mode644。脚本计划通过写入临时文件、chown/chmod、mv原子替换原路径，并保留所有旧规则、端口和进程。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "Continuation requires exact parent activeLease/authority/sourcevolume/frozen review and has exclusive HBA intent/noUnknownReplay; planned original3plane probes, correct/wrongpasswords,650table preservation and zero enabled bindings verify scope, not Host or eight-page completion.",
+        "evidence": "材料resume-material-1.txt包含对authority AOS-002001、parent task_id lease过期检查、source容器的Image/Id/Running/Mounts/Ports及network检查，resume-material-2.txt表明noUnknownActionReplayed、passwordsReissued为false，resume-material-3.txt声明stage为HBA_UNEXECUTED_CONTINUATION_ONLY。但材料中无pg_stat_activity计数、alembic_version数值、extension_runtime_binding enabled计数或650表数量的实际查询结果，亦无八页面/Host相关验收的边界澄清证据。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "保留当前review结果，待补充以下可核对证据后进入REVIEW-r5：(1) 从容器内实际执行SHOW hba_file；SELECT count(*) FROM pg_class WHERE relkind IN ('r','S','v','m','f','p')；SELECT version_num FROM alembic_version；SELECT count(*) FROM extension_runtime_binding WHERE enabled；SELECT count(*) FROM pg_stat_activity WHERE datname='aos_meta_head' AND pid<>pg_backend_pid() 的原始输出。(2) 三份平面SHOW CURRENT_ROLE、current_database、session_user的结果与错误密码拒绝结果。(3) 明确八页面与Host范围未纳入本r4边界的原因，避免范围漂移。当前材料只能证明意图与脚本准备，不足以支撑PASS。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

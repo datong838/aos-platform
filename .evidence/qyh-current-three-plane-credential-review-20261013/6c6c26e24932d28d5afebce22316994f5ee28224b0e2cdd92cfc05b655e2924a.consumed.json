@@ -1,0 +1,21 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-current-three-plane-credential-review-20261013-r7",
+  "task_id": "qyh-current-three-plane-credential-review-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "63660283c9d814380af946827d0c38019dfa8f1d",
+    "authority_revision": "AOS-002001",
+    "files": {
+      ".evidence/qyh-current-three-plane-credential-review-20261013/post-material-0.txt": "de58b495b62403fbf29c6f3d6cf6331fe8133d1defefbe5def319734f6c671dc",
+      ".evidence/qyh-current-three-plane-credential-review-20261013/post-material-1.txt": "4a371a301143c903dd106b6962f7404bf3ee2d6f60f279979afefc2f183f7d97",
+      ".evidence/qyh-current-three-plane-credential-review-20261013/post-material-2.txt": "4b7f4ff41f21dd490ae22a6fee92809e479e4b83191d82f0157b82aa3a3df719",
+      ".evidence/qyh-current-three-plane-credential-review-20261013/post-material-3.txt": "d1e08e35b794387f0f2af0ffc59dc38964601517b593dec9e2366e0bc859944a",
+      ".evidence/qyh-current-three-plane-credential-review-20261013/post-material-4.txt": "549993e107f552532032921c2c045ff73e6ab8fbe7177846553b8ab5bad06d41"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "e8b9afe3841f517ba5489cc91a83812fc286ca8a5e78ee54478cc22f4be95743",
+  "transport_sha256": "b914557e9266d726990f4ef2f5fbf95b34be74c1c8ced6f79926b2b603a680ca"
+}

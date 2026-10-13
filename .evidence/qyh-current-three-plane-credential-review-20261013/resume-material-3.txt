@@ -1,0 +1,10 @@
+{
+  "stage": "HBA_UNEXECUTED_CONTINUATION_ONLY",
+  "exactActiveHbaPath": "/etc/qyh_pg_hba.conf",
+  "currentPasswordTransactionAlreadyCompleted": true,
+  "passwordsMustNotBeRepeated": true,
+  "currentHbaStillOriginalReject": true,
+  "credentialFileSecretNeverAttached": true,
+  "newWriterExplicitContainerRootPreservesOriginalUID501GID20Mode644": true,
+  "rootIsContainerConfigMaintenanceOnlyNotDatabaseRoleGrant": true
+}

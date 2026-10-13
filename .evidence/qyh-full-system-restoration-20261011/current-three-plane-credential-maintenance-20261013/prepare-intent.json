@@ -1,0 +1,48 @@
+{
+  "source": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "native": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161",
+    "enabled": 0,
+    "otherSessions": 0,
+    "user": "aos_app",
+    "oidMatches": true
+  },
+  "roles": [
+    {
+      "role": "aos_a0v_directory_20260912",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolinherit": false,
+      "rolbypassrls": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolreplication": false,
+      "has_credential": false
+    },
+    {
+      "role": "aos_a0v_runtime_20260912",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolinherit": false,
+      "rolbypassrls": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolreplication": false,
+      "has_credential": false
+    },
+    {
+      "role": "aos_a0v_web_20260912",
+      "rolcanlogin": true,
+      "rolsuper": false,
+      "rolinherit": false,
+      "rolbypassrls": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolreplication": false,
+      "has_credential": false
+    }
+  ],
+  "writes": false
+}

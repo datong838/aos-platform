@@ -1,0 +1,8 @@
+{
+  "threeOriginalProbesPassed": true,
+  "currentCredentialsNotReissued": true,
+  "physicalAuthorityMatched": true,
+  "stage": "current_host_and_candidates",
+  "sqlstate": "42501",
+  "safeNativeError": "permission denied for table extension_runtime_host_assignment"
+}

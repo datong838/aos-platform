@@ -1,0 +1,68 @@
+{
+  "rules": [
+    {
+      "type": "host",
+      "database": [
+        "aos_meta_head"
+      ],
+      "user_name": [
+        "qyh_restored_api_login"
+      ],
+      "address": "0.0.0.0",
+      "auth_method": "scram-sha-256",
+      "error": null
+    },
+    {
+      "type": "host",
+      "database": [
+        "aos_meta_head"
+      ],
+      "user_name": [
+        "qyh_restored_stage_login_20261011"
+      ],
+      "address": "0.0.0.0",
+      "auth_method": "scram-sha-256",
+      "error": null
+    },
+    {
+      "type": "host",
+      "database": [
+        "aos_meta_head"
+      ],
+      "user_name": [
+        "aos_a0v_directory_20260912",
+        "aos_a0v_runtime_20260912",
+        "aos_a0v_web_20260912"
+      ],
+      "address": "0.0.0.0",
+      "auth_method": "scram-sha-256",
+      "error": null
+    },
+    {
+      "type": "host",
+      "database": [
+        "all"
+      ],
+      "user_name": [
+        "all"
+      ],
+      "address": "0.0.0.0",
+      "auth_method": "reject",
+      "error": null
+    },
+    {
+      "type": "host",
+      "database": [
+        "all"
+      ],
+      "user_name": [
+        "all"
+      ],
+      "address": "::",
+      "auth_method": "reject",
+      "error": null
+    }
+  ],
+  "existingRulesPreserved": true,
+  "noProcessRestart": true
+}

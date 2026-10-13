@@ -1,0 +1,44 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-three-plane-credential-review-20261013-r3",
+    "task_id": "qyh-current-three-plane-credential-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "63660283c9d814380af946827d0c38019dfa8f1d",
+      "authority_revision": "AOS-002001",
+      "files": {
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-0.txt": "2c3937a71396aa61666d1f71f4cd957f6998552a2f5055be099de4d981bd1072",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-1.txt": "add5261dbdc6add87b0eacb7378d7cfa41580338d4bf03e3660a719243c25a1d",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-2.txt": "6062b196503a5e499ea8a7d62eb0edb94ea59e7d5a47da92e2c3fc9171e9af3b",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-3.txt": "6b03cee7e6ce80254611e78eb2746afcba0218a8ed6ada8bdebf2e48845d825e",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-4.txt": "104f0fd9dbf49c8d96ab4609dcf02326b84fdf000add9c22f5629009377ba327",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-5.txt": "05e9d6dbcfcfced31296488bf8385ddd62198f566f76f1604eed4f6cc70b3e85",
+        ".evidence/qyh-current-three-plane-credential-review-20261013/material-6.txt": "7097934a97b943f5fbdc7ad554cf46791ad84a011891b3c8cc3902ac2bced38b"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The unexecuted candidate script proposes exact3existing nonprivileged-role credential recovery with EXCL private0700/0600 secret journaling and original role flags/memberships preserved; no current write completion is claimed.",
+        "evidence": "material-1.txt中guard()验证三个角色rolcanlogin=true且has_credential=false；private/write使用0o700/0o600并O_EXCL|O_CREAT；prepare()声明currentDatabaseWrites=false且未调用execute()；material-5明确为PRE-EXECUTION REVIEW ONLY，声称当前role密码和HBA尚未改变。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The unexecuted candidate HBA patch adds only one exact database/3role SCRAM rule and preserves every existing rule, with reload/readback and correct/wrongpassword verification coded; no Host activation is proposed.",
+        "evidence": "material-1.txt中execute()只插入一条host aos_meta_head +三个原role+0.0.0.0/0+scram-sha-256规则到原reject行前，调用pg_reload_conf()并对比actualhba==newhba；错误密码连接用KnownWrongNegativeCredential断言psycopg.OperationalError；record的hostActivated=false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Completed current READ ONLY preparation verifies fresh two-copy full decoded backup hashes and current650/schema/roles/sequence equality to recorded baseline; isolated original-probe/nativeSCRAM/file/target tests passed. This is pre-execution qualification, not an assertion current credential recovery has already completed.",
+        "evidence": "material-2.txt有current.dump/globals.sql两份哈希一致且freshArchiveFullyDecoded=true，preparedFileSHA256=b86890b8…；material-3显示isolated native SCRAM三平面通过且currentDatabaseWrites=false、hostActivated=false；material-4确认current650TablesUnchanged=true；material-6标注staging为PRE_EXECUTION_BACKUP_QUALIFICATION_ONLY并说明本轮真实完成的是readonly backup资格与isolated test，并非已执行。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前PRE_EXECUTION阶段冻结结果；如未来申请执行授权，需提供execute()实际运行后的consumption、verification.json中outcome=CURRENT_THREE_PLANE_NATIVE_SCRAM_ORIGINAL_IDENTITY_GATES_GREEN及credential.stat真实存在等证据，再作执行验收审阅。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

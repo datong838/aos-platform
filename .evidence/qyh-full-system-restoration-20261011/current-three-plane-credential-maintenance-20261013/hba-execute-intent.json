@@ -1,0 +1,9 @@
+{
+  "activePath": "/etc/qyh_pg_hba.conf",
+  "beforeSHA256": "6271c5b7f587b243ce6597e6be526f0a36899a761db8cbaf9ec930d08ece4330",
+  "afterSHA256": "8e0973b6e2d72f62d6c78a0febd817436231730a7d9044c97140e8abda4d8e2f",
+  "ownershipModePreserved": "501:20:644",
+  "newRules": 1,
+  "existingRulesExactPreserved": true,
+  "passwordTransactionNotRepeated": true
+}
