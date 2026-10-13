@@ -1,0 +1,11 @@
+{
+  "ownedTarget": "7263AE405334660557A7840F95B4446F",
+  "url": "http://127.0.0.1:18434/workshop/analyst",
+  "sourceReadinessVisible": "blocked",
+  "originalRunControl": "PREPARING/CANCELLED",
+  "stageReviewFailureRetained": true,
+  "noIgnoreBlockContinue": true,
+  "businessReadOnly": true,
+  "notReadRealSource": true,
+  "businessComplete": false
+}

@@ -1,0 +1,17 @@
+{
+  "before": ".evidence/qyh-restoration-successor-latest-restart-20261013/before-source-exact-read.json",
+  "after": ".evidence/qyh-restoration-successor-latest-restart-20261013/after-source-exact-acceptance.json",
+  "tableCount": 650,
+  "allTableFingerprintsExact": true,
+  "sameOriginalVolume": true,
+  "sameContainerClusterSchema161": true,
+  "samePgStartedAt": "2026-10-13T09:52:36.247449833Z",
+  "enabledBindings": 0,
+  "apiOnlyUpdate": true,
+  "apiPid": 14134,
+  "apiCodeHead": "2d1cb058977d86bf2fc15e659f7c83c64caeb140",
+  "webPidUnchanged": 7590,
+  "pgWebChromeRestarted": false,
+  "canonicalNativeEqualsHttp12Blocked": true,
+  "businessComplete": false
+}

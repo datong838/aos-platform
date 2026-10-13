@@ -6,5 +6,6 @@
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
   "authority_revision": "AOS-002022",
   "task_base_revision": "AOS-002022",
-  "step": "1/8 exactrouter/testsTask+plan registered;next sourcecontract review and independentplan before RED/code"
+  "step": "PLAN_ONLY_SUPERSEDED_UNIMPLEMENTED:legacy-zero/get-success risk;strict review invalid retained,no code effect",
+  "successorTask": "qyh-source-read-visibility-exact-admission-20261013"
 }

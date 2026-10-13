@@ -1,0 +1,577 @@
+LIVE scoped acceptance after consumed code r5PASS; full Goal still ACTIVE/first-chain pending. Original source/read-only actions only; no commands/schedules/oldRun replay/no mall source. API-only not full restart.
+
+FILE native-source-exact-read-r1.json
+{
+  "sourceHead": "2d1cb058977d86bf2fc15e659f7c83c64caeb140",
+  "actualManagementIdentityReadonly": true,
+  "originalAdminMembershipVerified": true,
+  "legacyCount": 0,
+  "selectedReadAdmission": true,
+  "canonicalStatus": "blocked",
+  "pipelines": [
+    {
+      "pipelineId": "P01-shop-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P02-product-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P03-product-sku-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P04-category-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P05-order-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P06-order-line-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P07-shipment-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P08-customer-lite-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P09-weapp-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P10-system-config-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P11-product-review-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P12-payment-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    }
+  ],
+  "nativeOnlyNotOIDCProof": true,
+  "noBusinessEffects": true,
+  "businessComplete": false,
+  "canaryDenied": true
+}
+
+FILE source-http-actual-r1.json
+{
+  "apiSource": "2d1cb058977d86bf2fc15e659f7c83c64caeb140",
+  "normalLoginObservedInRuntimeLogs": true,
+  "priorExpiryConfirmed": true,
+  "pageReloadClearedMemorySession": true,
+  "newSessionNormalFormSubmitOnce": true,
+  "httpStatus": 200,
+  "client": {
+    "state": "blocked",
+    "pipelineCount": 12
+  },
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "pipelines": [
+    {
+      "pipelineId": "P01-shop-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P02-product-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P03-product-sku-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P04-category-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P05-order-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P06-order-line-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P07-shipment-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P08-customer-lite-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P09-weapp-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P10-system-config-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P11-product-review-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P12-payment-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    }
+  ],
+  "businessComplete": false,
+  "noBusinessCommands": true
+}
+
+FILE source-page-actual-r1.json
+{
+  "ownedTarget": "7263AE405334660557A7840F95B4446F",
+  "url": "http://127.0.0.1:18434/workshop/analyst",
+  "sourceReadinessVisible": "blocked",
+  "originalRunControl": "PREPARING/CANCELLED",
+  "stageReviewFailureRetained": true,
+  "noIgnoreBlockContinue": true,
+  "businessReadOnly": true,
+  "notReadRealSource": true,
+  "businessComplete": false
+}
+
+FILE actual-data-and-service-r1.json
+{
+  "before": ".evidence/qyh-restoration-successor-latest-restart-20261013/before-source-exact-read.json",
+  "after": ".evidence/qyh-restoration-successor-latest-restart-20261013/after-source-exact-acceptance.json",
+  "tableCount": 650,
+  "allTableFingerprintsExact": true,
+  "sameOriginalVolume": true,
+  "sameContainerClusterSchema161": true,
+  "samePgStartedAt": "2026-10-13T09:52:36.247449833Z",
+  "enabledBindings": 0,
+  "apiOnlyUpdate": true,
+  "apiPid": 14134,
+  "apiCodeHead": "2d1cb058977d86bf2fc15e659f7c83c64caeb140",
+  "webPidUnchanged": 7590,
+  "pgWebChromeRestarted": false,
+  "canonicalNativeEqualsHttp12Blocked": true,
+  "businessComplete": false
+}
+
+FILE auth-http-runtime-reconciled.json
+{
+  "events": [
+    {
+      "ts": "2026-10-13T14:57:23.698885+00:00",
+      "msg": "request method=GET path=/v1/ecommerce-workshop/source-readiness status=401 duration_ms=677.4",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T14:58:01.523974+00:00",
+      "msg": "request method=POST path=/v1/auth/token status=200 duration_ms=426.1",
+      "org_id": "dev-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T14:58:01.571813+00:00",
+      "msg": "request method=GET path=/v1/me status=200 duration_ms=44.0",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T14:58:08.146995+00:00",
+      "msg": "request method=GET path=/v1/ecommerce-workshop/source-readiness status=200 duration_ms=2672.4",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T14:58:11.024401+00:00",
+      "msg": "request method=GET path=/v1/ecommerce-workshop/source-readiness status=200 duration_ms=2869.7",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T14:58:30.104394+00:00",
+      "msg": "request method=GET path=/v1/me status=401 duration_ms=6.6",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T14:59:14.673882+00:00",
+      "msg": "request method=POST path=/v1/auth/token status=200 duration_ms=213.7",
+      "org_id": "dev-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T14:59:14.705253+00:00",
+      "msg": "request method=GET path=/v1/me status=200 duration_ms=26.9",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T14:59:20.420939+00:00",
+      "msg": "request method=GET path=/v1/ecommerce-workshop/source-readiness status=200 duration_ms=2951.9",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T14:59:22.837463+00:00",
+      "msg": "request method=GET path=/v1/ecommerce-workshop/source-readiness status=200 duration_ms=2414.5",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T15:00:47.755523+00:00",
+      "msg": "request method=GET path=/v1/ecommerce-workshop/source-readiness status=200 duration_ms=970.4",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-13T15:00:47.915993+00:00",
+      "msg": "request method=GET path=/v1/ecommerce/investigations/runs/<record>/stage-review status=409 duration_ms=87.3",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    }
+  ],
+  "authLoggerDefaultDevOrgNotBusinessScope": true,
+  "businessTenantMeAndSourceExact": true,
+  "tokenBodyNeverRead": true,
+  "reloadClearedMemorySessionThenNewFormLoginConfirmed": true
+}
+
+FILE plan-code-consistency.json
+{
+  "installedPredicateTailExact": true,
+  "predicateSha256": "0623d932facbaec3a124e019c2d9f2d21d6734c1d86d7eb15090e38f0cfe9aa2",
+  "onlyChangedExistingRouterFunction": [
+    "get_ecommerce_workshop_source_readiness_envelope"
+  ],
+  "onlyAddedRouterFunction": [
+    "_require_visible_read_workshop_installation"
+  ],
+  "unchangedRouterFunctionCount": 161,
+  "noSourceServiceChanges": true,
+  "businessComplete": false
+}
+
+API CONTROLLER WHOLE
+"""Fresh one-attempt reload of exact current readonly API; no PG/Web/Chrome action."""
+from pathlib import Path
+import datetime,json,os,signal,subprocess,sys,time
+sys.dont_write_bytecode=True
+R=Path(__file__).resolve().parents[2];P=Path(__file__).resolve().parent;F=R/'.evidence/qyh-full-system-restoration-20261011';PY=R/'services/aos-api/.venv/bin/python'
+Q=R/'.evidence/qyh-source-read-visibility-exact-admission-20261013'
+import hashlib
+_review=json.loads((Q/'code-review-result-r5.json').read_text());_consume=json.loads((Q/'code-review-consumption-r5.json').read_text())
+assert _review['result']['verdict']=='PASS' and _consume['status']=='CONSUMED_MATERIAL_REVIEW','No effects before exact consumed PASS'
+assert _consume['result_sha256']==hashlib.sha256(json.dumps(_review,sort_keys=True).encode()).hexdigest()
+OWNER='codex-01a13484-f019-7d82-94ce-812396db9124';OLD=1234;OLD_SOURCE=F/'private/api-source-6afbf5684fba9a7e9fb88c3df804c5ed7e10e711';REPORT=F/'successor-source-exact-r5-api-20261013.json'
+assert not (P/'source-exact-r5-api-reload-intent.json').exists() and not (P/'source-exact-r5-api-started.json').exists(),'Existing operation: readonly reconcile,never resend'
+m=R.parent/'docs/palantier/AOS项目开发上下文/memory';lease=[x for x in json.loads((m/'leases.json').read_text())['leases'] if x['task_id']==P.name];assert len(lease)==1 and lease[0]['owner']==OWNER and datetime.datetime.fromisoformat(lease[0]['lease_expires_at'])>datetime.datetime.now(datetime.timezone.utc)
+sys.path.insert(0,str(R/'scripts'));import a0v_qyh_restored_http as guard
+source=guard.require_api_source_candidate(REPORT.resolve());report=json.loads(REPORT.read_text());assert report['head']==subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()
+assert 'n'+str(OLD_SOURCE)+'\n' in subprocess.check_output(['lsof','-a','-p',str(OLD),'-d','cwd','-Fn'],text=True)
+def listeners():
+ x=subprocess.run(['lsof','-t','-nP','-iTCP:18080','-sTCP:LISTEN'],capture_output=True,text=True);return sorted({int(i) for i in x.stdout.split()})
+assert listeners()==[OLD]
+def record(name,value):
+ with (P/name).open('x') as f:json.dump(value,f,ensure_ascii=False,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
+record('source-exact-r5-api-reload-intent.json',{'oldPid':OLD,'oldCwd':str(OLD_SOURCE),'newHead':report['head'],'source':str(source),'port':18080,'sourceGuardPassed':True,'pgWebChromeTouched':False,'normalReadonlyFlagsRetained':True})
+os.kill(OLD,signal.SIGTERM)
+for _ in range(100):
+ if not listeners():break
+ time.sleep(.2)
+assert not listeners(),'old stop not settled;reconcile-only'
+record('source-exact-r5-api-old-stop.json',{'oldPid':OLD,'portFree':True})
+args=[str(PY),str(R/'scripts/a0v_qyh_restored_http.py'),'--api-identity-file',str(F/'private/restored-identity.json'),'--serve-management-readonly','--bundle-root',str(F/'selected-public-bundles'),'--trust-roots-file',str(F/'restoration-public-trust-roots.json'),'--source-candidate',str(REPORT),'--management-oidc-config','/Users/ddt/.aos-local-identities/qyh-20261013/aos-management-oidc.json','--installed-readonly-installation','ab2fd72f-d81c-400d-bbbc-e1589a159d6b']
+with (P/'live-api-source-exact-r5.log').open('x') as log:proc=subprocess.Popen(args,cwd=R,env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'},stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+record('source-exact-r5-api-started.json',{'pid':proc.pid,'head':report['head'],'source':str(source),'port':18080,'terminalVerified':False,'pgWebChromeTouched':False});print(json.dumps({'newPid':proc.pid,'spawnedOnly':True,'pgWebChromeTouched':False}))
+
+CODE REVIEW consumed
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-source-read-visibility-exact-admission-20261013-code-r5",
+  "task_id": "qyh-source-read-visibility-exact-admission-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "29d876a6eb87072ac8575d756a3fdf44e506b5c0",
+    "authority_revision": "AOS-002022",
+    "files": {
+      ".evidence/qyh-source-read-visibility-exact-admission-20261013/code-review-package-r5.txt": "404a945452266f74fe1fc6c2db09115e5b863b38479b5d516027271df1532f24"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "9b886110adbf271e198729c146af609e720874dee8b9486951587a0e304f68e1",
+  "transport_sha256": "e511fb9ffc4be4b7769ba252cd58a810d48c0440fa32615b7045fa31bcc210ea"
+}
+GUARDED FREEZE
+{
+  "outcome": "CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START",
+  "head": "2d1cb058977d86bf2fc15e659f7c83c64caeb140",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-2d1cb058977d86bf2fc15e659f7c83c64caeb140",
+  "fileCount": 8667,
+  "manifestSha256": "6d3964204412b7e52212a462277c44806d7ebbc979b32157ab800b82960f04d3",
+  "repositoryBundleFileCount": 1827,
+  "repositoryBundleManifestSha256": "1e857c0dc55fc06c77888c021ad990babbd2b2f6dc194134981125b11b678735",
+  "mainSha256": "2d97ff3dbb84d8d948110b38bb7b8ae3c3462b5d7661d2cf1c1c830c85e32b4f",
+  "originalPreviewEntrySha256": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+  "explicitStartupEnabledSwitches": [
+    "AOS_AIP_LOGIC_AUTOMATION_ENABLED",
+    "AOS_ECOM_CONTENT_AGENTRUN_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_CAPACITY_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_STEP_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_TASKRUN_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_WORKER_ENABLED",
+    "AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED",
+    "AOS_ECOM_FEEDBACK_WORKER_ENABLED",
+    "AOS_ECOM_IMPROVEMENT_WORKER_ENABLED",
+    "AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED",
+    "AOS_JDBC_SSH_PREBUILD_ENABLED",
+    "AOS_QYH_CRON_ENABLED",
+    "AOS_SNAPSHOT_GROUP_WORKER_ENABLED"
+  ],
+  "startupFlags": {
+    "AOS_DOTENV_DISABLED": "1",
+    "AOS_DB_MIGRATION_MODE": "disabled",
+    "AOS_AIP_BINDING_REQUIRE_PRIVATE": "1",
+    "AOS_QYH_CRON_ENABLED": "false",
+    "AOS_AIP_LOGIC_AUTOMATION_ENABLED": "false",
+    "AOS_SNAPSHOT_GROUP_WORKER_ENABLED": "false",
+    "AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED": "false",
+    "AOS_EXTENSION_RUNTIME_HOST_ENABLED": "0",
+    "AOS_JDBC_SSH_PREBUILD_ENABLED": "false",
+    "AOS_ECOM_CONTENT_TASKRUN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_AGENTRUN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_CAPACITY_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED": "false",
+    "AOS_ECOM_FEEDBACK_WORKER_ENABLED": "false",
+    "AOS_ECOM_IMPROVEMENT_WORKER_ENABLED": "false",
+    "AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED": "false",
+    "AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_STEP_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED": "false",
+    "AOS_AUTH_ALLOW_DEV": "0",
+    "AOS_AUTH_EXTERNAL_ONLY": "1",
+    "AOS_REST_CONNECTOR_MOCK": "0"
+  },
+  "exactGitArchiveFilesVerified": true,
+  "sourcePrivate0700Files0600": true,
+  "uncommittedWorktreeChangesCopied": false,
+  "credentialsCopied": false,
+  "apiStarted": false,
+  "runtimeAuthorized": false,
+  "eightPagesAccepted": false,
+  "remaining": [
+    "real independent publisher",
+    "current four-package installation",
+    "formal OIDC settings and current Owner",
+    "current configuration approval",
+    "guarded PG/API/Web restart and actual eight-page browser acceptance"
+  ]
+}
+
+NATIVE READER WHOLE
+"""Read original Store with exact management API connection parameters; no HTTP effect."""
+import json,sys,os,hashlib
+from pathlib import Path
+sys.dont_write_bytecode=True
+R=Path(__file__).resolve().parents[2];P=Path(__file__).resolve().parent;F=R/'.evidence/qyh-full-system-restoration-20261011'
+r=json.loads((F/'successor-source-exact-r5-api-20261013.json').read_text());source=Path(r['source']);os.environ.update(r['startupFlags']);os.environ['AOS_BUNDLE_ROOT']=str(F/'selected-public-bundles');os.environ['AOS_BUNDLE_TRUST_ROOTS_FILE']=str(F/'restoration-public-trust-roots.json');os.environ['AOS_LOCAL_MANAGEMENT_OIDC_CONFIG']='/Users/ddt/.aos-local-identities/qyh-20261013/aos-management-oidc.json';os.environ['AOS_INSTALLED_READONLY_CATALOG']=json.dumps({'installationId':'ab2fd72f-d81c-400d-bbbc-e1589a159d6b','orgId':'org-org','projectId':'dev-project'});sys.path[:0]=[str(source/'scripts'),str(source/'services/aos-api')]
+import a0v_qyh_restored_http as entry
+from psycopg.conninfo import make_conninfo
+identity=entry._identity_parameters(F/'private/restored-identity.json')
+assert identity['host']=='127.0.0.1' and str(identity['port'])=='18446'
+dsn=make_conninfo(host=identity['host'],port=identity['port'],dbname=identity['dbname'],user=identity['user'],options='-c default_transaction_read_only=on')
+os.environ['PGPASSFILE']=identity['pgpassFile']
+from aos_api import db
+from aos_api.tenant_scope import TenantScope
+from aos_api.ecommerce_media_internal_workflow import EcommerceMediaInternalWorkflow
+scope=TenantScope('org-org','dev-project');db.get_dsn=lambda:dsn
+with db.connect(scope) as conn:
+ actual=conn.execute("SELECT current_setting('transaction_read_only') AS ro, session_user AS login,rolsuper,rolbypassrls FROM pg_roles WHERE rolname=session_user").fetchone()
+ assert actual['ro']=='on' and not actual['rolsuper'] and not actual['rolbypassrls'] and actual['login']==identity['user']
+
+from aos_api.tenant_scope import bind_tenant_scope
+from aos_api.auth import Principal
+from aos_api.routers import ecommerce_workshop as routes
+from aos_api.errors import ApiError
+subject='6f31cfdc-a26c-4f1f-ad6b-95a8559cc657'
+with bind_tenant_scope(scope):
+ with db.connect_read_only(scope) as conn:
+  row=conn.execute('SELECT role FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s',(*scope.key,subject)).fetchone()
+  assert row and row['role']=='admin'
+ principal=Principal(subject=subject,org_id=scope.org_id,project_id=scope.project_id,roles=['admin'],markings=[])
+ legacy=routes.get_ecommerce_workshop_catalog();read=routes.get_ecommerce_workshop_read_catalog(legacy)
+ assert legacy.list_modules(org_id=scope.org_id,project_id=scope.project_id,roles=principal.roles,markings=principal.markings).count==0
+ routes._require_visible_read_workshop_installation(principal=principal,catalog=legacy,read_catalog=read)
+ envelope=routes.get_ecommerce_workshop_source_readiness().read(org_id=scope.org_id,project_id=scope.project_id)
+ assert envelope.status.value=='blocked' and len(envelope.sources)==12
+ result={'sourceHead':r['head'],'actualManagementIdentityReadonly':True,'originalAdminMembershipVerified':True,'legacyCount':0,'selectedReadAdmission':True,'canonicalStatus':envelope.status.value,'pipelines':[{'pipelineId':x.pipeline_id,'status':x.status.value,'blockers':x.blockers} for x in envelope.sources],'nativeOnlyNotOIDCProof':True,'noBusinessEffects':True,'businessComplete':False}
+ canaryScope=TenantScope('dev-org','dev-project')
+ with bind_tenant_scope(canaryScope):
+  canary=Principal(subject=subject,org_id=canaryScope.org_id,project_id=canaryScope.project_id,roles=['admin'],markings=[])
+  try:routes._require_visible_read_workshop_installation(principal=canary,catalog=legacy,read_catalog=read)
+  except ApiError as exc:assert exc.code=='WORKSHOP_NOT_INSTALLED';result['canaryDenied']=True
+  else:raise AssertionError('canary must deny')
+out=P/'native-source-exact-read-r1.json';assert not out.exists();out.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items() if k!='pipelines'}))
+
+Precise scope: SourceHTTP404 WORKSHOP_NOT_INSTALLED ->200/12blocked, pagefailed->realblocked; original Case14/Run9 expected409 still,PREPARING/CANCELLED,canonicalReadOnly. Source producer querycapability/schedule disabled/mismatch stillpending. Auth expiry401 retained; first newlogin token/me200, then ownedpage reload caused tokenmemoryclear/401,known newlogin formsecondsession token/me200,neverresubmittedunknown. Originalbind/Host/worker/Provider remainOFF.

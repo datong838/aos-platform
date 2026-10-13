@@ -1,0 +1,34 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "qyh-source-read-visibility-exact-admission-20261013",
+  "base_revision": "AOS-002022",
+  "completed_revision": "AOS-002022",
+  "result": "SOURCE_GET_READ_ADMISSION_AND_BLOCKED12_VIEW_ONLY_GREEN_FIRST_CHAIN_PENDING",
+  "changed_files": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_read_catalog.py",
+    "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_api.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_catalog.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_source_read_visibility.py",
+    "aos-platform/.evidence/qyh-source-read-visibility-exact-admission-20261013"
+  ],
+  "commits": [
+    "2d1cb058977d86bf2fc15e659f7c83c64caeb140"
+  ],
+  "verification": [
+    "Planr4/code r5/live r6 strictPASS all legally consumed;no tools/execution_authorizedfalse",
+    "RED8failed41pass->74adjacentPASS;exactpredicate tailbytes,161existingrouterfunctions unchanged,onlySourceGET addsreaddependency",
+    "Actual ordinary management identity READONLY/noSUPER/BYPASS/adminmembership;legacylist0/selectedadmitted/canarydeny/native12blocked",
+    "Actual original normal login token/me200,SourceGET200 same12blocked,pageblocked,oldPREPARING/CANCELLED andstage409preserved",
+    "Before/after650tablefingerprints exact,originalvolume/cluster/schema161/PGStartedAt same,bindings0;API-only14134latest2d,Web7590unchanged"
+  ],
+  "risks": [
+    "Read grant is not runtime readiness. Sourcecapability/Schedule/current source/budget/producer/approval/InstanceToolBinding/fullbusinessGoal pending",
+    "Auth expiry and known reload memory-session loss reconciled normally;no unknown submit/replay"
+  ],
+  "blockers": [
+    "Natural first-chain/real install lifecycle/eight scenes/Wiki/observation-release acceptance remain pending"
+  ],
+  "completed_at": "2026-10-13T23:05:52+08:00"
+}

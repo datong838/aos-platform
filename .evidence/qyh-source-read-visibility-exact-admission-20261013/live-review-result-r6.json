@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-source-read-visibility-exact-admission-20261013-live-r6",
+    "task_id": "qyh-source-read-visibility-exact-admission-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "2d1cb058977d86bf2fc15e659f7c83c64caeb140",
+      "authority_revision": "AOS-002022",
+      "files": {
+        ".evidence/qyh-source-read-visibility-exact-admission-20261013/live-review-package-r6.txt": "17afa3ad259a80bdc50421bae28b3977c27d5fb2c3fddc490669b30837a3c66b"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Actual original readonly identity and normal OIDC Source GET now expose the same twelve blocked pipelines.",
+        "evidence": "FILE native-source-exact-read-r1.json (canonicalStatus 'blocked', pipelines length 12: P01-P12 each with status blocked); FILE source-http-actual-r1.json (client.pipelineCount 12, pipelines list P01-P12 each status blocked); FILE actual-data-and-service-r1.json (canonicalNativeEqualsHttp12Blocked true).",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The owned page retains the original cancelled Run and review gate while SourceReadiness displays blocked.",
+        "evidence": "FILE source-page-actual-r1.json (ownedTarget '7263AE405334660557A7840F95B4446F', url 'http://127.0.0.1:18434/workshop/analyst', sourceReadinessVisible 'blocked', originalRunControl 'PREPARING/CANCELLED', stageReviewFailureRetained true, noIgnoreBlockContinue true); FILE auth-http-runtime-reconciled.json (first GET /v1/ecommerce-workshop/source-readiness 401 due prior expiry, then newSessionNormalFormSubmitOnce then GET source-readiness 200; final GET /v1/ecommerce/investigations/runs/<record>/stage-review 409 retained).",
+        "assessment": "supported"
+      },
+      {
+        "claim": "This API-only scoped change preserves all 650 table fingerprints and does not complete the business Goal.",
+        "evidence": "FILE actual-data-and-service-r1.json (tableCount 650, allTableFingerprintsExact true, sameOriginalVolume true, apiOnlyUpdate true, pgWebChromeRestarted false, businessComplete false); FILE native-source-exact-read-r1.json (noBusinessEffects true, businessComplete false); GUARDED FREEZE (apiStarted false, runtimeAuthorized false, eightPagesAccepted false, remaining includes formal OIDC/settings/approval/restart/acceptance).",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前冻结基线 2d1cb058977d86bf2fc15e659f7c83c64caeb140 的只读审阅结果；下一步由 Owner 在正式 OIDC 配置与四包安装审批通过后，再决定是否执行受控 PG/API/Web 重启与八页面浏览器验收。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

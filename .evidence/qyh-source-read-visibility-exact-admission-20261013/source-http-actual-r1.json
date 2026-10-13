@@ -1,0 +1,140 @@
+{
+  "apiSource": "2d1cb058977d86bf2fc15e659f7c83c64caeb140",
+  "normalLoginObservedInRuntimeLogs": true,
+  "priorExpiryConfirmed": true,
+  "pageReloadClearedMemorySession": true,
+  "newSessionNormalFormSubmitOnce": true,
+  "httpStatus": 200,
+  "client": {
+    "state": "blocked",
+    "pipelineCount": 12
+  },
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "pipelines": [
+    {
+      "pipelineId": "P01-shop-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P02-product-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P03-product-sku-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P04-category-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P05-order-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P06-order-line-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P07-shipment-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P08-customer-lite-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P09-weapp-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P10-system-config-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P11-product-review-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    },
+    {
+      "pipelineId": "P12-payment-qyh",
+      "status": "blocked",
+      "blockers": [
+        "QUERY_CAPABILITY_REF_MISSING",
+        "SCHEDULE_CRON_POLICY_MISMATCH",
+        "SCHEDULE_DISABLED",
+        "SCHEDULE_SOURCE_REF_MISMATCH"
+      ]
+    }
+  ],
+  "businessComplete": false,
+  "noBusinessCommands": true
+}

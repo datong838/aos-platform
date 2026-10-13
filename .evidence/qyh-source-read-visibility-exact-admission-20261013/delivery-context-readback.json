@@ -1,0 +1,56 @@
+{
+  "project_revision": "AOS-002023",
+  "content_hash": "sha256:53e5eb991e53dc17b3970054aed632f1cf26245b98ac494e56bb63abaf2ba5d9",
+  "delivery_status": "W5CB4_E16_RUNTIME_HOST_ADMISSION_GATED_FIRST_CHAIN_PENDING",
+  "overall": "GREEN_WITH_WARNINGS",
+  "projections": [
+    {
+      "id": "context-current-status",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/01-当前项目状态.md"
+    },
+    {
+      "id": "context-checkpoint",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/06-当前执行检查点.md"
+    },
+    {
+      "id": "project-shared",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/projections/aos-project.json"
+    },
+    {
+      "id": "workbuddy-project",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+    },
+    {
+      "id": "prime-milestones",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "aos-milestones"
+    },
+    {
+      "id": "prime-current-delivery",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "aos-current-delivery"
+    },
+    {
+      "id": "prime-aip-checklists",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "aos-aip-full-checklists"
+    },
+    {
+      "id": "codex-project-note",
+      "consistency": "eventual",
+      "status": "STALE",
+      "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-002022-aos-memory-projection.md"
+    }
+  ]
+}

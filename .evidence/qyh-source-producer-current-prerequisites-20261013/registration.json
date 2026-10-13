@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-source-producer-current-prerequisites-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002023",
+  "scope": [
+    "aos-platform/.evidence/qyh-source-producer-current-prerequisites-20261013",
+    "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md"
+  ],
+  "excluded_scope": [
+    "aos-platform/services",
+    "aos-platform/scripts",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume",
+    "aos-platform/.evidence/qyh-full-system-restoration-20261011"
+  ],
+  "expected_outputs": [
+    "Readonly current12pipeline/querycapability/Schedule/source-ref/cronpolicy rootcause and exactcurrent sourceproducer prerequisites;no enabling/fetch/replay",
+    "Independent material review and accurate diagnosticDelivery;separatebudget/InstanceToolBinding/realapproval/newnatural producer conditions,fullGoal unchanged"
+  ],
+  "lease_expires_at": "2026-10-13T18:05:53.604226+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-13T23:05:54+08:00"
+}
