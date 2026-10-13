@@ -12,6 +12,7 @@ from fastapi.security import HTTPBearer
 
 from aos_api.asset_registry.errors import AssetRegistryError
 from aos_api.auth import Principal, require_principal
+from aos_api.ecommerce_workshop_read_catalog import EcommerceWorkshopReadCatalog
 from aos_api.ecommerce_workshop_catalog import (
     EcommerceWorkshopCatalog,
     build_ecommerce_workshop_catalog,
@@ -394,6 +395,17 @@ def get_ecommerce_workshop_catalog() -> EcommerceWorkshopCatalog:
     return build_ecommerce_workshop_catalog()
 
 
+def get_ecommerce_workshop_read_catalog(
+    legacy: Annotated[EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)],
+) -> EcommerceWorkshopReadCatalog:
+    from aos_api.ecommerce_installed_readonly_catalog import build_installed_readonly_catalog
+
+    return EcommerceWorkshopReadCatalog(
+        legacy=legacy,
+        installed_factory=build_installed_readonly_catalog,
+    )
+
+
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_feature_activation_service() -> EcommerceWorkshopFeatureActivationService:
     return EcommerceWorkshopFeatureActivationService()
@@ -627,6 +639,9 @@ def get_ecommerce_operation_command_observation_service() -> EcommerceOperationC
 
 CatalogDependency = Annotated[
     EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)
+]
+ReadCatalogDependency = Annotated[
+    EcommerceWorkshopReadCatalog, Depends(get_ecommerce_workshop_read_catalog)
 ]
 FeatureActivationServiceDependency = Annotated[
     EcommerceWorkshopFeatureActivationService,
@@ -1362,7 +1377,7 @@ def get_ecommerce_workshop_source_readiness_envelope(
 def get_ecommerce_workshop_operations_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     operations: OperationsDependency,
 ) -> WorkshopOperationsViewEnvelope:
     _reject_query_parameters(request)
@@ -1402,7 +1417,7 @@ def get_ecommerce_operation_case_workspace_view(
 def get_ecommerce_workshop_content_campaign_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     content_campaign: ContentCampaignDependency,
 ) -> WorkshopContentCampaignViewEnvelope:
     _reject_query_parameters(request)
@@ -1489,7 +1504,7 @@ def preview_ecommerce_content_campaign_approval(
 def get_ecommerce_workshop_creator_growth_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     creator_growth: CreatorGrowthDependency,
 ) -> WorkshopCreatorGrowthViewEnvelope:
     _reject_query_parameters(request)
@@ -1771,7 +1786,7 @@ def get_creator_lifecycle_view(
 def get_ecommerce_workshop_media_studio_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     media_studio: MediaStudioDependency,
 ) -> WorkshopMediaStudioViewEnvelope:
     _reject_query_parameters(request)
@@ -1949,7 +1964,7 @@ def get_ecommerce_workshop_media_studio_full_production_scenario(
 def get_ecommerce_workshop_analyst_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     analyst: AnalystDependency,
 ) -> WorkshopAnalystViewEnvelope:
     _reject_query_parameters(request)
@@ -1986,7 +2001,7 @@ def get_ecommerce_workshop_analyst_learning_scenario(
 def get_ecommerce_workshop_price_governance_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     price_governance: PriceGovernanceDependency,
 ) -> WorkshopPriceGovernanceViewEnvelope:
     _reject_query_parameters(request)
@@ -2301,7 +2316,7 @@ def get_price_disposition_contribution_view(
 def get_ecommerce_workshop_customer_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     customer: CustomerDependency,
 ) -> WorkshopCustomerViewEnvelope:
     _reject_query_parameters(request)
@@ -2888,7 +2903,7 @@ def kill_ecommerce_operation_automation(
 def get_ecommerce_workshop_task_cockpit_core(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     cockpit: TaskCockpitDependency,
     status: Annotated[TaskStatus | None, Query()] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,

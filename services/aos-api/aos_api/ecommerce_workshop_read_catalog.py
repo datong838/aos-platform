@@ -10,9 +10,10 @@ from aos_api.ecommerce_workshop_contracts import WorkshopDependencyType
 
 
 class EcommerceWorkshopReadCatalog:
-    def __init__(self, *, legacy, installed) -> None:
+    def __init__(self, *, legacy, installed=None, installed_factory=None) -> None:
         self._legacy = legacy
         self._installed = installed
+        self._installed_factory = installed_factory
 
     def get_readiness(self, **scope):
         try:
@@ -20,7 +21,11 @@ class EcommerceWorkshopReadCatalog:
         except AssetNotFoundError:
             # Integrity, signature and availability errors never permit fallback.
             pass
-        result = self._installed.get_readiness(**scope)
+        installed = (
+            self._installed_factory() if self._installed_factory is not None
+            else self._installed
+        )
+        result = installed.get_readiness(**scope)
         item = result.item
         installation = item.installation_ref
         required = set(item.permissions.data_scopes)
