@@ -1,0 +1,37 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-budget-owner-preflight-review-20261013-r1-current2010",
+    "task_id": "qyh-budget-owner-preflight-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "b11a656caf6c156e6aff3309d301626ef71f21f7",
+      "authority_revision": "AOS-002010",
+      "files": {
+        ".evidence/qyh-budget-owner-preflight-review-20261013/material-0.txt": "26dfdbd8f560cdb706bb81527adc9d739f71c81236d27020b6f9c8579d71ac77",
+        ".evidence/qyh-budget-owner-preflight-review-20261013/material-1.txt": "45f5ca917fc35bab4e548c33340d670deec39889830d4d7be6df70501def10ac",
+        ".evidence/qyh-budget-owner-preflight-review-20261013/material-2.txt": "d5926f2434a579511018b9296722eae0fecfb9f25d18753f725215cdfb8f1ef5",
+        ".evidence/qyh-budget-owner-preflight-review-20261013/material-3.txt": "d5655eeb05b0393f2dde88cd7ae136409ab1cb94d92f7254f375c049abf5074d",
+        ".evidence/qyh-budget-owner-preflight-review-20261013/material-4.txt": "e09db7aad375425a08ef2bad94113e78f78036e3bd7e6a922ed755b11a2c6c6c"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "C1: The existing preflight only inquires exact current owner/policy/budget/provider references under original readonly scope and public namespace guards; it grants no approval or execution.",
+        "evidence": "material-0.txt (module file with SHA 26dfdbd8...); _content omits tenant/contentHash/createdBy/createdAt, _exact enforces revision/lifecycle/content_hash scope match; schema checks aip_model_governance_policy_head/revision, aip_budget_head/revision, aip_provider_instance_head/revision. Unsafe guard (sql_sha f0b9... block) rejects session_user super/BYPASS/NOT CANLOGIN or non-pure-public search_path. Returns status=observed, activationEligible=False, approvalVerified=False.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "C2: The recorded137 tests and independent readonly lab inquiry support the bounded preflight only; native Principal is injected, not formal real maker/human approval acceptance.",
+        "evidence": "material-1.txt (SHA 45f5ca91...): 21 focused tests added, cumulativeTests=137. Fixes inject Principal(subject='machine-maker', roles=['admin']). material-2.txt outcome confirms redCommittedBaseline '5c99d590 contains no preflight module; actual test import refused missing module' and implementation prepared before red baseline. Limitations: 'No formal machine-maker identity or signed human spending approval is accepted by these tests' and 'native tests are readonly'. material-3.txt: Independent restored PG readonly outcome with real provider ref but 'realOidcAuthenticationAccepted=false' and 'humanApprovalCreated=false'. material-4.txt notes '不能伪造第二真人或复用旧approvalRef'.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "按材料约束继续：保持只读/原Owner作用域；后续如需批准/持久化须由新的真实身份与人工批准流程重验并重用新approvalRef，不得复用旧结果或伪造真人。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

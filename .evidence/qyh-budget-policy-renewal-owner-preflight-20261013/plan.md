@@ -3,3 +3,7 @@ Rules：用户AGENTS、AOS交付闭环、231、E17-s3g；上波cc7e8c220提案�
 文件：services/aos-api/aos_api/aip_budget_policy_renewal_preflight.py；services/aos-api/tests/aip/test_budget_policy_renewal_preflight.py；本目录。
 只读scoped REPEATABLE READ原连接加载sourcePolicy current head/revision/hash/version、预算exact当前ACTIVE版本及window、Provider/model当前exact ref、原maker/checker membership。强制scope/正常非owner非super角色及readonly，禁止caller提供true flags替代Owner。源不存在、revoked/suspended、CAS漂移、预算或Provider漂移、未知成员均返回明确拒绝；允许source历史ACTIVE但已过期作续期输入，目标必须草稿。任何positive结果只能表示已只读对账，activationEligible必须false，不能据此批准费用。
 先原连接/Owner读取合同与最小元数据调查，然后专项RED、最小实现、独立恢复库正向/跨租户/并发head漂移/readonly负门及相邻回归。当前库只读资料不当独立PG验证；原审批/持久化/低权消费依赖后续真实身份配置和批准绑定，不能伪造第二真人或复用旧approvalRef。
+
+实现前细化：ProviderModelId只核“当前不可变sourcePolicy费用授权中的模型标识与续期目标一致”，不伪称模型健康/目录/质量已验收。预算与Provider读原当前head/revision/payload，重算原各合同contentHash且scope完全一致；sourcePolicy仍必须与当前head及本提案原版本逐字段一致。使用原身份和成员检查；另拒session_user具super/BYPASS或拥有这些源表。查询不得FOR SHARE/UPDATE、不得commit或发布。结果仅包含proposalHash、各固定ref、版本和activationEligible=false，不返回预算金额、Provider端点、secretRef或token。
+
+自复审补充：Owner来源固定public权威表；自有SELECT全部显式public，原成员读者沿用前先拒绝current_schemas(true)含pg_catalog/public以外的shadow schema（含临时schema）。不能把可注入search_path下的同名表当原Owner，且不改原共享读者/用户数据。原r1材料审阅保留为旧截止；补强后必须原测试与独立PG复验及新精确材料审阅。

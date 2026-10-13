@@ -1,0 +1,36 @@
+{
+  "outcome": "INDEPENDENT_RESTORED_PG_READONLY_OWNER_PREFLIGHT_GREEN",
+  "sourceFrozenHead": "api-source-5c99d59011722909b98405a2fbc5c021c92e35ff",
+  "newModuleSha256": "f860b6d17f13c8c7eb0d3574f07f999ab96a0bee849afcf4b66723937bc6ce94",
+  "native": {
+    "status": "observed",
+    "proposalHash": "69a9fc0f361fdb84d7d2c583cf0aa0bfd0701ad8eb19cfe2e079b4c61f1a8f23",
+    "sourcePolicyRevision": 13,
+    "sourceHeadVersion": 13,
+    "budgetRef": {
+      "assetType": "BudgetRevision",
+      "assetId": "a0v-ecommerce-hard-stop-budget-v1",
+      "revision": 1,
+      "contentHash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+    },
+    "providerRef": {
+      "assetType": "ProviderInstanceRevision",
+      "assetId": "a0v-agnes-text-readonly-dev",
+      "revision": 1,
+      "contentHash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+    },
+    "activationEligible": false,
+    "approvalVerified": false
+  },
+  "negativeGates": {
+    "headVersion": "BudgetPolicyRenewalBlocked:RENEWAL_SOURCE_HEAD_DRIFT",
+    "unknownMaker": "BudgetPolicyRenewalBlocked:BUDGET_ACTIVATION_MAKER_MEMBERSHIP_REQUIRED",
+    "crossTenant": "REJECTED"
+  },
+  "principalInjectedTestFixture": true,
+  "realOidcAuthenticationAccepted": false,
+  "humanApprovalCreated": false,
+  "sourceCurrentDatabaseTouched": false,
+  "labDatabaseWrites": false,
+  "providerCalls": false
+}

@@ -1,0 +1,34 @@
+{
+  "outcome": "RENEWAL_OWNER_READONLY_PREFLIGHT_UNIT_AND_INDEPENDENT_PG_GREEN",
+  "codeFiles": {
+    "services/aos-api/aos_api/aip_budget_policy_renewal_preflight.py": "26dfdbd8f560cdb706bb81527adc9d739f71c81236d27020b6f9c8579d71ac77",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_preflight.py": "45f5ca917fc35bab4e548c33340d670deec39889830d4d7be6df70501def10ac"
+  },
+  "redCommittedBaseline": "5c99d590 contains no preflight module; actual test import refused missing module",
+  "implementationDraftPreparedBeforeBaselineRed": true,
+  "focusedTests": 21,
+  "cumulativeTests": 137,
+  "independentPgPositiveObserved": true,
+  "nativeNegativeGates": {
+    "headVersion": "BudgetPolicyRenewalBlocked:RENEWAL_SOURCE_HEAD_DRIFT",
+    "unknownMaker": "BudgetPolicyRenewalBlocked:BUDGET_ACTIVATION_MAKER_MEMBERSHIP_REQUIRED",
+    "unknownChecker": "BudgetPolicyRenewalBlocked:BUDGET_ACTIVATION_CHECKER_MEMBERSHIP_REQUIRED",
+    "crossTenant": "REJECTED",
+    "writableConnection": "REJECTED"
+  },
+  "testPrincipalInjected": true,
+  "realOidcEntryAccepted": false,
+  "currentDatabaseWrites": false,
+  "labDatabaseWrites": false,
+  "policyOrApprovalPublished": false,
+  "providerCalls": false,
+  "activationEligible": false,
+  "limitations": [
+    "Readonly Owner evidence only; future producer must revalidate locked/current source and CAS before persistence",
+    "No formal machine-maker identity or signed human spending approval is accepted by these tests",
+    "Provider model identity preserved from source policy, not a model-health/catalog/quality acceptance",
+    "Native tests are readonly; concurrent mutation after the snapshot is a persistence-stage CAS responsibility"
+  ],
+  "publicOwnerNamespacePinned": true,
+  "nativeEvidence": "native-readonly-result-r3.json"
+}

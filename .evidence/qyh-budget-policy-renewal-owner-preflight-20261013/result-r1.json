@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-owner-preflight-20261013-r1",
+    "task_id": "qyh-budget-policy-renewal-owner-preflight-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "5c99d59011722909b98405a2fbc5c021c92e35ff",
+      "authority_revision": "AOS-002008",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-owner-preflight-20261013/review-material-0.txt": "f860b6d17f13c8c7eb0d3574f07f999ab96a0bee849afcf4b66723937bc6ce94",
+        ".evidence/qyh-budget-policy-renewal-owner-preflight-20261013/review-material-1.txt": "45f5ca917fc35bab4e548c33340d670deec39889830d4d7be6df70501def10ac",
+        ".evidence/qyh-budget-policy-renewal-owner-preflight-20261013/review-material-2.txt": "5728169578856345bfd6cd577d78a34d8565bd8ad2a8befc73ac40bc1f9fac70",
+        ".evidence/qyh-budget-policy-renewal-owner-preflight-20261013/review-material-3.txt": "8a1723fca42294dd7ed9805373705d5e6f89ddcef0d7e12f6a110494cfe32532",
+        ".evidence/qyh-budget-policy-renewal-owner-preflight-20261013/review-material-4.txt": "3117d59f51635f2cdb80d7ba6973eabd676a8691ca5cebc25ec5c7fafbf8b507",
+        ".evidence/qyh-budget-policy-renewal-owner-preflight-20261013/review-material-5.txt": "5aa62dabea689da2894b892f5eb46636cb42d484fe7589a502f22ade32612a3f"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The new readonly preflight uses original Principal/scope/readonly-repeatable-read/member checks, rejects unsafe source identities, loads current policy/Budget/Provider heads and recomputes exact typed hashes, and returns only bounded references with activationEligible and approvalVerified false. It neither publishes policies nor approves or executes business.",
+        "evidence": "review-material-0.txt: BudgetPolicyRenewalPreflight.inquire uses _identity(principal), connect_read_only or read_only factory, _require_inquiry_connection, pg_roles/session_user unsafe check, _member for maker/checker, selects aip_model_governance_policy_head/revision, aip_budget_head/revision, aip_provider_instance_head/revision, validates typed BudgetPolicyRevision/BudgetRevision/ProviderInstanceRevision, recomputes canonical_hash(_content(...)), forbids FOR SHARE/UPDATE/COMMIT in test asserts (review-material-1.txt execute guard), and returns {status: observed, activationEligible: False, approvalVerified: False, ...} without amount/endpoint/secretRef (asserted in review-material-1.txt test_positive_is_observation_only_and_preserves_owner_refs).",
+        "assessment": "supported"
+      },
+      {
+        "claim": "21 focused cases included in137 cumulative contract passes and an independent retained full-restore PG normal-role positive read plus5 native negative gates passed. Native Principal is an injected fixture, not real OIDC or machine-maker identity acceptance; no current/lab DB writes, Provider calls, eight-workbench or business completion are claimed.",
+        "evidence": "review-material-3.txt outcome INDEPENDENT_RESTORED_PG_READONLY_OWNER_PREFLIGHT_GREEN reports 21 focused tests, cumulativeTests=137, testPrincipalInjectedTestFixture=true, realOidcAuthenticationAccepted=false, currentDatabaseWrites=false, labDatabaseWrites=false, providerCalls=false, policyOrApprovalPublished=false. review-material-4.txt and review-material-5.txt show native read result with negative gates for headVersion, unknownMaker, unknownChecker, crossTenant, writableConnection all rejected.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前baseline并收口本轮独立只读验证；如需推进，进入下一模块的预检查或生产绑定阶段，并在该阶段重新对source/revision/CAS和执行身份进行锁定验证。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}
