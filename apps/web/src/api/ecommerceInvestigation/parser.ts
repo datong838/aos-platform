@@ -80,7 +80,7 @@ function ref(value: unknown, label: string, expectedType?: string): Investigatio
   const revision = typeof raw.revision === "number" ? integer(raw.revision, `${label}.revision`, 1) : text(raw.revision, `${label}.revision`, 160);
   const contentHash = text(raw.contentHash, `${label}.contentHash`, 71);
   if (!HASH.test(contentHash)) throw new TypeError(`${label}.contentHash 非法`);
-  const receiptId = raw.receiptId === undefined ? undefined : text(raw.receiptId, `${label}.receiptId`, 240);
+  const receiptId = raw.receiptId === undefined || raw.receiptId === null ? undefined : text(raw.receiptId, `${label}.receiptId`, 240);
   return { resourceType, resourceId: text(raw.resourceId, `${label}.resourceId`, 240), revision, contentHash, ...(receiptId ? { receiptId } : {}) };
 }
 function nullableRef(value: unknown, label: string, expectedType?: string): InvestigationExactRef | null { return value === null ? null : ref(value, label, expectedType); }

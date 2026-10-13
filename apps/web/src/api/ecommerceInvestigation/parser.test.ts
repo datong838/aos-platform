@@ -74,3 +74,57 @@ describe("ecommerceInvestigation strict parser", () => {
     expect(() => parseInvestigationHandoffCompile({ ...payload, handoff: { ...handoff, issueCommand: { ...issueCommand, envelope: { ...issueCommand.envelope, objectRefs: [{ ...issueCommand.envelope.objectRefs[0], contentHash: undefined }] } } } }, "run-1", tenant)).toThrow(/contentHash|字段漂移/);
   });
 });
+
+describe("backend optional Receipt wire representation", () => {
+  const successor = {
+    ...caseItem, revision: 2, version: 2,
+    priorRef: { ...ref("BusinessInvestigationCaseRevision", "case-1"), receiptId: null },
+    channelRef: { ...caseItem.channelRef, receiptId: null },
+    businessEntityRef: { ...caseItem.businessEntityRef, receiptId: null },
+    entityChannelBindingRef: { ...caseItem.entityChannelBindingRef, receiptId: null },
+    investigationProfileRef: { ...caseItem.investigationProfileRef, receiptId: null },
+    scopeRef: { ...caseItem.scopeRef, receiptId: null },
+    schedulePolicyRef: { ...ref("SchedulePolicyRevision", "schedule-1"), receiptId: null },
+  };
+
+  it("accepts canonical optional null in successor Case refs as no Receipt", () => {
+    const parsed = parseInvestigationCaseList({ tenant, items: [successor], count: 1 }, tenant).items[0]!;
+    for (const value of [parsed.priorRef, parsed.channelRef, parsed.businessEntityRef, parsed.entityChannelBindingRef, parsed.investigationProfileRef, parsed.scopeRef, parsed.schedulePolicyRef]) {
+      expect(value).not.toBeNull();
+      expect(value).not.toHaveProperty("receiptId");
+      expect(value?.contentHash).toBe(hash);
+    }
+    expect(parsed.revision).toBe(2);
+    expect(parsed.priorRef?.revision).toBe(1);
+  });
+
+  it("preserves absent and valid non-null Receipt references", () => {
+    const parsed = parseInvestigationCaseList({ tenant, items: [{ ...caseItem, channelRef: { ...caseItem.channelRef, receiptId: "receipt-1" } }], count: 1 }, tenant).items[0]!;
+    expect(parsed.channelRef.receiptId).toBe("receipt-1");
+    expect(parsed.scopeRef).not.toHaveProperty("receiptId");
+  });
+
+  it.each(["", " ", "x".repeat(241), 0, false, {}])("rejects malformed non-null Receipt %j", (receiptId) => {
+    expect(() => parseInvestigationCaseList({ tenant, items: [{ ...caseItem, channelRef: { ...caseItem.channelRef, receiptId } }], count: 1 }, tenant)).toThrow(/receiptId/);
+  });
+
+  it("does not relax unknown fields, hashes or tenant with null Receipt", () => {
+    expect(() => parseInvestigationCaseList({ tenant, items: [{ ...successor, priorRef: { ...successor.priorRef, approved: true } }], count: 1 }, tenant)).toThrow(/字段漂移/);
+    expect(() => parseInvestigationCaseList({ tenant, items: [{ ...successor, priorRef: { ...successor.priorRef, contentHash: "sha256:bad" } }], count: 1 }, tenant)).toThrow(/contentHash/);
+    expect(() => parseInvestigationCaseList({ tenant, items: [successor], count: 1 }, { orgId: "dev-org", projectId: "dev-project" })).toThrow(/tenant 漂移/);
+  });
+
+  it("supports null in Run references without changing unknown control", () => {
+    const raw = { ...runItem, authority: { ...runItem.authority, caseRef: { ...runItem.authority.caseRef, receiptId: null } }, state: { ...runItem.state, version: 2, eventSequence: 2, priorRef: { ...ref("BusinessInvestigationRunStateRevision", "run-1"), receiptId: null }, control: "UNKNOWN", uncertainCommand: { commandId: "command-1", operation: "data.request", requestHash: hash } } };
+    const parsed = parseInvestigationRunList({ tenant, items: [raw], count: 1 }, "case-1", tenant).items[0]!;
+    expect(parsed.authority.caseRef).not.toHaveProperty("receiptId");
+    expect(parsed.state.control).toBe("UNKNOWN");
+    expect(parsed.state.uncertainCommand?.commandId).toBe("command-1");
+  });
+
+  it("keeps canonical commands and external-effect gate with null View refs", () => {
+    const raw = { ...viewV5, caseRef: { ...viewV5.caseRef, receiptId: null }, runRef: { ...viewV5.runRef, receiptId: null }, stateRef: { ...viewV5.stateRef, receiptId: null } };
+    expect(parseInvestigationWorkbenchView(raw, "run-1", tenant).commandProjection).toEqual(viewV5.commandProjection);
+    expect(() => parseInvestigationWorkbenchView({ ...raw, commandProjection: { ...viewV5.commandProjection, externalEffectsAllowed: true } }, "run-1", tenant)).toThrow(/authority 漂移/);
+  });
+});
