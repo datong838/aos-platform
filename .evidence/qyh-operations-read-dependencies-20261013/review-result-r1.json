@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-operations-read-dependencies-20261013-r1",
+    "task_id": "qyh-operations-read-dependencies-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "6cb7798238ddd1ae859c2f496c39ea9ab4f3c01b",
+      "authority_revision": "AOS-002015",
+      "files": {
+        ".evidence/qyh-operations-read-dependencies-20261013/plan-material.txt": "c8b07e05b12ab9f032541d5601c19f934ba1cab74d87b9bacc7cc6d6b7b2a896",
+        ".evidence/qyh-operations-read-dependencies-20261013/tests-material.txt": "7fc5e9ddfc09d3bba6d6e223399259fec2198b15bdbc091e149b5b2a261814b9",
+        ".evidence/qyh-operations-read-dependencies-20261013/scope-tests-material.txt": "a910d3b38aeb4919deebf3ad4249f57630bd262f363b394ca40f9357bc5c418f",
+        ".evidence/qyh-operations-read-dependencies-20261013/command-readonly-material.txt": "54aba001a344239613361bc7cf6ab2fd46c738ee063412f1376cd5f93996f0ad",
+        ".evidence/qyh-operations-read-dependencies-20261013/workspace-readonly-material.txt": "1be77f63b0f408cb67b2692a2b3c6e381454acf6c5ea0c14aadd63751a835a1e",
+        ".evidence/qyh-operations-read-dependencies-20261013/compatibility-material.txt": "96d8df242fedf2961d65d7b81326e7a84330160ee51ce52e864ecbca8cd7cbce",
+        ".evidence/qyh-operations-read-dependencies-20261013/router-diff-material.txt": "26769b5f57acdc1497b198606a475397441796a40dff78d46e876666575502ab"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "候选仅把两个已审计Operations依赖GET的目录类型换为ReadCatalogDependency，函数体/其他原函数与全部POST保持；实际读取安装门仍不授运行/业务执行权限。",
+        "evidence": "router-diff-material.txt 显示 ecommerce_workshop.py 仅两处 diff：get_ecommerce_operation_case_workspace_view 和 get_ecommerce_operation_command_readiness 的参数 catalog 类型从 CatalogDependency 改为 ReadCatalogDependency，函数体无其他变更。compatibility-material.txt 显示 changedOriginalFunctionsOnlyAnnotation 仅含这两个函数，allOtherOriginalFunctionsAstEqual 为 true。compatibility-material.txt 中 commandsAvailable=false、currentApiLoaded=false、businessComplete=false，表明未开放执行权限。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "HTTP专项验证两个GET使用新读取门/原tenant/未知参数拒绝，scope测试只允许明确root8+这两个GET；真实pure command DTO六项blocked及external退款门保留，CaseWorkspace源只组合原只读事实/DTO，没有新创建Case或执行调用。",
+        "evidence": "tests-material.txt 中 test_readiness_returns_original_six_blocked_commands 验证六项命令均 blocked，refund 使用 EXTERNAL_ACTION_GATE_NOT_BOUND 门；test_case_workspace_receives_original_authenticated_tenant 验证 tenant 为 org-org/dev-project；test_unknown_query_cannot_change_tenant_or_reach_catalog 验证未知参数返回 400。scope-tests-material.txt 中 test_read_dependency_only_reaches_explicit_audited_get_routes 验证仅 8 个 root + 2 个 audited GET 使用 ReadCatalogDependency。command-readonly-material.txt 中 EcommerceOperationCommands.read_readiness 仅返回 OperationCommandDescriptor，无 DB/网络/执行方法。workspace-readonly-material.txt 中 EcommerceOperationCaseWorkspace.read 仅组合 SELECT 事实，无 append/create/Action.execute/Provider 调用。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "依据 compatibility-material.txt 中 businessComplete=false 记录，本次变更范围限于只读门注入；下一步应继续按 plan-material.txt 第 3-8/8 节执行 HTTP 专项 RED 验证与原 runtime 私有冻结只读 helper DTO 回归测试，确保页面 Promise.all 进入真实视图后再推进下一已登记 helper 波。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

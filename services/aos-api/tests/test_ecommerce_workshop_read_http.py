@@ -1,4 +1,4 @@
-"""HTTP scope fence: only the audited eight roots use installed read admission."""
+"""HTTP scope fence: only explicitly audited GETs use installed read admission."""
 from __future__ import annotations
 
 import pytest
@@ -62,7 +62,7 @@ def test_unreviewed_get_still_uses_legacy_admission(path):
     assert not reader.calls
 
 
-def test_read_dependency_never_reaches_post_or_auxiliary_route():
+def test_read_dependency_only_reaches_explicit_audited_get_routes():
     actual = set()
     for route in routes.router.routes:
         uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
@@ -70,7 +70,10 @@ def test_read_dependency_never_reaches_post_or_auxiliary_route():
         if uses_read:
             assert route.methods == {'GET'}
             actual.add(route.path)
-    assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS}
+    assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+        '/v1/ecommerce-workshop/views/operations/cases',
+        '/v1/ecommerce-workshop/commands/operations/readiness',
+    }
 
 
 def test_unknown_query_rejected_before_catalog_call():

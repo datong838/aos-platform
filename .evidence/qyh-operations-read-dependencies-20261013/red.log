@@ -1,0 +1,121 @@
+FFFF..                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_missing_selected_read_admission_does_not_fall_back_to_legacy[/views/operations/cases] _
+
+path = '/views/operations/cases'
+
+    @pytest.mark.parametrize('path', PATHS)
+    def test_missing_selected_read_admission_does_not_fall_back_to_legacy(path):
+        client, legacy, reader = client_with_catalogs()
+        assert client.get('/v1/ecommerce-workshop' + path).status_code == 404
+>       assert not legacy.calls
+E       AssertionError: assert not [{'module_id': 'ecommerce.operations', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}]
+E        +  where [{'module_id': 'ecommerce.operations', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x11e0cfd10>.calls
+
+services/aos-api/tests/test_ecommerce_operations_read_dependencies.py:13: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T10:21:12.425756+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T10:21:12.554971+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T10:21:12.555648+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/operations/cases \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/operations/cases "HTTP/1.1 404 Not Found"
+_ test_missing_selected_read_admission_does_not_fall_back_to_legacy[/commands/operations/readiness] _
+
+path = '/commands/operations/readiness'
+
+    @pytest.mark.parametrize('path', PATHS)
+    def test_missing_selected_read_admission_does_not_fall_back_to_legacy(path):
+        client, legacy, reader = client_with_catalogs()
+        assert client.get('/v1/ecommerce-workshop' + path).status_code == 404
+>       assert not legacy.calls
+E       AssertionError: assert not [{'module_id': 'ecommerce.operations', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}]
+E        +  where [{'module_id': 'ecommerce.operations', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x11e3b83d0>.calls
+
+services/aos-api/tests/test_ecommerce_operations_read_dependencies.py:13: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T10:21:12.609039+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T10:21:12.749338+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T10:21:12.749894+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/commands/operations/readiness \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/commands/operations/readiness "HTTP/1.1 404 Not Found"
+_____________ test_readiness_returns_original_six_blocked_commands _____________
+
+    def test_readiness_returns_original_six_blocked_commands():
+        client, legacy, reader = client_with_catalogs()
+        admit(reader)
+        response = client.get('/v1/ecommerce-workshop/commands/operations/readiness')
+>       assert response.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_operations_read_dependencies.py:27: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T10:21:12.752017+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T10:21:12.874221+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T10:21:12.874747+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/commands/operations/readiness \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/commands/operations/readiness "HTTP/1.1 404 Not Found"
+__________ test_case_workspace_receives_original_authenticated_tenant __________
+
+    def test_case_workspace_receives_original_authenticated_tenant():
+        client, legacy, reader = client_with_catalogs()
+        admit(reader)
+        class Probe:
+            def read(self, **scope):
+                assert scope == dict(org_id='org-org',project_id='dev-project')
+                raise ReadReached('case-workspace')
+        client.app.dependency_overrides[routes.get_ecommerce_operation_case_workspace] = lambda: Probe()
+>       with pytest.raises(ReadReached, match='case-workspace'):
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_operations_read_dependencies.py:46: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T10:21:12.876958+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T10:21:12.997326+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T10:21:12.997935+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/operations/cases \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/operations/cases "HTTP/1.1 404 Not Found"
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_operations_read_dependencies.py::test_missing_selected_read_admission_does_not_fall_back_to_legacy[/views/operations/cases]
+FAILED services/aos-api/tests/test_ecommerce_operations_read_dependencies.py::test_missing_selected_read_admission_does_not_fall_back_to_legacy[/commands/operations/readiness]
+FAILED services/aos-api/tests/test_ecommerce_operations_read_dependencies.py::test_readiness_returns_original_six_blocked_commands
+FAILED services/aos-api/tests/test_ecommerce_operations_read_dependencies.py::test_case_workspace_receives_original_authenticated_tenant
+4 failed, 2 passed, 7 warnings in 1.13s

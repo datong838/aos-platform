@@ -1,0 +1,15 @@
+# Operations主视图两个只读依赖接线
+
+Rules：AGENTS.md、AOS工程交付、231/D-wave、完整Goal、单m1写者；先复习方案/登记/RED再最小编码；保留数据与dirty、tenant/exact grant/禁入/原执行门。当前Authority2015，正式新Task同名新owner，root8旧Task准确范围Delivery后router Lease已释放，维护新parent继续active。
+
+1/8：产品目标为原统一运营主视图可真实读取并解释原事实/缺口，不以root200、mock或空集合称经营成功。原最新2324同权威卷PG/API/Web全重启/650指纹一致/实际OIDC root8返回200已交付。当前浏览器OperationsPage的Promise.all(root+command readiness+case workspace)有后两项404，导致整体读取失败；19实际辅助404、四页失败、首链仍待。预算不是这两个404根因。
+
+2/8目标文件：services/aos-api/aos_api/routers/ecommerce_workshop.py，仅get_ecommerce_operation_case_workspace_view和get_ecommerce_operation_command_readiness将catalog从CatalogDependency换ReadCatalogDependency；函数体/服务构造/POST/其他辅助保持。services/aos-api/tests/test_ecommerce_workshop_read_http.py的明确scope集合扩至root8+这两个已审计GET；未审计GET仍legacy。新增services/aos-api/tests/test_ecommerce_operations_read_dependencies.py，实际HTTP RED测试两GET走独立读取门/正确tenant、command6真实pureDTO全部blocked、案例reader已授权门后原tenant调用；缺安装404和unknown query400保留。证据仅本目录；D-wave登记本波。
+
+输入：原真实OIDC principal、当前签名selected ACTIVE5和same exact lock/dataScopeGrant，正常原runtime只读角色。本波READONLY不等于运行准入；安装仍disabled。输出：原CommandReadinessDescriptor六项全部blocked（exact Proposal/Approval/Lease门、退款external门不变）；CaseWorkspace原保留facts/candidate refs/blocked来源，candidate是纯DTO不是创建Case。
+
+具体源码审计：EcommerceOperationCommands.read_readiness为pure DTO，无DB/网络/执行方法。EcommerceOperationCaseWorkspace.read→original bounded object/inventory/aftersale SELECT+OperationAuthorityStore.list_cases的read_connect_factory；_source/ref/member_ledger/case_view/candidates/candidate等12helper只在内存组合，tenant检查及external_effect_allowed=false保留；没有append/create/Action.execute/Provider调用。见上一维护目录operations-aux-read-audit.json和root递归审计。读失败0count同时BLOCKED保留，不说成已读真实0成功。
+
+3～8/8：HTTP专项RED→仅2注入→相邻root/Operations/CaseWorkspace tests→正常runtime私有冻结只读helper DTO→通过受支持current sourceguard API-only切换并原owned SPA重新读取（不将API-only称新fullPGrestart；aos提醒仍每次fullPG/API/Web同卷）→真实Commands6blocked、workspace来源/未知解释，页面Promise.all进入真实视图→精确冻结Prime/合法消费/Delivery和Authority/Prime，立即下一已登记helper波。最新snapshot不得包括dirty，旧unknown操作/Root脚本不重跑。新的source更换只在维护Task既有授权范围，由当前唯一owner串行。
+
+风险/回滚：只读门误用于执行的风险以明确10GET图级scope、POST保留及commandblocked合同保证；新helper发现SQL/Reader/schema问题先真实RED、另精确scope最小修复，不吞错误或放宽dataScope/legacy谓词。回滚仅两处类型注入，不改原数据/全局Role/签名/发布状态，不reset覆盖用户dirty。

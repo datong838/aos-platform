@@ -1,0 +1,11 @@
+{
+  "head": "6cb7798238ddd1ae859c2f496c39ea9ab4f3c01b",
+  "changedOriginalFunctionsOnlyAnnotation": [
+    "get_ecommerce_operation_case_workspace_view",
+    "get_ecommerce_operation_command_readiness"
+  ],
+  "allOtherOriginalFunctionsAstEqual": true,
+  "commandsAvailable": false,
+  "currentApiLoaded": false,
+  "businessComplete": false
+}

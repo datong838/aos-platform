@@ -1397,7 +1397,7 @@ def get_ecommerce_workshop_operations_view(
 def get_ecommerce_operation_case_workspace_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     workspace: OperationCaseWorkspaceDependency,
 ) -> OperationCaseWorkspaceEnvelope:
     _reject_query_parameters(request)
@@ -2725,7 +2725,7 @@ def get_ecommerce_workshop_shared_context_view(
 def get_ecommerce_operation_command_readiness(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     commands: OperationCommandsDependency,
 ) -> OperationCommandReadinessEnvelope:
     _reject_query_parameters(request)
