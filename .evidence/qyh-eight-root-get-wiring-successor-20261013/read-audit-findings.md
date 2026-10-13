@@ -1,0 +1,15 @@
+# committed HEAD root读取内容复核
+
+基线d97c4bae06e211a230efc2786eab642349fd3d9d；递归索引recursive-read-audit.json，56方法。此为源码内容结论，不是当前库实测/完整无副作用形式证明。
+
+Media：root.read只走source_reader三切片、jobs.list_jobs、finance.list/get/_reduce、lifecycle.read、publisher.read/_compose、cumulative.read。production各list→DTO helper与family投影只查本库；Action.list/get→_bundle只SELECT，execution.get_execution_view_for_scope→_view只SELECT已保留lease/attempt/receipt/reconcile/settlement/lineage，未调用claim/execute/reconcile/Provider adapter。finance._reduce仅在内存按事件累计，unknown/取消费用/未结算保持blocker。构造器保存依赖/构造TaskStore，不启动执行。
+
+职责read→_responsibility_plan→_responsibility_blockers→_require_exact_assignee_resolution→AipAssigneeResolutionStore._evaluate_candidate/_evaluate_capability_bindings，只查本库成员与binding/模板/Receipt，默认membership_resolver为空。四个lock_*默认false，读取调用没有设置为true；带FOR SHARE的分支属于写路径要求，不在此默认read调用中激活。能力评估读已存health/currentness字段，不实际探测Provider/Source，不生成新Receipt。
+
+Operations：authority.read_all生成明确语义authority描述；object/inventory/aftersale只查ecom_object/ecommerce_aftersale_event并用org+workspace/project+cutoff界限；case_store.list_cases使用read_connect_factory。数量来自原投影；失败原blocker和count表达仍须真实页面解释，不称失败0为经营成功。
+
+连接：多个历史store默认db_connect是RW事务，因此仅源码SELECT不能说DB强制只读；本机恢复HTTP全局连接禁入/READ ONLY及正常角色原生验证需单独实测。root依赖接线不改db模块、共享store或POST factory。dirty Action store/execution仅git HEAD内容作为审计和后续冻结输入。
+
+旧累计展示风险：ecommerce_workshop_media_cumulative.py默认release_revision=AOS-000267，ENGINEERING_READY引用历史20260826 EvidencePack且reasonCode=MEDIA_ENGINEERING_EVIDENCE_CURRENT；不能作为当前经营/发布/重启证据。本Task保留原root schema并登记后续精确证据currentness修复，未以历史ready宣称当前安全门通过。
+
+判定：8root新读取门可进入HTTP-specific RED/候选接线；真实正常角色、最新同卷重启/页面、当前证据解释和独立冻结复审仍待。辅助/private GET与POST不接新门。

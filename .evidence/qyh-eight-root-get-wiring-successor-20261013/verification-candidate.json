@@ -1,0 +1,19 @@
+{
+  "head": "fae0d10ea8b87cdabcc20db6db0ab2cbcfe7cc17",
+  "authority": "AOS-002013",
+  "task": "qyh-eight-root-get-wiring-successor-20261013",
+  "phase": "ROOT8_HTTP_CODE_CANDIDATE_REVIEWED_COMMITTED_NATIVE_AND_BROWSER_PENDING",
+  "tests": "65 passed,7 warnings,13.12s",
+  "final_review": "r3 PASS2/2 consumed",
+  "failed_review_r2": "known terminal transport missing next_safe_step;not accepted;fresh r3 request used",
+  "native_readonly_verified": false,
+  "latest_full_restart_verified": false,
+  "browser_verified": false,
+  "business_complete": false,
+  "task_complete": false,
+  "files": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "201219c331b7ad0f40da62962a038bc5d9428b94edd18949a1a9a85f255bda53",
+    "services/aos-api/aos_api/ecommerce_workshop_read_catalog.py": "ea77f702bd08803ff26c0bc9d5c7db963657a0e1134ef9f0b57216b9be8e1263",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "069b035033f1ec87ad287dec4e7ef52fab2adfb66bfe74c78b2569d3090c2983"
+  }
+}

@@ -1,0 +1,987 @@
+{
+  "head": "d97c4bae06e211a230efc2786eab642349fd3d9d",
+  "status": "RECURSIVE_SELF_HELPERS_EXTRACTED_CONTENT_AUDIT_IN_PROGRESS_NOT_EFFECT_PROOF",
+  "basis": "committed HEAD only, excludes user dirty; external object methods/free funcs/connection and validators require separate content review",
+  "entries": [
+    {
+      "file": "services/aos-api/aos_api/aip_action_execution.py",
+      "method": "__init__",
+      "line": 67,
+      "methodSha256": "d028332572ec0aedef588053c68b330115f608dd5e41e7e35cb706acd492144a",
+      "calls": [],
+      "sqlExpressions": [],
+      "source": "def __init__(self, store: AipActionStore, adapters: ActionAdapterRegistry) -> None:\n        self._store = store\n        self._adapters = adapters"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_action_execution.py",
+      "method": "get_execution_view_for_scope",
+      "line": 929,
+      "methodSha256": "51c65d0f4b5da4705fc7aff2402956c318385a2f61c732340d3a05b44072adea",
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_action_execution_lease\\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\\n                   ORDER BY attempt DESC, created_at DESC LIMIT 1', (*scope.key, proposal_id)).fetchone",
+        "connect",
+        "self._view"
+      ],
+      "sqlExpressions": [
+        "'SELECT * FROM aip_action_execution_lease\\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\\n                   ORDER BY attempt DESC, created_at DESC LIMIT 1'"
+      ],
+      "source": "def get_execution_view_for_scope(\n        self, scope: TenantScope, proposal_id: str\n    ) -> ActionExecutionView:\n        \"\"\"Read the same projection for an already authenticated tenant-bound caller.\"\"\"\n        with connect(scope) as conn:\n            lease = conn.execute(\n                \"\"\"SELECT * FROM aip_action_execution_lease\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\n                   ORDER BY attempt DESC, created_at DESC LIMIT 1\"\"\",\n                (*scope.key, proposal_id),\n            ).fetchone()\n        return self._view(scope, proposal_id, lease)"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_action_execution.py",
+      "method": "_view",
+      "line": 1597,
+      "methodSha256": "5919fef18790d2f668a8d75dc1e7c7551d8c9d60031141a1c0d0e53f93caee42",
+      "calls": [
+        "ActionExecutionAttemptSnapshot",
+        "ActionExecutionLeaseSnapshot",
+        "ActionExecutionView",
+        "ActionReceiptSnapshot",
+        "ActionReceiptStatus",
+        "ActionReconcileAttemptSnapshot",
+        "ManualReconcileCaseSnapshot",
+        "ResourceRef.model_validate",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_action_execution_attempt\\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\\n                   ORDER BY created_at DESC,attempt_id DESC LIMIT 1', (*scope.key, proposal_id)).fetchone",
+        "conn.execute('SELECT * FROM aip_action_manual_reconcile_case\\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\\n                   ORDER BY created_at DESC,case_id DESC LIMIT 1', (*scope.key, proposal_id)).fetchone",
+        "conn.execute('SELECT * FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND proposal_id=%s ORDER BY created_at,receipt_id', (*scope.key, proposal_id)).fetchall",
+        "conn.execute('SELECT * FROM aip_action_reconcile_attempt\\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\\n                   ORDER BY created_at DESC,reconcile_attempt_id DESC LIMIT 1', (*scope.key, proposal_id)).fetchone",
+        "conn.execute('SELECT status FROM aip_action_lineage_projection_request\\n                       WHERE org_id=%s AND project_id=%s AND attempt_id=%s', (*scope.key, attempt['attempt_id'])).fetchone",
+        "conn.execute('SELECT status FROM aip_action_settlement_request\\n                       WHERE org_id=%s AND project_id=%s AND attempt_id=%s', (*scope.key, attempt['attempt_id'])).fetchone",
+        "connect",
+        "self._store.get_proposal"
+      ],
+      "sqlExpressions": [
+        "'SELECT * FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND proposal_id=%s ORDER BY created_at,receipt_id'",
+        "'SELECT * FROM aip_action_execution_attempt\\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\\n                   ORDER BY created_at DESC,attempt_id DESC LIMIT 1'",
+        "'SELECT * FROM aip_action_reconcile_attempt\\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\\n                   ORDER BY created_at DESC,reconcile_attempt_id DESC LIMIT 1'",
+        "'SELECT * FROM aip_action_manual_reconcile_case\\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\\n                   ORDER BY created_at DESC,case_id DESC LIMIT 1'",
+        "'SELECT status FROM aip_action_settlement_request\\n                       WHERE org_id=%s AND project_id=%s AND attempt_id=%s'",
+        "'SELECT status FROM aip_action_lineage_projection_request\\n                       WHERE org_id=%s AND project_id=%s AND attempt_id=%s'"
+      ],
+      "source": "def _view(self, scope: TenantScope, proposal_id: str, lease: Any | None) -> ActionExecutionView:\n        bundle = self._store.get_proposal(scope, proposal_id)\n        with connect(scope) as conn:\n            receipts = conn.execute(\"SELECT * FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND proposal_id=%s ORDER BY created_at,receipt_id\", (*scope.key, proposal_id)).fetchall()\n            attempt = conn.execute(\n                \"\"\"SELECT * FROM aip_action_execution_attempt\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\n                   ORDER BY created_at DESC,attempt_id DESC LIMIT 1\"\"\",\n                (*scope.key, proposal_id),\n            ).fetchone()\n            reconcile_attempt = conn.execute(\n                \"\"\"SELECT * FROM aip_action_reconcile_attempt\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\n                   ORDER BY created_at DESC,reconcile_attempt_id DESC LIMIT 1\"\"\",\n                (*scope.key, proposal_id),\n            ).fetchone()\n            manual_case = conn.execute(\n                \"\"\"SELECT * FROM aip_action_manual_reconcile_case\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\n                   ORDER BY created_at DESC,case_id DESC LIMIT 1\"\"\",\n                (*scope.key, proposal_id),\n            ).fetchone()\n            settlement = None\n            lineage_request = None\n            if attempt is not None:\n                settlement = conn.execute(\n                    \"\"\"SELECT status FROM aip_action_settlement_request\n                       WHERE org_id=%s AND project_id=%s AND attempt_id=%s\"\"\",\n                    (*scope.key, attempt[\"attempt_id\"]),\n                ).fetchone()\n                lineage_request = conn.execute(\n                    \"\"\"SELECT status FROM aip_action_lineage_projection_request\n                       WHERE org_id=%s AND project_id=%s AND attempt_id=%s\"\"\",\n                    (*scope.key, attempt[\"attempt_id\"]),\n                ).fetchone()\n        lease_model = None if lease is None else ActionExecutionLeaseSnapshot(\n            id=lease[\"lease_id\"], proposal_id=proposal_id,\n            proposal_hash=lease[\"proposal_hash\"], attempt=lease[\"attempt\"],\n            expires_at=lease[\"expires_at\"], created_at=lease[\"created_at\"],\n            action_binding_hash=lease[\"action_binding_hash\"],\n            approval_set_hash=lease[\"approval_set_hash\"],\n            reservation_ref=lease[\"reservation_ref\"],\n        )\n        receipt_models = [ActionReceiptSnapshot(\n            id=row[\"receipt_id\"], proposal_id=row[\"proposal_id\"], lease_id=row[\"lease_id\"],\n            status=ActionReceiptStatus(row[\"status\"]), provider_request_id=row[\"provider_request_id\"],\n            evidence_refs=[ResourceRef.model_validate(item) for item in row[\"evidence_refs\"]],\n            receipt_kind=row[\"receipt_kind\"], supersedes_receipt_id=row[\"supersedes_receipt_id\"],\n            request_fingerprint=row[\"request_fingerprint\"], payload=row[\"payload\"], created_at=row[\"created_at\"],\n            attempt_id=row[\"attempt_id\"], action_binding_hash=row[\"action_binding_hash\"],\n            approval_set_hash=row[\"approval_set_hash\"],\n            adapter_revision_ref=row[\"adapter_revision_ref\"], account_binding_ref=row[\"account_binding_ref\"],\n            capability_binding_ref=row[\"capability_binding_ref\"], reservation_ref=row[\"reservation_ref\"],\n            response_artifact_ref=(ResourceRef.model_validate(row[\"response_artifact_ref\"]) if row[\"response_artifact_ref\"] else None),\n            response_hash=row[\"response_hash\"], output_schema_ref=row[\"output_schema_ref\"],\n            receipt_schema_ref=row[\"receipt_schema_ref\"], usage_schema_ref=row[\"usage_schema_ref\"],\n            redaction_policy_ref=row[\"redaction_policy_ref\"],\n            usage_receipt_refs=[ResourceRef.model_validate(item) for item in row[\"usage_receipt_refs\"]],\n            lineage_source_ref=(ResourceRef.model_validate(row[\"lineage_source_ref\"]) if row[\"lineage_source_ref\"] else None),\n            receipt_content_hash=row[\"receipt_content_hash\"],\n            provider_outcome=row[\"provider_outcome\"],\n            reconciliation_status=row[\"reconciliation_status\"],\n            resolution_quality=row[\"resolution_quality\"],\n            resolution_source=row[\"resolution_source\"],\n            resolution_cutoff=row[\"resolution_cutoff\"],\n            reconcile_attempt_id=row[\"reconcile_attempt_id\"],\n            manual_reconcile_case_id=row[\"manual_reconcile_case_id\"],\n            manual_decision_receipt_id=row[\"manual_decision_receipt_id\"],\n            applied_effect=row[\"applied_effect\"],\n            compensated_effect=row[\"compensated_effect\"],\n            residual_effect=row[\"residual_effect\"],\n        ) for row in receipts]\n        attempt_model = None if attempt is None else ActionExecutionAttemptSnapshot(\n            id=attempt[\"attempt_id\"], lease_id=attempt[\"lease_id\"], proposal_id=proposal_id,\n            status=attempt[\"status\"], action_binding_hash=attempt[\"action_binding_hash\"],\n            approval_set_hash=attempt[\"approval_set_hash\"],\n            adapter_revision_ref=attempt[\"adapter_revision_ref\"],\n            idempotency_envelope=attempt[\"idempotency_envelope\"], request_hash=attempt[\"request_hash\"],\n            provider_request_id=attempt[\"provider_request_id\"],\n            provider_outcome=(attempt[\"status\"] if attempt[\"status\"] in {\"accepted\", \"applied\", \"failed\", \"partial\", \"unknown\"} else None),\n            usage_settlement_status=(settlement[\"status\"] if settlement else \"pending\"),\n            lineage_projection_status=(lineage_request[\"status\"] if lineage_request else \"pending\"),\n            created_at=attempt[\"created_at\"], claimed_at=attempt[\"claimed_at\"], finished_at=attempt[\"finished_at\"],\n        )\n        reconcile_model = None if reconcile_attempt is None else ActionReconcileAttemptSnapshot(\n            id=reconcile_attempt[\"reconcile_attempt_id\"],\n            original_receipt_id=reconcile_attempt[\"original_receipt_id\"],\n            status=reconcile_attempt[\"status\"],\n            provider_request_id=reconcile_attempt[\"provider_request_id\"],\n            expires_at=reconcile_attempt[\"expires_at\"],\n            created_at=reconcile_attempt[\"created_at\"],\n            claimed_at=reconcile_attempt[\"claimed_at\"],\n            completed_at=reconcile_attempt[\"completed_at\"],\n        )\n        manual_case_model = None if manual_case is None else ManualReconcileCaseSnapshot(\n            id=manual_case[\"case_id\"],\n            original_receipt_id=manual_case[\"original_receipt_id\"],\n            status=manual_case[\"status\"],\n            version=manual_case[\"version\"],\n            required_facts=manual_case[\"required_facts\"],\n            evidence_refs=[ResourceRef.model_validate(item) for item in manual_case[\"evidence_refs\"]],\n            missing_facts=manual_case[\"missing_facts\"],\n            conflict_facts=manual_case[\"conflict_facts\"],\n            maker_id=manual_case[\"maker_id\"],\n            expires_at=manual_case[\"expires_at\"],\n            created_at=manual_case[\"created_at\"],\n            updated_at=manual_case[\"updated_at\"],\n        )\n        return ActionExecutionView(\n            proposal=bundle.proposal,\n            lease=lease_model,\n            attempt=attempt_model,\n            receipts=receipt_models,\n            reconcile_attempt=reconcile_model,\n            manual_reconcile_case=manual_case_model,\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_action_store.py",
+      "method": "__init__",
+      "line": 144,
+      "methodSha256": "2f8b88638d983fcb0cfcdeadfb5078a99552948992a17bde020a6745a5ff3bbe",
+      "calls": [
+        "TypeError",
+        "type"
+      ],
+      "sqlExpressions": [],
+      "source": "def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None,\n                 network_activation_guard=None, network_approval_guard=None,\n                 first_content_guard=None, guard_activation_guard=None, guard_approval_guard=None,\n                 model_eval_guard=None, source_license_guard=None, source_license_approval_guard=None,\n                 provider_capacity_guard=None, provider_capacity_source_guard=None) -> None:\n        if source_license_approval_guard is not None:\n            from aos_api.aip_license_source_approval import SourceLicenseApprovalGuard\n            if type(source_license_approval_guard) is not SourceLicenseApprovalGuard:\n                raise TypeError('exact source license approval guard required')\n        self._source_license_approval_guard = source_license_approval_guard\n        if source_license_guard is not None:\n            from aos_api.aip_license_source_proposal import SourceLicenseProposalGuard\n            if type(source_license_guard) is not SourceLicenseProposalGuard:\n                raise TypeError('exact source license proposal guard required')\n        self._source_license_guard = source_license_guard\n        if model_eval_guard is not None:\n            from aos_api.aip_model_eval_action import ModelEvalActionGuard\n            if type(model_eval_guard) is not ModelEvalActionGuard:\n                raise TypeError('exact Model Eval Action guard required')\n        self._model_eval_guard = model_eval_guard\n        if provider_capacity_guard is not None:\n            from aos_api.aip_provider_capacity_action import ProviderCapacityActionGuard\n            if type(provider_capacity_guard) is not ProviderCapacityActionGuard:\n                raise TypeError('exact Provider capacity Action guard required')\n        self._provider_capacity_guard = provider_capacity_guard\n        if provider_capacity_source_guard is not None:\n            from aos_api.aip_provider_capacity_source_action import ProviderCapacitySourceActionGuard\n            if type(provider_capacity_source_guard) is not ProviderCapacitySourceActionGuard:\n                raise TypeError('exact Provider capacity Source Action guard required')\n        self._provider_capacity_source_guard = provider_capacity_source_guard\n        if guard_approval_guard is not None:\n            from aos_api.aip_guard_policy_activation import GuardPolicyApprovalGuard\n            if type(guard_approval_guard) is not GuardPolicyApprovalGuard:\n                raise TypeError('exact guard policy approval guard required')\n        self._guard_approval_guard = guard_approval_guard\n        if guard_activation_guard is not None:\n            from aos_api.aip_guard_policy_activation import GuardPolicyActivationGuard\n            if type(guard_activation_guard) is not GuardPolicyActivationGuard:\n                raise TypeError('exact guard policy activation guard required')\n        self._guard_activation_guard = guard_activation_guard\n        if first_content_guard is not None:\n            from aos_api.ecommerce_content_first_action_binding import FirstContentActionGuard\n            if type(first_content_guard) is not FirstContentActionGuard:\n                raise TypeError('exact first content guard required')\n        self._first_content_guard = first_content_guard\n        if bootstrap_guard is not None:\n            from aos_api.ecommerce_analysis_bootstrap_action import _BootstrapActionGuard\n            if type(bootstrap_guard) is not _BootstrapActionGuard:\n                raise TypeError('exact bootstrap action guard required')\n        self._bootstrap_guard = bootstrap_guard\n        if network_activation_guard is not None:\n            from aos_api.aip_network_policy_action_producer import NetworkPolicyActivationGuard\n            if type(network_activation_guard) is not NetworkPolicyActivationGuard:\n                raise TypeError('exact network activation guard required')\n        self._network_activation_guard = network_activation_guard\n        if network_approval_guard is not None:\n            from aos_api.aip_network_policy_action_producer import NetworkPolicyApprovalGuard\n            if type(network_approval_guard) is not NetworkPolicyApprovalGuard:\n                raise TypeError('exact network approval guard required')\n        self._network_approval_guard = network_approval_guard\n        self._connect_factory = connect_factory or db_connect"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_action_store.py",
+      "method": "get_proposal",
+      "line": 1189,
+      "methodSha256": "f3bd99a07e659d6c82521511d5bc85b6aeb7dccdd08e2226e61145e23c1da0e1",
+      "calls": [
+        "self._bundle",
+        "self._connect"
+      ],
+      "sqlExpressions": [],
+      "source": "def get_proposal(self, scope: TenantScope, proposal_id: str) -> ActionDraftBundle:\n        with self._connect(scope) as conn:\n            return self._bundle(conn, scope, proposal_id)"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_action_store.py",
+      "method": "_connect",
+      "line": 1537,
+      "methodSha256": "ddc22431e28900d10d0793fe22153b7e2e1f7c5ac61a36c59c43e8efd11325a8",
+      "calls": [
+        "self._connect_factory"
+      ],
+      "sqlExpressions": [],
+      "source": "def _connect(self, scope: TenantScope):\n        try:\n            return self._connect_factory(scope)\n        except TypeError:\n            return self._connect_factory()"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_action_store.py",
+      "method": "_bundle",
+      "line": 1388,
+      "methodSha256": "54a2e20e7a7a55a93b312c2d47f6cd00709ba7f4a52322955fb9e71eb366be23",
+      "calls": [
+        "ActionApprovalEventSnapshot",
+        "ActionDraftBundle",
+        "ActionProposalSnapshot",
+        "ActionProposalStatus",
+        "ActionRiskLevel",
+        "ActionTypeRevisionRef",
+        "AipActionNotFound",
+        "ApprovalDecision",
+        "DraftSnapshot",
+        "ExactRevisionRef.model_validate",
+        "ResourceRef.model_validate",
+        "actor",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND proposal_id=%s ORDER BY created_at,approval_event_id', (*scope.key, proposal_id)).fetchall",
+        "conn.execute('SELECT * FROM aip_action_draft WHERE org_id=%s AND project_id=%s AND proposal_id=%s', (*scope.key, proposal_id)).fetchone",
+        "conn.execute('SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s', (*scope.key, proposal_id)).fetchone",
+        "int"
+      ],
+      "sqlExpressions": [
+        "'SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s'",
+        "'SELECT * FROM aip_action_draft WHERE org_id=%s AND project_id=%s AND proposal_id=%s'",
+        "'SELECT * FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND proposal_id=%s ORDER BY created_at,approval_event_id'"
+      ],
+      "source": "def _bundle(self, conn: Any, scope: TenantScope, proposal_id: str) -> ActionDraftBundle:\n        row = conn.execute(\"SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s\", (*scope.key, proposal_id)).fetchone()\n        if row is None:\n            raise AipActionNotFound(\"proposal not found in scope\")\n        draft = conn.execute(\"SELECT * FROM aip_action_draft WHERE org_id=%s AND project_id=%s AND proposal_id=%s\", (*scope.key, proposal_id)).fetchone()\n        approvals = conn.execute(\"SELECT * FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND proposal_id=%s ORDER BY created_at,approval_event_id\", (*scope.key, proposal_id)).fetchall()\n        action = row[\"action_type_snapshot\"]\n        proposal = ActionProposalSnapshot(\n            id=row[\"proposal_id\"],\n            action_type=ActionTypeRevisionRef(action_type_id=row[\"action_type_id\"], revision_hash=row[\"action_type_revision_hash\"], object_type=action[\"objectType\"]),\n            task_id=row[\"task_id\"], run_id=row[\"run_id\"],\n            object_ref=ResourceRef.model_validate(row[\"object_ref\"]) if row[\"object_ref\"] else None,\n            purpose=row[\"purpose\"], risk_level=ActionRiskLevel(row[\"risk_level\"]),\n            client_risk_hint=ActionRiskLevel(row[\"client_risk_hint\"]) if row[\"client_risk_hint\"] else None,\n            policy_snapshot=row[\"policy_snapshot\"], payload=row[\"payload\"], diff=row[\"diff\"],\n            evidence_refs=[ResourceRef.model_validate(item) for item in row[\"evidence_refs\"]],\n            impact_preview_ref=(\n                None\n                if row[\"impact_preview_id\"] is None\n                else {\n                    \"resourceType\": \"ImpactPreviewRevision\",\n                    \"resourceId\": row[\"impact_preview_id\"],\n                    \"revision\": int(row[\"impact_preview_revision\"]),\n                    \"contentHash\": row[\"impact_preview_hash\"],\n                }\n            ),\n            action_binding_hash=row[\"action_binding_hash\"],\n            approval_policy_hash=row[\"approval_policy_hash\"],\n            source_draft_ref=(\n                None\n                if row[\"source_draft_id\"] is None\n                else {\n                    \"resourceType\": \"ActionDraftRevision\",\n                    \"resourceId\": row[\"source_draft_id\"],\n                    \"revision\": int(row[\"source_draft_revision\"]),\n                    \"contentHash\": row[\"source_draft_hash\"],\n                }\n            ),\n            compensation_original_proposal_id=row[\"compensation_original_proposal_id\"],\n            compensation_original_receipt_id=row[\"compensation_original_receipt_id\"],\n            compensation_policy_ref=(\n                ExactRevisionRef.model_validate(row[\"compensation_policy_ref\"])\n                if row[\"compensation_policy_ref\"]\n                else None\n            ),\n            compensation_effect=row[\"compensation_effect\"],\n            compensation_residual_effect=row[\"compensation_residual_effect\"],\n            proposal_hash=row[\"proposal_hash\"], status=ActionProposalStatus(row[\"status\"]),\n            expires_at=row[\"expires_at\"], version=row[\"version\"], created_by=actor(row[\"created_by\"]),\n            created_at=row[\"created_at\"], updated_at=row[\"updated_at\"],\n        )\n        draft_model = DraftSnapshot(\n            id=draft[\"draft_id\"], proposal_id=proposal_id, proposal_version=draft[\"proposal_version\"],\n            proposal_hash=draft[\"proposal_hash\"], diff=draft[\"diff\"],\n            evidence_refs=[ResourceRef.model_validate(item) for item in draft[\"evidence_refs\"]],\n            status=draft[\"status\"], created_at=draft[\"created_at\"],\n        )\n        approval_models = [ActionApprovalEventSnapshot(\n            id=item[\"approval_event_id\"], proposal_id=proposal_id,\n            proposal_version=item[\"proposal_version\"], proposal_hash=item[\"proposal_hash\"],\n            decision=ApprovalDecision(item[\"decision\"]), actor=actor(item[\"actor_id\"]),\n            reason=item[\"reason\"], expires_at=item[\"expires_at\"], created_at=item[\"created_at\"],\n            action_binding_hash=item[\"action_binding_hash\"],\n            approval_policy_hash=item[\"approval_policy_hash\"],\n            slot_id=item[\"slot_id\"],\n            eligibility_snapshot_hash=item[\"eligibility_snapshot_hash\"],\n        ) for item in approvals]\n        return ActionDraftBundle(proposal=proposal, draft=draft_model, approvals=approval_models)"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_action_store.py",
+      "method": "list_proposals",
+      "line": 1181,
+      "methodSha256": "0515b3e4fbbfecfd1a48a5066488652f0772e9159d8c4cb906389061826cca9c",
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT proposal_id FROM aip_action_proposal WHERE org_id=%s AND project_id=%s ORDER BY updated_at DESC,proposal_id DESC LIMIT %s', (*scope.key, limit)).fetchall",
+        "self._bundle",
+        "self._connect"
+      ],
+      "sqlExpressions": [
+        "'SELECT proposal_id FROM aip_action_proposal WHERE org_id=%s AND project_id=%s ORDER BY updated_at DESC,proposal_id DESC LIMIT %s'"
+      ],
+      "source": "def list_proposals(self, scope: TenantScope, limit: int = 100) -> list[ActionDraftBundle]:\n        with self._connect(scope) as conn:\n            rows = conn.execute(\n                \"SELECT proposal_id FROM aip_action_proposal WHERE org_id=%s AND project_id=%s ORDER BY updated_at DESC,proposal_id DESC LIMIT %s\",\n                (*scope.key, limit),\n            ).fetchall()\n            return [self._bundle(conn, scope, row[\"proposal_id\"]) for row in rows]"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_start_service.py",
+      "method": "__init__",
+      "line": 33,
+      "methodSha256": "e6dc3e407b1be6eeb51457c7d1e14af58c0e28f0e783429556c6d670b58b5f9e",
+      "calls": [
+        "AipActionStore",
+        "AipProductionContractStore",
+        "AipTaskStore"
+      ],
+      "sqlExpressions": [],
+      "source": "def __init__(\n        self,\n        *,\n        connect_factory: ConnectFactory | None = None,\n        contract_store: AipProductionContractStore | None = None,\n        action_store: AipActionStore | None = None,\n        task_store: AipTaskStore | None = None,\n    ) -> None:\n        self._connect_factory = connect_factory or connect\n        self._contracts = contract_store or AipProductionContractStore(self._connect_factory)\n        self._actions = action_store or AipActionStore(self._connect_factory)\n        self._tasks = task_store or AipTaskStore(self._connect_factory)"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_start_service.py",
+      "method": "list",
+      "line": 156,
+      "methodSha256": "fcfbd2733b2bb0687208679931e18fb0a2680d27ed5ff682e183738da236ba87",
+      "calls": [
+        "ProductionStartDecisionListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_production_start_decision\\n                   WHERE org_id=%s AND project_id=%s\\n                   ORDER BY created_at DESC,decision_id', scope.key).fetchall",
+        "len",
+        "self._connect_factory",
+        "self._decision"
+      ],
+      "sqlExpressions": [
+        "'SELECT * FROM aip_production_start_decision\\n                   WHERE org_id=%s AND project_id=%s\\n                   ORDER BY created_at DESC,decision_id'"
+      ],
+      "source": "def list(self, scope: TenantScope) -> ProductionStartDecisionListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT * FROM aip_production_start_decision\n                   WHERE org_id=%s AND project_id=%s\n                   ORDER BY created_at DESC,decision_id\"\"\",\n                scope.key,\n            ).fetchall()\n        items = [self._decision(scope, row) for row in rows]\n        return ProductionStartDecisionListResponse(\n            tenant={\"orgId\": scope.org_id, \"projectId\": scope.project_id},\n            items=items,\n            count=len(items),\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_start_service.py",
+      "method": "_decision",
+      "line": 673,
+      "methodSha256": "6cf6be5314c7047586a42ad1988c505225a71128794bc4dbe19d259a83135286",
+      "calls": [
+        "ProductionStartDecision",
+        "isinstance",
+        "json.loads",
+        "load"
+      ],
+      "sqlExpressions": [],
+      "source": "def _decision(scope: TenantScope, row: Any) -> ProductionStartDecision:\n        def load(value: Any) -> Any:\n            return json.loads(value) if isinstance(value, str) else value\n\n        return ProductionStartDecision(\n            tenant={\"orgId\": scope.org_id, \"projectId\": scope.project_id},\n            decision_id=row[\"decision_id\"],\n            status=row[\"status\"],\n            task_id=row[\"task_id\"],\n            production_context_ref=load(row[\"production_context_ref\"]),\n            plan_ref=load(row[\"plan_ref\"]),\n            preview_ref=load(row[\"preview_ref\"]),\n            action_proposal_ref=load(row[\"action_proposal_ref\"]),\n            dependency_snapshot_hash=row[\"dependency_snapshot_hash\"],\n            blockers=load(row[\"blockers\"]),\n            task_run_ref=load(row[\"task_run_ref\"]),\n            created_by=row[\"created_by\"],\n            created_at=row[\"created_at\"],\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_provider_job_store.py",
+      "method": "__init__",
+      "line": 54,
+      "methodSha256": "a68f80d36e68859b0dd3ecd9c911f9b4c93d39df607d6c5c073370621055b2af",
+      "calls": [],
+      "sqlExpressions": [],
+      "source": "def __init__(self, *, connect_factory=db_connect) -> None:\n        self._connect = connect_factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_provider_job_store.py",
+      "method": "list_jobs",
+      "line": 389,
+      "methodSha256": "7c4bb023751cd492a734500ab13d456fb2ea5c2e0305c7d8f244926e5e8c737a",
+      "calls": [
+        "MediaProviderJobConflict",
+        "MediaProviderJobListResponse",
+        "conn.execute",
+        "conn.execute('SELECT j.*,e.sequence,e.status,e.blocker_codes,e.created_at AS updated_at\\n                   FROM aip_media_provider_job j\\n                   JOIN LATERAL (\\n                     SELECT sequence,status,blocker_codes,created_at\\n                     FROM aip_media_provider_job_event\\n                     WHERE org_id=j.org_id AND project_id=j.project_id AND job_id=j.job_id\\n                     ORDER BY sequence DESC LIMIT 1\\n                   ) e ON TRUE\\n                   WHERE j.org_id=%s AND j.project_id=%s\\n                   ORDER BY j.created_at DESC,j.job_id LIMIT %s', (*scope.key, limit)).fetchall",
+        "len",
+        "self._connect",
+        "self._job",
+        "self._tenant"
+      ],
+      "sqlExpressions": [
+        "'SELECT j.*,e.sequence,e.status,e.blocker_codes,e.created_at AS updated_at\\n                   FROM aip_media_provider_job j\\n                   JOIN LATERAL (\\n                     SELECT sequence,status,blocker_codes,created_at\\n                     FROM aip_media_provider_job_event\\n                     WHERE org_id=j.org_id AND project_id=j.project_id AND job_id=j.job_id\\n                     ORDER BY sequence DESC LIMIT 1\\n                   ) e ON TRUE\\n                   WHERE j.org_id=%s AND j.project_id=%s\\n                   ORDER BY j.created_at DESC,j.job_id LIMIT %s'"
+      ],
+      "source": "def list_jobs(self, scope: TenantScope, *, limit: int = 100) -> MediaProviderJobListResponse:\n        if not 1 <= limit <= 100:\n            raise MediaProviderJobConflict(\"MEDIA_JOB_LIMIT_INVALID\")\n        with self._connect(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT j.*,e.sequence,e.status,e.blocker_codes,e.created_at AS updated_at\n                   FROM aip_media_provider_job j\n                   JOIN LATERAL (\n                     SELECT sequence,status,blocker_codes,created_at\n                     FROM aip_media_provider_job_event\n                     WHERE org_id=j.org_id AND project_id=j.project_id AND job_id=j.job_id\n                     ORDER BY sequence DESC LIMIT 1\n                   ) e ON TRUE\n                   WHERE j.org_id=%s AND j.project_id=%s\n                   ORDER BY j.created_at DESC,j.job_id LIMIT %s\"\"\",\n                (*scope.key, limit),\n            ).fetchall()\n            items = [self._job(scope, row) for row in rows]\n            return MediaProviderJobListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_provider_job_store.py",
+      "method": "_tenant",
+      "line": 74,
+      "methodSha256": "11d645ca72ac496a9cb61634320a2aa627fa98cede0d6aee05ebe783273b3942",
+      "calls": [],
+      "sqlExpressions": [],
+      "source": "def _tenant(scope: TenantScope) -> dict[str, str]:\n        return {\"orgId\": scope.org_id, \"projectId\": scope.project_id}"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_provider_job_store.py",
+      "method": "_job",
+      "line": 431,
+      "methodSha256": "d7bce810ed0d22c3c1d8a45006a11131c4abc43664648105e0216c7f8ed6b22b",
+      "calls": [
+        "MediaProviderJob",
+        "self._tenant"
+      ],
+      "sqlExpressions": [],
+      "source": "def _job(self, scope: TenantScope, row: Any) -> MediaProviderJob:\n        return MediaProviderJob(\n            tenant=self._tenant(scope), jobId=row[\"job_id\"],\n            taskRunRef=row[\"task_run_ref\"], stepRunRef=row[\"step_run_ref\"],\n            binding=row[\"binding_snapshot\"], inputArtifactRefs=row[\"input_artifact_refs\"],\n            inputScanRefs=row[\"input_scan_refs\"],\n            scanPolicyRef=row[\"scan_policy_ref\"], scannerRef=row[\"scanner_ref\"],\n            expectedOutputModality=row[\"expected_output_modality\"],\n            purpose=row[\"purpose\"], dataClassification=row[\"data_classification\"],\n            requestFingerprint=row[\"request_fingerprint\"], status=row[\"status\"],\n            sequence=row[\"sequence\"], blockerCodes=row[\"blocker_codes\"],\n            createdBy=row[\"created_by\"], createdAt=row[\"created_at\"],\n            updatedAt=row[\"updated_at\"],\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_finance_store.py",
+      "method": "__init__",
+      "line": 52,
+      "methodSha256": "a68f80d36e68859b0dd3ecd9c911f9b4c93d39df607d6c5c073370621055b2af",
+      "calls": [],
+      "sqlExpressions": [],
+      "source": "def __init__(self, *, connect_factory=db_connect) -> None:\n        self._connect = connect_factory"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_finance_store.py",
+      "method": "list",
+      "line": 213,
+      "methodSha256": "e23ab7704f99aeb48baf8a15aa9b17a47adfe99b983a29bb46e308f44771d6cd",
+      "calls": [
+        "MediaFinanceConflict",
+        "MediaFinanceListResponse",
+        "conn.execute",
+        "conn.execute('SELECT finance_id FROM aip_media_attempt_finance\\n                   WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,finance_id LIMIT %s', (*scope.key, limit)).fetchall",
+        "len",
+        "self._connect",
+        "self._tenant",
+        "self.get"
+      ],
+      "sqlExpressions": [
+        "'SELECT finance_id FROM aip_media_attempt_finance\\n                   WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,finance_id LIMIT %s'"
+      ],
+      "source": "def list(self, scope: TenantScope, *, limit: int = 100) -> MediaFinanceListResponse:\n        if not 1 <= limit <= 100:\n            raise MediaFinanceConflict(\"MEDIA_FINANCE_LIMIT_INVALID\")\n        with self._connect(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT finance_id FROM aip_media_attempt_finance\n                   WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,finance_id LIMIT %s\"\"\",\n                (*scope.key, limit),\n            ).fetchall()\n            items = [self.get(scope, row[\"finance_id\"], conn=conn) for row in rows]\n            return MediaFinanceListResponse(tenant=self._tenant(scope), items=items, count=len(items))"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_finance_store.py",
+      "method": "get",
+      "line": 177,
+      "methodSha256": "a2d9466917ec1ea47b12cdf94efc58bb1b386782f248bb8bcf132b6033e9f74d",
+      "calls": [
+        "MediaFinanceNotFound",
+        "connection.execute",
+        "connection.execute('SELECT base_payload FROM aip_media_attempt_finance WHERE org_id=%s AND project_id=%s AND finance_id=%s', (*scope.key, finance_id)).fetchone",
+        "connection.execute('SELECT version,event_kind,payload,content_hash,actor,created_at\\n                   FROM aip_media_attempt_finance_event\\n                   WHERE org_id=%s AND project_id=%s AND finance_id=%s ORDER BY version', (*scope.key, finance_id)).fetchall",
+        "read",
+        "self._connect",
+        "self._load",
+        "self._reduce"
+      ],
+      "sqlExpressions": [
+        "'SELECT base_payload FROM aip_media_attempt_finance WHERE org_id=%s AND project_id=%s AND finance_id=%s'",
+        "'SELECT version,event_kind,payload,content_hash,actor,created_at\\n                   FROM aip_media_attempt_finance_event\\n                   WHERE org_id=%s AND project_id=%s AND finance_id=%s ORDER BY version'"
+      ],
+      "source": "def get(self, scope: TenantScope, finance_id: str, *, conn: Any | None = None) -> MediaFinanceSnapshot:\n        def read(connection: Any) -> MediaFinanceSnapshot:\n            row = connection.execute(\n                \"SELECT base_payload FROM aip_media_attempt_finance WHERE org_id=%s AND project_id=%s AND finance_id=%s\",\n                (*scope.key, finance_id),\n            ).fetchone()\n            if row is None:\n                raise MediaFinanceNotFound(finance_id)\n            events = connection.execute(\n                \"\"\"SELECT version,event_kind,payload,content_hash,actor,created_at\n                   FROM aip_media_attempt_finance_event\n                   WHERE org_id=%s AND project_id=%s AND finance_id=%s ORDER BY version\"\"\",\n                (*scope.key, finance_id),\n            ).fetchall()\n            return self._reduce(scope, self._load(row[\"base_payload\"]), events)\n\n        if conn is not None:\n            return read(conn)\n        with self._connect(scope) as connection:\n            return read(connection)"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_finance_store.py",
+      "method": "_reduce",
+      "line": 333,
+      "methodSha256": "d3172b21b98a1a9c62dea0bda7f6fdd07f5825c0d20f955ad9aeb4a07c757bb3",
+      "calls": [
+        "ExactRevisionRef.model_validate",
+        "MediaCancelOutcome",
+        "MediaCurrencyBucket",
+        "MediaFeeConclusion",
+        "MediaFinanceEventKind",
+        "MediaFinanceSnapshot",
+        "MediaSettlementStatus",
+        "MediaUsageQuality",
+        "any",
+        "blocker_codes.append",
+        "buckets.items",
+        "buckets.setdefault",
+        "buckets.values",
+        "currency_buckets.append",
+        "datetime.fromisoformat",
+        "datetime.now",
+        "int",
+        "next",
+        "payload.get",
+        "reversed",
+        "self._load",
+        "self._tenant",
+        "sorted",
+        "usage_items.append",
+        "usage_refs.append"
+      ],
+      "sqlExpressions": [],
+      "source": "def _reduce(self, scope: TenantScope, base: dict[str, Any], rows: list[Any]) -> MediaFinanceSnapshot:\n        buckets: dict[str, dict[str, int]] = {}\n        usage_items: list[dict[str, Any]] = []\n        active = True\n        cancel_outcome = None\n        fee = MediaFeeConclusion.UNKNOWN\n        usage_refs: list[ExactRevisionRef] = []\n        settlement = MediaSettlementStatus.PENDING\n        decision = None\n        updated_at = datetime.fromisoformat(base[\"createdAt\"])\n        for row in rows:\n            kind = MediaFinanceEventKind(row[\"event_kind\"])\n            payload = self._load(row[\"payload\"])\n            updated_at = row[\"created_at\"]\n            if kind is MediaFinanceEventKind.CAPACITY_RELEASED:\n                active = False\n            elif kind is MediaFinanceEventKind.CANCEL_OBSERVED:\n                cancel_outcome = MediaCancelOutcome(payload[\"outcome\"])\n                fee = MediaFeeConclusion(payload[\"feeConclusion\"])\n            elif kind is MediaFinanceEventKind.USAGE_BOUND:\n                ref = ExactRevisionRef.model_validate(payload[\"usageReceiptRef\"])\n                usage_refs.append(ref)\n                supersedes = payload.get(\"supersedesUsageReceiptRef\")\n                if supersedes:\n                    superseded = ExactRevisionRef.model_validate(supersedes)\n                    for item in usage_items:\n                        if item[\"ref\"] == superseded:\n                            item[\"active\"] = False\n                usage_items.append({\"ref\": ref, \"payload\": payload, \"active\": True})\n            elif kind is MediaFinanceEventKind.SETTLED:\n                settlement = MediaSettlementStatus(payload[\"status\"])\n                decision = ExactRevisionRef.model_validate(payload[\"decisionRef\"])\n        for item in usage_items:\n            if not item[\"active\"]:\n                continue\n            payload = item[\"payload\"]\n            bucket = buckets.setdefault(payload[\"currency\"], {\"measured\": 0, \"estimated\": 0, \"unknown\": 0, \"adjustment\": 0, \"refund\": 0})\n            quality = MediaUsageQuality(payload[\"quality\"])\n            if quality is MediaUsageQuality.UNKNOWN:\n                bucket[\"unknown\"] += 1\n            else:\n                bucket[quality.value] += int(payload[\"amountMinor\"])\n        if settlement is not MediaSettlementStatus.PENDING:\n            bucket = buckets.setdefault(base[\"currency\"], {\"measured\": 0, \"estimated\": 0, \"unknown\": 0, \"adjustment\": 0, \"refund\": 0})\n            settlement_payload = next(self._load(row[\"payload\"]) for row in reversed(rows) if MediaFinanceEventKind(row[\"event_kind\"]) is MediaFinanceEventKind.SETTLED)\n            bucket[\"adjustment\"] += int(settlement_payload[\"adjustmentMinor\"])\n            bucket[\"refund\"] += int(settlement_payload[\"refundMinor\"])\n        blocker_codes: list[str] = []\n        if datetime.fromisoformat(base[\"expiresAt\"]) <= datetime.now(UTC) or not active:\n            blocker_codes.append(\"MEDIA_DUAL_RESERVATION_INACTIVE\")\n        if any(item[\"unknown\"] for item in buckets.values()):\n            blocker_codes.append(\"MEDIA_USAGE_UNKNOWN_RECONCILE_REQUIRED\")\n        if cancel_outcome is MediaCancelOutcome.UNKNOWN or fee is MediaFeeConclusion.UNKNOWN:\n            blocker_codes.append(\"MEDIA_CANCEL_FEE_UNKNOWN\")\n        if settlement is MediaSettlementStatus.PENDING:\n            blocker_codes.append(\"MEDIA_SETTLEMENT_PENDING\")\n        currency_buckets = []\n        for currency, item in sorted(buckets.items()):\n            net = item[\"measured\"] + item[\"estimated\"] + item[\"adjustment\"] - item[\"refund\"]\n            residual = None if item[\"unknown\"] else net - (base[\"projectedMaxMinor\"] if currency == base[\"currency\"] else 0)\n            currency_buckets.append(MediaCurrencyBucket(currency=currency, measuredMinor=item[\"measured\"], estimatedMinor=item[\"estimated\"], unknownCount=item[\"unknown\"], adjustmentMinor=item[\"adjustment\"], refundMinor=item[\"refund\"], residualMinor=residual))\n        return MediaFinanceSnapshot(\n            tenant=self._tenant(scope), financeId=base[\"financeId\"], version=int(rows[-1][\"version\"]),\n            jobRef=base[\"jobRef\"], taskRunRef=base[\"taskRunRef\"], stepRunRef=base[\"stepRunRef\"],\n            capacityPoolRef=base[\"capacityPoolRef\"], capacityReservationRef=base[\"capacityReservationRef\"],\n            budgetRevisionRef=base[\"budgetRevisionRef\"], budgetReservationRef=base[\"budgetReservationRef\"],\n            attemptBindingHash=base[\"attemptBindingHash\"], projectedMinMinor=base[\"projectedMinMinor\"],\n            projectedMaxMinor=base[\"projectedMaxMinor\"], projectedCurrency=base[\"currency\"],\n            reservationsActive=active and datetime.fromisoformat(base[\"expiresAt\"]) > datetime.now(UTC),\n            cancelOutcome=cancel_outcome, feeConclusion=fee, usageReceiptRefs=usage_refs,\n            currencyBuckets=currency_buckets, settlementStatus=settlement, settlementDecisionRef=decision,\n            blockerCodes=blocker_codes, expiresAt=base[\"expiresAt\"], createdBy=base[\"createdBy\"],\n            createdAt=base[\"createdAt\"], updatedAt=updated_at, externalEffectsAllowed=False,\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_finance_store.py",
+      "method": "_tenant",
+      "line": 66,
+      "methodSha256": "11d645ca72ac496a9cb61634320a2aa627fa98cede0d6aee05ebe783273b3942",
+      "calls": [],
+      "sqlExpressions": [],
+      "source": "def _tenant(scope: TenantScope) -> dict[str, str]:\n        return {\"orgId\": scope.org_id, \"projectId\": scope.project_id}"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_finance_store.py",
+      "method": "_load",
+      "line": 409,
+      "methodSha256": "827fcfdd0a5fa1670c349ce0f567e0ee679fe9afbb7b9b77fef265276ba9eeea",
+      "calls": [
+        "isinstance",
+        "json.loads"
+      ],
+      "sqlExpressions": [],
+      "source": "def _load(value: Any) -> Any:\n        return json.loads(value) if isinstance(value, str) else value"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "__init__",
+      "line": 490,
+      "methodSha256": "7dd9ae09b551ccacce74ba9bebd5178e3ff68c28e6ca0de0e8f80d6d400d5089",
+      "calls": [
+        "AipTaskStore",
+        "InstalledProductionProfileResolver"
+      ],
+      "sqlExpressions": [],
+      "source": "def __init__(\n        self,\n        connect_factory: ConnectFactory | None = None,\n        *,\n        plan_connect_factory: ConnectFactory | None = None,\n        contract_connect_factory: ConnectFactory | None = None,\n        responsibility_template_resolver: ResponsibilityTemplateResolver | None = None,\n        stage_template_source_resolver: StageTemplateSourceResolver | None = None,\n        media_gate_source_resolver: MediaGateSourceResolver | None = None,\n        production_profile_resolver: ProductionProfileResolver | None = None,\n        schema_compatibility_resolver: SchemaCompatibilityResolver | None = None,\n        task_store: AipTaskStore | None = None,\n    ) -> None:\n        self._connect_factory = connect_factory or db_connect\n        self._plan_connect_factory = (\n            plan_connect_factory if plan_connect_factory is not None else self._connect_factory\n        )\n        self._contract_connect_factory = (\n            contract_connect_factory if contract_connect_factory is not None else self._connect_factory\n        )\n        self._responsibility_template_resolver = responsibility_template_resolver\n        self._stage_template_source_resolver = stage_template_source_resolver\n        self._media_gate_source_resolver = media_gate_source_resolver\n        self._production_profile_resolver = (\n            production_profile_resolver or InstalledProductionProfileResolver().resolve\n        )\n        self._schema_compatibility_resolver = (\n            schema_compatibility_resolver\n            or (lambda output_ref, input_ref: output_ref == input_ref)\n        )\n        self._task_store = task_store or AipTaskStore(self._connect_factory)"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_production_contexts",
+      "line": 3981,
+      "methodSha256": "718a2c359fdcaf2ae2cfbc9b1891765c3250a1d9343171db71da116d7dca9237",
+      "calls": [
+        "ProductionContextListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_production_context_revision\\n                   WHERE org_id=%s AND project_id=%s\\n                   ORDER BY created_at DESC, context_id, revision DESC', scope.key).fetchall",
+        "len",
+        "self._connect_factory",
+        "self._production_context",
+        "self._tenant"
+      ],
+      "sqlExpressions": [
+        "'SELECT * FROM aip_production_context_revision\\n                   WHERE org_id=%s AND project_id=%s\\n                   ORDER BY created_at DESC, context_id, revision DESC'"
+      ],
+      "source": "def list_production_contexts(\n        self, scope: TenantScope\n    ) -> ProductionContextListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT * FROM aip_production_context_revision\n                   WHERE org_id=%s AND project_id=%s\n                   ORDER BY created_at DESC, context_id, revision DESC\"\"\",\n                scope.key,\n            ).fetchall()\n            items = [self._production_context(scope, row) for row in rows]\n            return ProductionContextListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_tenant",
+      "line": 6748,
+      "methodSha256": "0e89a7b93b4ca682c6e28113e7388d3fb6ce3dfafc237bc9f74a86dc40178459",
+      "calls": [
+        "TenantContext"
+      ],
+      "sqlExpressions": [],
+      "source": "def _tenant(scope: TenantScope) -> TenantContext:\n        return TenantContext(org_id=scope.org_id, project_id=scope.project_id)"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_production_context",
+      "line": 3996,
+      "methodSha256": "938df279d3704a7c54c62e5cf8cd659e161322b934ec03505ebeb6c82f6ce0bb",
+      "calls": [
+        "ContractBlocker.model_validate",
+        "ExactRevisionRef.model_validate",
+        "ProductionContextRevision",
+        "int",
+        "self._load",
+        "self._tenant"
+      ],
+      "sqlExpressions": [],
+      "source": "def _production_context(\n        self, scope: TenantScope, row: Any\n    ) -> ProductionContextRevision:\n        preparation = self._load(row[\"preparation_ref\"])\n        return ProductionContextRevision(\n            tenant=self._tenant(scope),\n            context_id=row[\"context_id\"],\n            revision=int(row[\"revision\"]),\n            task_id=row[\"task_id\"],\n            brief_ref=ExactRevisionRef.model_validate(self._load(row[\"brief_ref\"])),\n            evidence_bundle_ref=ExactRevisionRef.model_validate(\n                self._load(row[\"evidence_bundle_ref\"])\n            ),\n            eval_contract_ref=ExactRevisionRef.model_validate(\n                self._load(row[\"eval_contract_ref\"])\n            ),\n            responsibility_plan_ref=ExactRevisionRef.model_validate(\n                self._load(row[\"responsibility_plan_ref\"])\n            ),\n            production_profile_ref=None\n            if self._load(row[\"production_profile_ref\"]) is None\n            else ExactRevisionRef.model_validate(\n                self._load(row[\"production_profile_ref\"])\n            ),\n            preparation_ref=None\n            if preparation is None\n            else ExactRevisionRef.model_validate(preparation),\n            profile=row[\"profile\"],\n            dependency_snapshot=self._load(row[\"dependency_snapshot\"]),\n            dependency_snapshot_hash=row[\"dependency_snapshot_hash\"],\n            content_hash=row[\"content_hash\"],\n            lifecycle=row[\"lifecycle\"],\n            readiness=row[\"readiness\"],\n            blockers=[\n                ContractBlocker.model_validate(item)\n                for item in (self._load(row[\"blockers\"]) or [])\n            ],\n            created_by=row[\"created_by\"],\n            created_at=row[\"created_at\"],\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_load",
+      "line": 6762,
+      "methodSha256": "0440ca08d92a4deba855d72dbc174bf4ab8fb08f40ff1d9b63c18c18510e2706",
+      "calls": [
+        "isinstance",
+        "json.loads"
+      ],
+      "sqlExpressions": [],
+      "source": "def _load(value:Any)->Any:return json.loads(value) if isinstance(value,str) else value"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_return_decisions",
+      "line": 3107,
+      "methodSha256": "0431dcecb44d983e41a5585c56a0bde1cf940a8fd74d47f6afefa2bc11419d95",
+      "calls": [
+        "ReturnDecisionListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_return_decision\\n                       WHERE org_id=%s AND project_id=%s AND issue_id=%s\\n                       ORDER BY created_at DESC, decision_id DESC', (*scope.key, issue_id)).fetchall",
+        "conn.execute('SELECT * FROM aip_return_decision\\n                       WHERE org_id=%s AND project_id=%s\\n                       ORDER BY created_at DESC, decision_id DESC', scope.key).fetchall",
+        "len",
+        "self._connect_factory",
+        "self._return_decision",
+        "self._tenant"
+      ],
+      "sqlExpressions": [
+        "'SELECT * FROM aip_return_decision\\n                       WHERE org_id=%s AND project_id=%s AND issue_id=%s\\n                       ORDER BY created_at DESC, decision_id DESC'",
+        "'SELECT * FROM aip_return_decision\\n                       WHERE org_id=%s AND project_id=%s\\n                       ORDER BY created_at DESC, decision_id DESC'"
+      ],
+      "source": "def list_return_decisions(\n        self, scope: TenantScope, *, issue_id: str | None = None\n    ) -> ReturnDecisionListResponse:\n        with self._connect_factory(scope) as conn:\n            if issue_id:\n                rows = conn.execute(\n                    \"\"\"SELECT * FROM aip_return_decision\n                       WHERE org_id=%s AND project_id=%s AND issue_id=%s\n                       ORDER BY created_at DESC, decision_id DESC\"\"\",\n                    (*scope.key, issue_id),\n                ).fetchall()\n            else:\n                rows = conn.execute(\n                    \"\"\"SELECT * FROM aip_return_decision\n                       WHERE org_id=%s AND project_id=%s\n                       ORDER BY created_at DESC, decision_id DESC\"\"\",\n                    scope.key,\n                ).fetchall()\n            items = [self._return_decision(scope, row) for row in rows]\n            return ReturnDecisionListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_return_decision",
+      "line": 5402,
+      "methodSha256": "8798072767e166b8f48cb383966ee8bdb3a87cecc68ab6e5061fe5dd23b0d2c9",
+      "calls": [
+        "ReturnDecision",
+        "ReviewImpactDecision.model_validate",
+        "int",
+        "row.get",
+        "self._load",
+        "self._tenant"
+      ],
+      "sqlExpressions": [],
+      "source": "def _return_decision(self, scope: TenantScope, row: Any) -> ReturnDecision:\n        raw_impact = self._load(row.get(\"impact_decisions\")) or []\n        return ReturnDecision(\n            tenant=self._tenant(scope),\n            decision_id=row[\"decision_id\"],\n            issue_id=row[\"issue_id\"],\n            issue_version=int(row[\"issue_version\"]),\n            run_id=row[\"run_id\"],\n            step_key=row[\"step_key\"],\n            step_run_id=row[\"step_run_id\"],\n            attempt=int(row[\"attempt\"]),\n            attempt_idempotency_key=row[\"attempt_idempotency_key\"],\n            reason=row[\"reason\"],\n            impactDecisions=[ReviewImpactDecision.model_validate(item) for item in raw_impact],\n            impactReadiness=(\"exact\" if raw_impact else \"legacy_unavailable\"),\n            decision_hash=row[\"decision_hash\"],\n            actor=row[\"actor\"],\n            created_at=row[\"created_at\"],\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_review_issues",
+      "line": 2836,
+      "methodSha256": "4eb88ff8ed553c880366221cf139c835a610ea58cdbddfcdd9c34e024827be7a",
+      "calls": [
+        "ReviewIssueListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_review_issue\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY updated_at DESC,issue_id', scope.key).fetchall",
+        "len",
+        "self._connect_factory",
+        "self._review_issue",
+        "self._tenant"
+      ],
+      "sqlExpressions": [
+        "'SELECT * FROM aip_review_issue\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY updated_at DESC,issue_id'"
+      ],
+      "source": "def list_review_issues(self, scope: TenantScope) -> ReviewIssueListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT * FROM aip_review_issue\n                WHERE org_id=%s AND project_id=%s\n                ORDER BY updated_at DESC,issue_id\"\"\",\n                scope.key,\n            ).fetchall()\n            items = [self._review_issue(scope, row) for row in rows]\n            return ReviewIssueListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_review_issue",
+      "line": 5372,
+      "methodSha256": "97278c35f93325cd0a0ff9051cf466370e6cd6574accaf3c5689c0c588a3e224",
+      "calls": [
+        "ExactArtifactRef",
+        "ExactRevisionRef",
+        "ExactRevisionRef.model_validate",
+        "ReviewIssue",
+        "int",
+        "self._load",
+        "self._tenant"
+      ],
+      "sqlExpressions": [],
+      "source": "def _review_issue(self, scope: TenantScope, row: Any) -> ReviewIssue:\n        return ReviewIssue(\n            tenant=self._tenant(scope),\n            issue_id=row[\"issue_id\"],\n            rule_ref=ExactRevisionRef.model_validate(self._load(row[\"rule_ref\"])),\n            severity=row[\"severity\"],\n            artifact_ref=ExactArtifactRef(\n                artifact_id=row[\"artifact_id\"], content_hash=row[\"artifact_hash\"]\n            ),\n            eval_report_ref=ExactRevisionRef(\n                resource_type=\"EvalReportRevision\",\n                resource_id=row[\"eval_report_id\"],\n                revision=int(row[\"eval_report_revision\"]),\n                content_hash=row[\"eval_report_hash\"],\n            ),\n            location=self._load(row[\"location\"]),\n            evidence_refs=[\n                ExactRevisionRef.model_validate(item)\n                for item in self._load(row[\"evidence_refs\"])\n            ],\n            suggested_fix=row[\"suggested_fix\"],\n            return_stage=row[\"return_stage\"],\n            status=row[\"status\"],\n            version=int(row[\"version\"]),\n            created_by=row[\"created_by\"],\n            created_at=row[\"created_at\"],\n            updated_by=row[\"updated_by\"],\n            updated_at=row[\"updated_at\"],\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_media_gate_sets",
+      "line": 2647,
+      "methodSha256": "64b76528baa0e278c0269045c79264d6261019f2c4c39481aa5a03cb02e7a8e4",
+      "calls": [
+        "MediaGateSetListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_media_gate_set_decision\\n                WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,gate_set_id', scope.key).fetchall",
+        "len",
+        "self._connect_factory",
+        "self._media_gate_set",
+        "self._tenant"
+      ],
+      "sqlExpressions": [
+        "'SELECT * FROM aip_media_gate_set_decision\\n                WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,gate_set_id'"
+      ],
+      "source": "def list_media_gate_sets(self, scope: TenantScope) -> MediaGateSetListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT * FROM aip_media_gate_set_decision\n                WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,gate_set_id\"\"\",\n                scope.key,\n            ).fetchall()\n            items = [self._media_gate_set(scope, row) for row in rows]\n            return MediaGateSetListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_media_gate_set",
+      "line": 5018,
+      "methodSha256": "6529196f336de5d7fd0bef80b750a6edc788956a1f9881f39766051c86b30b48",
+      "calls": [
+        "MediaGateResult.model_validate",
+        "MediaGateSetDecision",
+        "bool",
+        "self._load",
+        "self._tenant"
+      ],
+      "sqlExpressions": [],
+      "source": "def _media_gate_set(self, scope: TenantScope, row: Any) -> MediaGateSetDecision:\n        return MediaGateSetDecision(\n            tenant=self._tenant(scope),\n            gateSetId=row[\"gate_set_id\"],\n            reviewCycleId=row[\"review_cycle_id\"],\n            artifactRef=self._load(row[\"artifact_ref\"]),\n            familyId=row[\"family_id\"],\n            variantProfile=row[\"variant_profile\"],\n            variantPlatform=row[\"variant_platform\"],\n            renditionSpecHash=row[\"rendition_spec_hash\"],\n            evalContractRef=self._load(row[\"eval_contract_ref\"]),\n            gateProfileRef=self._load(row[\"gate_profile_ref\"]),\n            policyRef=self._load(row[\"policy_ref\"]),\n            cutoffAt=row[\"cutoff_at\"],\n            stageAttemptRef=self._load(row[\"stage_attempt_ref\"]),\n            gateResults=[MediaGateResult.model_validate(item) for item in self._load(row[\"gate_results\"])],\n            contractMigrationRef=(\n                self._load(row[\"contract_migration_ref\"])\n                if row[\"contract_migration_ref\"] is not None\n                else None\n            ),\n            readiness=row[\"readiness\"],\n            eligibleForApproval=bool(row[\"eligible_for_approval\"]),\n            blockerCodes=self._load(row[\"blocker_codes\"]),\n            contentHash=row[\"content_hash\"],\n            actor=row[\"actor\"],\n            createdAt=row[\"created_at\"],\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_artifact_families",
+      "line": 2215,
+      "methodSha256": "d0bd68d1b55155e4b4c1b52e5b3193c60cf4ee62947599b8209e7fd67d1d2c17",
+      "calls": [
+        "ArtifactFamilyListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_artifact_family_head\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY updated_at DESC,family_id', scope.key).fetchall",
+        "len",
+        "self._artifact_family_view",
+        "self._connect_factory",
+        "self._tenant"
+      ],
+      "sqlExpressions": [
+        "'SELECT * FROM aip_artifact_family_head\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY updated_at DESC,family_id'"
+      ],
+      "source": "def list_artifact_families(self, scope: TenantScope) -> ArtifactFamilyListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT * FROM aip_artifact_family_head\n                WHERE org_id=%s AND project_id=%s\n                ORDER BY updated_at DESC,family_id\"\"\",\n                scope.key,\n            ).fetchall()\n            items = [self._artifact_family_view(conn, scope, row) for row in rows]\n            return ArtifactFamilyListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_artifact_family_view",
+      "line": 5149,
+      "methodSha256": "0dd56451efeccbcd553547e9c2510ec9b44e45e774568172963a6494f1f116de",
+      "calls": [
+        "':'.join",
+        "ArtifactFamilyCandidateGroup",
+        "ArtifactFamilyMember",
+        "ArtifactFamilyView",
+        "ExactArtifactRef",
+        "ExactRevisionRef.model_validate",
+        "any",
+        "candidate_groups.append",
+        "canonical_hash",
+        "conn.execute",
+        "conn.execute(\"SELECT artifact.* FROM aip_artifact artifact\\n            JOIN aip_artifact_relation membership\\n              ON membership.org_id=artifact.org_id\\n             AND membership.project_id=artifact.project_id\\n             AND membership.from_artifact_id=artifact.artifact_id\\n             AND membership.from_content_hash=artifact.content_hash\\n             AND membership.relation_type='family_member'\\n            WHERE artifact.org_id=%s AND artifact.project_id=%s\\n              AND artifact.family_id=%s\\n              AND membership.to_artifact_id=%s\\n              AND membership.to_content_hash=%s\\n            ORDER BY artifact.family_revision,artifact.artifact_id\", (*scope.key, family_id, head['manifest_artifact_id'], head['manifest_content_hash'])).fetchall",
+        "conn.execute(\"SELECT relation.* FROM aip_artifact_relation relation\\n            JOIN aip_artifact source\\n              ON source.org_id=relation.org_id\\n             AND source.project_id=relation.project_id\\n             AND source.artifact_id=relation.from_artifact_id\\n            WHERE relation.org_id=%s AND relation.project_id=%s\\n              AND source.family_id=%s\\n              AND relation.relation_type IN ('variant_of','supersedes')\", (*scope.key, family_id)).fetchall",
+        "conn.execute('SELECT * FROM aip_artifact_family_selection_revision\\n            WHERE org_id=%s AND project_id=%s AND family_id=%s\\n            ORDER BY selection_key,revision', (*scope.key, family_id)).fetchall",
+        "grouped.items",
+        "grouped.setdefault",
+        "grouped.setdefault(group_key, []).append",
+        "int",
+        "len",
+        "master_by_member.get",
+        "self._artifact_family_decision",
+        "self._load",
+        "self._sorted_artifact_refs",
+        "self._tenant",
+        "sorted",
+        "str",
+        "supersedes_by_member.get"
+      ],
+      "sqlExpressions": [
+        "\"SELECT artifact.* FROM aip_artifact artifact\\n            JOIN aip_artifact_relation membership\\n              ON membership.org_id=artifact.org_id\\n             AND membership.project_id=artifact.project_id\\n             AND membership.from_artifact_id=artifact.artifact_id\\n             AND membership.from_content_hash=artifact.content_hash\\n             AND membership.relation_type='family_member'\\n            WHERE artifact.org_id=%s AND artifact.project_id=%s\\n              AND artifact.family_id=%s\\n              AND membership.to_artifact_id=%s\\n              AND membership.to_content_hash=%s\\n            ORDER BY artifact.family_revision,artifact.artifact_id\"",
+        "\"SELECT relation.* FROM aip_artifact_relation relation\\n            JOIN aip_artifact source\\n              ON source.org_id=relation.org_id\\n             AND source.project_id=relation.project_id\\n             AND source.artifact_id=relation.from_artifact_id\\n            WHERE relation.org_id=%s AND relation.project_id=%s\\n              AND source.family_id=%s\\n              AND relation.relation_type IN ('variant_of','supersedes')\"",
+        "'SELECT * FROM aip_artifact_family_selection_revision\\n            WHERE org_id=%s AND project_id=%s AND family_id=%s\\n            ORDER BY selection_key,revision'"
+      ],
+      "source": "def _artifact_family_view(\n        self, conn: Any, scope: TenantScope, head: Any\n    ) -> ArtifactFamilyView:\n        family_id = str(head[\"family_id\"])\n        rows = conn.execute(\n            \"\"\"SELECT artifact.* FROM aip_artifact artifact\n            JOIN aip_artifact_relation membership\n              ON membership.org_id=artifact.org_id\n             AND membership.project_id=artifact.project_id\n             AND membership.from_artifact_id=artifact.artifact_id\n             AND membership.from_content_hash=artifact.content_hash\n             AND membership.relation_type='family_member'\n            WHERE artifact.org_id=%s AND artifact.project_id=%s\n              AND artifact.family_id=%s\n              AND membership.to_artifact_id=%s\n              AND membership.to_content_hash=%s\n            ORDER BY artifact.family_revision,artifact.artifact_id\"\"\",\n            (\n                *scope.key,\n                family_id,\n                head[\"manifest_artifact_id\"],\n                head[\"manifest_content_hash\"],\n            ),\n        ).fetchall()\n        relation_rows = conn.execute(\n            \"\"\"SELECT relation.* FROM aip_artifact_relation relation\n            JOIN aip_artifact source\n              ON source.org_id=relation.org_id\n             AND source.project_id=relation.project_id\n             AND source.artifact_id=relation.from_artifact_id\n            WHERE relation.org_id=%s AND relation.project_id=%s\n              AND source.family_id=%s\n              AND relation.relation_type IN ('variant_of','supersedes')\"\"\",\n            (*scope.key, family_id),\n        ).fetchall()\n        master_by_member = {\n            row[\"from_artifact_id\"]: ExactArtifactRef(\n                artifactId=row[\"to_artifact_id\"], contentHash=row[\"to_content_hash\"]\n            )\n            for row in relation_rows\n            if row[\"relation_type\"] == \"variant_of\"\n        }\n        supersedes_by_member = {\n            row[\"from_artifact_id\"]: ExactArtifactRef(\n                artifactId=row[\"to_artifact_id\"], contentHash=row[\"to_content_hash\"]\n            )\n            for row in relation_rows\n            if row[\"relation_type\"] == \"supersedes\"\n        }\n        members = [\n            ArtifactFamilyMember(\n                artifactRef=ExactArtifactRef(\n                    artifactId=row[\"artifact_id\"], contentHash=row[\"content_hash\"]\n                ),\n                familyRevision=int(row[\"family_revision\"]),\n                role=row[\"family_role\"],\n                artifactType=row[\"artifact_type\"],\n                profile=row[\"profile\"],\n                platform=row[\"platform\"],\n                renditionSpecHash=row[\"rendition_spec_hash\"],\n                lineageRefs=[\n                    ExactRevisionRef.model_validate(item)\n                    for item in (self._load(row[\"lineage_refs\"]) or [])\n                ],\n                masterRef=master_by_member.get(row[\"artifact_id\"]),\n                supersedesRef=supersedes_by_member.get(row[\"artifact_id\"]),\n                approvalStatus=\"unknown\",\n                executionStatus=\"unknown\",\n                createdAt=row[\"created_at\"],\n            )\n            for row in rows\n        ]\n        decision_rows = conn.execute(\n            \"\"\"SELECT * FROM aip_artifact_family_selection_revision\n            WHERE org_id=%s AND project_id=%s AND family_id=%s\n            ORDER BY selection_key,revision\"\"\",\n            (*scope.key, family_id),\n        ).fetchall()\n        decisions = [self._artifact_family_decision(row) for row in decision_rows]\n        superseded_ids = {\n            row[\"to_artifact_id\"]\n            for row in relation_rows\n            if row[\"relation_type\"] == \"supersedes\"\n        }\n        grouped: dict[tuple[str, str, str, str, str], list[ArtifactFamilyMember]] = {}\n        for member in members:\n            if member.artifact_ref.artifact_id in superseded_ids:\n                continue\n            group_key = (\n                member.role.value,\n                member.artifact_type,\n                member.profile,\n                member.platform,\n                member.rendition_spec_hash,\n            )\n            grouped.setdefault(group_key, []).append(member)\n        candidate_groups: list[ArtifactFamilyCandidateGroup] = []\n        for group_key, group_members in sorted(grouped.items()):\n            role, artifact_type, profile, platform, rendition_hash = group_key\n            selection_key = \":\".join(group_key)\n            candidates = [item.artifact_ref for item in group_members]\n            selected_ref: ExactArtifactRef | None = None\n            status = ArtifactFamilyCandidateStatus.CURRENT\n            if len(candidates) > 1:\n                status = ArtifactFamilyCandidateStatus.CONFLICT\n                candidate_hash = canonical_hash(self._sorted_artifact_refs(candidates))\n                matching = [\n                    item\n                    for item in decisions\n                    if item.selection_key == selection_key\n                    and item.candidate_set_hash == candidate_hash\n                ]\n                if matching:\n                    selected_ref = matching[-1].selected_ref\n                    status = ArtifactFamilyCandidateStatus.SELECTED\n            candidate_groups.append(\n                ArtifactFamilyCandidateGroup(\n                    selectionKey=selection_key,\n                    role=role,\n                    artifactType=artifact_type,\n                    profile=profile,\n                    platform=platform,\n                    renditionSpecHash=rendition_hash,\n                    candidates=candidates,\n                    selectedRef=selected_ref,\n                    status=status,\n                )\n            )\n        topology = (\n            ArtifactFamilyTopologyStatus.EMPTY\n            if not candidate_groups\n            else ArtifactFamilyTopologyStatus.CONFLICT\n            if any(\n                item.status is ArtifactFamilyCandidateStatus.CONFLICT\n                for item in candidate_groups\n            )\n            else ArtifactFamilyTopologyStatus.CURRENT\n        )\n        return ArtifactFamilyView(\n            tenant=self._tenant(scope),\n            familyId=family_id,\n            version=int(head[\"version\"]),\n            currentRevision=int(head[\"current_revision\"]),\n            manifestRef=ExactArtifactRef(\n                artifactId=head[\"manifest_artifact_id\"],\n                contentHash=head[\"manifest_content_hash\"],\n            ),\n            members=members,\n            candidateGroups=candidate_groups,\n            selectionDecisions=decisions,\n            topologyStatus=topology,\n            updatedAt=head[\"updated_at\"],\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_sorted_artifact_refs",
+      "line": 5048,
+      "methodSha256": "43c036491040234d137ccf12e8be6d2b6d1bcd67b2a64be3118888fec8fefbe6",
+      "calls": [
+        "item.model_dump",
+        "sorted"
+      ],
+      "sqlExpressions": [],
+      "source": "def _sorted_artifact_refs(refs: list[ExactArtifactRef]) -> list[dict[str, str]]:\n        return sorted(\n            (item.model_dump(mode=\"json\", by_alias=True) for item in refs),\n            key=lambda item: (item[\"artifactId\"], item[\"contentHash\"]),\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_artifact_family_decision",
+      "line": 5303,
+      "methodSha256": "d98593d38e06fe2769471fe8c3610c03b60717b024f94e70002ae494a2fd290b",
+      "calls": [
+        "ArtifactFamilySelectionDecision",
+        "ExactArtifactRef",
+        "ExactArtifactRef.model_validate",
+        "ExactRevisionRef.model_validate",
+        "int",
+        "self._load"
+      ],
+      "sqlExpressions": [],
+      "source": "def _artifact_family_decision(self, row: Any) -> ArtifactFamilySelectionDecision:\n        return ArtifactFamilySelectionDecision(\n            familyId=row[\"family_id\"],\n            selectionKey=row[\"selection_key\"],\n            revision=int(row[\"revision\"]),\n            expectedFamilyVersion=int(row[\"expected_family_version\"]),\n            selectedRef=ExactArtifactRef(\n                artifactId=row[\"selected_artifact_id\"],\n                contentHash=row[\"selected_content_hash\"],\n            ),\n            candidateRefs=[\n                ExactArtifactRef.model_validate(item)\n                for item in (self._load(row[\"candidate_refs\"]) or [])\n            ],\n            candidateSetHash=row[\"candidate_set_hash\"],\n            policyRef=ExactRevisionRef.model_validate(self._load(row[\"policy_ref\"])),\n            reason=row[\"reason\"],\n            decisionHash=row[\"decision_hash\"],\n            actor=row[\"actor\"],\n            createdAt=row[\"created_at\"],\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_impact_previews",
+      "line": 1068,
+      "methodSha256": "b312044bd0dcd4a675aafbe2062cc14d14f1816296601d4ac7a75ade8b3735e7",
+      "calls": [
+        "ImpactPreviewListResponse",
+        "conn.execute",
+        "conn.execute('SELECT revision.*,head.version FROM aip_impact_preview_head head\\n                JOIN aip_impact_preview_revision revision ON revision.org_id=head.org_id\\n                  AND revision.project_id=head.project_id\\n                  AND revision.preview_id=head.preview_id\\n                  AND revision.revision=head.current_revision\\n                WHERE head.org_id=%s AND head.project_id=%s\\n                ORDER BY revision.created_at DESC,revision.preview_id', scope.key).fetchall",
+        "int",
+        "len",
+        "self._connect_factory",
+        "self._impact_preview",
+        "self._tenant"
+      ],
+      "sqlExpressions": [
+        "'SELECT revision.*,head.version FROM aip_impact_preview_head head\\n                JOIN aip_impact_preview_revision revision ON revision.org_id=head.org_id\\n                  AND revision.project_id=head.project_id\\n                  AND revision.preview_id=head.preview_id\\n                  AND revision.revision=head.current_revision\\n                WHERE head.org_id=%s AND head.project_id=%s\\n                ORDER BY revision.created_at DESC,revision.preview_id'"
+      ],
+      "source": "def list_impact_previews(self, scope: TenantScope) -> ImpactPreviewListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT revision.*,head.version FROM aip_impact_preview_head head\n                JOIN aip_impact_preview_revision revision ON revision.org_id=head.org_id\n                  AND revision.project_id=head.project_id\n                  AND revision.preview_id=head.preview_id\n                  AND revision.revision=head.current_revision\n                WHERE head.org_id=%s AND head.project_id=%s\n                ORDER BY revision.created_at DESC,revision.preview_id\"\"\",\n                scope.key,\n            ).fetchall()\n        items = [self._impact_preview(scope, row, int(row[\"version\"])) for row in rows]\n        return ImpactPreviewListResponse(\n            tenant=self._tenant(scope), items=items, count=len(items)\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_impact_preview",
+      "line": 5926,
+      "methodSha256": "33a762aa9c3ee21a766f3b1f212678dd7b0b77f13e21b1f4ff9af9ac7ba6bef6",
+      "calls": [
+        "ImpactPreviewRevision",
+        "body.model_dump",
+        "compute_action_binding_hash",
+        "int",
+        "self._impact_body",
+        "self._load",
+        "self._tenant"
+      ],
+      "sqlExpressions": [],
+      "source": "def _impact_preview(\n        self, scope: TenantScope, row: Any, version: int\n    ) -> ImpactPreviewRevision:\n        body = self._impact_body(row)\n        action_binding_hash = compute_action_binding_hash(\n            org_id=scope.org_id,\n            project_id=scope.project_id,\n            preview_id=row[\"preview_id\"],\n            revision=int(row[\"revision\"]),\n            content_hash=row[\"content_hash\"],\n            dependency_snapshot_hash=row[\"dependency_snapshot_hash\"],\n            binding_refs=self._load(row[\"binding_refs\"]),\n            capability_ref=self._load(row[\"capability_ref\"]),\n            account_ref=self._load(row[\"account_ref\"]),\n            external_action_binding=self._load(row[\"external_action_binding\"]),\n            expires_at=row[\"expires_at\"],\n        )\n        return ImpactPreviewRevision(\n            **body.model_dump(),\n            tenant=self._tenant(scope),\n            preview_id=row[\"preview_id\"],\n            revision=int(row[\"revision\"]),\n            version=version,\n            content_hash=row[\"content_hash\"],\n            dependency_snapshot_hash=row[\"dependency_snapshot_hash\"],\n            action_binding_hash=action_binding_hash,\n            lifecycle=row[\"lifecycle\"],\n            readiness=row[\"readiness\"],\n            blockers=self._load(row[\"blockers\"]),\n            frozen_by=row[\"frozen_by\"],\n            frozen_at=row[\"frozen_at\"],\n            created_by=row[\"created_by\"],\n            created_at=row[\"created_at\"],\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_impact_body",
+      "line": 5906,
+      "methodSha256": "28dc3a556b398205910ac74220c204fdf6745c0a9b7641ad9cc416bd6d7fa115",
+      "calls": [
+        "CreateImpactPreviewRequest",
+        "self._load"
+      ],
+      "sqlExpressions": [],
+      "source": "def _impact_body(self, row: Any) -> CreateImpactPreviewRequest:\n        return CreateImpactPreviewRequest(\n            task_id=row[\"task_id\"],\n            plan_ref=self._load(row[\"plan_ref\"]),\n            production_context_ref=self._load(row[\"production_context_ref\"]),\n            brief_ref=self._load(row[\"brief_ref\"]),\n            evidence_bundle_ref=self._load(row[\"evidence_bundle_ref\"]),\n            eval_contract_ref=self._load(row[\"eval_contract_ref\"]),\n            responsibility_plan_ref=self._load(row[\"responsibility_plan_ref\"]),\n            stage_template_ref=self._load(row[\"stage_template_ref\"]),\n            model_route_ref=self._load(row[\"model_route_ref\"]),\n            runtime_policy_ref=self._load(row[\"runtime_policy_ref\"]),\n            binding_refs=self._load(row[\"binding_refs\"]),\n            capability_ref=self._load(row[\"capability_ref\"]),\n            account_ref=self._load(row[\"account_ref\"]),\n            external_action_binding=self._load(row[\"external_action_binding\"]),\n            impact=self._load(row[\"impact\"]),\n            expires_at=row[\"expires_at\"],\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "get_responsibility_plan",
+      "line": 794,
+      "methodSha256": "a54d25b030564095678d9ce1e31f1a8e79a7d66d332149dfc3c695dd529b5b43",
+      "calls": [
+        "ProductionContractNotFound",
+        "c.execute",
+        "c.execute('SELECT * FROM public.aip_responsibility_plan_head WHERE org_id=%s AND project_id=%s AND plan_id=%s', (*scope.key, plan_id)).fetchone",
+        "c.execute('SELECT * FROM public.aip_responsibility_plan_revision WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s', (*scope.key, plan_id, selected)).fetchone",
+        "int",
+        "read",
+        "self._connect_factory",
+        "self._responsibility_plan"
+      ],
+      "sqlExpressions": [
+        "'SELECT * FROM public.aip_responsibility_plan_head WHERE org_id=%s AND project_id=%s AND plan_id=%s'",
+        "'SELECT * FROM public.aip_responsibility_plan_revision WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s'"
+      ],
+      "source": "def get_responsibility_plan(self, scope: TenantScope, plan_id: str, revision: int | None = None,\n                                *, conn: Any | None = None) -> ResponsibilityPlanRevision:\n        def read(c: Any) -> ResponsibilityPlanRevision:\n            head = c.execute(\"SELECT * FROM public.aip_responsibility_plan_head WHERE org_id=%s AND project_id=%s AND plan_id=%s\", (*scope.key, plan_id)).fetchone()\n            if not head:\n                raise ProductionContractNotFound(\"responsibility plan not found\")\n            selected = revision or int(head[\"current_revision\"])\n            row = c.execute(\"SELECT * FROM public.aip_responsibility_plan_revision WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s\", (*scope.key, plan_id, selected)).fetchone()\n            if not row:\n                raise ProductionContractNotFound(\"responsibility plan revision not found\")\n            return self._responsibility_plan(scope, row, int(head[\"version\"]), c)\n        if conn is not None:\n            return read(conn)\n        with self._connect_factory(scope) as c:\n            return read(c)"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_responsibility_plan",
+      "line": 6620,
+      "methodSha256": "4d5dbec6a02031eecafe5cb945f0be277d95f71159f96725c074b9f67cb1b855",
+      "calls": [
+        "ResponsibilityPlanRevision",
+        "int",
+        "row.get",
+        "self._load",
+        "self._responsibility_blockers",
+        "self._tenant"
+      ],
+      "sqlExpressions": [],
+      "source": "def _responsibility_plan(self, scope: TenantScope, row: Any, version: int, conn: Any) -> ResponsibilityPlanRevision:\n        blockers, uncovered = self._responsibility_blockers(conn, scope, row)\n        return ResponsibilityPlanRevision(\n            tenant=self._tenant(scope), plan_id=row[\"plan_id\"], revision=int(row[\"revision\"]), version=version,\n            profile=row[\"profile\"], template_ref=self._load(row[\"template_ref\"]), slots=self._load(row[\"slots\"]),\n            merge_decisions=self._load(row[\"merge_decisions\"]),\n            profile_recommendation_ref=self._load(row.get(\"profile_recommendation_ref\")),\n            profile_confirmation_id=row.get(\"profile_confirmation_id\"),\n            merge_policy_ref=self._load(row.get(\"merge_policy_ref\")),\n            merge_decision_receipt_ids=self._load(row.get(\"merge_decision_receipt_ids\")) or [],\n            coverage=Coverage.COMPLETE if not uncovered else Coverage.BLOCKED, uncovered_slots=uncovered,\n            content_hash=row[\"content_hash\"], lifecycle=row[\"lifecycle\"],\n            readiness=ContractReadiness.READY if not blockers else ContractReadiness.BLOCKED,\n            blockers=blockers, created_by=row[\"created_by\"], created_at=row[\"created_at\"])"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_responsibility_blockers",
+      "line": 6382,
+      "methodSha256": "fc1e45973e86cbdfb1e1f9f941bc386f487d2f3fcbda65dad0435f3726a11e77",
+      "calls": [
+        "AssigneeRef.model_validate",
+        "ContractBlocker",
+        "any",
+        "binding_ids.append",
+        "blockers.append",
+        "bool",
+        "candidates.items",
+        "candidates[cap_id].append",
+        "conn.execute",
+        "conn.execute(\"SELECT b.capability_refs,b.readiness,b.dependency_snapshot_hash,\\n                          b.readiness_expires_at,\\n                          (EXISTS (\\n                              SELECT 1 FROM public.aip_skill_template_revision s\\n                              WHERE s.skill_id=b.skill_id AND s.revision=b.skill_revision\\n                                AND s.lifecycle='published'\\n                                AND s.publication_tenant @> jsonb_build_object(\\n                                    'orgId',b.org_id,'projectId',b.project_id)\\n                          ) AND (\\n                              SELECT latest.lifecycle\\n                              FROM public.aip_skill_template_revision latest\\n                              WHERE latest.skill_id=b.skill_id\\n                              ORDER BY latest.revision DESC LIMIT 1\\n                          )='published' AND EXISTS (\\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                AND r.operation='skill_binding.create' AND r.status='applied'\\n                                AND r.result_ref->>'resourceId'=b.binding_id\\n                          ) AND EXISTS (\\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                AND r.operation='skill_binding.evaluate' AND r.status='applied'\\n                                AND r.result_ref->>'resourceId'=b.binding_id\\n                          ) AND EXISTS (\\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                AND r.operation='skill_binding.update' AND r.status='applied'\\n                                AND r.result_ref->>'resourceId'=b.binding_id\\n                          )) AS source_valid\\n                   FROM public.aip_skill_binding b\\n                   WHERE b.org_id=%s AND b.project_id=%s AND b.instance_id=%s\\n                     AND b.status='active'\", (*scope.key, instance_id)).fetchall",
+        "conn.execute('SELECT * FROM public.aip_capability_binding\\n                   WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)', (*scope.key, binding_ids)).fetchall",
+        "datetime.now",
+        "identifier.strip",
+        "isinstance",
+        "ref.get",
+        "ref.strip",
+        "self._capability_identifier",
+        "self._load",
+        "self._require_exact_assignee_resolution",
+        "set",
+        "slot.get",
+        "slot_codes.add",
+        "sorted",
+        "str",
+        "uncovered.append"
+      ],
+      "sqlExpressions": [
+        "\"SELECT b.capability_refs,b.readiness,b.dependency_snapshot_hash,\\n                          b.readiness_expires_at,\\n                          (EXISTS (\\n                              SELECT 1 FROM public.aip_skill_template_revision s\\n                              WHERE s.skill_id=b.skill_id AND s.revision=b.skill_revision\\n                                AND s.lifecycle='published'\\n                                AND s.publication_tenant @> jsonb_build_object(\\n                                    'orgId',b.org_id,'projectId',b.project_id)\\n                          ) AND (\\n                              SELECT latest.lifecycle\\n                              FROM public.aip_skill_template_revision latest\\n                              WHERE latest.skill_id=b.skill_id\\n                              ORDER BY latest.revision DESC LIMIT 1\\n                          )='published' AND EXISTS (\\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                AND r.operation='skill_binding.create' AND r.status='applied'\\n                                AND r.result_ref->>'resourceId'=b.binding_id\\n                          ) AND EXISTS (\\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                AND r.operation='skill_binding.evaluate' AND r.status='applied'\\n                                AND r.result_ref->>'resourceId'=b.binding_id\\n                          ) AND EXISTS (\\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                AND r.operation='skill_binding.update' AND r.status='applied'\\n                                AND r.result_ref->>'resourceId'=b.binding_id\\n                          )) AS source_valid\\n                   FROM public.aip_skill_binding b\\n                   WHERE b.org_id=%s AND b.project_id=%s AND b.instance_id=%s\\n                     AND b.status='active'\"",
+        "'SELECT * FROM public.aip_capability_binding\\n                   WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)'"
+      ],
+      "source": "def _responsibility_blockers(self, conn: Any, scope: TenantScope, row: Any) -> tuple[list[ContractBlocker], list[str]]:\n        \"\"\"W-L4: coverage via assignee SkillBinding → CapabilityBinding operational, not tenant-global.\"\"\"\n        blockers: list[ContractBlocker] = []\n        uncovered: list[str] = []\n        now = datetime.now(timezone.utc)\n        for slot in self._load(row[\"slots\"]):\n            slot_id = slot[\"slotId\"]\n            assignee = slot[\"assignee\"]\n            receipt_id = slot.get(\"assigneeResolutionReceiptId\")\n            if receipt_id:\n                try:\n                    self._require_exact_assignee_resolution(\n                        conn,\n                        scope,\n                        receipt_id,\n                        AssigneeRef.model_validate(assignee),\n                        set(slot[\"requiredCapabilityIds\"]),\n                        slot_id,\n                    )\n                except ProductionContractDependencyBlocked as exc:\n                    blockers.append(\n                        ContractBlocker(\n                            code=\"ASSIGNEE_RESOLUTION_INVALID\",\n                            message=str(exc),\n                        )\n                    )\n                    uncovered.append(slot_id)\n                continue\n            if assignee[\"kind\"] != \"agent_instance\":\n                blockers.append(\n                    ContractBlocker(\n                        code=\"ASSIGNEE_RESOLUTION_REQUIRED\",\n                        message=f\"职责 {slot_id} 缺少 canonical AssigneeResolutionReceipt\",\n                    )\n                )\n                uncovered.append(slot_id)\n                continue\n            instance_id = assignee[\"resourceId\"]\n            required = set(slot[\"requiredCapabilityIds\"])\n            skill_rows = conn.execute(\n                \"\"\"SELECT b.capability_refs,b.readiness,b.dependency_snapshot_hash,\n                          b.readiness_expires_at,\n                          (EXISTS (\n                              SELECT 1 FROM public.aip_skill_template_revision s\n                              WHERE s.skill_id=b.skill_id AND s.revision=b.skill_revision\n                                AND s.lifecycle='published'\n                                AND s.publication_tenant @> jsonb_build_object(\n                                    'orgId',b.org_id,'projectId',b.project_id)\n                          ) AND (\n                              SELECT latest.lifecycle\n                              FROM public.aip_skill_template_revision latest\n                              WHERE latest.skill_id=b.skill_id\n                              ORDER BY latest.revision DESC LIMIT 1\n                          )='published' AND EXISTS (\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\n                                AND r.operation='skill_binding.create' AND r.status='applied'\n                                AND r.result_ref->>'resourceId'=b.binding_id\n                          ) AND EXISTS (\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\n                                AND r.operation='skill_binding.evaluate' AND r.status='applied'\n                                AND r.result_ref->>'resourceId'=b.binding_id\n                          ) AND EXISTS (\n                              SELECT 1 FROM public.aip_agent_registry_receipt r\n                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id\n                                AND r.operation='skill_binding.update' AND r.status='applied'\n                                AND r.result_ref->>'resourceId'=b.binding_id\n                          )) AS source_valid\n                   FROM public.aip_skill_binding b\n                   WHERE b.org_id=%s AND b.project_id=%s AND b.instance_id=%s\n                     AND b.status='active'\"\"\",\n                (*scope.key, instance_id),\n            ).fetchall()\n            if not skill_rows:\n                blockers.append(\n                    ContractBlocker(\n                        code=\"SKILL_BINDING_NOT_ACTIVE\",\n                        message=f\"职责 {slot_id} 没有 active SkillBinding\",\n                    )\n                )\n                uncovered.append(slot_id)\n                continue\n            ready_skills = [\n                skill for skill in skill_rows\n                if skill[\"readiness\"] == \"available\"\n                and skill[\"dependency_snapshot_hash\"] is not None\n                and skill[\"readiness_expires_at\"] is not None\n                and skill[\"readiness_expires_at\"] > now\n            ]\n            if not ready_skills:\n                stale = any(\n                    skill[\"readiness\"] == \"available\" for skill in skill_rows\n                )\n                blockers.append(\n                    ContractBlocker(\n                        code=\"SKILL_BINDING_STALE\" if stale else \"SKILL_BINDING_NOT_READY\",\n                        message=f\"职责 {slot_id} 的 SkillBinding 未达当前可用且新鲜的 readiness\",\n                    )\n                )\n                uncovered.append(slot_id)\n                continue\n            sourced_skills = [skill for skill in ready_skills if skill[\"source_valid\"]]\n            if not sourced_skills:\n                blockers.append(\n                    ContractBlocker(\n                        code=\"SKILL_BINDING_SOURCE_INVALID\",\n                        message=f\"职责 {slot_id} 的 SkillBinding 缺少当前正式发布和绑定评测激活来源\",\n                    )\n                )\n                uncovered.append(slot_id)\n                # Preserve capability diagnostics while the source blocker keeps\n                # this slot closed; unsourced rows never make it ready.\n                sourced_skills = ready_skills\n            binding_ids: list[str] = []\n            for skill in sourced_skills:\n                for ref in self._load(skill[\"capability_refs\"]) or []:\n                    if isinstance(ref, str) and ref.strip():\n                        binding_ids.append(ref.strip())\n                    elif isinstance(ref, dict):\n                        identifier = ref.get(\"bindingId\") or ref.get(\"resourceId\")\n                        if isinstance(identifier, str) and identifier.strip():\n                            binding_ids.append(identifier.strip())\n            binding_ids = sorted(set(binding_ids))\n            if not required:\n                continue\n            if not binding_ids:\n                blockers.append(\n                    ContractBlocker(\n                        code=\"CAPABILITY_BINDING_MISSING\",\n                        message=f\"职责 {slot_id} 的 SkillBinding 未挂 CapabilityBinding\",\n                    )\n                )\n                if slot_id not in uncovered:\n                    uncovered.append(slot_id)\n                continue\n            cap_rows = conn.execute(\n                \"\"\"SELECT * FROM public.aip_capability_binding\n                   WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)\"\"\",\n                (*scope.key, binding_ids),\n            ).fetchall()\n            slot_codes: set[str] = set()\n            candidates: dict[str, list[Any]] = {item: [] for item in required}\n            for crow in cap_rows:\n                cap_id = self._capability_identifier(self._load(crow[\"capability_ref\"]))\n                if cap_id not in required:\n                    continue\n                candidates[cap_id].append(crow)\n            for cap_id, rows in candidates.items():\n                if not rows:\n                    slot_codes.add(\"CAPABILITY_BINDING_MISSING\")\n                    continue\n                active = [\n                    item\n                    for item in rows\n                    if item[\"status\"] == \"active\" and item[\"health\"] == \"healthy\"\n                ]\n                if not active:\n                    slot_codes.add(\"CAPABILITY_BINDING_NOT_ACTIVE\")\n                    continue\n                operational = [\n                    item\n                    for item in active\n                    if item[\"operational_readiness\"] == \"available\"\n                    or (\n                        item[\"operational_readiness\"] == \"degraded\"\n                        and bool(item[\"allow_degraded\"])\n                    )\n                ]\n                if not operational:\n                    slot_codes.add(\"CAPABILITY_BINDING_NOT_OPERATIONAL\")\n                    continue\n                fresh = [\n                    item\n                    for item in operational\n                    if item[\"dependency_snapshot_hash\"] is not None\n                    and item[\"readiness_expires_at\"] is not None\n                    and item[\"readiness_expires_at\"] > now\n                ]\n                if not fresh:\n                    slot_codes.add(\"CAPABILITY_BINDING_STALE\")\n                    continue\n            if slot_codes:\n                messages = {\n                    \"CAPABILITY_BINDING_MISSING\": f\"职责 {slot_id} 缺少 assignee 归属的 CapabilityBinding\",\n                    \"CAPABILITY_BINDING_NOT_ACTIVE\": f\"职责 {slot_id} 的 required capabilities 未全部由 assignee 的 operational Binding 覆盖\",\n                    \"CAPABILITY_BINDING_NOT_OPERATIONAL\": f\"职责 {slot_id} 的 CapabilityBinding 未达 operational 可用\",\n                    \"CAPABILITY_BINDING_STALE\": f\"职责 {slot_id} 的 CapabilityBinding readiness 已过期或未求值\",\n                }\n                for code in sorted(slot_codes):\n                    blockers.append(ContractBlocker(code=code, message=messages[code]))\n                if slot_id not in uncovered:\n                    uncovered.append(slot_id)\n        return blockers, uncovered"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_require_exact_assignee_resolution",
+      "line": 6178,
+      "methodSha256": "f8cb667f0beb4b5e06692d901bef4e7ce86edec73391b61c7acdeb2301ab355e",
+      "calls": [
+        "AipAssigneeResolutionStore",
+        "AipAssigneeResolutionStore()._evaluate_candidate",
+        "AipAssigneeResolutionStore._binding_ids",
+        "ProductionContractDependencyBlocked",
+        "ResolveAssigneeRequest",
+        "VersionedAssetRef.model_validate",
+        "any",
+        "assignee.model_dump",
+        "conn.execute",
+        "conn.execute(\"SELECT 1 FROM aip_skill_binding b\\n                            JOIN aip_skill_template_revision s\\n                              ON s.skill_id=b.skill_id AND s.revision=b.skill_revision\\n                            WHERE b.org_id=%s AND b.project_id=%s\\n                              AND b.binding_id=%s AND b.instance_id=%s\\n                              AND b.version=%s AND b.status='active'\\n                              AND s.lifecycle='published'\\n                              AND s.publication_tenant->>'orgId'=%s\\n                              AND s.publication_tenant->>'projectId'=%s\\n                              AND (SELECT latest.lifecycle\\n                                   FROM aip_skill_template_revision latest\\n                                   WHERE latest.skill_id=b.skill_id\\n                                   ORDER BY latest.revision DESC LIMIT 1)='published'\\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                    AND r.operation='skill_binding.create'\\n                                    AND r.status='applied'\\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                    AND r.operation='skill_binding.evaluate'\\n                                    AND r.status='applied'\\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                    AND r.operation='skill_binding.update'\\n                                    AND r.status='applied'\\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\", (*scope.key, ref.asset_id, assignee.resource_id, ref.revision, *scope.key)).fetchone",
+        "conn.execute('SELECT 1 FROM aip_agent_instance\\n                            WHERE org_id=%s AND project_id=%s AND instance_id=%s\\n                            FOR SHARE', (*scope.key, tool_row['agent_instance_id'])).fetchone",
+        "conn.execute('SELECT 1 FROM aip_agent_instance\\n                        WHERE org_id=%s AND project_id=%s AND instance_id=%s\\n                        FOR SHARE', (*scope.key, assignee.resource_id)).fetchone",
+        "conn.execute('SELECT 1 FROM aip_capability_binding\\n                                WHERE org_id=%s AND project_id=%s\\n                                  AND binding_id=ANY(%s)\\n                                ORDER BY binding_id FOR SHARE', (*scope.key, sorted(set(binding_ids)))).fetchall",
+        "conn.execute('SELECT 1 FROM aip_capability_binding\\n                        WHERE org_id=%s AND project_id=%s AND binding_id=%s\\n                        FOR SHARE', (*scope.key, assignee.resource_id)).fetchone",
+        "conn.execute('SELECT 1 FROM meta_membership\\n                WHERE org_id=%s AND project_id=%s AND subject=%s' + (' FOR SHARE' if lock_human_membership else ''), (*scope.key, assignee.resource_id)).fetchone",
+        "conn.execute('SELECT agent_instance_id,capability_binding_ids\\n                        FROM aip_tool_binding\\n                        WHERE org_id=%s AND project_id=%s AND binding_id=%s\\n                        FOR SHARE', (*scope.key, assignee.resource_id)).fetchone",
+        "conn.execute('SELECT subject_id,kind,resource_id,version,status,selected_assignee,\\n                      required_capability_refs,binding_refs,snapshot_hash,expires_at\\n                 FROM public.aip_assignee_resolution_receipt\\n                WHERE org_id=%s AND project_id=%s AND receipt_id=%s', (*scope.key, receipt_id)).fetchone",
+        "conn.execute(f'SELECT 1 FROM {table}\\n                                WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)\\n                                ORDER BY binding_id FOR SHARE', (*scope.key, ids)).fetchall",
+        "datetime.now",
+        "int",
+        "isinstance",
+        "item.get",
+        "ref.get",
+        "self._load",
+        "set",
+        "sorted"
+      ],
+      "sqlExpressions": [
+        "'SELECT subject_id,kind,resource_id,version,status,selected_assignee,\\n                      required_capability_refs,binding_refs,snapshot_hash,expires_at\\n                 FROM public.aip_assignee_resolution_receipt\\n                WHERE org_id=%s AND project_id=%s AND receipt_id=%s'",
+        "'SELECT 1 FROM meta_membership\\n                WHERE org_id=%s AND project_id=%s AND subject=%s' + (' FOR SHARE' if lock_human_membership else '')",
+        "'SELECT 1 FROM aip_capability_binding\\n                        WHERE org_id=%s AND project_id=%s AND binding_id=%s\\n                        FOR SHARE'",
+        "'SELECT agent_instance_id,capability_binding_ids\\n                        FROM aip_tool_binding\\n                        WHERE org_id=%s AND project_id=%s AND binding_id=%s\\n                        FOR SHARE'",
+        "'SELECT 1 FROM aip_agent_instance\\n                        WHERE org_id=%s AND project_id=%s AND instance_id=%s\\n                        FOR SHARE'",
+        "'SELECT 1 FROM aip_agent_instance\\n                            WHERE org_id=%s AND project_id=%s AND instance_id=%s\\n                            FOR SHARE'",
+        "'SELECT 1 FROM aip_capability_binding\\n                                WHERE org_id=%s AND project_id=%s\\n                                  AND binding_id=ANY(%s)\\n                                ORDER BY binding_id FOR SHARE'",
+        "f'SELECT 1 FROM {table}\\n                                WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)\\n                                ORDER BY binding_id FOR SHARE'",
+        "\"SELECT 1 FROM aip_skill_binding b\\n                            JOIN aip_skill_template_revision s\\n                              ON s.skill_id=b.skill_id AND s.revision=b.skill_revision\\n                            WHERE b.org_id=%s AND b.project_id=%s\\n                              AND b.binding_id=%s AND b.instance_id=%s\\n                              AND b.version=%s AND b.status='active'\\n                              AND s.lifecycle='published'\\n                              AND s.publication_tenant->>'orgId'=%s\\n                              AND s.publication_tenant->>'projectId'=%s\\n                              AND (SELECT latest.lifecycle\\n                                   FROM aip_skill_template_revision latest\\n                                   WHERE latest.skill_id=b.skill_id\\n                                   ORDER BY latest.revision DESC LIMIT 1)='published'\\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                    AND r.operation='skill_binding.create'\\n                                    AND r.status='applied'\\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                    AND r.operation='skill_binding.evaluate'\\n                                    AND r.status='applied'\\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\\n                                    AND r.operation='skill_binding.update'\\n                                    AND r.status='applied'\\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\""
+      ],
+      "source": "def _require_exact_assignee_resolution(\n        self,\n        conn: Any,\n        scope: TenantScope,\n        receipt_id: str,\n        assignee: AssigneeRef,\n        required_capability_ids: set[str],\n        slot_id: str,\n        *,\n        lock_human_membership: bool = False,\n        lock_provider_binding: bool = False,\n        lock_tool_binding: bool = False,\n        lock_agent_binding: bool = False,\n    ) -> None:\n        row = conn.execute(\n            \"\"\"SELECT subject_id,kind,resource_id,version,status,selected_assignee,\n                      required_capability_refs,binding_refs,snapshot_hash,expires_at\n                 FROM public.aip_assignee_resolution_receipt\n                WHERE org_id=%s AND project_id=%s AND receipt_id=%s\"\"\",\n            (*scope.key, receipt_id),\n        ).fetchone()\n        if row is None:\n            raise ProductionContractDependencyBlocked(\n                f\"ASSIGNEE_RESOLUTION_MISSING:{slot_id}\"\n            )\n        if row[\"subject_id\"] != slot_id:\n            raise ProductionContractDependencyBlocked(\n                f\"ASSIGNEE_RESOLUTION_SUBJECT_DRIFTED:{slot_id}\"\n            )\n        if row[\"status\"] != \"resolved\" or not row[\"snapshot_hash\"]:\n            raise ProductionContractDependencyBlocked(\n                f\"ASSIGNEE_RESOLUTION_NOT_EXACT:{slot_id}\"\n            )\n        if row[\"expires_at\"] is None or row[\"expires_at\"] <= datetime.now(timezone.utc):\n            raise ProductionContractDependencyBlocked(\n                f\"ASSIGNEE_RESOLUTION_STALE:{slot_id}\"\n            )\n        if (\n            row[\"kind\"] != assignee.kind.value\n            or row[\"resource_id\"] != assignee.resource_id\n            or int(row[\"version\"]) != assignee.version\n        ):\n            raise ProductionContractDependencyBlocked(\n                f\"ASSIGNEE_RESOLUTION_DRIFTED:{slot_id}\"\n            )\n        selected = self._load(row[\"selected_assignee\"])\n        if selected != assignee.model_dump(mode=\"json\", by_alias=True):\n            raise ProductionContractDependencyBlocked(\n                f\"ASSIGNEE_RESOLUTION_SELECTION_DRIFTED:{slot_id}\"\n            )\n        if assignee.kind.value == \"human_principal\" and conn.execute(\n            \"\"\"SELECT 1 FROM meta_membership\n                WHERE org_id=%s AND project_id=%s AND subject=%s\"\"\"\n            + (\" FOR SHARE\" if lock_human_membership else \"\"),\n            (*scope.key, assignee.resource_id),\n        ).fetchone() is None:\n            raise ProductionContractDependencyBlocked(\n                f\"ASSIGNEE_RESOLUTION_MEMBERSHIP_REVOKED:{slot_id}\"\n            )\n        capabilities = self._load(row[\"required_capability_refs\"]) or []\n        resolved_ids = {\n            item.get(\"assetId\")\n            for item in capabilities\n            if isinstance(item, dict) and item.get(\"assetType\") == \"CapabilityRevision\"\n        }\n        if not required_capability_ids <= resolved_ids:\n            raise ProductionContractDependencyBlocked(\n                f\"ASSIGNEE_RESOLUTION_CAPABILITY_DRIFTED:{slot_id}\"\n            )\n        if assignee.kind.value in {\n            \"provider_capability_binding\", \"tool_binding\", \"agent_instance\"\n        }:\n            if lock_provider_binding and assignee.kind.value == \"provider_capability_binding\":\n                conn.execute(\n                    \"\"\"SELECT 1 FROM aip_capability_binding\n                        WHERE org_id=%s AND project_id=%s AND binding_id=%s\n                        FOR SHARE\"\"\",\n                    (*scope.key, assignee.resource_id),\n                ).fetchone()\n            if lock_tool_binding and assignee.kind.value == \"tool_binding\":\n                tool_row = conn.execute(\n                    \"\"\"SELECT agent_instance_id,capability_binding_ids\n                        FROM aip_tool_binding\n                        WHERE org_id=%s AND project_id=%s AND binding_id=%s\n                        FOR SHARE\"\"\",\n                    (*scope.key, assignee.resource_id),\n                ).fetchone()\n                if tool_row is not None:\n                    conn.execute(\n                        \"\"\"SELECT 1 FROM aip_agent_instance\n                            WHERE org_id=%s AND project_id=%s AND instance_id=%s\n                            FOR SHARE\"\"\",\n                        (*scope.key, tool_row[\"agent_instance_id\"]),\n                    ).fetchone()\n                    binding_ids = AipAssigneeResolutionStore._binding_ids(\n                        tool_row[\"capability_binding_ids\"]\n                    )\n                    if binding_ids:\n                        conn.execute(\n                            \"\"\"SELECT 1 FROM aip_capability_binding\n                                WHERE org_id=%s AND project_id=%s\n                                  AND binding_id=ANY(%s)\n                                ORDER BY binding_id FOR SHARE\"\"\",\n                            (*scope.key, sorted(set(binding_ids))),\n                        ).fetchall()\n            if lock_agent_binding and assignee.kind.value == \"agent_instance\":\n                conn.execute(\n                    \"\"\"SELECT 1 FROM aip_agent_instance\n                        WHERE org_id=%s AND project_id=%s AND instance_id=%s\n                        FOR SHARE\"\"\",\n                    (*scope.key, assignee.resource_id),\n                ).fetchone()\n                refs = self._load(row[\"binding_refs\"]) or []\n                for asset_type, table in (\n                    (\"SkillBinding\", \"aip_skill_binding\"),\n                    (\"CapabilityBinding\", \"aip_capability_binding\"),\n                ):\n                    ids = sorted({\n                        ref.get(\"assetId\") for ref in refs\n                        if isinstance(ref, dict) and ref.get(\"assetType\") == asset_type\n                        and isinstance(ref.get(\"assetId\"), str)\n                    })\n                    if ids:\n                        conn.execute(\n                            f\"\"\"SELECT 1 FROM {table}\n                                WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)\n                                ORDER BY binding_id FOR SHARE\"\"\",\n                            (*scope.key, ids),\n                        ).fetchall()\n            kind = (\n                \"PROVIDER_BINDING\"\n                if assignee.kind.value == \"provider_capability_binding\"\n                else \"TOOL_BINDING\" if assignee.kind.value == \"tool_binding\"\n                else \"AGENT_BINDING\"\n            )\n            try:\n                required = [VersionedAssetRef.model_validate(item) for item in capabilities]\n                frozen_refs = [\n                    VersionedAssetRef.model_validate(item)\n                    for item in (self._load(row[\"binding_refs\"]) or [])\n                ]\n                decision = AipAssigneeResolutionStore()._evaluate_candidate(\n                    conn, scope,\n                    ResolveAssigneeRequest(\n                        subject_id=slot_id, candidates=[assignee],\n                        required_capabilities=required,\n                    ),\n                    assignee, datetime.now(timezone.utc),\n                )\n            except (TypeError, ValueError) as exc:\n                raise ProductionContractDependencyBlocked(\n                    f\"ASSIGNEE_RESOLUTION_{kind}_DRIFTED:{slot_id}\"\n                ) from exc\n            if assignee.kind.value == \"agent_instance\":\n                skill_refs = [\n                    ref for ref in frozen_refs if ref.asset_type == \"SkillBinding\"\n                ]\n                if not skill_refs or any(\n                    conn.execute(\n                        \"\"\"SELECT 1 FROM aip_skill_binding b\n                            JOIN aip_skill_template_revision s\n                              ON s.skill_id=b.skill_id AND s.revision=b.skill_revision\n                            WHERE b.org_id=%s AND b.project_id=%s\n                              AND b.binding_id=%s AND b.instance_id=%s\n                              AND b.version=%s AND b.status='active'\n                              AND s.lifecycle='published'\n                              AND s.publication_tenant->>'orgId'=%s\n                              AND s.publication_tenant->>'projectId'=%s\n                              AND (SELECT latest.lifecycle\n                                   FROM aip_skill_template_revision latest\n                                   WHERE latest.skill_id=b.skill_id\n                                   ORDER BY latest.revision DESC LIMIT 1)='published'\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\n                                    AND r.operation='skill_binding.create'\n                                    AND r.status='applied'\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\n                                    AND r.operation='skill_binding.evaluate'\n                                    AND r.status='applied'\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\n                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r\n                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id\n                                    AND r.operation='skill_binding.update'\n                                    AND r.status='applied'\n                                    AND r.result_ref->>'resourceId'=b.binding_id)\"\"\",\n                        (*scope.key, ref.asset_id, assignee.resource_id,\n                         ref.revision, *scope.key),\n                    ).fetchone() is None\n                    for ref in skill_refs\n                ):\n                    raise ProductionContractDependencyBlocked(\n                        f\"ASSIGNEE_RESOLUTION_AGENT_SOURCE_INVALID:{slot_id}\"\n                    )\n            if decision.status is not AssigneeResolutionStatus.RESOLVED:\n                raise ProductionContractDependencyBlocked(\n                    f\"ASSIGNEE_RESOLUTION_{kind}_REVOKED:{slot_id}\"\n                )\n            if not frozen_refs or frozen_refs != decision.binding_refs:\n                raise ProductionContractDependencyBlocked(\n                    f\"ASSIGNEE_RESOLUTION_{kind}_DRIFTED:{slot_id}\"\n                )"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "_capability_identifier",
+      "line": 6735,
+      "methodSha256": "bab5d1d405945d7352914c7883d25fc2d975d7e805d7c15538f927ce33cd794b",
+      "calls": [
+        "isinstance",
+        "ref.get",
+        "ref.strip",
+        "value.strip"
+      ],
+      "sqlExpressions": [],
+      "source": "def _capability_identifier(ref: Any) -> str | None:\n        \"\"\"Skill/capability bindings may store plain ids or ResourceRef-shaped objects.\"\"\"\n        if isinstance(ref, str):\n            value = ref.strip()\n            return value or None\n        if isinstance(ref, dict):\n            value = ref.get(\"assetId\") or ref.get(\"resourceId\") or ref.get(\"capabilityId\")\n            if isinstance(value, str):\n                value = value.strip()\n                return value or None\n        return None"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_data_authority.py",
+      "method": "read_all",
+      "line": 84,
+      "methodSha256": "4351e4369fa81f6f7edb55c438802859d8968f4020db9aed642177a42b09aab7",
+      "calls": [
+        "EcommerceDataAuthorityDescriptor",
+        "TenantContext",
+        "authority_content_hash",
+        "authority_scope_binding_hash",
+        "descriptors.append",
+        "list"
+      ],
+      "sqlExpressions": [],
+      "source": "def read_all(\n        self, *, org_id: str, project_id: str\n    ) -> list[EcommerceDataAuthorityDescriptor]:\n        tenant = TenantContext(org_id=org_id, project_id=project_id)\n        descriptors = []\n        for authority in _AUTHORITIES:\n            fields = list(authority.fields)\n            content_hash = authority_content_hash(\n                authority_id=authority.authority_id,\n                resource_type=authority.resource_type,\n                semantic_revision=authority.semantic_revision,\n                persistence_state=authority.persistence_state,\n                fields=fields,\n            )\n            descriptors.append(\n                EcommerceDataAuthorityDescriptor(\n                    tenant=tenant,\n                    authority_id=authority.authority_id,\n                    resource_type=authority.resource_type,\n                    semantic_revision=authority.semantic_revision,\n                    persistence_state=authority.persistence_state,\n                    receipt_id=authority.receipt_id,\n                    fields=fields,\n                    content_hash=content_hash,\n                    scope_binding_hash=authority_scope_binding_hash(\n                        tenant=tenant,\n                        content_hash=content_hash,\n                    ),\n                )\n            )\n        return descriptors"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_operations_object_reader.py",
+      "method": "__init__",
+      "line": 43,
+      "methodSha256": "f69ae9a2847e434e635f130ccbc15e8748a8825ba2e2dc060383834f0136add4",
+      "calls": [
+        "partial"
+      ],
+      "sqlExpressions": [],
+      "source": "def __init__(self, *, connect_factory: ConnectFactory | None = None) -> None:\n        self._connect_factory = connect_factory or partial(\n            connect_read_only, inherit_scope=False\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_operations_object_reader.py",
+      "method": "read",
+      "line": 48,
+      "methodSha256": "9111d98286230598435924e0e0330454484a3fcabe25a867d9c3e5b817494baa",
+      "calls": [
+        "OperationsObjectReadError",
+        "OperationsObjectRef",
+        "TenantScope",
+        "ValueError",
+        "apply_transaction_scope",
+        "conn.execute",
+        "conn.execute('SELECT object_type,external_id,source_updated_at,payload_hash FROM ecom_object WHERE org_id=%s AND workspace_id=%s AND object_type=%s AND deleted_at IS NULL AND source_updated_at<=%s ORDER BY source_updated_at DESC,external_id DESC LIMIT %s', (*scope.key, object_type, cutoff, limit)).fetchall",
+        "cutoff.utcoffset",
+        "items.append",
+        "self._connect_factory"
+      ],
+      "sqlExpressions": [
+        "'SELECT object_type,external_id,source_updated_at,payload_hash FROM ecom_object WHERE org_id=%s AND workspace_id=%s AND object_type=%s AND deleted_at IS NULL AND source_updated_at<=%s ORDER BY source_updated_at DESC,external_id DESC LIMIT %s'"
+      ],
+      "source": "def read(\n        self,\n        *,\n        org_id: str,\n        project_id: str,\n        object_type: ObjectType,\n        cutoff: datetime,\n        limit: int = 50,\n    ) -> list[OperationsObjectRef]:\n        if cutoff.utcoffset() is None:\n            raise ValueError(\"operations object cutoff requires a timezone\")\n        if object_type not in _OBJECT_TYPES:\n            raise ValueError(\"unsupported operations object type\")\n        if not 1 <= limit <= 50:\n            raise ValueError(\"operations object limit must be between 1 and 50\")\n        scope = TenantScope(org_id=org_id, project_id=project_id)\n        try:\n            with self._connect_factory() as conn:\n                apply_transaction_scope(conn, scope)\n                rows = conn.execute(\n                    \"SELECT object_type,external_id,source_updated_at,payload_hash \"\n                    \"FROM ecom_object WHERE org_id=%s AND workspace_id=%s \"\n                    \"AND object_type=%s AND deleted_at IS NULL AND source_updated_at<=%s \"\n                    \"ORDER BY source_updated_at DESC,external_id DESC LIMIT %s\",\n                    (*scope.key, object_type, cutoff, limit),\n                ).fetchall()\n            items = []\n            for row in rows:\n                if row[\"object_type\"] != object_type:\n                    raise ValueError(\"operations object type drift\")\n                items.append(\n                    OperationsObjectRef(\n                        object_type=row[\"object_type\"],\n                        object_id=row[\"external_id\"],\n                        content_hash=\"sha256:\" + row[\"payload_hash\"],\n                        source_updated_at=row[\"source_updated_at\"],\n                    )\n                )\n            return items\n        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:\n            raise OperationsObjectReadError(\n                \"canonical Operations object read failed closed\"\n            ) from exc"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_inventory_reader.py",
+      "method": "__init__",
+      "line": 48,
+      "methodSha256": "af8640f5f4e588109b889c8a9bf4ca9737a1d981ab0f3f3829ecbf0bc57ce890",
+      "calls": [
+        "partial"
+      ],
+      "sqlExpressions": [],
+      "source": "def __init__(self, *, connect_factory: ConnectFactory | None = None) -> None:\n        self._connect_factory = connect_factory or partial(\n            connect_read_only,\n            inherit_scope=False,\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_inventory_reader.py",
+      "method": "read",
+      "line": 54,
+      "methodSha256": "5123bb760b3d75ab221a1cb321a11c6bd3bcc4f395cdb221893fb8e52f524d5e",
+      "calls": [
+        "EcommerceInventoryReaderError",
+        "InventoryReadEnvelope",
+        "InventoryReadPage",
+        "TenantScope",
+        "ValueError",
+        "apply_transaction_scope",
+        "conn.execute",
+        "conn.execute('SELECT external_id,properties,source_updated_at,payload_hash\\n                         FROM ecom_object\\n                        WHERE org_id=%s AND workspace_id=%s AND object_type=%s\\n                          AND deleted_at IS NULL AND source_updated_at<=%s\\n                        ORDER BY source_updated_at DESC, external_id DESC\\n                        LIMIT %s', (*scope.key, 'ProductSku', cutoff, limit + 1)).fetchall",
+        "cutoff.utcoffset",
+        "len",
+        "self._connect_factory",
+        "self._item",
+        "sum"
+      ],
+      "sqlExpressions": [
+        "'SELECT external_id,properties,source_updated_at,payload_hash\\n                         FROM ecom_object\\n                        WHERE org_id=%s AND workspace_id=%s AND object_type=%s\\n                          AND deleted_at IS NULL AND source_updated_at<=%s\\n                        ORDER BY source_updated_at DESC, external_id DESC\\n                        LIMIT %s'"
+      ],
+      "source": "def read(\n        self,\n        *,\n        org_id: str,\n        project_id: str,\n        cutoff: datetime,\n        limit: int,\n    ) -> InventoryReadEnvelope:\n        scope = TenantScope(org_id=org_id, project_id=project_id)\n        if cutoff.utcoffset() is None:\n            raise ValueError(\"Inventory cutoff requires a timezone\")\n        if not 1 <= limit <= 100:\n            raise ValueError(\"Inventory limit must be between 1 and 100\")\n\n        try:\n            with self._connect_factory() as conn:\n                apply_transaction_scope(conn, scope)\n                rows = conn.execute(\n                    \"\"\"SELECT external_id,properties,source_updated_at,payload_hash\n                         FROM ecom_object\n                        WHERE org_id=%s AND workspace_id=%s AND object_type=%s\n                          AND deleted_at IS NULL AND source_updated_at<=%s\n                        ORDER BY source_updated_at DESC, external_id DESC\n                        LIMIT %s\"\"\",\n                    (*scope.key, \"ProductSku\", cutoff, limit + 1),\n                ).fetchall()\n                items = [self._item(row) for row in rows[:limit]]\n        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:\n            raise EcommerceInventoryReaderError(\n                \"canonical ProductSku inventory read failed closed\"\n            ) from exc\n\n        return InventoryReadEnvelope(\n            tenant={\"orgId\": scope.org_id, \"projectId\": scope.project_id},\n            cutoff=cutoff,\n            items=items,\n            page=InventoryReadPage(\n                limit=limit,\n                count=len(items),\n                unknown_count=sum(\n                    item.stock is None\n                    or item.stock_alarm is None\n                    or item.stock_health is None\n                    for item in items\n                ),\n                has_more=len(rows) > limit,\n            ),\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_inventory_reader.py",
+      "method": "_item",
+      "line": 104,
+      "methodSha256": "6fb4d5e5e02452ff75d2550fc25caffe7937899c953bab43b25baf7334b3239b",
+      "calls": [
+        "InventoryHealth",
+        "InventoryObjectRevision",
+        "InventoryReadItem",
+        "_optional_non_negative_integer",
+        "dict",
+        "properties.get",
+        "str",
+        "str(row['payload_hash']).strip"
+      ],
+      "sqlExpressions": [],
+      "source": "def _item(row: dict[str, Any]) -> InventoryReadItem:\n        properties = dict(row[\"properties\"])\n        object_id = str(row[\"external_id\"])\n        payload_hash = str(row[\"payload_hash\"]).strip()\n        return InventoryReadItem(\n            object_id=object_id,\n            stock=_optional_non_negative_integer(properties.get(\"stock\"), field=\"stock\"),\n            stock_alarm=_optional_non_negative_integer(\n                properties.get(\"stockAlarm\"),\n                field=\"stockAlarm\",\n            ),\n            stock_health=(\n                InventoryHealth(properties[\"stock_health\"])\n                if properties.get(\"stock_health\") is not None\n                else None\n            ),\n            source_updated_at=row[\"source_updated_at\"],\n            revision=InventoryObjectRevision(\n                resource_id=object_id,\n                content_hash=\"sha256:\" + payload_hash,\n            ),\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_aftersale_event_reader.py",
+      "method": "__init__",
+      "line": 52,
+      "methodSha256": "f69ae9a2847e434e635f130ccbc15e8748a8825ba2e2dc060383834f0136add4",
+      "calls": [
+        "partial"
+      ],
+      "sqlExpressions": [],
+      "source": "def __init__(self, *, connect_factory: ConnectFactory | None = None) -> None:\n        self._connect_factory = connect_factory or partial(\n            connect_read_only, inherit_scope=False\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_aftersale_event_reader.py",
+      "method": "read",
+      "line": 57,
+      "methodSha256": "5ee4a679e9f19b4a703b9921e278da99b9284286ec3b3cc3d698370f1b861fda",
+      "calls": [
+        "EcommerceAftersaleEventReaderError",
+        "TenantScope",
+        "ValueError",
+        "apply_transaction_scope",
+        "conn.execute",
+        "conn.execute('SELECT org_id,project_id,event_id,source_revision,source_hash,event_type,status,occurred_at,order_resource_id,order_revision,order_content_hash,order_line_resource_id,order_line_revision,order_line_content_hash FROM ecommerce_aftersale_event WHERE org_id=%s AND project_id=%s AND occurred_at<=%s ORDER BY occurred_at DESC,event_id DESC,source_revision DESC LIMIT %s', (*scope.key, cutoff, limit)).fetchall",
+        "cutoff.utcoffset",
+        "self._connect_factory",
+        "self._item"
+      ],
+      "sqlExpressions": [
+        "'SELECT org_id,project_id,event_id,source_revision,source_hash,event_type,status,occurred_at,order_resource_id,order_revision,order_content_hash,order_line_resource_id,order_line_revision,order_line_content_hash FROM ecommerce_aftersale_event WHERE org_id=%s AND project_id=%s AND occurred_at<=%s ORDER BY occurred_at DESC,event_id DESC,source_revision DESC LIMIT %s'"
+      ],
+      "source": "def read(\n        self,\n        *,\n        org_id: str,\n        project_id: str,\n        cutoff: datetime,\n        limit: int = 50,\n    ) -> list[AftersaleEventOriginal]:\n        if cutoff.utcoffset() is None:\n            raise ValueError(\"aftersale cutoff requires a timezone\")\n        if not 1 <= limit <= 50:\n            raise ValueError(\"aftersale limit must be between 1 and 50\")\n        scope = TenantScope(org_id=org_id, project_id=project_id)\n        try:\n            with self._connect_factory() as conn:\n                apply_transaction_scope(conn, scope)\n                rows = conn.execute(\n                    \"SELECT org_id,project_id,event_id,source_revision,source_hash,event_type,status,\"\n                    \"occurred_at,order_resource_id,order_revision,order_content_hash,\"\n                    \"order_line_resource_id,order_line_revision,order_line_content_hash \"\n                    \"FROM ecommerce_aftersale_event WHERE org_id=%s AND project_id=%s \"\n                    \"AND occurred_at<=%s ORDER BY occurred_at DESC,event_id DESC,\"\n                    \"source_revision DESC LIMIT %s\",\n                    (*scope.key, cutoff, limit),\n                ).fetchall()\n            return [self._item(row, scope=scope) for row in rows]\n        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:\n            raise EcommerceAftersaleEventReaderError(\n                \"canonical aftersales event read failed closed\"\n            ) from exc"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_aftersale_event_reader.py",
+      "method": "_item",
+      "line": 89,
+      "methodSha256": "7d39f093dd3abbfc036d86b7f5c3f31e46c59e9263cd985763a17414f3ddf8f3",
+      "calls": [
+        "AftersaleEventOriginal",
+        "ExactAuthorityRevisionRef",
+        "ValueError",
+        "all",
+        "any"
+      ],
+      "sqlExpressions": [],
+      "source": "def _item(\n        row: dict[str, Any], *, scope: TenantScope\n    ) -> AftersaleEventOriginal:\n        if (row[\"org_id\"], row[\"project_id\"]) != scope.key:\n            raise ValueError(\"aftersale event tenant scope drift\")\n        line_values = (\n            row[\"order_line_resource_id\"],\n            row[\"order_line_revision\"],\n            row[\"order_line_content_hash\"],\n        )\n        if any(value is None for value in line_values) and not all(\n            value is None for value in line_values\n        ):\n            raise ValueError(\"partial order line exact ref\")\n        order_line_ref = None\n        if all(value is not None for value in line_values):\n            order_line_ref = ExactAuthorityRevisionRef(\n                resource_id=row[\"order_line_resource_id\"],\n                revision=row[\"order_line_revision\"],\n                content_hash=row[\"order_line_content_hash\"],\n            )\n        return AftersaleEventOriginal(\n            event_id=row[\"event_id\"],\n            source_revision=row[\"source_revision\"],\n            source_hash=row[\"source_hash\"],\n            event_type=row[\"event_type\"],\n            status=row[\"status\"],\n            occurred_at=row[\"occurred_at\"],\n            order_ref=ExactAuthorityRevisionRef(\n                resource_id=row[\"order_resource_id\"],\n                revision=row[\"order_revision\"],\n                content_hash=row[\"order_content_hash\"],\n            ),\n            order_line_ref=order_line_ref,\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_operation_case_store.py",
+      "method": "__init__",
+      "line": 62,
+      "methodSha256": "92c678867bf48c48bf5ec0997fdd71481365d9fa7ea8ca68698ecb3431015c99",
+      "calls": [],
+      "sqlExpressions": [],
+      "source": "def __init__(\n        self,\n        connect_factory: ConnectFactory | None = None,\n        read_connect_factory: ConnectFactory | None = None,\n    ) -> None:\n        self._connect_factory = connect_factory or db_connect\n        self._read_connect_factory = read_connect_factory or (\n            connect_factory if connect_factory is not None else db_read_only_connect\n        )"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_operation_case_store.py",
+      "method": "list_cases",
+      "line": 136,
+      "methodSha256": "42b3acfb1d8c560fe961cd08e86ec84515fd456109fd77e1d2b6b841174a9ded",
+      "calls": [
+        "OperationAuthorityReadError",
+        "OperationCaseRevision.model_validate",
+        "ValueError",
+        "conn.execute",
+        "conn.execute('SELECT revision.payload FROM ecommerce_operation_case_head head JOIN ecommerce_operation_case_revision revision ON revision.org_id=head.org_id AND revision.project_id=head.project_id AND revision.case_id=head.case_id AND revision.revision=head.current_revision WHERE head.org_id=%s AND head.project_id=%s ORDER BY revision.created_at DESC,revision.case_id LIMIT %s', (*scope.key, limit)).fetchall",
+        "self._load",
+        "self._read_connect_factory"
+      ],
+      "sqlExpressions": [
+        "'SELECT revision.payload FROM ecommerce_operation_case_head head JOIN ecommerce_operation_case_revision revision ON revision.org_id=head.org_id AND revision.project_id=head.project_id AND revision.case_id=head.case_id AND revision.revision=head.current_revision WHERE head.org_id=%s AND head.project_id=%s ORDER BY revision.created_at DESC,revision.case_id LIMIT %s'"
+      ],
+      "source": "def list_cases(\n        self,\n        scope: TenantScope,\n        *,\n        limit: int = 50,\n    ) -> list[OperationCaseRevision]:\n        if not 1 <= limit <= 50:\n            raise ValueError(\"operation case limit must be between 1 and 50\")\n        try:\n            with self._read_connect_factory(scope) as conn:\n                rows = conn.execute(\n                    \"SELECT revision.payload FROM ecommerce_operation_case_head head \"\n                    \"JOIN ecommerce_operation_case_revision revision \"\n                    \"ON revision.org_id=head.org_id AND revision.project_id=head.project_id \"\n                    \"AND revision.case_id=head.case_id \"\n                    \"AND revision.revision=head.current_revision \"\n                    \"WHERE head.org_id=%s AND head.project_id=%s \"\n                    \"ORDER BY revision.created_at DESC,revision.case_id LIMIT %s\",\n                    (*scope.key, limit),\n                ).fetchall()\n                return [\n                    OperationCaseRevision.model_validate(self._load(row[\"payload\"]))\n                    for row in rows\n                ]\n        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:\n            raise OperationAuthorityReadError(\n                \"canonical operation case read failed closed\"\n            ) from exc"
+    },
+    {
+      "file": "services/aos-api/aos_api/ecommerce_operation_case_store.py",
+      "method": "_load",
+      "line": 531,
+      "methodSha256": "827fcfdd0a5fa1670c349ce0f567e0ee679fe9afbb7b9b77fef265276ba9eeea",
+      "calls": [
+        "isinstance",
+        "json.loads"
+      ],
+      "sqlExpressions": [],
+      "source": "def _load(value: Any) -> Any:\n        return json.loads(value) if isinstance(value, str) else value"
+    }
+  ]
+}

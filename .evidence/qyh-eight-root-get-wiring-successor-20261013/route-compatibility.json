@@ -1,0 +1,20 @@
+{
+  "head": "d97c4bae06e211a230efc2786eab642349fd3d9d",
+  "changedOriginalFunctions": [
+    "get_ecommerce_workshop_operations_view",
+    "get_ecommerce_workshop_content_campaign_view",
+    "get_ecommerce_workshop_creator_growth_view",
+    "get_ecommerce_workshop_media_studio_view",
+    "get_ecommerce_workshop_analyst_view",
+    "get_ecommerce_workshop_price_governance_view",
+    "get_ecommerce_workshop_customer_view",
+    "get_ecommerce_workshop_task_cockpit_core"
+  ],
+  "newFunctions": [
+    "get_ecommerce_workshop_read_catalog"
+  ],
+  "originalOtherFunctionsAstEqual": true,
+  "originalPostBodiesUnchanged": true,
+  "runtimeActivated": false,
+  "businessCompleted": false
+}

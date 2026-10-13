@@ -1,0 +1,45 @@
+{
+  "schema": "aos-successor-acceptance/v1",
+  "thread": "01a13484-f019-7d82-94ce-812396db9124",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "oldThread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "oldWriterReadOnlyConfirmation": "supported wait_threads final 2026-10-13T09:17:42Z; old writer expressly stopped construction",
+  "head": "d97c4bae06e211a230efc2786eab642349fd3d9d",
+  "authority": "AOS-002012",
+  "goalSupportedActive": true,
+  "completeLongTermObjectivePreserved": true,
+  "reminders": [
+    {
+      "id": "aos",
+      "name": "AOS 每日最新代码与当前数据卷重启验收",
+      "kind": "heartbeat",
+      "rrule": "FREQ=DAILY;BYHOUR=9;BYMINUTE=0",
+      "status": "ACTIVE",
+      "target_thread_id": "01a13484-f019-7d82-94ce-812396db9124",
+      "notification_policy": null
+    },
+    {
+      "id": "aos-2",
+      "name": "AOS 长程开发中断接续",
+      "kind": "heartbeat",
+      "rrule": "FREQ=MINUTELY;INTERVAL=15",
+      "status": "ACTIVE",
+      "target_thread_id": "01a13484-f019-7d82-94ce-812396db9124",
+      "notification_policy": null
+    }
+  ],
+  "newTask": "qyh-eight-root-get-wiring-successor-20261013",
+  "historicalLeasesRetained": 39,
+  "parentMaintenanceOwnershipPending": true,
+  "authoritativePgVolume": "aos-qyh-history159-prepared-data-20261011",
+  "authoritativePgPort": 18446,
+  "apiPid": 58363,
+  "apiPort": 18080,
+  "apiFrozenSource": "ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08",
+  "webPid": 58523,
+  "webPort": 18434,
+  "fullLatestRestartVerified": false,
+  "businessComplete": false,
+  "protectedDirtyNamesPresent": true,
+  "next": "root8 candidate review, native readonly, parent maintenance handoff, same-volume latest restart and browser then auxiliary GET and bounded budget consumer"
+}

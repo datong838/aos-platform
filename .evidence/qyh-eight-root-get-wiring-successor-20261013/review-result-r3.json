@@ -1,0 +1,37 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-eight-root-get-wiring-successor-20261013-http-r3",
+    "task_id": "qyh-eight-root-get-wiring-successor-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "d97c4bae06e211a230efc2786eab642349fd3d9d",
+      "authority_revision": "AOS-002012",
+      "files": {
+        ".evidence/qyh-eight-root-get-wiring-successor-20261013/review-router-diff.txt": "460ac3a7a8360c8020f1bd38626459b4f628f990d578cd9e462e5b5141ddeebe",
+        ".evidence/qyh-eight-root-get-wiring-successor-20261013/review-http-tests.txt": "069b035033f1ec87ad287dec4e7ef52fab2adfb66bfe74c78b2569d3090c2983",
+        ".evidence/qyh-eight-root-get-wiring-successor-20261013/review-plan.txt": "9e93f8681ef6a00efda49d966eaac4121b63379c0dd5002d39050d7c2b210829",
+        ".evidence/qyh-eight-root-get-wiring-successor-20261013/review-compatibility.txt": "70f4e833d8f2ee631919c34f3724e1f2834d6346a4821c6c8b1bfe9c6877f409",
+        ".evidence/qyh-eight-root-get-wiring-successor-20261013/review-read-catalog-r2.txt": "ea77f702bd08803ff26c0bc9d5c7db963657a0e1134ef9f0b57216b9be8e1263"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "候选仅将八个已登记root GET接入独立读取目录依赖，原POST、辅助GET及其他原函数体保持；这不是runtime或经营首链验收。",
+        "evidence": "文件 `.evidence/qyh-eight-root-get-wiring-successor-20261013/review-router-diff.txt` 显示 `catalog: CatalogDependency` 被替换为 `catalog: ReadCatalogDependency` 仅发生于 8 个 view 路由函数中；路由测试证明 `actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS}`；兼容性材料 `review-compatibility.txt` 确认 `originalPostBodiesUnchanged: true` 且 `runtimeActivated: false`。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "读取factory复用原legacy HTTP依赖入口，legacy成功原样返回且不构造selected安装目录；只有AssetNotFound触发延迟installed factory，exact DataScopeGrant与disabled边界保留。",
+        "evidence": "文件 `.evidence/qyh-eight-root-get-wiring-successor-20261013/review-read-catalog-r2.txt` 中 `EcommerceWorkshopReadCatalog.get_readiness` 实现先调用 `self._legacy.get_readiness(**scope)`，仅在 `except AssetNotFoundError` 后构造安装目录；测试文件 `review-http-tests.txt` 中的 `test_legacy_success_does_not_build_installed_configuration` 验证成功路径下不调用 `build_installed_readonly_catalog`，而 `test_installed_factory_is_deferred_until_legacy_not_found` 验证失败路径下延迟调用。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续执行独立的native/browser验收阶段，验证具体已安装模块在真实PostgreSQL卷上的正向读取数据输出；当前HTTP层仅证明依赖接线，不证明业务就绪。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

@@ -1,0 +1,10 @@
+{
+  "request_id": "qyh-eight-root-get-wiring-successor-20261013-http-r2",
+  "transport_returncode": 0,
+  "terminalResultKnown": true,
+  "tools": 0,
+  "failure": "Missing required next_safe_step; PASS text not consumable",
+  "accepted": false,
+  "resendSameRequest": false,
+  "next": "Fresh r3 exact same final code, explicit required response fields after cooldown"
+}

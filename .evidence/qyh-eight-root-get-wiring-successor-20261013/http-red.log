@@ -1,0 +1,348 @@
+FFFFFFFFFFFFF                                                            [100%]
+=================================== FAILURES ===================================
+___ test_root_get_uses_scoped_read_admission_before_business_reader[analyst] ___
+
+module = 'analyst'
+
+    @pytest.mark.parametrize('module', sorted(ROOTS))
+    def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+_ test_root_get_uses_scoped_read_admission_before_business_reader[content-campaign] _
+
+module = 'content-campaign'
+
+    @pytest.mark.parametrize('module', sorted(ROOTS))
+    def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+_ test_root_get_uses_scoped_read_admission_before_business_reader[creator-growth] _
+
+module = 'creator-growth'
+
+    @pytest.mark.parametrize('module', sorted(ROOTS))
+    def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+__ test_root_get_uses_scoped_read_admission_before_business_reader[customer] ___
+
+module = 'customer'
+
+    @pytest.mark.parametrize('module', sorted(ROOTS))
+    def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+_ test_root_get_uses_scoped_read_admission_before_business_reader[media-studio] _
+
+module = 'media-studio'
+
+    @pytest.mark.parametrize('module', sorted(ROOTS))
+    def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+_ test_root_get_uses_scoped_read_admission_before_business_reader[operations] __
+
+module = 'operations'
+
+    @pytest.mark.parametrize('module', sorted(ROOTS))
+    def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+_ test_root_get_uses_scoped_read_admission_before_business_reader[price-governance] _
+
+module = 'price-governance'
+
+    @pytest.mark.parametrize('module', sorted(ROOTS))
+    def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+_ test_root_get_uses_scoped_read_admission_before_business_reader[task-cockpit] _
+
+module = 'task-cockpit'
+
+    @pytest.mark.parametrize('module', sorted(ROOTS))
+    def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+_ test_unreviewed_get_still_uses_legacy_admission[/views/customer/contributions] _
+
+path = '/views/customer/contributions'
+
+    @pytest.mark.parametrize('path', [
+        '/views/customer/contributions', '/views/media-studio/full-video-scenario',
+        '/modules/ecommerce.operations/readiness',
+    ])
+    def test_unreviewed_get_still_uses_legacy_admission(path):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+_ test_unreviewed_get_still_uses_legacy_admission[/views/media-studio/full-video-scenario] _
+
+path = '/views/media-studio/full-video-scenario'
+
+    @pytest.mark.parametrize('path', [
+        '/views/customer/contributions', '/views/media-studio/full-video-scenario',
+        '/modules/ecommerce.operations/readiness',
+    ])
+    def test_unreviewed_get_still_uses_legacy_admission(path):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+_ test_unreviewed_get_still_uses_legacy_admission[/modules/ecommerce.operations/readiness] _
+
+path = '/modules/ecommerce.operations/readiness'
+
+    @pytest.mark.parametrize('path', [
+        '/views/customer/contributions', '/views/media-studio/full-video-scenario',
+        '/modules/ecommerce.operations/readiness',
+    ])
+    def test_unreviewed_get_still_uses_legacy_admission(path):
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+__________ test_read_dependency_never_reaches_post_or_auxiliary_route __________
+
+    def test_read_dependency_never_reaches_post_or_auxiliary_route():
+        actual = set()
+        for route in routes.router.routes:
+>           uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                            for d in route.dependant.dependencies)
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <list_iterator object at 0x1198f3d60>
+
+>   uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    for d in route.dependant.dependencies)
+E   AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:68: AttributeError
+_______________ test_unknown_query_rejected_before_catalog_call ________________
+
+    def test_unknown_query_rejected_before_catalog_call():
+>       client, legacy, reader = client_with_catalogs()
+                                 ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client_with_catalogs():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(routes.router)
+        legacy, reader = RejectingCatalog(), RejectingCatalog()
+        app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+>       app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_ecommerce_workshop_read_catalog'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:34: AttributeError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[analyst]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[content-campaign]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[creator-growth]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[customer]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[media-studio]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[operations]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[price-governance]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[task-cockpit]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/views/customer/contributions]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/views/media-studio/full-video-scenario]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/modules/ecommerce.operations/readiness]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_never_reaches_post_or_auxiliary_route
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unknown_query_rejected_before_catalog_call
+13 failed, 7 warnings in 0.36s

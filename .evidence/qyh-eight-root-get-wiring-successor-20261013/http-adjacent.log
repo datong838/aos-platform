@@ -1,0 +1,340 @@
+............................F.F.FFFF.FFFF........                        [100%]
+=================================== FAILURES ===================================
+________ test_operations_shell_is_tenant_bound_and_structurally_blocked ________
+
+    def test_operations_shell_is_tenant_bound_and_structurally_blocked() -> None:
+        class ObjectReader:
+            def read(self, **kwargs):
+                return []
+    
+        class InventoryReader:
+            def read(self, **kwargs):
+                return type(
+                    "Inventory",
+                    (),
+                    {"items": [], "page": type("Page", (), {"unknown_count": 0})()},
+                )()
+    
+        class CaseStore:
+            def list_cases(self, scope, *, limit=50):
+                return []
+    
+        class AftersaleReader:
+            def read(self, **kwargs):
+                return []
+    
+        operations = EcommerceWorkshopOperations(
+            object_reader=ObjectReader(),  # type: ignore[arg-type]
+            inventory_reader=InventoryReader(),  # type: ignore[arg-type]
+            aftersale_reader=AftersaleReader(),  # type: ignore[arg-type]
+            case_store=CaseStore(),  # type: ignore[arg-type]
+        )
+        catalog = FakeCatalog()
+        with _client(catalog, operations) as client:
+            response = client.get("/v1/ecommerce-workshop/views/operations")
+    
+>       assert response.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_operations_api.py:135: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T09:20:42.695249+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:42.810120+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:42.812240+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:42.812469+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/operations \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+WARNING  aos-api.errors:errors.py:119 api_error code=REGISTRY_INTEGRITY_CORRUPT status=500
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/operations "HTTP/1.1 500 Internal Server Error"
+________ test_operations_api_fails_closed_when_module_is_not_installed _________
+
+    def test_operations_api_fails_closed_when_module_is_not_installed() -> None:
+        with _client(FakeCatalog(installed=False)) as client:
+            response = client.get("/v1/ecommerce-workshop/views/operations")
+    
+>       assert response.status_code == 404
+E       assert 500 == 404
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_operations_api.py:194: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T09:20:42.985748+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:43.099939+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:43.100437+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:43.100610+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/operations \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+WARNING  aos-api.errors:errors.py:119 api_error code=REGISTRY_INTEGRITY_CORRUPT status=500
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/operations "HTTP/1.1 500 Internal Server Error"
+_____ test_content_campaign_shell_is_get_only_tenant_bound_and_scope_safe ______
+
+    def test_content_campaign_shell_is_get_only_tenant_bound_and_scope_safe() -> None:
+        catalog = FakeCatalog()
+        content_campaign = EcommerceWorkshopContentCampaign(
+            clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)
+        )
+        with _client(catalog, content_campaign=content_campaign) as client:
+            response = client.get("/v1/ecommerce-workshop/views/content-campaign")
+            injected = client.get(
+                "/v1/ecommerce-workshop/views/content-campaign?orgId=dev-org"
+            )
+            posted = client.post("/v1/ecommerce-workshop/views/content-campaign")
+            document = client.get("/openapi.json").json()
+    
+>       assert response.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_operations_api.py:220: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T09:20:43.930928+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:44.043240+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:44.043715+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:44.043871+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/content-campaign \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:44.044529+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=VALIDATION status=400", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:44.044635+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/content-campaign?orgId=dev-org \"HTTP/1.1 400 Bad Request\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:44.045040+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/v1/ecommerce-workshop/views/content-campaign \"HTTP/1.1 405 Method Not Allowed\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.034585+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/openapi.json \"HTTP/1.1 200 OK\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+WARNING  aos-api.errors:errors.py:119 api_error code=REGISTRY_INTEGRITY_CORRUPT status=500
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/content-campaign "HTTP/1.1 500 Internal Server Error"
+WARNING  aos-api.errors:errors.py:119 api_error code=VALIDATION status=400
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/content-campaign?orgId=dev-org "HTTP/1.1 400 Bad Request"
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/v1/ecommerce-workshop/views/content-campaign "HTTP/1.1 405 Method Not Allowed"
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/openapi.json "HTTP/1.1 200 OK"
+_______ test_content_campaign_fails_closed_when_module_is_not_installed ________
+
+    def test_content_campaign_fails_closed_when_module_is_not_installed() -> None:
+        with _client(FakeCatalog(installed=False)) as client:
+            response = client.get("/v1/ecommerce-workshop/views/content-campaign")
+    
+>       assert response.status_code == 404
+E       assert 500 == 404
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_operations_api.py:241: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T09:20:45.043393+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.157783+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.158240+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.158404+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/content-campaign \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+WARNING  aos-api.errors:errors.py:119 api_error code=REGISTRY_INTEGRITY_CORRUPT status=500
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/content-campaign "HTTP/1.1 500 Internal Server Error"
+______ test_creator_growth_shell_is_get_only_tenant_bound_and_scope_safe _______
+
+    def test_creator_growth_shell_is_get_only_tenant_bound_and_scope_safe() -> None:
+        catalog = FakeCatalog()
+        creator_growth = EcommerceWorkshopCreatorGrowth(
+            clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)
+        )
+        with _client(catalog, creator_growth=creator_growth) as client:
+            response = client.get("/v1/ecommerce-workshop/views/creator-growth")
+            injected = client.get(
+                "/v1/ecommerce-workshop/views/creator-growth?orgId=dev-org"
+            )
+            posted = client.post("/v1/ecommerce-workshop/views/creator-growth")
+            document = client.get("/openapi.json").json()
+    
+>       assert response.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_operations_api.py:258: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T09:20:45.163715+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.273592+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.274060+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.274228+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/creator-growth \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.275019+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=VALIDATION status=400", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.275111+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/creator-growth?orgId=dev-org \"HTTP/1.1 400 Bad Request\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.275527+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/v1/ecommerce-workshop/views/creator-growth \"HTTP/1.1 405 Method Not Allowed\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:45.971474+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/openapi.json \"HTTP/1.1 200 OK\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+WARNING  aos-api.errors:errors.py:119 api_error code=REGISTRY_INTEGRITY_CORRUPT status=500
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/creator-growth "HTTP/1.1 500 Internal Server Error"
+WARNING  aos-api.errors:errors.py:119 api_error code=VALIDATION status=400
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/creator-growth?orgId=dev-org "HTTP/1.1 400 Bad Request"
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/v1/ecommerce-workshop/views/creator-growth "HTTP/1.1 405 Method Not Allowed"
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/openapi.json "HTTP/1.1 200 OK"
+________ test_creator_growth_fails_closed_when_module_is_not_installed _________
+
+    def test_creator_growth_fails_closed_when_module_is_not_installed() -> None:
+        with _client(FakeCatalog(installed=False)) as client:
+            response = client.get("/v1/ecommerce-workshop/views/creator-growth")
+    
+>       assert response.status_code == 404
+E       assert 500 == 404
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_operations_api.py:275: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T09:20:45.979588+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:46.098665+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:46.099219+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:46.099400+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/creator-growth \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+WARNING  aos-api.errors:errors.py:119 api_error code=REGISTRY_INTEGRITY_CORRUPT status=500
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/creator-growth "HTTP/1.1 500 Internal Server Error"
+_______ test_media_studio_shell_is_get_only_tenant_bound_and_scope_safe ________
+
+    def test_media_studio_shell_is_get_only_tenant_bound_and_scope_safe() -> None:
+        catalog = FakeCatalog()
+        media_studio = EcommerceWorkshopMediaStudio(
+            clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)
+        )
+        with _client(catalog, media_studio=media_studio) as client:
+            response = client.get("/v1/ecommerce-workshop/views/media-studio")
+            injected = client.get("/v1/ecommerce-workshop/views/media-studio?orgId=dev-org")
+            posted = client.post("/v1/ecommerce-workshop/views/media-studio")
+            document = client.get("/openapi.json").json()
+    
+>       assert response.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_operations_api.py:296: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T09:20:46.104944+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:46.222240+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:46.222714+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:46.222900+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:46.223847+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=VALIDATION status=400", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:46.223965+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio?orgId=dev-org \"HTTP/1.1 400 Bad Request\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:46.224426+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/v1/ecommerce-workshop/views/media-studio \"HTTP/1.1 405 Method Not Allowed\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:46.936881+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/openapi.json \"HTTP/1.1 200 OK\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+WARNING  aos-api.errors:errors.py:119 api_error code=REGISTRY_INTEGRITY_CORRUPT status=500
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio "HTTP/1.1 500 Internal Server Error"
+WARNING  aos-api.errors:errors.py:119 api_error code=VALIDATION status=400
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio?orgId=dev-org "HTTP/1.1 400 Bad Request"
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/v1/ecommerce-workshop/views/media-studio "HTTP/1.1 405 Method Not Allowed"
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/openapi.json "HTTP/1.1 200 OK"
+_________ test_media_studio_fails_closed_when_module_is_not_installed __________
+
+    def test_media_studio_fails_closed_when_module_is_not_installed() -> None:
+        with _client(FakeCatalog(installed=False)) as client:
+            response = client.get("/v1/ecommerce-workshop/views/media-studio")
+>       assert response.status_code == 404
+E       assert 500 == 404
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_operations_api.py:309: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T09:20:46.945333+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:47.061096+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:47.061574+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:47.061740+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+WARNING  aos-api.errors:errors.py:119 api_error code=REGISTRY_INTEGRITY_CORRUPT status=500
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio "HTTP/1.1 500 Internal Server Error"
+__________ test_analyst_shell_is_get_only_tenant_bound_and_scope_safe __________
+
+    def test_analyst_shell_is_get_only_tenant_bound_and_scope_safe() -> None:
+        catalog = FakeCatalog()
+        analyst = EcommerceWorkshopAnalyst(clock=lambda: datetime(2026, 8, 24, tzinfo=UTC))
+        with _client(catalog, analyst=analyst) as client:
+            response = client.get("/v1/ecommerce-workshop/views/analyst")
+            injected = client.get("/v1/ecommerce-workshop/views/analyst?orgId=dev-org")
+            posted = client.post("/v1/ecommerce-workshop/views/analyst")
+            document = client.get("/openapi.json").json()
+>       assert response.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_operations_api.py:321: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T09:20:47.066647+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:47.180182+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:47.180715+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:47.180914+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:47.181830+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=VALIDATION status=400", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:47.181954+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst?orgId=dev-org \"HTTP/1.1 400 Bad Request\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:47.182477+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/v1/ecommerce-workshop/views/analyst \"HTTP/1.1 405 Method Not Allowed\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:48.178568+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/openapi.json \"HTTP/1.1 200 OK\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+WARNING  aos-api.errors:errors.py:119 api_error code=REGISTRY_INTEGRITY_CORRUPT status=500
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst "HTTP/1.1 500 Internal Server Error"
+WARNING  aos-api.errors:errors.py:119 api_error code=VALIDATION status=400
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst?orgId=dev-org "HTTP/1.1 400 Bad Request"
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/v1/ecommerce-workshop/views/analyst "HTTP/1.1 405 Method Not Allowed"
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/openapi.json "HTTP/1.1 200 OK"
+____________ test_analyst_fails_closed_when_module_is_not_installed ____________
+
+    def test_analyst_fails_closed_when_module_is_not_installed() -> None:
+        with _client(FakeCatalog(installed=False)) as client:
+            response = client.get("/v1/ecommerce-workshop/views/analyst")
+>       assert response.status_code == 404
+E       assert 500 == 404
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_operations_api.py:334: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T09:20:48.186293+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:48.299246+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:48.299718+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T09:20:48.299918+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+WARNING  aos-api.errors:errors.py:119 api_error code=REGISTRY_INTEGRITY_CORRUPT status=500
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst "HTTP/1.1 500 Internal Server Error"
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_operations_api.py::test_operations_shell_is_tenant_bound_and_structurally_blocked
+FAILED services/aos-api/tests/test_ecommerce_workshop_operations_api.py::test_operations_api_fails_closed_when_module_is_not_installed
+FAILED services/aos-api/tests/test_ecommerce_workshop_operations_api.py::test_content_campaign_shell_is_get_only_tenant_bound_and_scope_safe
+FAILED services/aos-api/tests/test_ecommerce_workshop_operations_api.py::test_content_campaign_fails_closed_when_module_is_not_installed
+FAILED services/aos-api/tests/test_ecommerce_workshop_operations_api.py::test_creator_growth_shell_is_get_only_tenant_bound_and_scope_safe
+FAILED services/aos-api/tests/test_ecommerce_workshop_operations_api.py::test_creator_growth_fails_closed_when_module_is_not_installed
+FAILED services/aos-api/tests/test_ecommerce_workshop_operations_api.py::test_media_studio_shell_is_get_only_tenant_bound_and_scope_safe
+FAILED services/aos-api/tests/test_ecommerce_workshop_operations_api.py::test_media_studio_fails_closed_when_module_is_not_installed
+FAILED services/aos-api/tests/test_ecommerce_workshop_operations_api.py::test_analyst_shell_is_get_only_tenant_bound_and_scope_safe
+FAILED services/aos-api/tests/test_ecommerce_workshop_operations_api.py::test_analyst_fails_closed_when_module_is_not_installed
+10 failed, 39 passed, 7 warnings in 13.51s

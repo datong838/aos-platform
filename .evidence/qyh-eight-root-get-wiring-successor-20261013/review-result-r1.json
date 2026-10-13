@@ -1,0 +1,37 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-eight-root-get-wiring-successor-20261013-http-r1",
+    "task_id": "qyh-eight-root-get-wiring-successor-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "d97c4bae06e211a230efc2786eab642349fd3d9d",
+      "authority_revision": "AOS-002012",
+      "files": {
+        ".evidence/qyh-eight-root-get-wiring-successor-20261013/review-router-diff.txt": "460ac3a7a8360c8020f1bd38626459b4f628f990d578cd9e462e5b5141ddeebe",
+        ".evidence/qyh-eight-root-get-wiring-successor-20261013/review-read-catalog.txt": "07ee703fa030a791fc5f1820bdb4ef1d18f47d821c15481a9c31c667dd3612e1",
+        ".evidence/qyh-eight-root-get-wiring-successor-20261013/review-http-tests.txt": "069b035033f1ec87ad287dec4e7ef52fab2adfb66bfe74c78b2569d3090c2983",
+        ".evidence/qyh-eight-root-get-wiring-successor-20261013/review-plan.txt": "9e93f8681ef6a00efda49d966eaac4121b63379c0dd5002d39050d7c2b210829",
+        ".evidence/qyh-eight-root-get-wiring-successor-20261013/review-compatibility.txt": "70f4e833d8f2ee631919c34f3724e1f2834d6346a4821c6c8b1bfe9c6877f409"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "候选仅将八个已登记root GET接入独立读取目录依赖，原POST、辅助GET及其他原函数体保持；这不是runtime或经营首链验收。",
+        "evidence": "文件：.evidence/qyh-eight-root-get-wiring-successor-20261013/review-router-diff.txt；定位：新增get_ecommerce_workshop_read_catalog与ReadCatalogDependency；仅替换task-cockpit/operations/content-campaign/creator-growth/media-studio/analyst/price-governance/customer八处视图函数依赖；.evidence/qyh-eight-root-get-wiring-successor-20261013/review-compatibility.txt：changedOriginalFunctions列出上述八项，newFunctions仅有get_ecommerce_workshop_read_catalog，originalPostBodiesUnchanged=true，originalOtherFunctionsAstEqual=true；runtimeActivated=false,businessCompleted=false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "读取factory复用原legacy HTTP依赖入口，legacy成功原样返回且不构造selected安装目录；只有AssetNotFound触发延迟installed factory，exact DataScopeGrant与disabled边界保留。",
+        "evidence": "文件：.evidence/qyh-eight-root-get-wiring-successor-20261013/review-read-catalog.txt；定位：EcommerceWorkshopReadCatalog.__init__要求installed/installed_factory恰好提供其一；get_readiness先调用self._legacy.get_readiness(**scope)，仅在except AssetNotFoundError后调用installed_factory（或已注入的installed）；DataScopeGrant校验要求resource_type/DataScopeGrant、revision=installation:revision/lock:lock_revision、content_hash=installation.lock_hash、authority=postgres:bundle_composition_lock；保留disallowed阻断与原disabled状态（注释：Keep the original disabled state and every runtime/authority gap intact）；.evidence/qyh-eight-root-get-wiring-successor-20261013/review-http-tests.txt：test_legacy_success_does_not_build_installed_configuration证明legacy成功时不构造selected；test_installed_factory_is_deferred_until_legacy_not_found证明延迟到legacy AssetNotFound后。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前m1 d97c4bae06e211a230efc2786eab642349fd3d9d基线，按计划推进后续native/browser真实数据正向读取验收；不要在本Task范围内触发runtime-ready或经营首链证据。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}
