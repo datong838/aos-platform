@@ -1,0 +1,17 @@
+{
+  "normalRoleReadonlyScopeVerified": true,
+  "policyMetadata": [
+    {
+      "current_revision": 13,
+      "version": 13,
+      "lifecycle": "active",
+      "expired": true
+    }
+  ],
+  "activeBudgetCount": 1,
+  "canonicalHumanAdminMembershipCount": 1,
+  "makerOidcIdentityVerified": false,
+  "approvalOrPolicyPublished": false,
+  "activationEligible": false,
+  "currentDatabaseWrites": false
+}

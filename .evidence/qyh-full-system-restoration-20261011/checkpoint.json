@@ -5,7 +5,7 @@
   "task_id": "qyh-full-system-restoration-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "task_base_revision": "AOS-001842",
-  "authority_revision": "AOS-002007",
+  "authority_revision": "AOS-002008",
   "step": "current_readonly_entry_62_tests_source_and_fresh_quality_review_verified",
   "code_files": [
     "scripts/a0v_qyh_restored_http.py",
@@ -76,8 +76,9 @@
     },
     {
       "id": "current_immutable_source_revalidated",
-      "state": "VERIFIED_LOCAL",
-      "proof": ".evidence/qyh-full-system-restoration-20261011/checkpoint-live-source-20261013-current_immutable_source_revalidated-proof.json"
+      "state": "PENDING",
+      "proof": ".evidence/qyh-full-system-restoration-20261011/checkpoint-live-source-20261013-current_immutable_source_revalidated-proof.json",
+      "reason": "The previous full frozen-source proof remains valid at its40434df/f27 cutoff. New cc7 proposal module is now committed API code and absent from the running40434df snapshot; next aos restart must freeze/validate latest source. Parent exact HTTP entry code/tests are unchanged; no false latest-live-source claim."
     },
     {
       "id": "actual_current161_preview_restart",
@@ -90,5 +91,5 @@
       "proof": ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual_current_assets_and_submitted_eight_installation-proof.json"
     }
   ],
-  "next_step": "REVIEW_STEP:source_migration_and_aos_restart_acceptance"
+  "next_step": "REVIEW_STEP:latest_m1_source_freeze_at_next_aos_restart_and_current_budget_owner_preflight"
 }
