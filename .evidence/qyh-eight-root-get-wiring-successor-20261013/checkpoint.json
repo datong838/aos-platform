@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "qyh-eight-root-get-wiring-successor-20261013",
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
-  "authority_revision": "AOS-002013",
+  "authority_revision": "AOS-002014",
   "task_base_revision": "AOS-002012",
-  "step": "5/8 root8 code candidate committed,65pass and final r3 review consumed; native/parent handoff/latest restart/browser open",
+  "step": "6/8 normal original role native8DTO/canary8denied; latest same-volume restart/browser running next",
   "code_files": [
     "services/aos-api/aos_api/routers/ecommerce_workshop.py",
     "services/aos-api/aos_api/ecommerce_workshop_read_catalog.py",

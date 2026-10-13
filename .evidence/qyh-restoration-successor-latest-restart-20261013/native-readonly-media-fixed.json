@@ -1,0 +1,413 @@
+{
+  "schema": "aos-native-root8-readonly/v1",
+  "head": "2324ba3916b39ed81d6527577f4d20ab3bd86071",
+  "roleResults": [
+    {
+      "plane": "runtime",
+      "role": "aos_a0v_runtime_20260912",
+      "superuser": false,
+      "bypassRls": false,
+      "transactionReadOnly": true,
+      "modules": [
+        {
+          "module": "ecommerce.task-cockpit",
+          "admitted": true,
+          "readiness": "disabled",
+          "installationRevision": 5,
+          "blockerCodes": [
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "INSTALLED_ASSET_READONLY",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED"
+          ],
+          "businessReadReturned": true,
+          "dto": "TaskCockpitCoreEnvelope",
+          "topLevelFields": [
+            "blockers",
+            "evaluatedAt",
+            "items",
+            "page",
+            "readiness",
+            "schemaVersion",
+            "stateConsistency",
+            "taskCutoff",
+            "tenant"
+          ],
+          "topLevelListCounts": {
+            "blockers": 2,
+            "items": 2
+          }
+        },
+        {
+          "module": "ecommerce.operations",
+          "admitted": true,
+          "readiness": "disabled",
+          "installationRevision": 5,
+          "blockerCodes": [
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "INSTALLED_ASSET_READONLY",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED"
+          ],
+          "businessReadReturned": true,
+          "dto": "WorkshopOperationsViewEnvelope",
+          "topLevelFields": [
+            "dataCutoff",
+            "evaluatedAt",
+            "page",
+            "readiness",
+            "schemaVersion",
+            "slices",
+            "tenant"
+          ],
+          "topLevelListCounts": {
+            "slices": 7
+          }
+        },
+        {
+          "module": "ecommerce.content-campaign",
+          "admitted": true,
+          "readiness": "disabled",
+          "installationRevision": 5,
+          "blockerCodes": [
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "INSTALLED_ASSET_READONLY",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED"
+          ],
+          "businessReadReturned": true,
+          "dto": "WorkshopContentCampaignViewEnvelope",
+          "topLevelFields": [
+            "dataCutoff",
+            "evaluatedAt",
+            "page",
+            "readiness",
+            "schemaVersion",
+            "slices",
+            "tenant"
+          ],
+          "topLevelListCounts": {
+            "slices": 3
+          }
+        },
+        {
+          "module": "ecommerce.creator-growth",
+          "admitted": true,
+          "readiness": "disabled",
+          "installationRevision": 5,
+          "blockerCodes": [
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "INSTALLED_ASSET_READONLY",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED"
+          ],
+          "businessReadReturned": true,
+          "dto": "WorkshopCreatorGrowthViewEnvelope",
+          "topLevelFields": [
+            "dataCutoff",
+            "evaluatedAt",
+            "page",
+            "readiness",
+            "schemaVersion",
+            "slices",
+            "tenant"
+          ],
+          "topLevelListCounts": {
+            "slices": 5
+          }
+        },
+        {
+          "module": "ecommerce.media-studio",
+          "admitted": true,
+          "readiness": "disabled",
+          "installationRevision": 5,
+          "blockerCodes": [
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "INSTALLED_ASSET_READONLY",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED"
+          ],
+          "businessReadReturned": true,
+          "dto": "WorkshopMediaStudioViewEnvelope",
+          "topLevelFields": [
+            "cumulativeGateSet",
+            "dataCutoff",
+            "evaluatedAt",
+            "lifecycle",
+            "lifecycleBlockers",
+            "lifecycleStatus",
+            "mediaFinance",
+            "mediaFinanceBlockers",
+            "mediaFinanceStatus",
+            "page",
+            "providerJobBlockers",
+            "providerJobs",
+            "providerJobsStatus",
+            "publishBlockers",
+            "publishContributions",
+            "publishStatus",
+            "readiness",
+            "schemaVersion",
+            "slices",
+            "tenant"
+          ],
+          "topLevelListCounts": {
+            "slices": 3,
+            "providerJobs": 0,
+            "providerJobBlockers": 0,
+            "mediaFinance": 0,
+            "mediaFinanceBlockers": 0,
+            "lifecycleBlockers": 0,
+            "publishContributions": 0,
+            "publishBlockers": 1
+          }
+        },
+        {
+          "module": "ecommerce.analyst",
+          "admitted": true,
+          "readiness": "disabled",
+          "installationRevision": 5,
+          "blockerCodes": [
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "INSTALLED_ASSET_READONLY",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED"
+          ],
+          "businessReadReturned": true,
+          "dto": "WorkshopAnalystViewEnvelope",
+          "topLevelFields": [
+            "dataCutoff",
+            "evaluatedAt",
+            "growthScenario",
+            "page",
+            "readiness",
+            "resourceRevision",
+            "schemaVersion",
+            "tenant",
+            "views"
+          ],
+          "topLevelListCounts": {
+            "views": 7
+          }
+        },
+        {
+          "module": "ecommerce.price-governance",
+          "admitted": true,
+          "readiness": "disabled",
+          "installationRevision": 5,
+          "blockerCodes": [
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "INSTALLED_ASSET_READONLY",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED"
+          ],
+          "businessReadReturned": true,
+          "dto": "WorkshopPriceGovernanceViewEnvelope",
+          "topLevelFields": [
+            "dataCutoff",
+            "evaluatedAt",
+            "page",
+            "readiness",
+            "remedyScenario",
+            "resourceRevision",
+            "schemaVersion",
+            "tenant",
+            "views"
+          ],
+          "topLevelListCounts": {
+            "views": 3
+          }
+        },
+        {
+          "module": "ecommerce.customer",
+          "admitted": true,
+          "readiness": "disabled",
+          "installationRevision": 5,
+          "blockerCodes": [
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "AIP_FEATURE_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "INSTALLED_ASSET_READONLY",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED"
+          ],
+          "businessReadReturned": true,
+          "dto": "WorkshopCustomerViewEnvelope",
+          "topLevelFields": [
+            "dataCutoff",
+            "evaluatedAt",
+            "page",
+            "readiness",
+            "resourceRevision",
+            "schemaVersion",
+            "tenant",
+            "views"
+          ],
+          "topLevelListCounts": {
+            "views": 4
+          }
+        }
+      ],
+      "canary": [
+        {
+          "module": "task-cockpit",
+          "denied": true
+        },
+        {
+          "module": "operations",
+          "denied": true
+        },
+        {
+          "module": "content-campaign",
+          "denied": true
+        },
+        {
+          "module": "creator-growth",
+          "denied": true
+        },
+        {
+          "module": "media-studio",
+          "denied": true
+        },
+        {
+          "module": "analyst",
+          "denied": true
+        },
+        {
+          "module": "price-governance",
+          "denied": true
+        },
+        {
+          "module": "customer",
+          "denied": true
+        }
+      ],
+      "originalHumanAdminMembershipVerified": true
+    }
+  ],
+  "currentDatabaseWrites": false,
+  "runtimeActivation": false,
+  "providerCalls": false,
+  "businessComplete": false,
+  "sourceManifestSha256": "2dd77c7c0d05696c98c320ea0c2dbe38d69300ae01aa2e63d8a37eef488228d9",
+  "scriptSha256": "da0e73ffb3e8d00940e95b2773dd55f3d57c92f6eb281d67217512e7327d5471",
+  "scope": "Normal original roles and frozen root readers, no HTTP/browser proof; admin role corresponds to preserved real subject, no test Principal or approval"
+}

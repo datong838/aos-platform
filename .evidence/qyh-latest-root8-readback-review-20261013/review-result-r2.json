@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-latest-root8-readback-review-20261013-r2",
+    "task_id": "qyh-latest-root8-readback-review-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "2324ba3916b39ed81d6527577f4d20ab3bd86071",
+      "authority_revision": "AOS-002014",
+      "files": {
+        ".evidence/qyh-latest-root8-readback-review-20261013/verification-latest-root8.json": "33dd94d840ac428c6e5d155cefb3528cb2a7ef84f0154d9f5d685c6ab89eeaad",
+        ".evidence/qyh-latest-root8-readback-review-20261013/http-noeffect-readback.json": "46120da9d85284ac2817eed7bd561fcffa5a4a3dc7954ffea64dba6aef97fe66",
+        ".evidence/qyh-latest-root8-readback-review-20261013/backup-readback.json": "2915087bfe31cc810c18b01ce74dda3bf3d2496bd071f68004b9fbb8bfb9083e",
+        ".evidence/qyh-latest-root8-readback-review-20261013/pg-terminal.json": "e59da43cf05c2e75c3dfe4e689585d604ecce26a23db379dda46f33e8018c456",
+        ".evidence/qyh-latest-root8-readback-review-20261013/prepare-terminal.json": "ebb98d6479a02ce1f152d3f6695763b92ca03808121f74733438b35615b07801",
+        ".evidence/qyh-latest-root8-readback-review-20261013/human-login-terminal.json": "9294bb4bd0e6d6fdb8adb90a6bbd9d165c1aa3d8eff8df1e38fd73bd0f40f73d",
+        ".evidence/qyh-latest-root8-readback-review-20261013/browser-observations.json": "a3983bd344292ca2396f252be4bfde6af403bad23dadd40a3c468c1a9f398918",
+        ".evidence/qyh-latest-root8-readback-review-20261013/restart-controller-material.txt": "9600878d2574003446ce9a486bb74336f4c6087c530f36844adab294612eb306",
+        ".evidence/qyh-latest-root8-readback-review-20261013/guarded-management-source.txt": "b9d95378493d5ad412b4b8110613467594dc66ab9cd2093f6a230207dc3e1910"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "冻结材料记录同一原权威卷PG→最新2324API→Web完整重启、原650表各快照一致、正常只读/原执行OFF与无身份401/POST405边界；仅支持本次读取维护证据，不授业务运行权限。",
+        "evidence": "1) .evidence/qyh-latest-root8-readback-review-20261013/verification-latest-root8.json 记录 head=2324ba3916b39ed81d6527577f4d20ab3bd86071、authority=AOS-002014、volume=aos-qyh-history159-prepared-data-20261011、containerId=84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c、tableCount=650、apiSourceManifestSha256=2dd77c7c...、apiPort=18080、webPort=18434、webSourceHead=2324ba39...；allSnapshotsEqual.after-pg-restart=after-services-restart=after-browser-readback=true；pgStartBefore/pgStartAfter证明 PG 在重启前后不同（pg-terminal.json: restartReturnCode=0、startedBefore=2026-10-13T03:36...、startedAfter=2026-10-13T09:52...）；prepare-terminal.json: head=2324ba39...、webFiles=764、allCurrentSourceGuardPassed=true、noServiceActions=true；http-noeffect-readback.json 中 /v1/health GET=200，/v1/ecommerce-workshop/views/customer 无身份 GET=401 (AUTH_REQUIRED)，POST=405 (RESTORED_MANAGEMENT_READ_ONLY)。2) restart-controller-material.txt 为当前请求 task_id/owner 对应的重启控制器源码，其逻辑显式拒绝迁移与写操作。3) guarded-management-source.txt ReadOnlyManagementApp 对非 GET/HEAD/OPTIONS 返回 405 + RESTORED_MANAGEMENT_READ_ONLY；require_api_source_candidate 强制校验 frozen API source。4) backup-readback.json 两个备份文件哈希相等、newRestoreOrMigrationPerformed=false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "真实OIDC与原owned tab八root返回200且同租户，原八组件终态已记录；19辅助404及四页读取失败如实保留，不将页面可见、root200或本次重启称作整体恢复/经营首链完成。",
+        "evidence": "1) verification-latest-root8.json: originalHumanLoginHttp200Once=true、root8Http200AndTenantExact=true、all8OriginalComponentsSettled=true。2) browser-observations.json: 八项 finalSnapshots 均为 settled=true，含 operations/task-cockpit/media-studio/analyst/content-campaign/creator-growth/price-governance/customer；pagesWithReadFailureText=['operations','task-cockpit','media-studio','analyst'] 与 19 个 observedAuxFailures 精确对应 404 列表。3) verification-latest-root8.json: dbWrites=false、migrationPerformed=false、oldRunsReplayed=false、hostWorkerProviderEnabled=false、businessFirstChainAccepted=false、wholeRestorationComplete=false、tabRetained=true、initialScreenshotsAreNotSettledEvidence=true、human-login-terminal.json realIdentityPageAndRootReadbackPending=true、browser-observations.json businessFirstChainAccepted=false。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续以只读方式保存本轮 evidence；不要发起任何写入、调度或对外发布流程；如需推进，请先申请新的读取级验证任务基线。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

@@ -1,0 +1,25 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-latest-root8-readback-review-20261013-r2",
+  "task_id": "qyh-latest-root8-readback-review-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "2324ba3916b39ed81d6527577f4d20ab3bd86071",
+    "authority_revision": "AOS-002014",
+    "files": {
+      ".evidence/qyh-latest-root8-readback-review-20261013/verification-latest-root8.json": "33dd94d840ac428c6e5d155cefb3528cb2a7ef84f0154d9f5d685c6ab89eeaad",
+      ".evidence/qyh-latest-root8-readback-review-20261013/http-noeffect-readback.json": "46120da9d85284ac2817eed7bd561fcffa5a4a3dc7954ffea64dba6aef97fe66",
+      ".evidence/qyh-latest-root8-readback-review-20261013/backup-readback.json": "2915087bfe31cc810c18b01ce74dda3bf3d2496bd071f68004b9fbb8bfb9083e",
+      ".evidence/qyh-latest-root8-readback-review-20261013/pg-terminal.json": "e59da43cf05c2e75c3dfe4e689585d604ecce26a23db379dda46f33e8018c456",
+      ".evidence/qyh-latest-root8-readback-review-20261013/prepare-terminal.json": "ebb98d6479a02ce1f152d3f6695763b92ca03808121f74733438b35615b07801",
+      ".evidence/qyh-latest-root8-readback-review-20261013/human-login-terminal.json": "9294bb4bd0e6d6fdb8adb90a6bbd9d165c1aa3d8eff8df1e38fd73bd0f40f73d",
+      ".evidence/qyh-latest-root8-readback-review-20261013/browser-observations.json": "a3983bd344292ca2396f252be4bfde6af403bad23dadd40a3c468c1a9f398918",
+      ".evidence/qyh-latest-root8-readback-review-20261013/restart-controller-material.txt": "9600878d2574003446ce9a486bb74336f4c6087c530f36844adab294612eb306",
+      ".evidence/qyh-latest-root8-readback-review-20261013/guarded-management-source.txt": "b9d95378493d5ad412b4b8110613467594dc66ab9cd2093f6a230207dc3e1910"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "a8bcb913861c5c2f7f13c9cce1f8b13fa3ff9b5e57b34fa247224443f5b7a38a",
+  "transport_sha256": "168438e035c02f406ef09a47e18c1904a6083a5498e50a2b19e74c0871c480be"
+}

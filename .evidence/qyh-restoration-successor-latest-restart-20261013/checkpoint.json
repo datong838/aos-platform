@@ -1,0 +1,19 @@
+{
+  "schema": "aos-engineering-checkpoint/v1",
+  "thread": "01a13484-f019-7d82-94ce-812396db9124",
+  "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "task_id": "qyh-restoration-successor-latest-restart-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "authority_revision": "AOS-002015",
+  "task_base_revision": "AOS-002013",
+  "step": "7/8 full latest2324 same-volume restart/650 identical and actual8root readback complete;whole restoration/business remain pending,Operations auxiliary wave in progress",
+  "code_files": [
+    "scripts/a0v_qyh_restored_http.py"
+  ],
+  "evidence_files": [
+    ".evidence/qyh-restoration-successor-latest-restart-20261013/verification-latest-root8.json",
+    ".evidence/qyh-restoration-successor-latest-restart-20261013/browser-settled-final.json",
+    ".evidence/qyh-restoration-successor-latest-restart-20261013/http-noeffect-readback.json",
+    ".evidence/qyh-restoration-successor-latest-restart-20261013/progress-and-next.md"
+  ]
+}

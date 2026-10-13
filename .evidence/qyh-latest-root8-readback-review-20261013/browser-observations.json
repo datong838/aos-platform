@@ -1,0 +1,110 @@
+{
+  "finalSnapshots": [
+    {
+      "module": "operations",
+      "route": "/workshop/operations",
+      "originalComponent": "operations-page",
+      "settled": true,
+      "menus": 1,
+      "blockedElements": 19,
+      "readFailedText": true,
+      "visibleStateText": "统一运营 · 正式业务处理视图\n重新读取\n读取失败\n正式服务未返回可验证结果。\n重新读取",
+      "contentCharacterCount": 44,
+      "screenshot": "final-operations.png",
+      "businessDataReady": false
+    },
+    {
+      "module": "task-cockpit",
+      "route": "/workshop/cockpit",
+      "originalComponent": "task-cockpit-page",
+      "settled": true,
+      "menus": 1,
+      "blockedElements": 32,
+      "readFailedText": true,
+      "visibleStateText": "2\n今日经营任务\n已排除系统验收记录\n0\n执行中\n活跃状态\n1\n已绑定执行记录\n不补造缺失记录\n0\n待补条件\n影响任务执行\n1\n待规划\n尚未进入执行\n2\n待接入\n需要补充数据\n18:07\n评估截止\n2026/10/13\nϟ\n下达\n正在读取经营建议\n任务状态\n全部状态\n待规划\n规划中\n待审批\n已批准\n执行中\n已暂停\n已完成\n失败\n已取消\n已回滚\n重新读取\n执行组\n客服专员\n状态待核对\n私域管家\n状态待核对\n导购顾问\n状态待核对\n当日经营任务流 · 执行进度\n2 项\n业务任务\n全店经营基线分析\n已取消\n业务任务\n执行记录：已取消 · 第 4 版\n业务任务\n栖月汇全店基线与商品尖刀验证\n待规划\n业务任务\n尚无执行记录\n策划组\n数据参谋\n状态待核对\n内容官\n状态待核对\n活动策划师\n状态待核对\n复盘 · 经验沉淀\n2026/10/13\n今日复盘\n\n今日没有可回读的终结任务\n不使用静态复盘结果或伪成功状态。\n\n复盘所需数据缺口 2 项\nAI 改进建议\n\n今日没有可回读的改进观察\n不复制视觉稿示例建议。\n\n经验沉淀 Wiki · 今日入库\n\n今日没有入库记录\n不复制视觉稿示例 SOP 条目。\n\n共享技能 AGENT\n素材采集\n暂不可用\n策略规划\n暂不可用\n文案生成\n暂不可用\n脚本撰写\n暂不可用\n语音合成\n暂不可用\n视频合成\n暂不可用\n内容审核\n暂不可用\n直播编排\n暂不可用\n平台适配\n暂不可用\n数",
+      "contentCharacterCount": 756,
+      "screenshot": "final-task-cockpit.png",
+      "businessDataReady": false
+    },
+    {
+      "module": "content-campaign",
+      "route": "/workshop/content-campaign",
+      "originalComponent": "content-campaign-page",
+      "settled": true,
+      "menus": 1,
+      "blockedElements": 20,
+      "readFailedText": false,
+      "visibleStateText": "活动策划\n内容日历\n日常模板\n栖月汇微商城\n＋ 新建活动\n商品、库存与活动来源读取未完整，已保留其他可用业务视图。\n×\n暂无数据\n服务已返回空集合，没有使用示例数据填充。\n数据截止：2026-10-13T10:07:15.110597Z\n活动列表\n筛选\n当前数据范围\n3 个视图可读取\n活动计划\n活动目标与节奏\n可读取 · 0/0\n内容日历\n日期、渠道与负责人\n可读取 · 0/0\n主内容与变体\n主内容与渠道版本\n可读取 · 0/0\n没有活动记录？\n\n填写中央活动目标即可生成内部草稿；对外发布仍需独立审批。\n\nAI 策划助手\n仅消费当前正式业务数据\n生成方案\n基于当前数据：\n读取正式活动计划\n核对内容日历\n关联主内容与渠道版本\n当前正式数据可供审阅\n只读呈现正式业务事实，不代表已批准或发布。\n只读\n当前业务视图\n活动概览\n正式数据可读\n\n活动计划\n正式业务数据已挂接\n\n可评估\n0\n已挂接\n0\n未匹配\n0\n冲突\n0\n\n当前没有可展示的活动计划\n页面不会用演示活动填充；请补充正式业务数据后重新读取。\n\n可创建内部草稿\n草稿操作形成版本与业务回执；对外发布仍需独立审批。\n保存为草稿\n重新生成\n批准并发布\nAI 策划助手\n基于正式数据实时核对\n可审阅\n活动计划已读取\n\n已完成数量与来源核对；需要人工审阅后才能进入后续内部流程。\n\n风险决策\n先生成草稿\n折扣与毛利边界\n\n确认活动折扣不突破正式审",
+      "contentCharacterCount": 874,
+      "screenshot": "final-content-campaign.png",
+      "businessDataReady": false
+    },
+    {
+      "module": "creator-growth",
+      "route": "/workshop/creator-growth",
+      "originalComponent": "creator-growth-page",
+      "settled": true,
+      "menus": 1,
+      "blockedElements": 19,
+      "readFailedText": false,
+      "visibleStateText": "达人库\n招募漏斗\n商务签约\n履约效果\n长期关系\n达人与机构\n0 条正式记录\n导入准备\n全部\n个人达人\n机构\n有合作记录\n\n全部 · 全部关键词 · 0 条\n\n栖月汇商品\n商品数据暂未读取\n重新读取业务数据\n候选\n0\n达人与品牌、商品和受众的匹配\n邀约\n0\n候选去重、准备、批准与回复\n合作\n0\n意向、条款、签约与生效\n交付\n0\n内容交付、效果窗口与异常\n关系\n0\n分层、复邀窗口与关系事件\n没有匹配记录\n\n调整关键词或先准备候选来源与筛选条件。\n\n0\n候选总量\n0\n符合条件\n0\n需要复核\n0\n已去重\n0\n当前选中\n达人库\n候选匹配概览\n0 条正式记录\n当前达人库为空\n\n栖月汇当前数据截止面没有可回链的达人或机构记录。可以先整理候选来源和筛选条件，再进入正式导入流程。\n\n准备候选条件\nAI 匹配分析 · 导购顾问\n0 条依据\n当前判断\n当前没有可验证业务对象\n\n核对候选与商品、内容领域和受众是否匹配。没有正式记录时不生成姓名、联系方式、匹配分或经营结果。\n\n下一步动作\n补充候选条件\n补充预算权益\n补充交付物证据\n准备候选条件\n重新读取业务数据\n页面准备不会自动触达达人，也不会代替合同、履约或关系记录。\n共享数字同事\n导购顾问\n数据参谋\n活动策划师\n内容官\n私域管家\n技术与数据诊断\n数据截止 2026/10/13 18:07:22\n重新读取",
+      "contentCharacterCount": 575,
+      "screenshot": "final-creator-growth.png",
+      "businessDataReady": false
+    },
+    {
+      "module": "media-studio",
+      "route": "/workshop/media-studio",
+      "originalComponent": "media-studio-page",
+      "settled": true,
+      "menus": 1,
+      "blockedElements": 30,
+      "readFailedText": true,
+      "visibleStateText": "重新读取\n栖月汇微商城\n内容官（负责人未绑定）\n场景：未绑定\n数据截止未验证\n今日计划：待核对\n读取失败\n正式服务未返回可验证结果。\n重新读取",
+      "contentCharacterCount": 71,
+      "screenshot": "final-media-studio.png",
+      "businessDataReady": false
+    },
+    {
+      "module": "analyst",
+      "route": "/workshop/analyst",
+      "originalComponent": "analyst-page",
+      "settled": true,
+      "menus": 1,
+      "blockedElements": 36,
+      "readFailedText": true,
+      "visibleStateText": "经营计划 · 正式业务数据只读视图\n重新读取\n部分数据可用\n仅展示已确认部分，缺失范围不会以零值代替。\n数据截止：2026-10-13T10:07:28.374629Z\n经营参谋说明\n只读 · 指标、证据与质量同截止面\n跨域贡献与学习治理说明\n正式业务能力 → 数字同事 → 工作台贡献\n生意探究\n只读\n经营总览\n等待条件\n驱动因素\n等待条件\n问题诊断\n等待条件\n增长计划\n等待条件\n效果复盘\n等待条件\n证据链\n等待条件\n数据质量\n可读取\n经营分析 · 证据驱动\n生意探究\n只读\n只读边界\n仅当前租户可见的正式分析记录\n按渠道、经营实体与分析记录三级选择\n当前为只读模式；周期计划、评审与交接未开启\n查看数据审计信息\n分析记录读取失败\n\n页面已失败关闭，未保留旧选择。\n\n重新读取\n租户 org-org/dev-project\n统一数据截止 2026/10/13 18:07:28\n待核对项不显示为 0\n经营研究 · 只读\n研究任务与业务进度\n重新读取\n\n研究、查询与知识整理任务分别展示；阶段结果、待核对状态和正式回读结果均以当前租户数据为准。\n\n可信空集合\n当前租户没有可读取的异步任务。",
+      "contentCharacterCount": 496,
+      "screenshot": "final-analyst.png",
+      "businessDataReady": false
+    },
+    {
+      "module": "price-governance",
+      "route": "/workshop/price-governance",
+      "originalComponent": "price-governance-page",
+      "settled": true,
+      "menus": 1,
+      "blockedElements": 40,
+      "readFailedText": false,
+      "visibleStateText": "栖月汇 · 品牌待核对 · 核心商品待核对\n数据参谋（负责人未绑定）+ 活动策划师 + 导购顾问\n价格治理视图已读取\n3 个视图待复核\n刷新数据\n等待必要条件\n页面保持可浏览；补齐所需数据后可继续处理。\n数据截止：2026-10-13T10:07:33.898430Z\n价格治理全过程与累计审计\n同款价格治理\n等待条件\n竞品比价\n等待条件\n调度控制台\n等待条件\n当前业务视图\n同款价格治理\n等待数据\n价格治理流程\n价格治理任务链\n采集证据\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n同款判定\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n策略与业务事项\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n通知就绪\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n建议交接\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n自动调价\n待核对\n\n专业调价能力未开启\n\n查看数据审计信息\n全部\n可比\n待复核\n已排除\n核心商品列表\n待核对\n异常候选\n未挂接\n待复核商品\n未挂接\n可比报价\n待核对\n\n当前没有可挂接的价格观察；可信空与待补条件分开表达。\n\nMonitoringPolicy → Action Proposal\n内部价格策略\n尚未提交\n\n请选择当前视图中的价格观察；没有 exact 来源时不生成策略。\n\n新建监测策略\n对比预览\n执行结果\n批准预览\n撤回策略\n立即采集预检\n数字同事\n数字同事",
+      "contentCharacterCount": 720,
+      "screenshot": "final-price-governance.png",
+      "businessDataReady": false
+    },
+    {
+      "module": "customer",
+      "route": "/workshop/customer",
+      "originalComponent": "customer-page",
+      "settled": true,
+      "menus": 1,
+      "blockedElements": 28,
+      "readFailedText": false,
+      "visibleStateText": "重新读取\n栖月汇 · 客户状态待核对\n私域管家（负责人未绑定）\n任务驱动 · 只读计划 · 客户产物\n高价值待核对 · 潜力待核对 · 活跃待核对\n沉睡待核对 · 流失预警待核对\n等待必要条件\n页面保持可浏览；补齐所需数据后可继续处理。\n数据截止：2026-10-13T10:07:38.548655Z\n客户治理全过程与累计审计\n客户最小投影\n等待条件 · 正式来源 0\n客户分群\n等待条件 · 正式来源 0\n生命周期旅程\n等待条件 · 正式来源 0\n对话与批次\n等待条件 · 正式来源 0\n客户关系视图\n客户最小投影\n等待必要条件\n客户最小集\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n同意依据\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n分群投影\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n旅程投影\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n对话摘要\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n触达批次\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n全部\n可披露\n待复核\n已排除\n\n已读取正式来源 0 条；允许披露 0 条，0 条因同意、目的或留存条件未闭合而不展示客户明细。\n\nSegment → Journey → Dialogue Draft\n内部客户经营计划\n尚未提交\n\n请选择当前视图中的最小客户投影；无 exact ref 时不生成计划。\n\n新建经营计划",
+      "contentCharacterCount": 743,
+      "screenshot": "final-customer.png",
+      "businessDataReady": false
+    }
+  ],
+  "pageErrors": [],
+  "businessFirstChainAccepted": false
+}

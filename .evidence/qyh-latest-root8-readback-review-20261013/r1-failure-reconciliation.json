@@ -1,0 +1,8 @@
+{
+  "terminalReturncode": 0,
+  "toolCalls": 0,
+  "strictJsonRejected": true,
+  "accepted": false,
+  "sameRequestResent": false,
+  "knownTerminalResponse": true
+}

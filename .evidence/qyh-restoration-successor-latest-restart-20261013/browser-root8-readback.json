@@ -1,0 +1,821 @@
+{
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "realLogin": true,
+  "tokenExported": false,
+  "navigation": "existing documented SPA, no page reload",
+  "views": [
+    {
+      "module": "operations",
+      "url": "http://127.0.0.1:18434/workshop/operations",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 7
+      },
+      "bodyTail": "栖月汇微商城\n/\n统一运营驾驶舱\n筛选\n重新读取\n＋ 新建处理\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n\n已安装电商工作台\n\n统一运营驾驶舱\n已停用\n专注模式\n技术与数据诊断\necommerce.operations · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n统一运营 · 正式业务处理视图\n重新读取\n读取失败\n正式服务未返回可验证结果。\n重新读取",
+      "screenshot": "settled-operations.png",
+      "navigation": "existing documented SPA pushState/popstate"
+    },
+    {
+      "module": "task-cockpit",
+      "url": "http://127.0.0.1:18434/workshop/cockpit",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "taskCutoff",
+        "stateConsistency",
+        "readiness",
+        "blockers",
+        "items",
+        "page"
+      ],
+      "listCounts": {
+        "blockers": 2,
+        "items": 2
+      },
+      "bodyTail": "栖月汇微商城\n/\n日常任务总控大屏\n2026/10/13周二\n日历视图\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n\n已安装电商工作台\n\n电商日常任务总控大屏\n\n菜单名：日常任务总控大屏\n\n已停用\n专注模式\n技术与数据诊断\necommerce.task-cockpit · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n待核对\n今日经营任务\n已排除系统验收记录\n0\n执行中\n活跃状态\n0\n已绑定执行记录\n不补造缺失记录\n未知\n待补条件\n影响任务执行\n未知\n待规划\n尚未进入执行\n未知\n待接入\n需要补充数据\n尚未验证\n评估截止\n截止时间待核对\nϟ\n下达\n正在读取经营建议\n任务状态\n全部状态\n待规划\n规划中\n待审批\n已批准\n执行中\n已暂停\n已完成\n失败\n已取消\n已回滚\n重新读取\n执行组\n客服专员\n状态待核对\n私域管家\n状态待核对\n导购顾问\n状态待核对\n当日经营任务流 · 执行进度\n待验证\n正在读取当日任务\n\n当前没有正式业务任务，页面不会用演示任务填充。\n\n策划组\n数据参谋\n状态待核对\n内容官\n状态待核对\n活动策划师\n状态待核对\n复盘 · 经验沉淀\n待验证\n今日复盘\n\n今日没有可回读的终结任务\n不使用静态复盘结果或伪成功状态。\n\nAI 改进建议\n\n今日没有可回读的改进观察\n不复制视觉稿示例建议。\n\n经验沉淀 Wiki · 今日入库\n\n今日没有入库记录\n不复制视觉稿示例 SOP 条目。\n\n共享技能 AGENT\n素材采集\n暂不可用\n策略规划\n暂不可用\n文案生成\n暂不可用\n脚本撰写\n暂不可用\n语音合成\n暂不可用\n视频合成\n暂不可用\n内容审核\n暂不可用\n直播编排\n暂不可用\n平台适配\n暂不可用\n数据复盘\n暂不可用\n明日预告 · 仅显示已排期业务任务\n计划表未验证\n内容评审后的经营反馈\n\n原评审通过后形成的复盘、效果观察与方法候选；这里只读，不代表当前可执行授权。\n\n经营反馈权威读取失败；不显示旧结果，也不推断效果或 Wiki 入库。\n\n运行、发布与审计上下文\n保持原完整功能；默认收起以恢复视觉稿首屏结构",
+      "readFailedText": true,
+      "screenshot": "settled-task-cockpit.png",
+      "navigation": "existing documented SPA pushState/popstate"
+    },
+    {
+      "module": "content-campaign",
+      "url": "http://127.0.0.1:18434/workshop/content-campaign",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.content-campaign-view/v1",
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 3
+      },
+      "bodyTail": "栖月汇微商城\n/\n内容与活动工作台\n保存草稿\n批准并发布\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n\n已安装电商工作台\n\n内容与活动工作台\n已停用\n专注模式\n技术与数据诊断\necommerce.content-campaign · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n活动策划\n内容日历\n日常模板\n栖月汇微商城\n＋ 新建活动\n商品、库存与活动来源读取未完整，已保留其他可用业务视图。\n×\n正在读取\n正在从正式服务读取当前工作区状态。",
+      "readFailedText": false,
+      "screenshot": "settled-content-campaign.png",
+      "navigation": "existing documented SPA pushState/popstate"
+    },
+    {
+      "module": "creator-growth",
+      "url": "http://127.0.0.1:18434/workshop/creator-growth",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.creator-growth-view/v1",
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 5
+      },
+      "bodyTail": "栖月汇微商城\n/\n达人邀约驾驶舱\n导入达人\n＋ 新建邀约批次\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n\n已安装电商工作台\n\n达人邀约与签约驾驶舱\n\n菜单名：达人邀约驾驶舱\n\n已停用\n专注模式\n技术与数据诊断\necommerce.creator-growth · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n正在读取\n正在从正式服务读取当前工作区状态。",
+      "readFailedText": false,
+      "screenshot": "settled-creator-growth.png",
+      "navigation": "existing documented SPA pushState/popstate"
+    },
+    {
+      "module": "media-studio",
+      "url": "http://127.0.0.1:18434/workshop/media-studio",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.media-studio-view/v6",
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "providerJobsStatus",
+        "providerJobs",
+        "providerJobBlockers",
+        "mediaFinanceStatus",
+        "mediaFinance",
+        "mediaFinanceBlockers",
+        "lifecycleStatus",
+        "lifecycle",
+        "lifecycleBlockers",
+        "publishStatus",
+        "publishContributions",
+        "publishBlockers",
+        "cumulativeGateSet",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 3,
+        "providerJobs": 0,
+        "providerJobBlockers": 0,
+        "mediaFinance": 0,
+        "mediaFinanceBlockers": 0,
+        "lifecycleBlockers": 0,
+        "publishContributions": 0,
+        "publishBlockers": 1
+      },
+      "bodyTail": "栖月汇微商城\n/\n多媒体内容生产\n栖月汇微商城\n查看内容计划\n＋ 新建内容任务\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n\n已安装电商工作台\n\n多媒体任务全过程闭环工作台\n\n菜单名：多媒体内容生产\n\n已停用\n专注模式\n技术与数据诊断\necommerce.media-studio · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n重新读取\n栖月汇微商城\n内容官（负责人未绑定）\n场景：未绑定\n数据截止未验证\n今日计划：待核对\n读取失败\n正式服务未返回可验证结果。\n重新读取",
+      "readFailedText": true,
+      "screenshot": "settled-media-studio.png",
+      "navigation": "existing documented SPA pushState/popstate"
+    },
+    {
+      "module": "analyst",
+      "url": "http://127.0.0.1:18434/workshop/analyst",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.analyst-view/v2",
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "resourceRevision",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "views",
+        "growthScenario",
+        "page"
+      ],
+      "listCounts": {
+        "views": 7
+      },
+      "bodyTail": "经营参谋 · 增长指挥中心\n工作台 › 增长指挥域 › 经营参谋\n渠道视角\n渠道未知\n经营参谋（负责人未绑定）\n查看今日方案\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n渠道未选择 · 数据截止未验证\n经营参谋（负责人未绑定）\n数据截止未验证 · 新鲜度待核对\n业务操作：只读\n专注模式\n技术与数据诊断\necommerce.analyst · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n经营计划 · 正式业务数据只读视图\n重新读取\n正在读取\n正在从正式服务读取当前工作区状态。\n经营研究 · 只读\n研究任务与业务进度\n重新读取\n\n研究、查询与知识整理任务分别展示；阶段结果、待核对状态和正式回读结果均以当前租户数据为准。\n\n可信空集合\n当前租户没有可读取的异步任务。",
+      "readFailedText": false,
+      "screenshot": "settled-analyst.png",
+      "navigation": "existing documented SPA pushState/popstate"
+    },
+    {
+      "module": "price-governance",
+      "url": "http://127.0.0.1:18434/workshop/price-governance",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.price-governance-view/v2",
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "resourceRevision",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "views",
+        "remedyScenario",
+        "page"
+      ],
+      "listCounts": {
+        "views": 3
+      },
+      "bodyTail": "价格治理驾驶舱\n/\n工作台 › 增长引擎域 › 价格治理\n栖月汇微商城\n导出报告\n＋ 新建监测策略\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n\n已安装电商工作台\n\n价格治理驾驶舱\n已停用\n专注模式\n技术与数据诊断\necommerce.price-governance · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n栖月汇 · 品牌待核对 · 核心商品待核对\n数据参谋（负责人未绑定）+ 活动策划师 + 导购顾问\n价格治理视图未验证\n待复核数量待核对\n刷新数据\n正在读取\n正在从正式服务读取当前工作区状态。",
+      "readFailedText": false,
+      "screenshot": "settled-price-governance.png",
+      "navigation": "existing documented SPA pushState/popstate"
+    },
+    {
+      "module": "customer",
+      "url": "http://127.0.0.1:18434/workshop/customer",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.customer-view/v1",
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "resourceRevision",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "views",
+        "page"
+      ],
+      "listCounts": {
+        "views": 4
+      },
+      "bodyTail": "客户关系工作台\n/\n工作台 › 运营执行域 › 客户关系\n栖月汇微商城 · 客户待核对\n导入客户\n＋ 新建触达任务\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n\n已安装电商工作台\n\n客户关系工作台\n已停用\n专注模式\n技术与数据诊断\necommerce.customer · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n重新读取\n栖月汇 · 客户状态待核对\n私域管家（负责人未绑定）\n任务驱动 · 只读计划 · 客户产物\n高价值待核对 · 潜力待核对 · 活跃待核对\n沉睡待核对 · 流失预警待核对\n正在读取\n正在从正式服务读取当前工作区状态。",
+      "readFailedText": false,
+      "screenshot": "settled-customer.png",
+      "navigation": "existing documented SPA pushState/popstate"
+    }
+  ],
+  "requests": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations/cases",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations/cases",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.operations-view/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 7
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.operations-view/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 7
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "taskCutoff",
+        "stateConsistency",
+        "readiness",
+        "blockers",
+        "items",
+        "page"
+      ],
+      "listCounts": {
+        "blockers": 2,
+        "items": 2
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.analyst-view/v2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "resourceRevision",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "views",
+        "growthScenario",
+        "page"
+      ],
+      "listCounts": {
+        "views": 7
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "taskCutoff",
+        "stateConsistency",
+        "readiness",
+        "blockers",
+        "items",
+        "page"
+      ],
+      "listCounts": {
+        "blockers": 2,
+        "items": 2
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.content-campaign-view/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 3
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.analyst-view/v2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "resourceRevision",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "views",
+        "growthScenario",
+        "page"
+      ],
+      "listCounts": {
+        "views": 7
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.content-campaign-view/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 3
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.creator-growth-view/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 5
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.creator-growth-view/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 5
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.media-studio-view/v6",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "providerJobsStatus",
+        "providerJobs",
+        "providerJobBlockers",
+        "mediaFinanceStatus",
+        "mediaFinance",
+        "mediaFinanceBlockers",
+        "lifecycleStatus",
+        "lifecycle",
+        "lifecycleBlockers",
+        "publishStatus",
+        "publishContributions",
+        "publishBlockers",
+        "cumulativeGateSet",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 3,
+        "providerJobs": 0,
+        "providerJobBlockers": 0,
+        "mediaFinance": 0,
+        "mediaFinanceBlockers": 0,
+        "lifecycleBlockers": 0,
+        "publishContributions": 0,
+        "publishBlockers": 1
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.analyst-view/v2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "resourceRevision",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "views",
+        "growthScenario",
+        "page"
+      ],
+      "listCounts": {
+        "views": 7
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.analyst-view/v2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "resourceRevision",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "views",
+        "growthScenario",
+        "page"
+      ],
+      "listCounts": {
+        "views": 7
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.price-governance-view/v2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "resourceRevision",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "views",
+        "remedyScenario",
+        "page"
+      ],
+      "listCounts": {
+        "views": 3
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.media-studio-view/v6",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "slices",
+        "providerJobsStatus",
+        "providerJobs",
+        "providerJobBlockers",
+        "mediaFinanceStatus",
+        "mediaFinance",
+        "mediaFinanceBlockers",
+        "lifecycleStatus",
+        "lifecycle",
+        "lifecycleBlockers",
+        "publishStatus",
+        "publishContributions",
+        "publishBlockers",
+        "cumulativeGateSet",
+        "page"
+      ],
+      "listCounts": {
+        "slices": 3,
+        "providerJobs": 0,
+        "providerJobBlockers": 0,
+        "mediaFinance": 0,
+        "mediaFinanceBlockers": 0,
+        "lifecycleBlockers": 0,
+        "publishContributions": 0,
+        "publishBlockers": 1
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.price-governance-view/v2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "resourceRevision",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "views",
+        "remedyScenario",
+        "page"
+      ],
+      "listCounts": {
+        "views": 3
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "status": 200,
+      "schemaVersion": "aos.ecommerce-workshop.customer-view/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "fields": [
+        "schemaVersion",
+        "tenant",
+        "resourceRevision",
+        "evaluatedAt",
+        "dataCutoff",
+        "readiness",
+        "views",
+        "page"
+      ],
+      "listCounts": {
+        "views": 4
+      }
+    }
+  ],
+  "businessComplete": false
+}

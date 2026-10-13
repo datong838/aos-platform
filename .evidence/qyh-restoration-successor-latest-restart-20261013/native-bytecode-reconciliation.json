@@ -1,0 +1,873 @@
+{
+  "head": "2324ba3916b39ed81d6527577f4d20ab3bd86071",
+  "selfGeneratedBytecodeRemoved": 216,
+  "declaredSourceFilesUnchanged": true,
+  "exactManifestRestored": true,
+  "noUserFilesTouched": true,
+  "removed": [
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/__init__.cpython-311.pyc",
+      "sha256": "9e9d69569a847631339201fdb5454144606bbfef40d4985015b75792be6740c9"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_action_adapters.cpython-311.pyc",
+      "sha256": "385b0c5927bffe8d497e6813499191b07c2848c21d8660f885f2cc7b1fb7143b"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_action_canary_models.cpython-311.pyc",
+      "sha256": "1af01fe37a23291e1742befe193d53a755f4238446c0051513d28c5777a1eb0e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_action_canary_service.cpython-311.pyc",
+      "sha256": "8637f46a731e6ebf7b8b3897c3d5a9fc85710b90d80d1ee7654c9cdd07dd46bb"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_action_execution.cpython-311.pyc",
+      "sha256": "95927e345ff08d60f111d09d777b6e73911abc92d2fd54db62c56c91e53911c8"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_action_models.cpython-311.pyc",
+      "sha256": "2a12b53c54d58f52a7dde1b49c2146f2c6c34156b53f69a9ef2c380e11849564"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_action_policy.cpython-311.pyc",
+      "sha256": "877766165e93ff1fe3cad297fb58a1c3628fa1af43e674a94d2410b03e1492d8"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_action_service.cpython-311.pyc",
+      "sha256": "0d2e355f51b8bac6b2cd1b58ae6796b140b63c2a9487e506eeb386a6aec3dcb0"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_action_store.cpython-311.pyc",
+      "sha256": "85ffb568e148814dad09f90d663e13d65a51bb56a99f3026ca5cf7df35f6dc12"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_adapter_contracts.cpython-311.pyc",
+      "sha256": "bca624e2605d83e9cbc128877a9b623dbdd9216784ad1493285c220fed5c9614"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_agent_registry_contracts.cpython-311.pyc",
+      "sha256": "1f9bc46b27cd63b372fed0aa6cc1a99afc753c83bd7a66b55ed1e78ad440421b"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_agent_registry_store.cpython-311.pyc",
+      "sha256": "3c33fc4e969ca79df37562257fb4e7d7f471df8115039a7c65121f009e972891"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_assignee_resolution.cpython-311.pyc",
+      "sha256": "7b19ab96044862845b67367b657be4ee6cc8ba4c480dc61dfc9e0d528e3fd127"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_assignee_resolution_store.cpython-311.pyc",
+      "sha256": "45c39613dcb3a83d838794d5434ea083cd4e283b69919703239a50d84f340162"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_binding_api_contracts.cpython-311.pyc",
+      "sha256": "a5f94f8481c842792907559fad256757791c45600e579efcdf8affb64c7683de"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_binding_readiness_service.cpython-311.pyc",
+      "sha256": "feddb3cec44dce2cbb1af9607916c1e92fb747f786a7db1ac993fbf940c7c80b"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_budget_contracts.cpython-311.pyc",
+      "sha256": "fb0b150d9e5829474d05759127f8e3ebb11cc11da7c73ff490ef9cd31449793d"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_budget_store.cpython-311.pyc",
+      "sha256": "ce4213c8d5f45c698632eb5f437b8b3bfc6f313ffbf56c2447d2f3105af1a37c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_business_investigation_responsibility_template.cpython-311.pyc",
+      "sha256": "3c7a69bdc72eb358ec08babe0577a4c09c9d2d8759ccb466da61103e31643c7d"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_capability_binding_service.cpython-311.pyc",
+      "sha256": "92e9f6511d6601078884279831becc0e499e77c4fc3b3871c18511da0a24493d"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_capability_registry.cpython-311.pyc",
+      "sha256": "69b106c29d5c3f0f0996950c0e64e84d2ce68a047d8b3fe39c80b9fe6f3fe5de"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_contracts.cpython-311.pyc",
+      "sha256": "c7a75d74bc91822330229dcd1309e7de412721ebb9b52f88518e7c0bb34371d6"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_development_cost_authorization.cpython-311.pyc",
+      "sha256": "19de3a0d6ed32991757233789f4baaecf0a17bc3b4dba7eeba64409fbe57b5a6"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_effect_review.cpython-311.pyc",
+      "sha256": "812f8700e12a5a9194a0a24eb0ef96479f870e0c2cf199d459a287133a403024"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_effect_review_store.cpython-311.pyc",
+      "sha256": "ea2516e096547e98865cdb5f30bc9e394b27b4c691995e8f2d1fba9dd84fb1bd"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_eval_authority_store.cpython-311.pyc",
+      "sha256": "db461f3d57439e0c5b053455ab97f3bf924a49a66d8250df8c2632289875d0c6"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_eval_contracts.cpython-311.pyc",
+      "sha256": "7d3ffed71f344e1b56cda24d6052a7398dbafe988158e1fa3c3567f13a5ef73e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_license_source_action.cpython-311.pyc",
+      "sha256": "a572991a0ff71ea7b1884a7fae6d1d6f4ebce72a0dcf2892f99d205a55bd3977"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_lineage_service.cpython-311.pyc",
+      "sha256": "3469495fdcbc969837a2c8d1b6bc49ec149b5cc6f8578fcbfadd6f46876dd3f3"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_media_finance_contracts.cpython-311.pyc",
+      "sha256": "d131ce64740f55efcc2624587af74c59d2c6a3b66f6f53a4df3f677fc9602031"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_media_finance_store.cpython-311.pyc",
+      "sha256": "f027808fb007ebc1644e63ffbdeb71812cd7a9fc59bbf69c55777deee76cbcae"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_media_production_templates.cpython-311.pyc",
+      "sha256": "31dda70ded3f19704eb205ccc103b21f25e464a85ea65b3abc69cee8adc561d2"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_media_provider_job_contracts.cpython-311.pyc",
+      "sha256": "ff4e6ad3c70c3211d75ce9bea8ceba27b813fa0e6adf18c169d1e67331b5df22"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_media_provider_job_store.cpython-311.pyc",
+      "sha256": "6570c525fbf6ba73e8ea8e8ed046b30df4b350f33bc40d9acef374046e4333e2"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_media_responsibility_capability_map.cpython-311.pyc",
+      "sha256": "83d7545dd05bf4007e21e189c1c41c813b0118b2cf8bafceb8275d176dd08b57"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_memory_contracts.cpython-311.pyc",
+      "sha256": "4b9b657a2366dba54e34cfa8ba5930d31978333625906876a2e36517a946556d"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_memory_store.cpython-311.pyc",
+      "sha256": "8f6c72d1dff3461013652151f2cdb6241d8d104ced371c7949944bb5eb45b756"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_model_eval_authorization.cpython-311.pyc",
+      "sha256": "189ce54557294c57ce67d99ec98f126d267488c0c500b382fca572d98485b5c3"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_model_governance_policy_contracts.cpython-311.pyc",
+      "sha256": "b6523d7d96a9cc61d6779deabefd142f32cc50de46c59a14b93ba89bf8a299bf"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_model_governance_policy_store.cpython-311.pyc",
+      "sha256": "7177d2d184422c1539a548071111e6a918d91ff6730fdab04fb8ae09959ee4d3"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_model_runtime_contracts.cpython-311.pyc",
+      "sha256": "405329aeda04c861377434fe25e3e9910bb492cec58c353aca0de5e32c079c31"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_model_runtime_resolver.cpython-311.pyc",
+      "sha256": "ab3e997a21bbcd1286a2115920f75a24e61cfb972e521f88f78d88cf6cbfff4c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_model_runtime_store.cpython-311.pyc",
+      "sha256": "b3ea87f1c3aed16cbbee0bbf507e001f1030835ec8e1d99bbee49d8ace3e8cd4"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_network_policy_contracts.cpython-311.pyc",
+      "sha256": "cbaabe1b43ebfb27685911b326c2a3aa3d15938e393f0916c7ff80c613eb6008"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_network_policy_store.cpython-311.pyc",
+      "sha256": "f700f0113a60103e4a9ed1d506065c8ab0b81b7a345a50ddfdbd5debbd2bb81e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_policy_activation_action.cpython-311.pyc",
+      "sha256": "6f1d294b08d2a53d285b2deb812e2ababf0deb2458be20ad51fc286369cd7c7b"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_production_contract_store.cpython-311.pyc",
+      "sha256": "a463dd11c272649f45b209c3ab7a8c1d9cc932b8f59dcdfab8fba6436da43f5e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_production_contracts.cpython-311.pyc",
+      "sha256": "b09092f595d875dba412e17cfa92bf73be587285c4f27109e8f72afe953aa4df"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_production_profile_contracts.cpython-311.pyc",
+      "sha256": "d16e0dc1e9398e8f0a8feb7e536f9d8aad4793a7f1f081ee2243f13691b44318"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_production_start_service.cpython-311.pyc",
+      "sha256": "f5e01a81ad629ef0d965568441840d64df291481ff25db417b48c406530cd847"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_provider_health_action.cpython-311.pyc",
+      "sha256": "63945598654a3f32a7e71e16446fb1db76bbb9f935bb93df6772aa3a08b4c334"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_provider_plugin_authority.cpython-311.pyc",
+      "sha256": "86ce36a45fcd73016a49248b45bb6d4b3e83cde32c46741d44d7f05899be2f14"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_registry_issuer_connection.cpython-311.pyc",
+      "sha256": "0ab78e9f26afa0b57b2921346073342f5fad880475a1279c7bced15cf14ac125"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_responsibility_template_authority.cpython-311.pyc",
+      "sha256": "6f110c898f14d2d259259a710156e5c4a5c43734db8f651de5f0b595f70530b5"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_runtime_guard_policy_contracts.cpython-311.pyc",
+      "sha256": "0f93dee5823e93c52aedb88fbbd7592b7c727e498ee3d0f0506ab91635663c5c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_runtime_guard_policy_store.cpython-311.pyc",
+      "sha256": "9fe4266996bac3f3a2671bbb704d44446e8242565f832ce9795e9ce9cbf091a3"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_skill_registry.cpython-311.pyc",
+      "sha256": "435e5bdba0d6ab93609735bafaf4e3093489b3e390dc0a9cb6b110142eb9175e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_solution_pack_publisher.cpython-311.pyc",
+      "sha256": "435f17dea332e7af299ac131298c9dd184ebc6eb83bb552d27c35b46e5547297"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_task_models.cpython-311.pyc",
+      "sha256": "131b88c5e212b709172085f13367e734130d50e5fa2f6ce4cc3c6e0862e15da5"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/aip_task_store.cpython-311.pyc",
+      "sha256": "8520fa375bac37d0db9aee4f856cda802533464fad5d8c7c7571cda14bdd3300"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/auth.cpython-311.pyc",
+      "sha256": "2cbb7ba300cd6dcbf313d0ef60f6c042dbe01da9efc56a3d5bd7d419cc251196"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/db.cpython-311.pyc",
+      "sha256": "ae07dea5b5b49b1ee6ad81bb0751cf31ee0f8fb23c2536aa31ce15434a133d8f"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecom_core_models.cpython-311.pyc",
+      "sha256": "27a24cf9badf7da93a7ad19c31a4fd2e083e1d2f45d6e8873c727ad9b9523ed9"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_aftersale_event_reader.cpython-311.pyc",
+      "sha256": "2aea48f3cb5944e78e122b04a8aa937453c7da13df9e2cb073b55ab641c0865f"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_content_campaign_authority_contracts.cpython-311.pyc",
+      "sha256": "8e7d28602071f50bcf14e31169c470f552447f39b46c989c7fc587b080dabffb"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_content_campaign_authority_store.cpython-311.pyc",
+      "sha256": "343b2cb0a65c97c4e743272321fa295e76a34b8a9b7bbcd8f20ed27e94daa398"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_content_campaign_workflow.cpython-311.pyc",
+      "sha256": "cb131820fd56dfdf41525f01e86c52558fff479601ea624f0f3f5bcb8883cd50"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_content_campaign_workflow_contracts.cpython-311.pyc",
+      "sha256": "8e6651429ed6f8e6f51c74338a444f648d320ce8aaf758d7b5059b89ad450b5f"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_creator_internal_workflow.cpython-311.pyc",
+      "sha256": "97d7092ba318ab2756abecf000ca3895436e66932f3f2a0234eb9ff2a3b0d423"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_creator_internal_workflow_contracts.cpython-311.pyc",
+      "sha256": "b18df0f6e648862dec35281a3b333b62d1951276051c8823512997392f8aae51"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_data_authority.cpython-311.pyc",
+      "sha256": "fcfc80e818083c434185e2e2c464d2a5d5639d24c059095acbb6779692fc9aed"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_data_authority_contracts.cpython-311.pyc",
+      "sha256": "0ee9418d73ace8a2b9d4645f665f7b1824d7879a28baa9a6583215b00616a385"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_growth_daily_review_target.cpython-311.pyc",
+      "sha256": "ca86fc777da3f14e1202eb5f9f02d616c845320d7b2964aa3b044b11c4261d25"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_growth_effect_review_owner.cpython-311.pyc",
+      "sha256": "7ebb41c1dd30d507bfe5c912b79f568a9a5203ec867f99fc116a252648c262ec"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_growth_feedback_port.cpython-311.pyc",
+      "sha256": "5856b38bee5a179ba24fb1cd7b25d7cad65b48a2b2adc18bd7b553fc7c37b9b0"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_growth_host_ports.cpython-311.pyc",
+      "sha256": "654be6a9f1458e54b8c8faa6569789546b1d5d3500876e48e6fc8e904f4ed1f6"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_growth_improvement_target.cpython-311.pyc",
+      "sha256": "1b2e897304a4a0f3b92d69dbe531c0fba80fb4297a371580eb8bcaba8543b201"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_growth_memory_candidate_target.cpython-311.pyc",
+      "sha256": "2a4fef3e2728443c17ecabdfd463c212bc8b0fc955ca948f1df3ecc3c1732ae1"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_growth_runtime_connection.cpython-311.pyc",
+      "sha256": "013cd98764386e4a11ba5a62bc8cc3c97c89c5b88fc070879068e4408047bc8c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_installed_readonly_catalog.cpython-311.pyc",
+      "sha256": "0dbdf2b845dc07302254b4f63d351d2c92caf96d002bc311bbf4380c5358c836"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_inventory_reader.cpython-311.pyc",
+      "sha256": "0664bb3ade1b2e527f3a3da5a60e9893ea964eed676ba0079928af7601be65af"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_inventory_reader_contracts.cpython-311.pyc",
+      "sha256": "69f0d42cea52cca0a48cd2d92ead4b41bad4b867a2618afe6a4acffa01ccd212"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_media_delivery.cpython-311.pyc",
+      "sha256": "e24df2d2e41067349af7d8b0444b1c58dfcfbc6e24fe1537e954dab563fece0d"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_media_delivery_contracts.cpython-311.pyc",
+      "sha256": "1c55713437fc91802261d0d2bb0ed2603040a5a0ec3c03fe459c13005811890c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_media_internal_workflow.cpython-311.pyc",
+      "sha256": "a9d88aa91a2c255e8048fbe14364438c978e6d4de953604bba8922f67e723740"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_media_internal_workflow_contracts.cpython-311.pyc",
+      "sha256": "afefa443fb5d76b270b412569d1d7c969be36e72dbc945403d03bde9f1b042ae"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_operation_case_contracts.cpython-311.pyc",
+      "sha256": "d459d2a7b34d5e565ca2401166900f67ddfe5c2de27980b4379c5a38c06f7504"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_operation_case_store.cpython-311.pyc",
+      "sha256": "93e2317b93c3d10fc064216d23d8a57f4b51be29c17bb9ed01d20e5149bebf73"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_operation_case_workspace.cpython-311.pyc",
+      "sha256": "4cec350979a44f53ad10ca6a1e28584bb0f27e83d0d4195ba242ef55ac79f718"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_operation_case_workspace_contracts.cpython-311.pyc",
+      "sha256": "630de1367472e60b7a6ed25dcd1d89f8ce575f550b1f68f17a0a0b091b1d337f"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_operation_command_contracts.cpython-311.pyc",
+      "sha256": "d307814d766bc100ac3f784833ba59144369c56b3f056c7e56726d8b33c432f7"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_operation_command_execution_contracts.cpython-311.pyc",
+      "sha256": "494e05647fd898c582fef95206aae59afbbaf346377de174d1aa3115e9b9d285"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_operation_command_observation.cpython-311.pyc",
+      "sha256": "03eb576c3cf6631d9fd6efbf3d5151c12ac8998bf9e4dce5f45424aac976259a"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_operation_command_service.cpython-311.pyc",
+      "sha256": "51f7acd2e6521b40c36393867b21a61e89680c8a3e270925561a230a7d8923bf"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_operation_commands.cpython-311.pyc",
+      "sha256": "f8c64b61ba7c9617684f8b2ab1415ba2e8fb7499f5567d558b85bde7d37f9cb6"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_operations_object_reader.cpython-311.pyc",
+      "sha256": "816c67d039e161ec18d484093fe42bdeefb3a17dc79733701d7dd8ec3e4cdd5e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_analyst.cpython-311.pyc",
+      "sha256": "c4e76a14d05b5780558d0e326ef3ad6ba9e73dd9a77ba074ae02ffd478699930"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_analyst_contracts.cpython-311.pyc",
+      "sha256": "f098e46e1060f39690a74430f840f09a8bb8a7fd34660e53ec2dd57944ab138b"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_analyst_reader.cpython-311.pyc",
+      "sha256": "12de3231b215530c8f170cdbf2e71ea77660e7244943376e0912859915d3fb83"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_analyst_source_reader.cpython-311.pyc",
+      "sha256": "31e444c6a788c87665334e3642e1692b19e5df2ee0ed2c9baea11e44623f573c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_batch_scenario.cpython-311.pyc",
+      "sha256": "14982ce3acf580e74b036d14a3a25af6b6819d65d419748a9c53280241833492"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_batch_scenario_contracts.cpython-311.pyc",
+      "sha256": "1fa7791cb4dcde780039e9614a3a8da80fdc17c15b41b2ee1cd33b18e8bbe6a9"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_catalog.cpython-311.pyc",
+      "sha256": "94b2f7157c96b615a488c4102d5362441213b5b8050b75091c112efe351b0d88"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_content_campaign.cpython-311.pyc",
+      "sha256": "d05208bd8598dfe4bc592ed8fcfead1aaf622777a93614513704d0597825559c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_content_campaign_contracts.cpython-311.pyc",
+      "sha256": "493efa7cd723e34bf44d1cd402057e1dd0942b5b16e965c5cd10a11ca159955f"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_content_campaign_inputs.cpython-311.pyc",
+      "sha256": "e23ed645efb75e2e7225957327921a5103e1ed77305a14a052d98542a024fa33"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_content_campaign_inputs_contracts.cpython-311.pyc",
+      "sha256": "515bb9779e4178c6efbdd8113ac2e2f192ee57456feb9f1c56072995dab5b7db"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_contracts.cpython-311.pyc",
+      "sha256": "5a83b01d6751ae8c1433a573c7ec6c7cdea4412fbd3c91e98905b2bbe0147e85"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_creator_growth.cpython-311.pyc",
+      "sha256": "ede37e6ed85a1e08b23f619bbf7ae306c12e60dc6ceb215d31501e1a048406be"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_creator_growth_authorities.cpython-311.pyc",
+      "sha256": "62009e200b623aa63b44dd45eeb86a8defd6591eae75595359ac30a9269b6f75"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_creator_growth_contracts.cpython-311.pyc",
+      "sha256": "1fbc132c51c98782196dbfee4b34e991e14973c4f150e54fa053c56f013374da"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_creator_growth_store.cpython-311.pyc",
+      "sha256": "aa660b5217f0c9c5009e294630416418531f9e699e269b4c3a021f7cdd552909"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_creator_lifecycle.cpython-311.pyc",
+      "sha256": "234d3a35ef493fe37f64aea2ff637967e48f72a7fc1f42dd4b0beab451a60f5e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_creator_lifecycle_store.cpython-311.pyc",
+      "sha256": "27ba5be6760447a297b7f8d994006097c7bb23a3574cc04dcca1cff461702d57"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_creator_prepare.cpython-311.pyc",
+      "sha256": "832a684a78bd4320713aea5278562a9591936dc28804d0c9fff4e41b798176e7"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_creator_prepare_store.cpython-311.pyc",
+      "sha256": "c0e81a3540e697d48992d4ddf7c5fbc85671f01454631039555663f364c82ce1"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_customer.cpython-311.pyc",
+      "sha256": "c0a03fa9bb0fae4ee3f8f6dc40e5321d315f4ad3e867cbe208d17a151a2ce86c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_customer_contact.cpython-311.pyc",
+      "sha256": "8f20b9d1c054fc2ecf7c19b8ac3e1b31cb6c3132f55f2dfeb54fa0b096635c53"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_customer_contact_store.cpython-311.pyc",
+      "sha256": "6a84a6ef6527caacbea78454698dfc83de1cd5d5ebd8708972234e5295adaf11"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_customer_contracts.cpython-311.pyc",
+      "sha256": "2cc0c7b80e0d380563d3f472862a954ac1d2d86a3602c6a13910c4871c757e1d"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_customer_lifecycle.cpython-311.pyc",
+      "sha256": "36bc3c1637d97073d77f5bfb76718b07fc408446dbaebb7e6efc4f1231a3d8ba"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_customer_lifecycle_store.cpython-311.pyc",
+      "sha256": "1bc1b3b21155814fe1d4d52f3fb924668814dceedbc66289a079a4750a9ae54f"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_customer_reader.cpython-311.pyc",
+      "sha256": "c6cfac1169cccee36b5e3af133923ba61be537dcacba8edcbff75a559e474c6d"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_customer_source_reader.cpython-311.pyc",
+      "sha256": "d48b483c4a24e364d824ccbafe2ca764e873273b2ea4524477e6d00f39a6c062"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_dispatch_scenario.cpython-311.pyc",
+      "sha256": "94a2eafe905184bbd4829b1914b98108a842b46840a185997dd3d0727f32ec31"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_dispatch_scenario_contracts.cpython-311.pyc",
+      "sha256": "33aa92076c14e3443d610a87861f0f3b0400fd39ecae8077a8533af49f139a8d"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_evidence_build_service.cpython-311.pyc",
+      "sha256": "612cb9d983d545cf0a9032d0193c1a79000a12ef5666a51aa7feecaf01831a8e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_feature_activation.cpython-311.pyc",
+      "sha256": "5a64dbb02770f50d4ea44cb445d44208868543de1c13c0ac298e304bcce01433"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_feedback_read_contracts.cpython-311.pyc",
+      "sha256": "f4a50d72633f7a46dc58438be82c0ceb31a0b748f902dead67e691230c6773e7"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_feedback_read_model.cpython-311.pyc",
+      "sha256": "32cd0225af7338d56882329d5345726a718f9f232e4cbe57870423e36ad34fb1"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_freeze_contracts.cpython-311.pyc",
+      "sha256": "dbea502f57f98d71f7cd0b69075873ed3ff0e28b778691f3d65a14847baf4d82"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_freeze_service.cpython-311.pyc",
+      "sha256": "8f442a0f23933c2225ead84b9cd27641d4b29d034fa5e379edfdde0dddfdb911"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_full_video_scenario.cpython-311.pyc",
+      "sha256": "968a69e31be62c8fad8a6796b53af12554a85ef580b876cb565a67ad6c758fa2"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_full_video_scenario_contracts.cpython-311.pyc",
+      "sha256": "a7c772ca32f63e6e392e64108ef4ace523334622f44482393828c0e8bf79c11b"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_growth_scenario.cpython-311.pyc",
+      "sha256": "6046dfec43cb37e8dfdf1e25b7a21f8255273d9c97c3c124ca6b0f06dc2723d5"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_growth_scenario_contracts.cpython-311.pyc",
+      "sha256": "08ce1d5a1a4a6d0fa38b0816c9280ce0e5c1f9d4c989d401d9903a90695f79ca"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_handoff_contracts.cpython-311.pyc",
+      "sha256": "8c16e4412eea27b4e2669a28b2334eb9872744311db0aeb40369a39dc91e0356"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_handoff_service.cpython-311.pyc",
+      "sha256": "146618a8185daa38b09044e5686d108a520f962a5c3b782b6f93e98bd189f64c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_learning_scenario.cpython-311.pyc",
+      "sha256": "7d8ffd820205f0aac67557f87f2d10aa06a1172f4ee44b899f95b5fc4f987e2a"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_learning_scenario_contracts.cpython-311.pyc",
+      "sha256": "90e17582abb73190a831d50c2fcaa4a2116cadaefdd88d4adf1f23096871edd9"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_media_cumulative.cpython-311.pyc",
+      "sha256": "78b5911e94355c10575602ecd54547ef4a10c84a0502420d112fd5ef8c1cd32f"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_media_cumulative_contracts.cpython-311.pyc",
+      "sha256": "39811fef72bd3eda0c69b029ff734e7fba7d2895bb192955e4c5ce4e7127d089"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_media_publish.cpython-311.pyc",
+      "sha256": "bea0206460e83f36c3cfc2efab33671cb91907a76785a711c929b511ba2addab"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_media_publish_contracts.cpython-311.pyc",
+      "sha256": "d40dca215d328b97bcc014f43c6d6aef3a89c3269ba40ecb44d0234a164e7b69"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_media_studio.cpython-311.pyc",
+      "sha256": "28d23cab17a14fcbead6c5a37ef278ed75b2c477012a74dd4596ffc34f81885f"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_media_studio_contracts.cpython-311.pyc",
+      "sha256": "03198c4fb02a0e97f8ac54e7d0de881e6daadb0c4273d3e3b98adae806913d2e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_media_studio_lifecycle.cpython-311.pyc",
+      "sha256": "62fcdf7a75220b68c874bede55cc3748be014123d0eb781efbb26dec10b85a59"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_media_studio_lifecycle_contracts.cpython-311.pyc",
+      "sha256": "fbc93e847f539f0ee1e000b377f74194532aa86d587e503e664b1c530ea98dea"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_media_studio_reader.cpython-311.pyc",
+      "sha256": "6d76a30803d44c72b86c614c08fbae635f90e8199d45a1727990a37751f9becc"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_media_studio_source_reader.cpython-311.pyc",
+      "sha256": "2eb7593f64fd9e12b64eb9139cd3e84e7adb9736ecd106795e18301a6d14eca2"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_operations.cpython-311.pyc",
+      "sha256": "91019be8a6213a6ad46b2597abea766ffbfb2710c64358ba94475e90b72e8101"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_operations_contracts.cpython-311.pyc",
+      "sha256": "7d32cb728f1ac4d5cbdc5047defb797efc0ff0f75111fcc66c8f3013836832e6"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_prepare_contracts.cpython-311.pyc",
+      "sha256": "f1d169de5b4ef4473db7b098ff08bc48ae45d96a2385564d667935f9fb0efc38"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_prepare_service.cpython-311.pyc",
+      "sha256": "88c6f4f51d72be6dcee8647cd8ce7dfb7afa8e752faf4ada48d762c0fdae0ee8"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_prepare_store.cpython-311.pyc",
+      "sha256": "fbd975c1c523fc4dcf5920327449e9c39625b0fbe7da0e2065d601ec14f1f9cf"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_price_disposition.cpython-311.pyc",
+      "sha256": "ae1c0dd77f9a6f6c57b6956be3c35bc804e5b5f7b0973c3d472ae61db7cdff0d"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_price_disposition_store.cpython-311.pyc",
+      "sha256": "80acc123d06f5d4ae1e1b6478dea835401bd69d5a5bcf3adb9b97565b5a2b96c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_price_governance.cpython-311.pyc",
+      "sha256": "5addf27953448077cab8172a9d3499372da8890c4414cb2c64d4dcf5c49f0876"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_price_governance_contracts.cpython-311.pyc",
+      "sha256": "aa5b44a8ba04c77b0066549dd396cf3ea1603369ccfcb7c809bba4eb4f523aa3"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_price_governance_reader.cpython-311.pyc",
+      "sha256": "ab9996b835d2ce6583a6a49641bb7b5c8f610492c72e4ebba4d0584f12675a31"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_price_research.cpython-311.pyc",
+      "sha256": "44b96b14b796f709948b4b3153c11b51cfe7b2a3e6715cb45f30d607fbdc6602"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_price_research_store.cpython-311.pyc",
+      "sha256": "ac4767919dbf29756b3c24c7b4004d9ff14b822a409f24bf6e6ea6121f4f6bba"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_read_catalog.cpython-311.pyc",
+      "sha256": "9fb5f055a768672f2daf1d85545201465d2da03f4fdaf6cbe37ac6ddd3383e79"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_remedy_scenario.cpython-311.pyc",
+      "sha256": "07cc12e10618ebfabe536f8c79add7fcf1b7c34297d36f12d7167fb3dd9126c3"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_remedy_scenario_contracts.cpython-311.pyc",
+      "sha256": "4b4930017b4b2ce53060241c7e93a113c05b56abc2991b05b25bcd5829559c03"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_shared_context.cpython-311.pyc",
+      "sha256": "446e881953912e86e1baa9f2c8217721d1af7887c070bb90b791e4adce8f06e4"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_shared_context_contracts.cpython-311.pyc",
+      "sha256": "fc6c723d09110974273f81808e80f75772d066aa9826a8397a32ea70927ff9cf"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_shared_context_reader.cpython-311.pyc",
+      "sha256": "2bf58f0d5420973ed1735ce9cd416f7502a1d93d880a8760d9cd12be16f941e2"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_source_readiness.cpython-311.pyc",
+      "sha256": "0642fb78e98e9440f8cd685b1eaecafdb8c0513301306d713d081d1264949ae6"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_task_cockpit.cpython-311.pyc",
+      "sha256": "efbd169a0a320fcac109cb6d4dec8dc07258e26758aebd762858ec1a066e7708"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_task_cockpit_contracts.cpython-311.pyc",
+      "sha256": "22aedcf45a065e8e6d38434d8302fca89f6eafb111f771134c45177a88ae6782"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_three_module_closure.cpython-311.pyc",
+      "sha256": "3b12ae9c42ed904f24273aa42789b1b4a05e97aa7a9f80a33560ebde2bc09a46"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ecommerce_workshop_three_module_closure_store.cpython-311.pyc",
+      "sha256": "f477b3e4d177e43e9323f00f2c402f391e1c515a6d038316c19342a553730885"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/env_load.cpython-311.pyc",
+      "sha256": "2e32958a72062feb0002dc92e685eb84a2dc1f150fd9fcc1ce8c407feac838f2"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/errors.cpython-311.pyc",
+      "sha256": "e136e4cbe81a9bc358cc562c15bff647a822621a9235e2a6fceaef37774bf2ad"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/logging_facade.cpython-311.pyc",
+      "sha256": "b42b1a9e44cef5a55a07f6f8a8654e9f42d07d732336660e682cfc69bc3c2522"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/marking.cpython-311.pyc",
+      "sha256": "32222381a7ea1c07ccea5448eb6ab7f7c74cb71c31b7cb3c9fa1579c4580033a"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/oidc.cpython-311.pyc",
+      "sha256": "3ac1de401fa4ac8d06d892a6082817f16ec8dbff678cfc6ec2b7567c70adb5e1"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/ontology_compose.cpython-311.pyc",
+      "sha256": "3584600f6a2ed08da7c0394545d7095becbf87c94262ed531ee5941ffc51db04"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/openfga.cpython-311.pyc",
+      "sha256": "1494c1b547813a6c699c02f48cf6ded894f43feea752faa8e62dd5ad1a83b873"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/public_contracts.cpython-311.pyc",
+      "sha256": "9a848bf7f0504279ac70685c4f575feb7bca8876299f0563a0681227b7c5ac7f"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/qyh_cron_scheduler.cpython-311.pyc",
+      "sha256": "e9f4cec58627c8126e5e5cb6ee897ad425fa088a9d58fe5b78e0e5d31caf2635"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/scheduling_engine.cpython-311.pyc",
+      "sha256": "03bd40e85e2629367ff6e4546e98548551d8bb0330f0b7a36713daea88be0d80"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/source_readiness.cpython-311.pyc",
+      "sha256": "0976ff8dd9788dd848ebc5c372c4960721520dfabf5d47051d0f81278350eed6"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/source_readiness_contracts.cpython-311.pyc",
+      "sha256": "36c034fe380bae5e5c45297d468cb8a5d8efcbd56c0a403909979b69e606ddcb"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/source_readiness_snapshot_contracts.cpython-311.pyc",
+      "sha256": "d1bc93cefcb5b343b7134a45899514eb466e0a87195f84da731060b2f34818d3"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/submission.cpython-311.pyc",
+      "sha256": "81282b9865beaa4638b3da97c89e604ba5e863abe8f93b7605a01d0e9d61b71b"
+    },
+    {
+      "relative": "services/aos-api/aos_api/__pycache__/tenant_scope.cpython-311.pyc",
+      "sha256": "9574b10d998a13bf452ebc1ecde171d3ff19df0fad7b4e33ac0d1c5be11e913b"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/__init__.cpython-311.pyc",
+      "sha256": "dd96a58e3c2981946fb57ebc1f0b7b98870db426231f5ecad4f05a30191e87db"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/canonical_json.cpython-311.pyc",
+      "sha256": "5af9cc492e21b1049564dc879237a3ede90595d1c5deefa43d1a5ab1f7d13999"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/composition_contracts.cpython-311.pyc",
+      "sha256": "ef04e2587ea3148ff6b2df935f0cc5d8a59d3f472831a283df62afdac35d9814"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/contracts.cpython-311.pyc",
+      "sha256": "7ca01ca97d99a1b6064cf66b2aa3f4dbdd3425e7d0a7bd7688a2498e79468fe9"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/control_policy.cpython-311.pyc",
+      "sha256": "025487c61eae0d9f743e33805328e17288b4f8e3467419f90882f4d81629776e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/control_protocols.cpython-311.pyc",
+      "sha256": "eb8468d038f5d127fe80d7629c7f7c612dab19bf30834a4c46ccb2836dbdc94c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/control_wiring.cpython-311.pyc",
+      "sha256": "19f77ef440e87b24391b40df93f42ccecb98206bd6a07a5bee9f9aca3ccd9ced"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/errors.cpython-311.pyc",
+      "sha256": "b5e2c0c7f22e4a36f9c23bee0f87e3aded284ce2d46aedda48264ff900363250"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/knowledge_contracts.cpython-311.pyc",
+      "sha256": "3f26546a6281de3976eb0f7c304a0efcbe3d8c9d7a62eafe4e6284e2a6027a5f"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/legacy_runtime_boundary.cpython-311.pyc",
+      "sha256": "8bceb6881ce47084bcecbe325dbcfdf18aab82f00a8c6644ff9d38de4fe042d4"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/manifest_loader.cpython-311.pyc",
+      "sha256": "17da0d527db40df23614a20419787c09ce0451c96fa752631e141c5e2a6c9749"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/registry_service.cpython-311.pyc",
+      "sha256": "8126d032308b4cf18f12ae8ab12c514f61e1f0608756bd58e1b5548009bc7961"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/registry_store.cpython-311.pyc",
+      "sha256": "9362d54855329179142dc3dbc2f9338730ea545b4abede55de7bdd08d7ea4680"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/release_policy.cpython-311.pyc",
+      "sha256": "1667b73bfba28124c2401babb744c38143ecfd4350ceaf106f347b9c45c94bdb"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/runtime_contracts.cpython-311.pyc",
+      "sha256": "e6545912b9991f6d2a485927a92f392855394e84b2893b04b9c7360a10508907"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/semver.cpython-311.pyc",
+      "sha256": "d5285b6b170a1ded8a043811b31e60024ae9e5b46fb7fa3b1eea191e006ee505"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/signature.cpython-311.pyc",
+      "sha256": "321e3ed17cf1b0a75f5dfe12da44e361be2b22c023d84009006da98f148bda0e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/tenant_transaction.cpython-311.pyc",
+      "sha256": "a4422c45e2ef31da06a6032f104beab3bea15ad55ae7d1d58d0d8081449df1d7"
+    },
+    {
+      "relative": "services/aos-api/aos_api/asset_registry/__pycache__/workshop_catalog_source.cpython-311.pyc",
+      "sha256": "b73ced7f8a4e12c7a2b28aeddcf4405c25530f3a50c02f4598398e32d447164b"
+    },
+    {
+      "relative": "services/aos-api/aos_api/extension_runtime/__pycache__/__init__.cpython-311.pyc",
+      "sha256": "a4ef3de2bb8447632e64981a5773abb54ffbce0fb5a7020471d7000a3f7ee96e"
+    },
+    {
+      "relative": "services/aos-api/aos_api/extension_runtime/__pycache__/lifecycle.cpython-311.pyc",
+      "sha256": "85c643063fc093cc8e7b4a689f5c15e602f1b9fc5674bc7c59cab0259b5114a4"
+    },
+    {
+      "relative": "services/aos-api/aos_api/extension_runtime/__pycache__/lifecycle_store.cpython-311.pyc",
+      "sha256": "edf21feabbf8c29f2f99d76493bde9b0ae9fe01be82df007a6d3e1de866c3fcb"
+    },
+    {
+      "relative": "services/aos-api/aos_api/extension_runtime/__pycache__/query_registry.cpython-311.pyc",
+      "sha256": "ac4f3dfd49b375d66939594bb549742fe7a39f67c06b011c1be7415653f82671"
+    },
+    {
+      "relative": "services/aos-api/aos_api/extension_runtime/__pycache__/runtime_connections.cpython-311.pyc",
+      "sha256": "f6c39f6493c77f92c684f91a63c8f0aeb96e7cd4b033ab40deaadbd4a1c18a47"
+    },
+    {
+      "relative": "services/aos-api/aos_api/extension_runtime/__pycache__/storage_ports.cpython-311.pyc",
+      "sha256": "898dcced14091618d05052273ce4bf6400c7be22150685575f69123af6530dd5"
+    },
+    {
+      "relative": "services/aos-api/aos_api/routers/__pycache__/__init__.cpython-311.pyc",
+      "sha256": "5feb3b0f306161ba7de96e7a6e66d6a54e66c7fc42fb1dd506d9267fb6c7726a"
+    },
+    {
+      "relative": "services/aos-api/aos_api/routers/__pycache__/actions.cpython-311.pyc",
+      "sha256": "2ec1308ce5088a668235742f5f68fd9ac0b63834dd922e96fd4027c620589d6c"
+    },
+    {
+      "relative": "services/aos-api/aos_api/routers/__pycache__/ecommerce_workshop.cpython-311.pyc",
+      "sha256": "849ed6d192a7eb0b9c411fb2dc636438fdd0e15b23eca040bdf1683d4b58b8d0"
+    }
+  ]
+}

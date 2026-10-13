@@ -30,3 +30,13 @@ Rules：用户 AGENTS.md、仓库 AGENTS.md、aos-engineering-delivery、231串�
 内容审计见read-audit-findings.md。8root范围精确为/views/{task-cockpit,operations,content-campaign,creator-growth,media-studio,analyst,price-governance,customer}。新增HTTP测试用安装读取门和legacy门独立拒绝哨兵，实际请求证明root使用新门并传递真实principal的tenant/roles/markings；辅助GET、module readiness仍legacy；路由整体遍历证明任何POST/其他GET没有新依赖。认证401及未知query400保留。此层fixture不是原生/真实经营证据，安装签名/scope adapter已交付验证不重跑；正常读取正向需后续native/browser。
 
 兼容复验修正：factory必须用Depends原legacy入口，不能直接调用以绕开原HTTP依赖覆盖。安装factory延迟到legacy AssetNotFound之后才构造，确保旧legacy成功时不受未配置/损坏selected配置影响；不得缓存安装结果。这是已有成功legacy保持的必要实现，追加factory专项证明错误不回退、成功不触发安装构造。
+
+## 正常角色/最新运行验证与维护交接（2026-10-13）
+
+依据当前用户明确正式移交、原写者受支持只读回复确认停止施工与新唯一写者、HEAD32bd509/Authority2013/原volume及进程核验，原parent qyh-full-system-restoration-20261011没有Delivery。通过memoryctl.complete_task写准确HANDOFF_BOUNDARY_ONLY_RESTORATION_INCOMPLETE Delivery释放该parent Lease，不假扮原owner续租，不按TTL清锁、不声称整体恢复完成。current159-maintenance等其余原Lease继续保留。
+
+另登记qyh-restoration-successor-latest-restart-20261013，新owner负责原parent证据/实际原权威卷及API维护、独立新证据目录和已验证启动脚本范围；它与本GET Task范围不重叠。先新的私有Git archive冻结HEAD32bd509（不复制任何dirty/凭据），原guard只支持parent下source报告，使用独立新receipt stem、existing intent/result先只读对账。正常SCRAM/无SUPER/BYPASS三个原角色只读检查当前installation与8module/8root DTO，不造Principal或运行审批；真实浏览器身份仍原OIDC。
+
+重启前只读原volume/container/cluster/schema/全表指纹、现有process cwd/ports及零执行窗口；schema161当前一致则不迁移、不重跑备份恢复施工。核已有完整恢复演练/第二备份证据并当前摘要回读；若需迁移才建立新独立备份/恢复/逐步演练。先PG同容器同卷重启，进程结果未知只读poll，不重发；然后精确PID/cwd停止旧API/Web并通过原supported guard启动最新冻结API/Web，保留OIDC、selected公开签名根、READ ONLY和执行OFF标志。不得用原固定40434/ceba旧prepare脚本重跑。
+
+具体新文件均在.evidence/qyh-restoration-successor-latest-restart-20261013：plan.md、只读指纹/角色验证工具、fresh restart intent/terminal/public receipt、private固定代码快照的摘要证据、浏览器GET真实结果。需要生产script修改时先追加方案和专项RED/独立review；目前复用原supported脚本无production更改。所有新执行均有新一次性intent，已存在或不明终态先对账，禁止旧安装/HBA/Host维护、未知预算模型request、旧12Run、商城源/Provider。

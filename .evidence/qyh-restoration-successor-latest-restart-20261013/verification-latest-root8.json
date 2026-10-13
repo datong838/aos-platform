@@ -1,0 +1,131 @@
+{
+  "schema": "aos-latest-same-volume-root8-readback/v1",
+  "head": "2324ba3916b39ed81d6527577f4d20ab3bd86071",
+  "authority": "AOS-002014",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "cluster": "7695302940039200809",
+  "schemaVersion": "a0v_161",
+  "tableCount": 650,
+  "allSnapshotsEqual": {
+    "after-pg-restart": true,
+    "after-services-restart": true,
+    "after-browser-readback": true
+  },
+  "pgStartBefore": "2026-10-13T03:36:19.314142909Z",
+  "pgStartAfter": "2026-10-13T09:52:36.247449833Z",
+  "apiPid": 81071,
+  "apiPort": 18080,
+  "apiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-2324ba3916b39ed81d6527577f4d20ab3bd86071",
+  "apiSourceManifestSha256": "2dd77c7c0d05696c98c320ea0c2dbe38d69300ae01aa2e63d8a37eef488228d9",
+  "webPid": 81203,
+  "webPort": 18434,
+  "webSourceHead": "2324ba3916b39ed81d6527577f4d20ab3bd86071",
+  "originalHumanLoginHttp200Once": true,
+  "root8Http200AndTenantExact": true,
+  "all8OriginalComponentsSettled": true,
+  "observedAuxFailures": [
+    {
+      "path": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations/cases",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "status": 404
+    }
+  ],
+  "pagesWithReadFailureText": [
+    "operations",
+    "task-cockpit",
+    "media-studio",
+    "analyst"
+  ],
+  "httpNoAuth401Post405": true,
+  "normalOriginalRuntimeNative8AndCanary8Denied": true,
+  "dbWrites": false,
+  "migrationPerformed": false,
+  "oldRunsReplayed": false,
+  "hostWorkerProviderEnabled": false,
+  "businessFirstChainAccepted": false,
+  "wholeRestorationComplete": false,
+  "tabRetained": true,
+  "initialScreenshotsAreNotSettledEvidence": true,
+  "finalScreenshots": [
+    "final-operations.png",
+    "final-task-cockpit.png",
+    "final-content-campaign.png",
+    "final-creator-growth.png",
+    "final-media-studio.png",
+    "final-analyst.png",
+    "final-price-governance.png",
+    "final-customer.png"
+  ]
+}

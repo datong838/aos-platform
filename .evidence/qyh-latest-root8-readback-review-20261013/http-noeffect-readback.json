@@ -1,0 +1,20 @@
+[
+  {
+    "method": "GET",
+    "path": "/v1/health",
+    "status": 200,
+    "body": "{\"status\":\"ok\"}"
+  },
+  {
+    "method": "GET",
+    "path": "/v1/ecommerce-workshop/views/customer",
+    "status": 401,
+    "body": "{\"code\":\"AUTH_REQUIRED\",\"message\":\"Bearer [REDACTED] required\",\"details\":null,\"traceId\":\"bece0f75-24a3-4a04-a68e-a066f4215b0c\"}"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/ecommerce-workshop/views/customer",
+    "status": 405,
+    "body": "{\"code\":\"RESTORED_MANAGEMENT_READ_ONLY\",\"message\":\"Management inspection is read only.\"}"
+  }
+]

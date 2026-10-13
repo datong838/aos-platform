@@ -1,0 +1,9 @@
+{
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "origin": "http://127.0.0.1:18434",
+  "reason": "Web restart cleared in-memory session; original local real human login scope already authorized",
+  "credentials": "existing private user input,not copied to evidence",
+  "singleAttempt": true,
+  "oldUnknownAttemptReplay": false,
+  "timestamp": "2026-10-13T09:56:22.952794+00:00"
+}

@@ -1,0 +1,151 @@
+{
+  "head": "2324ba3916b39ed81d6527577f4d20ab3bd86071",
+  "readinessSource": "EcommerceOperationCommands.read_readiness: pure DTO,all6blocked,EXACT_ACTION_CHAIN_REQUIRED/external refund gate retained,no DB/network/command execution calls",
+  "workspace": "EcommerceOperationCaseWorkspace.read -> original object/inventory/aftersale SELECT readers + OperationAuthorityStore.list_cases READ ONLY,then pure candidate/ref/ledger DTO helpers. No create/append/Action execution/provider called. This source audit is not current API/page completion.",
+  "methods": [
+    {
+      "name": "_bare_hash",
+      "line": 76,
+      "calls": [
+        "value.removeprefix"
+      ],
+      "sourceSha256": "12a253a2b9a8ac83df495d13ba9fe34d1caa9bc0b83b558c6c3ee02dc7d4b047"
+    },
+    {
+      "name": "_member_key",
+      "line": 80,
+      "calls": [],
+      "sourceSha256": "88877d35b200c7926adc547deecb8188b42c1c168e568e995363f9d6e0166a62"
+    },
+    {
+      "name": "__init__",
+      "line": 91,
+      "calls": [
+        "EcommerceAftersaleEventReader",
+        "EcommerceInventoryReader",
+        "EcommerceOperationsObjectReader",
+        "OperationAuthorityStore",
+        "datetime.now"
+      ],
+      "sourceSha256": "772e5d7a26f28be2ba5a554358c94205ff4764728af2299850330d4dd8921590"
+    },
+    {
+      "name": "read",
+      "line": 106,
+      "calls": [
+        "OperationAuthorityReadError",
+        "OperationCaseWorkspaceEnvelope",
+        "OperationCaseWorkspaceLedger",
+        "TenantContext",
+        "TenantScope",
+        "ValueError",
+        "_TRANSACTION_SOURCES.items",
+        "_member_key",
+        "any",
+        "blocked.add",
+        "cutoff.utcoffset",
+        "fact_by_key.items",
+        "facts.extend",
+        "len",
+        "list",
+        "self._aftersale_reader.read",
+        "self._aftersale_ref",
+        "self._candidates",
+        "self._case_store.list_cases",
+        "self._case_view",
+        "self._clock",
+        "self._inventory_reader.read",
+        "self._inventory_ref",
+        "self._object_reader.read",
+        "self._source",
+        "self._transaction_ref",
+        "set",
+        "sum"
+      ],
+      "sourceSha256": "a6539db88433e9d895ee59a9d299b70ed864c5102412bd5ee4757b0032817f90"
+    },
+    {
+      "name": "_source",
+      "line": 219,
+      "calls": [
+        "OperationCaseWorkspaceBlocker",
+        "OperationCaseWorkspaceSource",
+        "len"
+      ],
+      "sourceSha256": "e3e079deb397770596c5e8a45235058cbd52117e67a37b451e5f71643dadc7ec"
+    },
+    {
+      "name": "_transaction_ref",
+      "line": 242,
+      "calls": [
+        "ExactOriginalRef",
+        "_bare_hash"
+      ],
+      "sourceSha256": "0e85e6a2f92447c998509598518acda84d74c1897b798b8789f2862ce0f28140"
+    },
+    {
+      "name": "_inventory_ref",
+      "line": 252,
+      "calls": [
+        "ExactOriginalRef",
+        "_bare_hash",
+        "getattr"
+      ],
+      "sourceSha256": "ba847c94919b633152f7375cc9871977fc268b45d057401293ea13f8344c4b2f"
+    },
+    {
+      "name": "_aftersale_ref",
+      "line": 262,
+      "calls": [
+        "ExactOriginalRef"
+      ],
+      "sourceSha256": "244a02fe94292a476a65e081afed6b141021fbad736ecded686752f10bfc1366"
+    },
+    {
+      "name": "_member_ledger",
+      "line": 272,
+      "calls": [
+        "Counter",
+        "OperationCaseMemberLedger",
+        "len"
+      ],
+      "sourceSha256": "d6de81e4412782ef41dfe594727b329d9b2f92c939b06dce18394d6c2a1d1fd0"
+    },
+    {
+      "name": "_case_view",
+      "line": 285,
+      "calls": [
+        "ExactAuthorityRevisionRef",
+        "OperationCaseWorkspaceCase",
+        "cls._member_ledger"
+      ],
+      "sourceSha256": "e19ba4d0d84b20fc98f5170a3e70ca526cb9a20544b540c45f6f1b89eb6e0687"
+    },
+    {
+      "name": "_candidates",
+      "line": 300,
+      "calls": [
+        "'、'.join",
+        "_member_key",
+        "candidates.append",
+        "cls._aftersale_ref",
+        "cls._candidate",
+        "cls._inventory_ref",
+        "getattr"
+      ],
+      "sourceSha256": "d20c39053cea22ed181169ad5759ea3742e037f1ba0f808332d0b091932de8b1"
+    },
+    {
+      "name": "_candidate",
+      "line": 348,
+      "calls": [
+        "OperationCaseWorkspaceCandidate",
+        "hashlib.sha256",
+        "hashlib.sha256(identity.encode()).hexdigest",
+        "identity.encode"
+      ],
+      "sourceSha256": "5cfda861da3376fe7e8033a60bed8fc601d4e41301f6899551eca167118a852d"
+    }
+  ],
+  "next": "only two audited Operations aux GET read dependency wiring,allPOST/execution and other auxiliary unchanged"
+}
