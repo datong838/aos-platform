@@ -1,0 +1,19 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "valid_independent_entry_quality_review",
+  "exit_code": 0,
+  "input_files": {
+    "scripts/a0v_qyh_restored_http.py": "79977f32ef3645767ad4d674ac8acbf052a28e28a23926da351a8878f4ed312e",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py": "96c596b5885b20300cf33ce660efa576fb37ba2a159a99cb1da8b6dbd54d8863"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-live-source-20261013-review-result.json": "58d14fb7b9a15299391491ff1e60a7b003f8863b3e15d91080d5e5d2555d93f5",
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-live-source-20261013-review-consumption.json": "3759f32084be27e95be2fccc4b63e61c5c7044daef2bfcad349db44972e9e8f4",
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-live-source-20261013-review-provenance.json": "b88d1384d685e4a4eac546e34fe75344f681b9ae8c1863b59fbf7caecb5fee48"
+  },
+  "limitations": [
+    "Fresh current material review PASS2/2 consumed; no operational, spending, model-stability or eight-workbench acceptance"
+  ]
+}

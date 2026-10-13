@@ -1,0 +1,18 @@
+{
+  "outcome": "REAL_CURRENT_POLICY_EXPIRY_RENEWAL_WITH_OLD_AUTHORIZATION_REJECTED",
+  "sourceHead": "40434df16065bace2d44c8f25ab94549045bcef0",
+  "currentPolicyId": "a0v-ecommerce-budget-policy-v1",
+  "currentRevision": 13,
+  "originalPayloadHash": "24fcdc510eed50774009ad5a727bc6c071c3d682d19c2770c17fac769782a934",
+  "oldPolicyExpired": true,
+  "oldAuthorizationPreservedInMemoryTest": true,
+  "newWindowWithOldAuthorizationRejected": true,
+  "rejectionMessages": [
+    "Value error, policy window exceeds development cost authorization"
+  ],
+  "databaseReadOnlyTransaction": true,
+  "databaseWrites": false,
+  "providerCalls": false,
+  "actualApprovalCreated": false,
+  "eightConfigurationsAccepted": false
+}

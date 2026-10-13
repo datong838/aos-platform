@@ -1,0 +1,21 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-current-entry-checkpoint-review-20261013-r1",
+  "task_id": "qyh-current-entry-checkpoint-review-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "f27df23cf3ba6c1929547b425fd4cd4901cd947a",
+    "authority_revision": "AOS-002006",
+    "files": {
+      ".evidence/qyh-current-entry-checkpoint-review-20261013/material-0.txt": "79977f32ef3645767ad4d674ac8acbf052a28e28a23926da351a8878f4ed312e",
+      ".evidence/qyh-current-entry-checkpoint-review-20261013/material-1.txt": "96c596b5885b20300cf33ce660efa576fb37ba2a159a99cb1da8b6dbd54d8863",
+      ".evidence/qyh-current-entry-checkpoint-review-20261013/material-2.txt": "3d49f53539db8a467c8651e2a539ecab543eed6ecc54613c0c4581bcd517a3ae",
+      ".evidence/qyh-current-entry-checkpoint-review-20261013/material-3.txt": "e37307f812a6b486c6bba35cfc96cea1325394e18a439526072457c0d652d298",
+      ".evidence/qyh-current-entry-checkpoint-review-20261013/material-4.txt": "1af5a4cd4bb5ac3aa75c8dda9debbc65a881cb2787d360294be090ebde5b2b6a"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "0f2776bf3c62b96af7a3ccb58071a53ab00d5b1bde4c9cdea526828c0bf73e69",
+  "transport_sha256": "68b48e8e2e39faccdb4cdb1e3c75ccc21963772ba21a20b9fba938bc790e06ad"
+}

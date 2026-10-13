@@ -1,0 +1,37 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-entry-checkpoint-review-20261013-r1",
+    "task_id": "qyh-current-entry-checkpoint-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "f27df23cf3ba6c1929547b425fd4cd4901cd947a",
+      "authority_revision": "AOS-002006",
+      "files": {
+        ".evidence/qyh-current-entry-checkpoint-review-20261013/material-0.txt": "79977f32ef3645767ad4d674ac8acbf052a28e28a23926da351a8878f4ed312e",
+        ".evidence/qyh-current-entry-checkpoint-review-20261013/material-1.txt": "96c596b5885b20300cf33ce660efa576fb37ba2a159a99cb1da8b6dbd54d8863",
+        ".evidence/qyh-current-entry-checkpoint-review-20261013/material-2.txt": "3d49f53539db8a467c8651e2a539ecab543eed6ecc54613c0c4581bcd517a3ae",
+        ".evidence/qyh-current-entry-checkpoint-review-20261013/material-3.txt": "e37307f812a6b486c6bba35cfc96cea1325394e18a439526072457c0d652d298",
+        ".evidence/qyh-current-entry-checkpoint-review-20261013/material-4.txt": "1af5a4cd4bb5ac3aa75c8dda9debbc65a881cb2787d360294be090ebde5b2b6a"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The actual current read-only management entry has 62 passing frozen-source unit tests and the two current owned code files match current committed Git and the live frozen API source; this is code/source proof only, not eight-workbench or business acceptance.",
+        "evidence": "material-2.txt: outcome='EXACT_CURRENT_READONLY_ENTRY_FROZEN_SOURCE_62_TESTS_GREEN', testCount=62, testExitCode=0, head=f27df23cf3ba6c1929547b425fd4cd4901cd947a, exactInputHashes[scripts/a0v_qyh_restored_http.py]=79977f32..., exactInputHashes[.../test_qyh_restored_http.py]=96c596b5..., testsUseCurrentDatabase=false, runtimeBusinessAuthority=false, eightWorkbenchesAccepted=false, runningApiHead=40434df1..., runningApiPid=38314, originalSourceValidatorPassed=true; material-4.txt confirms 62 passed, 7 warnings in 0.88s; material-0.txt ReadOnlyManagementApp enforces GET/HEAD/OPTIONS+authenticated login only, all other methods return 405 RESTORED_MANAGEMENT_READ_ONLY",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The original management launcher remains read-only with explicit Host/worker/Provider disabled and external local OIDC integration; updating only these two local checkpoint proofs does not renew an expired budget, activate bindings, replay unknown effects or confer execution authority.",
+        "evidence": "material-0.txt management_app enforces PythonPATH cwd validation (RESTORED_MANAGEMENT_SOURCE_IMPORT_DRIFT); environment strips AOS_/PG keys, sets AOS_AUTH_ALLOW_DEV=1/AOS_AUTH_EXTERNAL_ONLY=0, uses default_transaction_read_only=on, does not enable AOS_EXTENSION_RUNTIME_HOST_ENABLED or workers; serve_management_readonly prints databaseReadOnly=true, mutationRequestsAllowed=false, formalIdentityVerified=false, runtimeAuthorized=false; material-2.txt runtimeBusinessAuthority=false, eightWorkbenchesAccepted=false; material-3.txt 预算续期合同调查仍待后续独立步骤，本checkpoint仅验证冻结源码",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前只读检查点材料，不修改业务状态；继续按material-3的下一步开展预算续期合同调查，或申请新的精确审阅以把本次两步源码/测试证据更新为可持久凭证。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

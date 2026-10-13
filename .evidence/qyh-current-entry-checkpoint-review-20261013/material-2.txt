@@ -1,0 +1,18 @@
+{
+  "outcome": "EXACT_CURRENT_READONLY_ENTRY_FROZEN_SOURCE_62_TESTS_GREEN",
+  "head": "f27df23cf3ba6c1929547b425fd4cd4901cd947a",
+  "runningApiHead": "40434df16065bace2d44c8f25ab94549045bcef0",
+  "runningApiPid": 38314,
+  "runningApiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-40434df16065bace2d44c8f25ab94549045bcef0",
+  "originalSourceValidatorPassed": true,
+  "exactInputHashes": {
+    "scripts/a0v_qyh_restored_http.py": "79977f32ef3645767ad4d674ac8acbf052a28e28a23926da351a8878f4ed312e",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py": "96c596b5885b20300cf33ce660efa576fb37ba2a159a99cb1da8b6dbd54d8863"
+  },
+  "testExitCode": 0,
+  "testCount": 62,
+  "testLogSha256": "f8ba2f52698725fb9e7e6bbf960cc3d8c0f7ccf0e7e1379ddd480cf2424c22bf",
+  "testsUseCurrentDatabase": false,
+  "runtimeBusinessAuthority": false,
+  "eightWorkbenchesAccepted": false
+}

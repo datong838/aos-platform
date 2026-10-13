@@ -1,0 +1,18 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "current_attachment_code_and_source_verified_locally",
+  "exit_code": 0,
+  "input_files": {
+    "scripts/a0v_qyh_restored_http.py": "79977f32ef3645767ad4d674ac8acbf052a28e28a23926da351a8878f4ed312e",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py": "96c596b5885b20300cf33ce660efa576fb37ba2a159a99cb1da8b6dbd54d8863"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-live-source-20261013-verification.json": "d5a20412c71a07ecbe308d3dad3a834acda6b9d194626ccdeda415bc2d73a5b8",
+    ".evidence/qyh-full-system-restoration-20261011/checkpoint-live-source-20261013-tests-r2.log": "f8ba2f52698725fb9e7e6bbf960cc3d8c0f7ccf0e7e1379ddd480cf2424c22bf"
+  },
+  "limitations": [
+    "62 pure entry tests plus live frozen source verification only, no current PG test writes, no configuration/spending/runtime or eight-workbench acceptance"
+  ]
+}

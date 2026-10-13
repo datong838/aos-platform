@@ -1,0 +1,12 @@
+{
+  "originalManifestAll8652FilesUnchanged": true,
+  "generatedCacheFiles": [
+    "services/aos-api/.pytest_cache/.gitignore",
+    "services/aos-api/.pytest_cache/CACHEDIR.TAG",
+    "services/aos-api/.pytest_cache/README.md",
+    "services/aos-api/.pytest_cache/v/cache/nodeids"
+  ],
+  "cachePreservedPrivately": true,
+  "noProductionFileRemoved": true,
+  "initialValidationFailure": "RESTORED_API_SOURCE_PERMISSION_DRIFT"
+}
