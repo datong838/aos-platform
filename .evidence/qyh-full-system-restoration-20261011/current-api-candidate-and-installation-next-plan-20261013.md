@@ -1,0 +1,11 @@
+# 当前API候选与安装预备接续
+
+Rules：当前唯一m1/parentTask，用户全恢复授权与231原状态机，先方案后动作；aos-2本波不作PG→API→Web系统重启，aos独立职责保留。候选A最新已冻结API候选/原install准备权限与未知operation只读对账；候选B Source读锁隔离兼容（恢复实验归档后）。选A，文件仅parent目录证据；若需产品代码另Task/RED。
+
+已实际source25b8a87ca frozen8651files/manifest3d9fbcbb0d6c7c0a352ea9433cbec6c44bc205f566bfa123eea1ee43750bee24，原candidate验证器与实际frozen生产_current_a0v_host_preflight==true，无Host/API启动。原liveAPI仍a283becd9、Web仍d589cad90，同原权威PG@161和卷。不能宣称源更新已被运行进程加载。
+
+下一先只读精确对账current installation ab2fd72f-d81c-400d-bbbc-e1589a159d6b的approved3/active_revision、原operation/command/unknownattempt、当前正式安装控制身份与scope权限；复用原apply/verify，不人工置ACTIVE、不假配置、不放宽真实RuntimePreparationService profile门。已批准人工恢复不重复审批；正式八配置/Owner/预算与外部执行不是model PASS授予，完整Host/worker/Provider保持OFF。
+
+API受支持受控替换须新鲜冻结candidate/review、精确确认唯一oldPID/启动时间/端口/in-flight，保留旧source/manifest/日志及RollbackLauncher，仅替换本管理API不碰PG卷/IdP/Web；真实OIDC/人员profile/tenant/private安全与新接线read-only验收。此替换与aos系统重启职责按本线程最新提醒协调，不能并行另一写者。要允许安装预备必须沿已批准原preparation权限合同说明模型/Owner/副作用边界，不能用环境假路由赋权限。
+
+八页验收继续待原signed runtime安装和目录呈现通过，API/预检200与111单元/相邻测试不替代页面、数据及自然首链。
