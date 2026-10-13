@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-original-installation-maintenance-review-20261013-r4-post-execution",
+    "task_id": "qyh-current-original-installation-maintenance-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "0756bea8665439adb122dc6fda5214465d08b715",
+      "authority_revision": "AOS-002004",
+      "files": {
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-0.txt": "84dd30f2abcf4f2ad440ff3b36a963a870d7b65702f724c2fb5e1cd49d663dfc",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-1.txt": "910fb732bc7640b6b8c4af006e1a326c599fa0dbc0030670b3f99965844755d9",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-2.txt": "048db0c479ec327dbfc024720f90966afd85921caf96cc0b7d48e69f4f1d43f0",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-3.txt": "7537bd1eeece05ee92459b214500d76dbf16d3ded5c78a7a1b56fe89ee61215e",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-4.txt": "b36e1143327053e3e0bebbb1879ccc9a5a3154afe1a5f30f901777d99ae7355e",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-5.txt": "94e14f8da56bc25a64bb6b7740db889e8db240a1142696b5e4a68a48e89d3b5b",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-6.txt": "6ad028fab955628d7afe5360a760e2c0388acfdbbe59625d3727e80f9f72541e",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-7.txt": "7d1eebefd89087b87ebf792fc8105e8e8fab3f21fb7c672ae53db6dba8015984",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-8.txt": "a4175fe52cda38adef86fbe4d95ed97f4ced052186063aae4120c320cf8f1772"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Actual current approved3 installation was applied and verified to active5 by original frozen b514 services through one original selected scheduler owner; both native operations succeeded, old407 outboxes remain3, no runtime-enable/full Host/Source/Provider/system restart occurred, and all3 sandbox resources were released after the controlled maintenance.",
+        "evidence": "final-material-0.txt: outcome=CURRENT_ORIGINAL_INSTALLATION_APPLY_VERIFY_ACTIVE5_GREEN; installation.current_revision=5, active_revision=5, previous_active_revision=null, state=active, etag_version=5; operations[0] runtime-apply status=succeeded phase=succeeded revision=16 idempotency_key=qyh-current-original-apply-20261013; operations[1] runtime-verify status=succeeded phase=succeeded revision=5 idempotency_key=qyh-current-original-verify-20261013; resourceAndFence.resources全部3项cleanup_state=released observed_release=true; old407Undelivered=3; fullHostStarted=false; providerStarted=false; runtimeEnableRequested=false; systemRestarted=false. final-material-7.txt: assert current=={'etag_version':3,'state':'approved'} (apply前); assert status=={'status':'succeeded','phase':'succeeded'}; assert owner.enable_allowed is False; assert status['status']=='succeeded' and status['phase']=='succeeded'. final-material-3.txt: ticks显示apply verification均succeeded acknowledged; enableAllowed=false; currentInstallationMaintenance=true. final-material-4.txt: currentInstallationOnly=true; hostStarted=false; schedulerClosed=true; eightPagesAccepted=false; verifyRequested=true; enableRequested=false.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Post-maintenance650-table comparison found exactly the9 allowed installation/runtime tables changed; other641 tables and source schema/roles/memberships/sequences are unchanged. Budget policy remains expired and binding disabled/fenced, so eight-page visibility and business first-chain completion are explicitly not claimed.",
+        "evidence": "final-material-0.txt: changedTables=[public.bundle_installation, public.bundle_installation_command, public.bundle_installation_event, public.bundle_installation_revision, public.extension_runtime_binding, public.extension_runtime_event, public.extension_runtime_operation, public.extension_runtime_outbox, public.extension_runtime_resource_lease] (共9张); other641TablesUnchanged=true; schemaRolesMembershipsSequencesUnchanged=true; budget governance policy expired in remaining. final-material-8.txt: policy a0v-ecommerce-budget-policy-v1 current_revision=13 lifecycle=active effective_until=2026-09-25T02:52:33.666717+00:00 unexpired=false; policyPayloadRead=false; budgetAmountsChanged=false; policyChanged=false; currentDatabaseWrites=false. final-material-0.txt resourceAndFence.binding: enabled=false operation_fence=true desired_state=disabled observed_state=unknown.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "本受控安装维护review结论为PASS。继续按材料0中\"remaining\"所述路径推进：修复过期budget policy13、补齐当前8配置/Owner/full admission及UI readiness，再沿正式API部署路径执行，不得绕过当前ready/enabled状态。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

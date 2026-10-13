@@ -1,0 +1,17 @@
+{
+  "sourceHead": "b514011bd244305c85d48ac4b92860f5b0303b50",
+  "authority": "AOS-002004",
+  "source650AndMetadataMatchFreshCompleteBackupBaseline": true,
+  "originalIndependentRestoreAndReviewsAccepted": true,
+  "currentInstallationApproved3": true,
+  "currentNoOperations": true,
+  "currentHumanMembershipAdmin": true,
+  "originalHumanChatApprovalRecorded": true,
+  "fullHostEnabled": false,
+  "providerEnabled": false,
+  "businessWorkersEnabled": false,
+  "sourceDBWrites": false,
+  "budgetChanged": false,
+  "mutationExecuted": false,
+  "scriptSHA256": "7d1eebefd89087b87ebf792fc8105e8e8fab3f21fb7c672ae53db6dba8015984"
+}

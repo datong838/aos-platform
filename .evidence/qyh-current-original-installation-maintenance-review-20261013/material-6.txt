@@ -1,0 +1,25 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-installation-preparation-full-restore-20261013-r8-fresh-post-installation",
+  "task_id": "qyh-installation-preparation-full-restore-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "b514011bd244305c85d48ac4b92860f5b0303b50",
+    "authority_revision": "AOS-002003",
+    "files": {
+      ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-0.txt": "72f7384f1518c4ea7a26ec5cc65243fac27619adb9696030af75454c63a1f7e6",
+      ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-1.txt": "2110ef3e1389dd1b738fdf13408b19558b611bf1d2a92afafa76e14c963445cc",
+      ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-2.txt": "40ac9ddabe405d99c3663d69e543891aff46e64d894562aac65b2c78fbc4c667",
+      ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-3.txt": "0a391febc13cde5913dffd7f67d404b004c082bee4d5c834b7ac79b4b4af6c16",
+      ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-4.txt": "077efe8d1b05eb9f579c7907f057c5b94f0b27f1d90ec67fb4117c9e39a68fcd",
+      ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-5.txt": "c73eb170859d043efa94c9b99dedb24bfe00e69c3af1a366a33f066c95a795c1",
+      ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-6.txt": "61c0793e2a0f60293f50e452e9acb6950361ff6015c43f282e088ca7c61077bf",
+      ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-7.txt": "959e74d92a0b220d9c4b072f8760c68556f16a59a999663325fa44f780bea8fa",
+      ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-8.txt": "2c7555eeecd7d8ac48771020fc658c5ee0b440fcbcfee83ec4cc80b7ab72ea0e"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "e7854a12a0b6d284c914846e302b0e9dca716c9b4080651d66b804d98bac2625",
+  "transport_sha256": "94e986f8c02b80e3bd60918fb970a4af264178628194e6f728542d77fe52e8ea"
+}

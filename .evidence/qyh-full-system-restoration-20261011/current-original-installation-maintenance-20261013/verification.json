@@ -1,0 +1,149 @@
+{
+  "outcome": "CURRENT_ORIGINAL_INSTALLATION_APPLY_VERIFY_ACTIVE5_GREEN",
+  "native": {
+    "installation": {
+      "installation_id": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+      "current_revision": 5,
+      "active_revision": 5,
+      "previous_active_revision": null,
+      "etag_version": 5,
+      "state": "active",
+      "requested_by": "user:dev",
+      "decision_id": "24de749e-d3bd-45a0-8ba7-f8a2a5303ac2",
+      "created_by": "user:dev"
+    },
+    "operations": [
+      {
+        "operation_id": "35166916-1091-4dec-ae0c-d6288844ca50",
+        "kind": "runtime-apply",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 16,
+        "requested_by": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "approved_by": null,
+        "expected_installation_etag": 3,
+        "deadline": "2026-10-13T03:02:07.914031+00:00",
+        "failure_code": null,
+        "idempotency_key": "qyh-current-original-apply-20261013",
+        "created_at": "2026-10-13T02:57:07.876784+00:00"
+      },
+      {
+        "operation_id": "9ad7b7c3-ceff-4037-849b-c8385611d933",
+        "kind": "runtime-verify",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 5,
+        "requested_by": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "approved_by": null,
+        "expected_installation_etag": 4,
+        "deadline": "2026-10-13T03:02:10.509352+00:00",
+        "failure_code": null,
+        "idempotency_key": "qyh-current-original-verify-20261013",
+        "created_at": "2026-10-13T02:57:10.472992+00:00"
+      }
+    ],
+    "decisions": [
+      {
+        "decision_id": "24de749e-d3bd-45a0-8ba7-f8a2a5303ac2",
+        "submitted_revision": 2,
+        "decision": "approved",
+        "actor": "human:conversation-owner:01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+        "lock_hash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+        "created_at": "2026-10-12T16:15:37.868987+00:00"
+      }
+    ],
+    "commands": [
+      {
+        "operation": "bundle_installations.create",
+        "idempotency_key": "qyh-current-admin-install-20261012-create",
+        "subject": "user:dev",
+        "status_code": 201,
+        "response_etag": "\"1\"",
+        "created_at": "2026-10-12T12:59:53.807026+00:00"
+      },
+      {
+        "operation": "bundle_installations.submit",
+        "idempotency_key": "qyh-current-admin-install-20261012-submit",
+        "subject": "user:dev",
+        "status_code": 200,
+        "response_etag": "\"2\"",
+        "created_at": "2026-10-12T12:59:53.934033+00:00"
+      },
+      {
+        "operation": "bundle_installations.approve",
+        "idempotency_key": "qyh-explicit-human-approval-20261013",
+        "subject": "human:conversation-owner:01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+        "status_code": 200,
+        "response_etag": "\"3\"",
+        "created_at": "2026-10-12T16:15:37.793733+00:00"
+      },
+      {
+        "operation": "runtime_installations.runtime-apply",
+        "idempotency_key": "qyh-current-original-apply-20261013",
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "status_code": 202,
+        "response_etag": "\"1\"",
+        "created_at": "2026-10-13T02:57:07.876784+00:00"
+      },
+      {
+        "operation": "runtime_installations.runtime-verify",
+        "idempotency_key": "qyh-current-original-verify-20261013",
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "status_code": 202,
+        "response_etag": "\"1\"",
+        "created_at": "2026-10-13T02:57:10.472992+00:00"
+      }
+    ],
+    "currentHumanMembership": [
+      {
+        "role": "admin"
+      }
+    ]
+  },
+  "resourceAndFence": {
+    "binding": {
+      "enabled": false,
+      "operation_fence": true,
+      "desired_state": "disabled",
+      "observed_state": "unknown",
+      "generation": "985c5ad6-de84-473b-bd80-8640c9723cf6"
+    },
+    "resources": [
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      }
+    ],
+    "old407Undelivered": 3
+  },
+  "changedTables": [
+    "public.bundle_installation",
+    "public.bundle_installation_command",
+    "public.bundle_installation_event",
+    "public.bundle_installation_revision",
+    "public.extension_runtime_binding",
+    "public.extension_runtime_event",
+    "public.extension_runtime_operation",
+    "public.extension_runtime_outbox",
+    "public.extension_runtime_resource_lease"
+  ],
+  "other641TablesUnchanged": true,
+  "schemaRolesMembershipsSequencesUnchanged": true,
+  "currentInstallationMaintenance": true,
+  "old12RunsReplayed": false,
+  "old407OutboxesUntouched": true,
+  "fullHostStarted": false,
+  "providerStarted": false,
+  "runtimeEnableRequested": false,
+  "systemRestarted": false,
+  "eightPagesAccepted": false,
+  "remaining": "budget governance policy expired; current eight configuration/Owner/full admission and UI readiness remain pending"
+}

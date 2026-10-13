@@ -1,0 +1,25 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-current-original-installation-maintenance-review-20261013-r4-post-execution",
+  "task_id": "qyh-current-original-installation-maintenance-review-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "0756bea8665439adb122dc6fda5214465d08b715",
+    "authority_revision": "AOS-002004",
+    "files": {
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-0.txt": "84dd30f2abcf4f2ad440ff3b36a963a870d7b65702f724c2fb5e1cd49d663dfc",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-1.txt": "910fb732bc7640b6b8c4af006e1a326c599fa0dbc0030670b3f99965844755d9",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-2.txt": "048db0c479ec327dbfc024720f90966afd85921caf96cc0b7d48e69f4f1d43f0",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-3.txt": "7537bd1eeece05ee92459b214500d76dbf16d3ded5c78a7a1b56fe89ee61215e",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-4.txt": "b36e1143327053e3e0bebbb1879ccc9a5a3154afe1a5f30f901777d99ae7355e",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-5.txt": "94e14f8da56bc25a64bb6b7740db889e8db240a1142696b5e4a68a48e89d3b5b",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-6.txt": "6ad028fab955628d7afe5360a760e2c0388acfdbbe59625d3727e80f9f72541e",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-7.txt": "7d1eebefd89087b87ebf792fc8105e8e8fab3f21fb7c672ae53db6dba8015984",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/final-material-8.txt": "a4175fe52cda38adef86fbe4d95ed97f4ced052186063aae4120c320cf8f1772"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "7b395908a12c8ede4908129abdb3bc01ed37bb409e86dd199ff6620afa38e81b",
+  "transport_sha256": "a631c1967421b7af0441123209449621586bdcc930eab509e5a04d1b08fed83d"
+}

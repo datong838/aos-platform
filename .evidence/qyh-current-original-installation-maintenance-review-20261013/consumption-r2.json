@@ -1,0 +1,26 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-current-original-installation-maintenance-review-20261013-r2",
+  "task_id": "qyh-current-original-installation-maintenance-review-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "0756bea8665439adb122dc6fda5214465d08b715",
+    "authority_revision": "AOS-002004",
+    "files": {
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-0.txt": "80d58be36f3162c1494f473a211fe1911d8db887e8a1086f031dd16cb9771703",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-1.txt": "7d1eebefd89087b87ebf792fc8105e8e8fab3f21fb7c672ae53db6dba8015984",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-2.txt": "3f7832f017d7d4ebbb2b19aded5b31cde8e69d0c7aaa0d651c0570960b6c2012",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-3.txt": "5bbdd51d86319de234ea1a4ef94940c7168805e1e13c263509c7bbb37ca43007",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-4.txt": "959e74d92a0b220d9c4b072f8760c68556f16a59a999663325fa44f780bea8fa",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-5.txt": "2c7555eeecd7d8ac48771020fc658c5ee0b440fcbcfee83ec4cc80b7ab72ea0e",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-6.txt": "dfa7bc534584c9ac2cac8bb44d6e36b59d221827aee26caa1e9ffdf916e67c0c",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-7.txt": "7b9c016006344fcab6af72ae395616e9d517a42f9cf0580ca8071e17d4295710",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-8.txt": "e18e5c2e58dfc8bda6edf3de1600fd5cf18a6bae59b6d305757aeea44a8092de",
+      ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-9.txt": "f997ade83c35d4fcbb468c377cc3bb1125c255bc408a394a9b4ea667a1b2d956"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "c68e604f3372fad998ea36e740301d4f1b7c507207559dc74bf8f1313e5cc01a",
+  "transport_sha256": "4b6892797177343af4a02c637f90b23ba4152a517f21e1f00807f6e2d25b59ee"
+}

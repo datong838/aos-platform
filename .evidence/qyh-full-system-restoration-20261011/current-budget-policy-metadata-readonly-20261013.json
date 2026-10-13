@@ -1,0 +1,18 @@
+{
+  "native": [
+    {
+      "policy_id": "a0v-ecommerce-budget-policy-v1",
+      "current_revision": 13,
+      "revision": 13,
+      "lifecycle": "active",
+      "effective_from": "2026-09-24T02:53:28.63705+00:00",
+      "effective_until": "2026-09-25T02:52:33.666717+00:00",
+      "already_effective": true,
+      "unexpired": false
+    }
+  ],
+  "policyPayloadRead": false,
+  "budgetAmountsChanged": false,
+  "policyChanged": false,
+  "currentDatabaseWrites": false
+}

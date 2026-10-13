@@ -1,0 +1,42 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-current-original-installation-maintenance-review-20261013-r2",
+    "task_id": "qyh-current-original-installation-maintenance-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "0756bea8665439adb122dc6fda5214465d08b715",
+      "authority_revision": "AOS-002004",
+      "files": {
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-0.txt": "80d58be36f3162c1494f473a211fe1911d8db887e8a1086f031dd16cb9771703",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-1.txt": "7d1eebefd89087b87ebf792fc8105e8e8fab3f21fb7c672ae53db6dba8015984",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-2.txt": "3f7832f017d7d4ebbb2b19aded5b31cde8e69d0c7aaa0d651c0570960b6c2012",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-3.txt": "5bbdd51d86319de234ea1a4ef94940c7168805e1e13c263509c7bbb37ca43007",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-4.txt": "959e74d92a0b220d9c4b072f8760c68556f16a59a999663325fa44f780bea8fa",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-5.txt": "2c7555eeecd7d8ac48771020fc658c5ee0b440fcbcfee83ec4cc80b7ab72ea0e",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-6.txt": "dfa7bc534584c9ac2cac8bb44d6e36b59d221827aee26caa1e9ffdf916e67c0c",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-7.txt": "7b9c016006344fcab6af72ae395616e9d517a42f9cf0580ca8071e17d4295710",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-8.txt": "e18e5c2e58dfc8bda6edf3de1600fd5cf18a6bae59b6d305757aeea44a8092de",
+        ".evidence/qyh-current-original-installation-maintenance-review-20261013/material-9.txt": "f997ade83c35d4fcbb468c377cc3bb1125c255bc408a394a9b4ea667a1b2d956"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The prepared current installation-only candidate reuses original frozen b514 production wiring, native signed current preflight, original service CAS3 apply/CAS4 verify and one actual original selected scheduler owner, with durable intent/receipt records and no retry of unknown effects. It never calls full Host.run/serve, runtime-enable, old407 owners/old12Runs, Source or Provider. This is static candidate assessment before current execution, not proof future execution succeeded.",
+        "evidence": "material-0.txt 明文声明使用最新b514私密Git冻结代码/原validator/原selected scheduler，runtime-apply→applied4、runtime-verify→active5，仅对原9张表操作，明确不开启经营任务、不调用Host.run/serve/旧407 outboxes/旧12Run/Source/Provider；material-1.txt run() 函数只调用 build_runtime_control_plane、request_preparation(kind='runtime-apply','runtime-verify')、scheduler.run_selected_once、scheduler.stop，断言 owner.enable_allowed=False 且 noOldPendingOperations 为 true；material-2.txt 读取 b514 源、运行 current_installation_operation_audit.py 生成 native signed preflight 写入 prepared.json；material-9.txt 执行前检查 review 消费、source 哈希、native 状态、无现有 intent/receipt 文件，失败由 SystemExit 终止，无重试逻辑；material-3.txt/budget policy AOS-002004 为过期草稿，与当前正式配置绑定无关。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Readonly current preparation confirmed original approved3/chat decision, real canonical datong838 subject admin membership, zero current installation operations and unchanged650 tables/metadata against the fresh completely restored two-backup baseline. Seven/eight candidate counts and expired budget policy are explicitly not current configuration binding, spending authorization, full Host admission or eight visible-page completion; no budget/role/schema changes are proposed.",
+        "evidence": "material-2.txt 通过 entry.require_api_source_candidate + b.fingerprint/b.metadata 比对备份 baseline，assert current state=='approved' etag_version==3、operations==[]、currentHumanMembership==[admin]、decisions[0].actor 为 conversation-owner 身份；material-4.txt current650TablesAndMetadataUnchanged=true、runtimeEnableRequested=false、eightPagesAccepted=false、budgetChanged=false；material-5.txt/6.txt 为相关已消费 reviewer，未授权本任务执行；material-7.txt allPresent=false/configurationBoundToCurrentInstallation=false/humanSpendingAuthorityVerified=false/currentDatabaseWrites=false；material-8.txt budget revision 13 approval_ref=AOS-000573 已过期草稿，explicitly 不视为当前花费授权。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持现状只读冻结证据不变；待 r2 消费记录生成后，按 material-9.txt 的 explicit --execute 门禁由授权 actor 在 fresh source hash 校验通过后手工触发，失败不得自动重试。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

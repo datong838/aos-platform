@@ -1,0 +1,14 @@
+{
+  "authority": "AOS-002004",
+  "task": "qyh-full-system-restoration-20261011",
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "candidateSHA256": "7d1eebefd89087b87ebf792fc8105e8e8fab3f21fb7c672ae53db6dba8015984",
+  "sourceBeforeSHA256": "294c370e1cda381643f4307038bccf2258048231952e1394832ceb9aa48370e6",
+  "reviewConsumptionSHA256": "7e9a243a07536427e69ca4f828ed6bdaeb4fb9832157530ec2704bdbe6568a14",
+  "actorIsDelegatedCanonicalHuman": true,
+  "fullHostAuthorized": false,
+  "runtimeEnableAuthorized": false,
+  "sourceOrProviderAuthorized": false,
+  "unknownResultRetryAuthorized": false
+}

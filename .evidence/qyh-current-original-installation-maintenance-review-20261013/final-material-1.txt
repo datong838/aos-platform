@@ -1,0 +1,12 @@
+{
+  "statusCode": 202,
+  "response": {
+    "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+    "operationId": "35166916-1091-4dec-ae0c-d6288844ca50",
+    "phase": "accepted",
+    "status": "accepted",
+    "revision": 1
+  },
+  "etag": "\"1\"",
+  "replayed": false
+}

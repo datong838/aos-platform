@@ -1,0 +1,29 @@
+{
+  "native": {
+    "policy_id": "a0v-ecommerce-budget-policy-v1",
+    "revision": 13,
+    "budget_ref": {
+      "assetId": "a0v-ecommerce-hard-stop-budget-v1",
+      "revision": 1,
+      "assetType": "BudgetRevision",
+      "contentHash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+    },
+    "has_cost_deferral": true,
+    "approval_ref": "approval:AOS-000573:A0-V-development-cost-deferred",
+    "owner": "a0v-current-runtime-configuration-authority",
+    "allow_zero_price": "false",
+    "current_budget_heads": [
+      {
+        "budget_id": "a0v-ecommerce-hard-stop-budget-v1",
+        "current_revision": 1,
+        "content_hash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126",
+        "effective_from": "2026-09-10T00:00:00+00:00",
+        "effective_until": "2027-09-10T00:00:00+00:00",
+        "lifecycle": "active"
+      }
+    ]
+  },
+  "credentialsRead": false,
+  "budgetAmountsRead": false,
+  "currentDatabaseWrites": false
+}

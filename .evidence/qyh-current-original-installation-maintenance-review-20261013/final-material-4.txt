@@ -1,0 +1,9 @@
+{
+  "currentInstallationOnly": true,
+  "hostStarted": false,
+  "schedulerClosed": true,
+  "currentInstallationMaintenance": true,
+  "eightPagesAccepted": false,
+  "verifyRequested": true,
+  "enableRequested": false
+}

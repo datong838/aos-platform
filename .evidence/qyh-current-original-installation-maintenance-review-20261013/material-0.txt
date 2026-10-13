@@ -1,0 +1,11 @@
+# 当前栖月汇安装原流程受控维护
+
+Rules：用户既有全恢复/安装/审批授权，parent唯一m1/DataVolume Lease，231状态机/物理authority/双备份/独立全恢复。最新已登记并实测full restore/真实SCRAM/coldOwner reset/apply/verify通过，source650/metadata至今精确不变；三plane current身份真实已建立且原HostOID rev2匹配。不再重复安装审批，不凭独立review PASS授业务执行。预算policy13已过期；7/8候选有值不等于当前正式配置绑定或花费授权。
+
+本维护仅将当前安装ab2fd72f-d81c-400d-bbbc-e1589a159d6b从approved3沿原RuntimeLifecycleService request_preparation runtime-apply/CAS3→applied4、同原Owner runtime-verify/CAS4→active5。仅原selected scheduler处理target，完整Host.run/serve、旧407 outboxes/旧12Run/Source/Provider/enable全不调用。正式8配置/Owner/预算未齐，不开启任何经营任务。允许变化仅原9张installation/runtime表（与最新clone实测9表同名），other641表、原roles/membership/sequence/schema/卷/cluster/PG开始时间不变；role不新增/不grant，不改Budget或治理策略，不迁移Schema。
+
+执行前source新的只读650/metadata与最新合格备份snapshot完全相等、原双备份/independentrestore记录真实、native当前approved3/锁hash/Chat批准receipt/实际canonical datong838 subject的Memberadmin角色/零当前scope未终态operation/zeroenabledbindings/原署名四包锁回读，现有完整正式三planeFile字节与generation重复原preflight并pin。使用最新b514私密Git冻结代码/原validator，普通runtime角色原Store连接，私密pgpass且环境无密码。actor为既有真实OIDC校验/人员profile对应的canonical subject，记录代理执行，不声称真人点击。
+
+新增parent/current_original_installation_preparation.py、launcher与公开/私密intent，各副作用独占journal写前再实际nativeCAS对账；5min deadline内同轮原apply→verify，同Host原目录materialized scheduler、run_selected_once维护真正同一Owner。每个202 receipt独立source行读回后继续，unknown效果不重发/不重置deadline、不修改既有history。失败从源native metadata/OCI exactowned refs对账，原Owned.stop安全收口，绝不通用重试/复刻旧Run。
+
+这是受控安装维护，不是PG/API/Web系统重启（aos独立）、全Host启用、8可见或自然首链。维护完成后原Owner关闭/6?当前单wave3sandbox资源回读released、binding disabled/fenced，保留原不可变active安装历史；之后沿原配置/预算过期修复与最新API部署路径继续，不绕当前ready/enabled/UI会话和原profile predicate。三沙盒是原网络none/noSource隔离注册，noProvider/外部变更。精确评审Task仅冻结本方案和已有证据，不另起施工写者。

@@ -1,0 +1,25 @@
+{
+  "exitCode": 0,
+  "native": {
+    "counts": {
+      "responsibility_plans": 1,
+      "runtime_policies": 1,
+      "data_policies": 1,
+      "egress_policies": 1,
+      "network_policies": 1,
+      "quota_policies": 1,
+      "budget_policies": 0,
+      "budgets": 1
+    },
+    "missing": [
+      "budget_policies"
+    ],
+    "allPresent": false,
+    "configurationBoundToCurrentInstallation": false,
+    "humanSpendingAuthorityVerified": false,
+    "currentDatabaseWrites": false
+  },
+  "stderr": "",
+  "sourceHead": "b514011bd244305c85d48ac4b92860f5b0303b50",
+  "currentDatabaseWrites": false
+}

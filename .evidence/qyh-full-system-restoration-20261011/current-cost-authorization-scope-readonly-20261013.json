@@ -1,0 +1,23 @@
+{
+  "native": {
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "provider": {
+      "assetId": "a0v-agnes-text-readonly-dev",
+      "revision": 1,
+      "assetType": "ProviderInstanceRevision",
+      "contentHash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+    },
+    "approvalRef": "approval:AOS-000573:A0-V-development-cost-deferred",
+    "environment": "development",
+    "effectiveFrom": "2026-09-24T02:53:28.637050Z",
+    "effectiveUntil": "2026-09-25T02:52:33.666717Z",
+    "providerModelId": "agnes-2.5-flash"
+  },
+  "credentialValuesRead": false,
+  "budgetChanged": false,
+  "providerStarted": false,
+  "currentDatabaseWrites": false
+}
