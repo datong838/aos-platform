@@ -1981,7 +1981,7 @@ def get_ecommerce_workshop_analyst_view(
 def get_ecommerce_workshop_analyst_learning_scenario(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     scenario: LearningScenarioDependency,
 ) -> LearningScenarioContribution:
     _reject_unknown_query_parameters(request, allowed=frozenset())

@@ -78,6 +78,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
         '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
         '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
         '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+        '/v1/ecommerce-workshop/views/analyst/learning-scenario',
     }
 
 
