@@ -21,3 +21,7 @@ Rules：用户正式移交和原完整恢复/日常最新重启授权、AGENTS.m
 Operations两helper代码972c16c5e已55相邻/精确Prime r2消费；原frozen2324 helper正常runtime READ ONLY实际读取CaseWorkspace=ready、169refs/50候选/0Cases，commands6blocked，无创建Case。只读API现在需载入新增两GET注入，Web内容与本波HEAD的apps/web/packages树未变；本波新一次性ops-api-reload intent精确旧PID81071/CWD2324→original guarded CLI/新当前Git冻结972。不重启PG/Web/Chrome，不重放旧restart-controller阶段或凭TTL迁锁。当前维护owner/Lease复核，sourceguard通过、18080唯一旧PID/原cwd再次核验后单次SIGTERM、portFree记录，再Popen原supported management入口保存新PID、未知结果仅对账。停止或新启动失败诊断修复单独新attempt，不能重发已知/未知旧操作。原每日/每次aos最新全PG/API/Web协议保持，原本波全重启2324证据保留为其截止面。
 
 任务总控三辅助GET97c7509f3代码已独立quality r1消费，51+3测试通过；本维护Task在原授权内创建新successor-cockpit-current-api-20261013冻结候选，仅API-only替换当前86349/972，原PG/Web/Chrome不发信号。一次intent先行/原cwd与listener/sourceguard/Lease exact验证，未知结果只读核对。不能作为新full restart或真实页面通过。
+
+Media辅助GET候选54原完整隔离PG通过；独立r5原始JSON/exactbaseline合法消费，前r1..r4失败不消费保留。新successor-media-aux-current-api-20261013冻结，仅API-only精确替换原92226/97c7509，原PG/Web/Chrome不发信号；一次intent先行，unknown只读对账。不是新全面重启或经营生产闭环。
+
+纠错：Media r5消费状态NEED_EVIDENCE，误将合法消费当PASS导致提前API-only切换95278/f28ef48c4，禁止声称复审通过/交付。仅撤回本次3文件own提交，新Git revert保留历史。新successor-media-reviewgate-restored-api-20261013冻结当前回退代码，通过原one-intent精确95278 cwd/port/Lease控制恢复上一版读取内容；PG/Web/Chrome不发信号。补r5所需隔离日志/52→54两个原集成差异/exact terminal原始核验输出再独立复审，不得手补PASS。

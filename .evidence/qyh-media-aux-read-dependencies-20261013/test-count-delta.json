@@ -1,0 +1,14 @@
+{
+  "same54CollectedTests": true,
+  "initialRun": "tests-green.txt:52passed/2failed due placeholder port1 connection",
+  "isolatedR1": "54 setup errors:no aos_app role",
+  "isolatedR2": "54 setup errors:original161 requires aos_app owner;postgres migration owner refused",
+  "isolatedR3": "54passed/0skip afterfixture migration role correction;no test additions or deletion between runs",
+  "twoRecoveredTests": [
+    "test_real_postgres_stores_preserve_replay_history_and_tenant_isolation",
+    "test_real_http_routes_are_principal_scoped_receipted_and_query_closed"
+  ],
+  "notAdditionalTests": "52+2 recovered original integration cases =54;not invented positive cases",
+  "migration161Unchanged": true,
+  "customerDbUntouched": true
+}

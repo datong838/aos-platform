@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-media-aux-read-dependencies-20261013-r5",
+    "task_id": "qyh-media-aux-read-dependencies-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "f2a99b63742dcefee8934180f0179d2028370a31",
+      "authority_revision": "AOS-002017",
+      "files": {
+        ".evidence/qyh-media-aux-read-dependencies-20261013/review-package-r4.txt": "432f9d554ed20d8d464f374dd2e4e84b5b56abb219daf8b7929c015f4ff2676f"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "仅两个已审计Media GET目录参数换ReadCatalogDependency及明确白名单；原所有函数体/其他GET/POST/写入factory保留。草稿当前实际list调用只有tenant SELECT与纯校验，但其默认连接读写，材料未冒称自带readonly；原正常runtime只读诊断草稿0，不计非空或生产闭环。",
+        "evidence": "review-material-router-diff.txt.txt: 精确变更仅在ecommerce_workshop.py的list_media_internal_workflows与get_ecommerce_workshop_media_studio_full_production_scenario两处，将catalog: CatalogDependency替换为ReadCatalogDependency；review-material-compatibility.json.txt确认仅有这两个函数为annotation changes，allOtherOriginalASTEqual=true；test_ecommerce_workshop_read_http.py的test_read_dependency_only_reaches_explicit_audited_get_routes显式白名单包含两media-studio路径及原有task-cockpit/operations等，其余ROOTS与未审计GET验证legacy调用；transitive-read-audit.json.txt明确：list执行tenant scoped SELECT，但AipProductionContractStore default db.connect是READ WRITE；native diagnostic（review-material-native-two-r1.json.txt）drafts count=0、status=READ_OK；notInvoked列出resolve/create_task/execute/_receipt/publish等无调用",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "HTTP RED4fail/2pass后隔离原完整54项通过，含两个原写入PG集成；fixture-only新tmpfs独立cluster原aos_app迁移owner/161门未修改，原两setup失败保留，临时库清理且仅exact容器停止。视频exact根缺失8commandsfalse、未知参数/租户和原幂等历史门保留；实际新版API/页/经营仍待。",
+        "evidence": "review-package-r4.txt: 声明HTTP RED 4fail/2pass、累计52pass/2fail；review-material-tests-isolated-r3.txt.txt显示54 passed（与声明52pass数字不一致，可能含其他fixture）；review-material-isolated-pg-terminal.json.txt确认cid 579e97... exact容器停止、remainingFixtureDatabases=0、customerContainerTouched=false、namedVolumesDeleted=false；r2 setup门在material-plan中记录失败原因（postgres运行迁移与aos_app 161身份不符），未修改门；test_full_video_keeps_all_execution_commands_false()断言commands八字段全false、blockers含FULL_VIDEO_EXACT_ROOT_REQUIRED；test_media_unknown_query_cannot_override_tenant验证未知orgId返回400且reader/legacy未调用；但实际PG隔离日志细节、setup失败trace、54 vs 52差异未提供，businessComplete=false",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "补充三项可核查证据：(1) 54 passed与RED 52pass/2fail的差异清单，说明另两项来源及是否计入本次audited scope；(2) r2 setup失败的完整conftest错误traceback与aos_app身份门拒绝日志，确认161门未修改的真实拒绝；(3) isolated-pg terminal中exact容器停止时间戳、remainingFixtureDatabases=0的验证命令输出。在证据补齐前，不升级至PASS，不视为生产闭环或部署就绪。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

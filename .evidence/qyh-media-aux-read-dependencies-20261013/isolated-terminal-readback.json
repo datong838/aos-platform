@@ -1,0 +1,10 @@
+{
+  "cid": "579e97f1d63cb2c90b48808fcd00ac792be3ce97adf231cba905f8b0bb7d9149",
+  "finishedAt": "2026-10-13T11:54:03.128315821Z",
+  "running": false,
+  "mounts": [],
+  "tmpfs": {
+    "/var/lib/postgresql/data": "rw,size=512m"
+  },
+  "earlierDatabaseCountObservation": "prior exact query SELECT count(*) FROM pg_database WHERE datname LIKE aos_test_% returned 0;asserted before stop;terminal receipt retains observed count0;not re-queried after stop"
+}

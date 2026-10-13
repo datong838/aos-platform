@@ -1,0 +1,15 @@
+{
+  "r5Verdict": "NEED_EVIDENCE",
+  "notPASS": true,
+  "mistake": "treated successful protocol consumption as PASS;premature API-only switch",
+  "prematureCode": "f28ef48c48ae4cebd144f3b986635cbc2a52de04",
+  "prematureApiPid": 95278,
+  "correctiveRevert": "62e43d5323ccd5d1d4e2b21a8e03eec20303f6b6",
+  "restoredApiPid": 95538,
+  "sameSourceManifestAsOriginal97": true,
+  "original650TablesUnchanged": true,
+  "pgWebChromeSignals": false,
+  "noPOSTOrProducerInitiated": true,
+  "authorityStill2017": true,
+  "scopedDeliveryNotClaimed": true
+}

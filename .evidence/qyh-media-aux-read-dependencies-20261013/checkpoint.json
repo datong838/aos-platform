@@ -6,7 +6,7 @@
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
   "authority_revision": "AOS-002017",
   "task_base_revision": "AOS-002017",
-  "step": "5/8 complete original54 isolatedPASS;3 material reviews terminal but unconsumed(format/baseline),candidate still uncommitted and undeployed;next simplify one exact material package preserving all content then independent review",
+  "step": "5/8 isolated54PASS; r5 NEED_EVIDENCE legally consumed,notPASS; prematureAPI switch corrected by ownrevert and supported restoration95538/same97code;650 unchanged; supplemental independent evidence review pending",
   "candidateCodeFiles": [
     "services/aos-api/aos_api/routers/ecommerce_workshop.py",
     "services/aos-api/tests/test_ecommerce_workshop_read_http.py",
@@ -18,11 +18,12 @@
     "services/aos-api/tests/test_ecommerce_media_read_dependencies.py": "33eabb5a651f547662ce0adda03aa2d60a5dccca2e55c5f2bbbe74c7960e90bd"
   },
   "currentRuntimeUnchanged": {
-    "apiPid": 92226,
-    "apiSourceHead": "97c7509f395e2c976022df8db4ae6602906fb396",
+    "apiPid": 95538,
+    "apiSourceHead": "62e43d5323ccd5d1d4e2b21a8e03eec20303f6b6",
+    "apiCodeContentSameAs": "97c7509f395e2c976022df8db4ae6602906fb396",
     "webPid": 81203
   },
-  "nextAction": "Prepare one-file exact review material with all current diff/audit/test/native evidence, baseline onehash;fresh request only after recording previous3 known terminal; no runner/parser weakening or fabricated PASS",
+  "nextAction": "Supplement r5 requested two-test delta/inittrace/exact terminal facts;actual method source excerpts;new review only,assert verdict PASS before subsequent effect",
   "isolatedVerification": {
     "passes": 54,
     "fixtureCluster": "7696118414481760296",
@@ -36,5 +37,6 @@
     "r2": "terminal baseline mismatch refused",
     "r3": "terminal fenced JSON refused",
     "consumed": false
-  }
+  },
+  "candidateStatus": "Own candidate retained in f28 commit and review package;working production files reverted,no candidate deployment"
 }

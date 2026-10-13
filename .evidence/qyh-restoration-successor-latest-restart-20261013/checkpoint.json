@@ -18,12 +18,14 @@
     ".evidence/qyh-restoration-successor-latest-restart-20261013/ops-api-started.json"
   ],
   "currentApi": {
-    "pid": 92226,
+    "pid": 95538,
     "port": 18080,
-    "sourceHead": "97c7509f395e2c976022df8db4ae6602906fb396",
-    "reload": "API_ONLY_COCKPIT",
+    "sourceHead": "62e43d5323ccd5d1d4e2b21a8e03eec20303f6b6",
+    "codeContentSameAs": "97c7509f395e2c976022df8db4ae6602906fb396",
+    "reload": "MEDIA_REVIEW_NEED_EVIDENCE_CORRECTIVE_API_ONLY",
     "notNewFullRestart": true
   },
   "lastCockpit": "actualroot+3helpers200/settled,2 original cancelled/unplanned tasks,feedback0,exact roots missing commandsfalse,650 unchanged",
-  "nextTask": "qyh-media-aux-read-dependencies-20261013"
+  "nextTask": "qyh-media-aux-read-dependencies-20261013",
+  "lastMedia": "isolated54PASS;reviewr5 NEED_EVIDENCE notPASS;premature switch corrected by own revert;650 unchanged;task/Goal active"
 }
