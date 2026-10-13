@@ -1,0 +1,9 @@
+{
+  "name": "qyh-media-read-isolated-pg-20261013-r1",
+  "cid": "579e97f1d63cb2c90b48808fcd00ac792be3ce97adf231cba905f8b0bb7d9149",
+  "port": 32768,
+  "cluster": "7696118414481760296",
+  "fixtureOnly": true,
+  "pgdataTmpfs": true,
+  "customerDataCopied": false
+}

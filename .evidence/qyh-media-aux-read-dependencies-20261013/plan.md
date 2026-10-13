@@ -16,3 +16,8 @@ Rules：用户/AGENTS/231/双侧增长/AOS工程交付；m1单写、原库只读
 见transitive-read-audit.json。特别保留：drafts list执行一次tenant scoped SELECT，但Store默认db.connect是read-write事务，不称自身强制只读；当前原HTTP受支持只读维护环境及本次原生诊断强制READ ONLY。constructor内ProductionProfileResolver/AipTaskStore只保存factory，不调用resolve/创建任务。仅当前调用链无写/网络/生产动作，不泛化任意方法。原生0条不能替代非空真实草稿/生成产物验证。下一先HTTP RED及原门/租户/DTO保持，再两GET最小注入。
 
 HTTP RED明确4fail/2pass；候选仅两个GET参数类型+已审核白名单，新专项覆盖原tenant/未知参数/8commandsfalse。累计52pass/2fail，两fail为原写入PG集成用placeholder:1连接拒绝，不计GREEN/不当代码缺陷；不得连接原650表业务库跑写夹具。下一先隔离一次性PG与原两集成，随后完整独立Prime/实际页/交付。当前候选未部署，运行API仍97c7509f3/92226。
+
+## 隔离PG验证方案
+两个原测试使用conftest自动新建随机aos_test_*_ti4_test并迁移，不能用AOS_TEST_USE_SHARED_DATABASE绕过后连接原业务库。新唯一qyh-media-read-isolated-pg-20261013-r1容器使用原本地PG镜像、仅127.0.0.1随机端口、tmpfs PGDATA，无原卷挂载/无复制数据/512MiB上限，fixture-only postgres身份不冒充真实runtime/真人；先记录一次创建intent/精确CID/端口/cluster，随后仅临时DSN跑原专项与相邻；不启用Host/Provider。失败保留诊断，不重放unknown创建。结束只停本次exact CID，不prune/rm原卷。
+
+隔离r2 setup命中原a0v161身份门：三Skill日志必须由aos_app拥有；使用postgres运行迁移owner不符。门正确拒绝，不修改/跳过迁移。新独立tmpfs cluster中将fixture-only aos_app改为临时迁移LOGIN/SUPERUSER并以此角色运行conftest，使真实原迁移创建原要求的owner/强制RLS/ACL；此身份只属于可销毁夹具，绝不作真实runtime权限证明。原库未操作，原native正常runtime证据独立。r1/r2保留，不称测试业务失败。

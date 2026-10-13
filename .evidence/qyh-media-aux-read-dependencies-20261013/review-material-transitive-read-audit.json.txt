@@ -1,0 +1,30 @@
+{
+  "head": "d51a6a18fc8ec1140a5954e33ab72d38cd310627",
+  "authority": "AOS-002017",
+  "status": "ACTUAL_CALL_PATH_STATIC_AUDITED_NATIVE_PENDING",
+  "sourceHashes": {
+    "routers/ecommerce_workshop.py": "e397893d1550436f8060066dfd08f9b041af338ce25e0a17404f4895a7c1eb35",
+    "ecommerce_workshop_full_video_scenario.py": "b0aa142436483d6edf0341a2bdffc553a00b72f6c0fdeb88f702f81814d63a0e",
+    "ecommerce_media_internal_workflow.py": "92c9e9723590d703e5f945f91c002340fc6597cbe10f8500cbef6a7f87d220fe",
+    "aip_production_contract_store.py": "731e7d278dde3c19f95f08b032df77a12ff6871d050e4f24af9e4eb5425b47b8",
+    "aip_production_contracts.py": "af1720d4b40b95200e2dd6bbd1c00a98e2d8657527b2f3ac9b99d63635cb6029",
+    "aip_task_store.py": "6fd1d7f192e9e9a8e6068fd6a3b17ba7fe54552c915377166eb87c82854da6aa",
+    "aip_responsibility_template_authority.py": "0df75393572b0ce57372c34ad84897bb314ea1ad2bdaafd8097ad4851ed3895f",
+    "db.py": "a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010",
+    "aip_contracts.py": "ec870e5382bb65d45bf8968a4552392b4fb3b65eaf1fc9b3ffd7c7a11fa364d3"
+  },
+  "fullVideo": "factory constructs reader=None; read→_blocked composes DTO only; full hash/scope/root/stages/authorization gates remain; future reader needs independent audit",
+  "drafts": "factory constructs default workflow; tasks/briefs/profile-resolver constructors only store refs/factories and Path; no queries/file/network access during constructors. list→list_briefs executes one tenant scoped head/current revision JOIN SELECT; _brief/_load/DTO pure decode; workflow type filter/_require_media_brief validates exact schema/externalEffectsAllowed false/type/status/details; _draft pure DTO + sort; no execute/create/revise/receipt writes",
+  "connectionCaveat": "AipProductionContractStore default db.connect is READ WRITE, not reader-enforced read-only. Actual current restored HTTP read-only maintenance globally enforces read-only; native diagnostic explicitly enforces default_transaction_read_only=on. Do not change shared workflow write factory or claim generic read-only transaction. Current selected call has no write SQL/implicit producer",
+  "notInvoked": [
+    "InstalledProductionProfileResolver.resolve",
+    "AipTaskStore.create_task",
+    "EcommerceMediaInternalWorkflow.execute",
+    "_receipt",
+    "create_brief",
+    "revise_brief",
+    "export",
+    "publish"
+  ],
+  "businessComplete": false
+}

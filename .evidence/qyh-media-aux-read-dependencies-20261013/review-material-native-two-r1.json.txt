@@ -1,0 +1,37 @@
+{
+  "sourceHead": "97c7509f395e2c976022df8db4ae6602906fb396",
+  "normalRole": "aos_a0v_runtime_20260912",
+  "superuser": false,
+  "bypassRls": false,
+  "transactionReadOnly": true,
+  "realAdminMembershipVerified": true,
+  "diagnosticOnly": true,
+  "results": {
+    "fullVideo": {
+      "status": "READ_OK",
+      "blockers": [
+        "FULL_VIDEO_EXACT_ROOT_REQUIRED"
+      ],
+      "commands": {
+        "prepare": false,
+        "start": false,
+        "resume": false,
+        "takeover": false,
+        "cancel": false,
+        "reconcile": false,
+        "publish": false,
+        "settle": false
+      }
+    },
+    "drafts": {
+      "status": "READ_OK",
+      "count": 0,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    }
+  },
+  "businessComplete": false,
+  "scriptSha256": "16424d3d6f4fe72c705a2210c402e642a685fee4be9edcaef0142e6f109a5127"
+}

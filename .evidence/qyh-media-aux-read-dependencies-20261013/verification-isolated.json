@@ -1,0 +1,18 @@
+{
+  "tests": "tests-isolated-r3.txt",
+  "passed": 54,
+  "skipped": 0,
+  "warnings": 7,
+  "initialDummyConnectionFailuresRetained": true,
+  "isolatedSetupR1MissingRole": "aos_app",
+  "isolatedSetupR2OwnerMismatch": "original161 guard correctly refused postgres owner",
+  "noMigrationEdits": true,
+  "fixtureCluster": "7696118414481760296",
+  "originalClusterDifferent": "7695302940039200809",
+  "fixtureTestDatabasesCleaned": true,
+  "fixtureExactContainerStopped": true,
+  "codeCandidateOnly2GetAnnotations": true,
+  "productionDeployment": false,
+  "independentReviewConsumed": false,
+  "businessComplete": false
+}

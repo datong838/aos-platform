@@ -6,7 +6,7 @@
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
   "authority_revision": "AOS-002017",
   "task_base_revision": "AOS-002017",
-  "step": "4/8 static/transitive audit+normal runtime native2+HTTP RED4/2PASS; minimal2GET annotations and whitelist candidate,52PASS/2PG-environmentFAIL;isolated PG/Prime/live/Delivery still pending",
+  "step": "5/8 complete original54 isolatedPASS;3 material reviews terminal but unconsumed(format/baseline),candidate still uncommitted and undeployed;next simplify one exact material package preserving all content then independent review",
   "candidateCodeFiles": [
     "services/aos-api/aos_api/routers/ecommerce_workshop.py",
     "services/aos-api/tests/test_ecommerce_workshop_read_http.py",
@@ -22,5 +22,19 @@
     "apiSourceHead": "97c7509f395e2c976022df8db4ae6602906fb396",
     "webPid": 81203
   },
-  "nextAction": "Provide isolated disposable PostgreSQL for original2 integration cases;never use authoritative original DB for fixture writes;then exactPrime and only after consumption current API frozen/live verification"
+  "nextAction": "Prepare one-file exact review material with all current diff/audit/test/native evidence, baseline onehash;fresh request only after recording previous3 known terminal; no runner/parser weakening or fabricated PASS",
+  "isolatedVerification": {
+    "passes": 54,
+    "fixtureCluster": "7696118414481760296",
+    "fixtureContainer": "579e97f1d63cb2c90b48808fcd00ac792be3ce97adf231cba905f8b0bb7d9149",
+    "ownedFixtureStopped": true,
+    "originalPgUntouched": true,
+    "setupFailuresRetained": 2
+  },
+  "reviewResults": {
+    "r1": "terminal fenced JSON refused",
+    "r2": "terminal baseline mismatch refused",
+    "r3": "terminal fenced JSON refused",
+    "consumed": false
+  }
 }
