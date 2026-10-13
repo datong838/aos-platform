@@ -371,3 +371,56 @@ def test_frozen_source_candidate_rejects_drift_before_process_start(entry, sourc
         reason='RESTORED_API_SOURCE_FILES_DRIFT'
     with pytest.raises(entry.RestorationBlocked,match=reason):
         entry.require_api_source_candidate(report)
+
+
+def test_installed_readonly_directory_requires_canonical_selection_and_real_login(entry):
+    import json
+    selected='ab2fd72f-d81c-400d-bbbc-e1589a159d6b'
+    assert entry.installed_readonly_environment(None, management_oidc_config=None) == {}
+    environment=entry.installed_readonly_environment(selected, management_oidc_config=Path('/protected/oidc.json'))
+    assert json.loads(environment['AOS_INSTALLED_READONLY_CATALOG']) == {
+        'installationId':selected,'orgId':'org-org','projectId':'dev-project'}
+    for invalid in ['bad', selected.upper(), ' '+selected]:
+        with pytest.raises(entry.RestorationBlocked):
+            entry.installed_readonly_environment(invalid, management_oidc_config=Path('/protected/oidc.json'))
+    with pytest.raises(entry.RestorationBlocked):
+        entry.installed_readonly_environment(selected, management_oidc_config=None)
+
+
+def test_installed_readonly_selection_cannot_be_used_for_formal_start(entry, monkeypatch):
+    monkeypatch.setattr('sys.argv',['entry','--api-identity-file','/protected/identity',
+        '--installed-readonly-installation','ab2fd72f-d81c-400d-bbbc-e1589a159d6b'])
+    with pytest.raises(SystemExit) as exc:entry.main()
+    assert exc.value.code == 2
+
+
+def test_management_launch_revalidates_selected_installation_and_scrubs_inherited_config(entry, monkeypatch, tmp_path):
+    selected='ab2fd72f-d81c-400d-bbbc-e1589a159d6b'
+    observed=[]
+    (tmp_path/'trust').write_text('{}')
+    monkeypatch.setenv('AOS_INSTALLED_READONLY_CATALOG','untrusted inherited selection')
+    monkeypatch.setattr(entry.previous,'_port_free',lambda port:True)
+    monkeypatch.setattr(entry,'require_api_source_candidate',lambda path:tmp_path)
+    monkeypatch.setattr(entry,'load_management_oidc_config',lambda path:{'AOS_AUTH_ALLOW_DEV':'0'})
+    monkeypatch.setattr(entry,'preflight',lambda path:None)
+    monkeypatch.setattr(entry,'select_current_installation',lambda **kw:observed.append(kw['installation_id']))
+    monkeypatch.setattr(entry,'_identity_parameters',lambda path:{'host':'127.0.0.1','port':1,'dbname':'fixture','user':'fixture','pgpassFile':'/protected/passfile'})
+    class Connection:
+        def __enter__(self):return self
+        def __exit__(self,*args):pass
+        def execute(self,sql):return SimpleNamespace(fetchone=lambda:('on',))
+    monkeypatch.setattr('psycopg.connect',lambda *args,**kw:Connection())
+    monkeypatch.setattr(entry.os,'chdir',lambda path:None)
+    class CapturedLaunch(Exception):pass
+    def capture(executable,command,environment):
+        import json
+        assert json.loads(environment['AOS_INSTALLED_READONLY_CATALOG'])['installationId']==selected
+        assert environment['AOS_AUTH_ALLOW_DEV']=='0'
+        assert 'default_transaction_read_only=on' in environment['AOS_DATABASE_URL']
+        assert observed == [selected]
+        raise CapturedLaunch()
+    monkeypatch.setattr(entry.os,'execve',capture)
+    with pytest.raises(CapturedLaunch):
+        entry.serve_management_readonly(identity_file=tmp_path/'identity',bundle_root=tmp_path,
+            trust_roots_file=tmp_path/'trust',source_candidate=tmp_path/'source',
+            management_oidc_config=tmp_path/'oidc',installed_readonly_installation=selected)

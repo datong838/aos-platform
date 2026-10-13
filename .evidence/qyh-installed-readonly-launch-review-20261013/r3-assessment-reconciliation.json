@@ -1,0 +1,5 @@
+{
+  "verdict": "NEED_EVIDENCE",
+  "consumed": false,
+  "action": "add actual test function names and byte-exact original ReadOnlyManagementApp and FLAGS; no production code change or weakening"
+}

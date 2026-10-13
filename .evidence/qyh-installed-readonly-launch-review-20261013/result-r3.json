@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-installed-readonly-launch-review-20261013-r3-bare-json",
+    "task_id": "qyh-installed-readonly-launch-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "13d532ebf11f252d47b918d0dc290d1fff80e4a1",
+      "authority_revision": "AOS-002009",
+      "files": {
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-0.txt": "5e51736fa6bbe0fcea32f8c7882f66b81b57a7711b5051931bdd595be9281578",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-1.txt": "40fd63c69fdfa2f6f224dbfc27728cfb96a6a99378b42d6f5515c6da5d55a960",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-2.txt": "ba8148814484e3f69366192ed9b391985b3243121bd5018d631f340f7218c87f",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-3.txt": "c3dc2a9661a8a4184d08bfd005b141729add24a111641cdead8280e137048751"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "Original readonly management launcher adds an explicit canonical installation UUID option restricted to management readonly mode, requiring existing local OIDC config, and reuses select_current_installation before startup. Environment is scrubbed and only bounded server-selected org-org/dev-project installed readonly configuration is injected; readonly DB, original mutation and websocket fences, Host/worker/Provider OFF remain unchanged. This grants installed asset viewing only, not business/runtime or approval authority.",
+        "evidence": "r2-material-0.txt diff在scripts/a0v_qyh_restored_http.py新增installed_readonly_environment()（UUID校验+固定org-org/dev-project注入AOS_INSTALLED_READONLY_CATALOG），serve_management_readonly()接受installed_readonly_installation并在environment.update(readonly_catalog_environment)前调用select_current_installation；main()强制--installed-readonly-installation必须与--serve-management-readonly同用，否则parser.error。r2-material-3.txt build_installed_readonly_catalog()从env读取、校验三项字段、要求AOS_LOCAL_MANAGEMENT_OIDC_CONFIG与AOS_BUNDLE_ROOT均存在才构建InstalledReadonlyWorkshopCatalog，模块readiness设为DISABLED并打INSTALLED_ASSET_READONLY blocker。r2-material-1.txt声明数据库仍default_transaction_read_only、ReadOnlyManagementApp拒绝POST/WebSocket、不启动Host/worker/Provider。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "85 focused and adjacent launcher/catalog/API tests passed, including invalid/no identity/UUID, formal-mode option rejection, revalidation and inherited-config scrubbing, existing business routes and readonly mutation fences. Live API/Web cutover and actual authenticated eight-page browser verification remain pending; review freezes only this code change and plan.",
+        "evidence": "r2-material-2.txt显示85 passed, 7 warnings in 7.77s（仅UserWarning/DeprecationWarning）。r2-material-0.txt包含三个新测试：test_installed_readonly_directory_requires_canonical_selection_and_real_login覆盖None/无效/无OIDC；test_installed_readonly_selection_cannot_be_used_for_formal_start验证正式模式拒绝（SystemExit 2）；test_management_launch_revalidates_selected_installation_and_scrubs_inherited_config验证select_current_installation被调用、环境catalog被覆盖为selected、AOS_AUTH_ALLOW_DEV='0'、DSN含default_transaction_read_only=on。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "补充两类证据：(1)现有85测试的完整报告（或`services/aos-api/tests/extension_runtime/test_qyh_restored_http.py`中全部测试函数名列表），确认test_installed_readonly_*以外的相邻launcher/catalog变更测试是否覆盖；(2)在r2-material-0.txt或新增材料中明确列出本次diff未触及的原有fences文件/函数（ReadOnlyManagementApp POST拒绝、WebSocket拒绝、Host/worker/Provider停止逻辑），以便核对'unchanged'声明。当前冻结仅审阅代码变更本身可PASS，但未提供上述额外证据前不能判定claim 2关于'existing business routes and readonly mutation fences'通过。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

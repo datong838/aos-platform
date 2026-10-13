@@ -1,0 +1,133 @@
+diff --git a/scripts/a0v_qyh_restored_http.py b/scripts/a0v_qyh_restored_http.py
+index c5f21a31b..45e0dd3cc 100644
+--- a/scripts/a0v_qyh_restored_http.py
++++ b/scripts/a0v_qyh_restored_http.py
+@@ -336,13 +336,34 @@ def serve_limited(**arguments):
+     os.execve(sys.executable, command, environment)
+ 
+ 
++def installed_readonly_environment(installation_id, *, management_oidc_config):
++    """Explicit viewing selection; never a runtime-start or approval flag."""
++    if installation_id is None:
++        return {}
++    from uuid import UUID
++    try:
++        if not isinstance(installation_id, str) or str(UUID(installation_id)) != installation_id:
++            raise ValueError('Canonical UUID required')
++    except (ValueError, TypeError, AttributeError):
++        raise RestorationBlocked('INSTALLED_READONLY_SELECTION_INVALID') from None
++    if management_oidc_config is None:
++        raise RestorationBlocked('INSTALLED_READONLY_REAL_LOGIN_REQUIRED')
++    return {'AOS_INSTALLED_READONLY_CATALOG': json.dumps({
++        'installationId': installation_id, 'orgId': 'org-org', 'projectId': 'dev-project'})}
++
++
+ def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, source_candidate,
+-                              management_oidc_config=None):
++                              management_oidc_config=None, installed_readonly_installation=None):
+     """Attach preserved local management data without enabling formal execution."""
+     if not previous._port_free(LIMITED_PORT):
+         raise RestorationBlocked('RESTORED_HTTP_PORT_OCCUPIED')
+     source = require_api_source_candidate(source_candidate)
+     oidc_environment = load_management_oidc_config(management_oidc_config) if management_oidc_config is not None else None
++    readonly_catalog_environment = installed_readonly_environment(
++        installed_readonly_installation, management_oidc_config=management_oidc_config)
++    if installed_readonly_installation is not None:
++        select_current_installation(identity_file=identity_file, bundle_root=bundle_root,
++            trust_roots_file=trust_roots_file, installation_id=installed_readonly_installation)
+     preflight(identity_file)
+     identity = _identity_parameters(identity_file)
+     from psycopg import connect
+@@ -362,6 +383,7 @@ def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, s
+         'PGPASSFILE': identity['pgpassFile'], 'AOS_DATABASE_URL': dsn,
+         'AOS_BUNDLE_ROOT': str(bundle_root.resolve(strict=True)),
+         'AOS_BUNDLE_TRUST_ROOTS_FILE': str(trust_roots_file.resolve(strict=True))})
++    environment.update(readonly_catalog_environment)
+     environment['PYTHONPATH'] = os.pathsep.join([str(source / 'services/aos-api'), str(source / 'scripts')])
+     if oidc_environment is not None:
+         environment.update(oidc_environment)
+@@ -402,10 +424,13 @@ def main():
+     parser.add_argument('--serve-limited', action='store_true')
+     parser.add_argument('--serve-management-readonly', action='store_true')
+     parser.add_argument('--management-oidc-config', type=Path)
++    parser.add_argument('--installed-readonly-installation')
+     parser.add_argument('--source-candidate', type=Path)
+     args = parser.parse_args()
+     if args.management_oidc_config is not None and not args.serve_management_readonly:
+         parser.error('local management OIDC requires explicit management readonly serving')
++    if args.installed_readonly_installation is not None and not args.serve_management_readonly:
++        parser.error('installed readonly selection requires management readonly serving')
+     values = (args.current_installation, args.bundle_root, args.trust_roots_file)
+     if args.serve_management_readonly:
+         if (args.serve_limited or args.current_installation is not None
+@@ -413,7 +438,8 @@ def main():
+             parser.error('management inspection requires bundle root, trust roots, source candidate; no runtime installation or limited start')
+         serve_management_readonly(identity_file=args.api_identity_file, bundle_root=args.bundle_root,
+             trust_roots_file=args.trust_roots_file, source_candidate=args.source_candidate,
+-            management_oidc_config=args.management_oidc_config)
++            management_oidc_config=args.management_oidc_config,
++            installed_readonly_installation=args.installed_readonly_installation)
+         return
+     if args.serve_limited:
+         if any(value is None for value in values) or args.source_candidate is None:
+diff --git a/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py b/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py
+index 5913403df..d9cb03356 100644
+--- a/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py
++++ b/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py
+@@ -371,3 +371,56 @@ def test_frozen_source_candidate_rejects_drift_before_process_start(entry, sourc
+         reason='RESTORED_API_SOURCE_FILES_DRIFT'
+     with pytest.raises(entry.RestorationBlocked,match=reason):
+         entry.require_api_source_candidate(report)
++
++
++def test_installed_readonly_directory_requires_canonical_selection_and_real_login(entry):
++    import json
++    selected='ab2fd72f-d81c-400d-bbbc-e1589a159d6b'
++    assert entry.installed_readonly_environment(None, management_oidc_config=None) == {}
++    environment=entry.installed_readonly_environment(selected, management_oidc_config=Path('/protected/oidc.json'))
++    assert json.loads(environment['AOS_INSTALLED_READONLY_CATALOG']) == {
++        'installationId':selected,'orgId':'org-org','projectId':'dev-project'}
++    for invalid in ['bad', selected.upper(), ' '+selected]:
++        with pytest.raises(entry.RestorationBlocked):
++            entry.installed_readonly_environment(invalid, management_oidc_config=Path('/protected/oidc.json'))
++    with pytest.raises(entry.RestorationBlocked):
++        entry.installed_readonly_environment(selected, management_oidc_config=None)
++
++
++def test_installed_readonly_selection_cannot_be_used_for_formal_start(entry, monkeypatch):
++    monkeypatch.setattr('sys.argv',['entry','--api-identity-file','/protected/identity',
++        '--installed-readonly-installation','ab2fd72f-d81c-400d-bbbc-e1589a159d6b'])
++    with pytest.raises(SystemExit) as exc:entry.main()
++    assert exc.value.code == 2
++
++
++def test_management_launch_revalidates_selected_installation_and_scrubs_inherited_config(entry, monkeypatch, tmp_path):
++    selected='ab2fd72f-d81c-400d-bbbc-e1589a159d6b'
++    observed=[]
++    (tmp_path/'trust').write_text('{}')
++    monkeypatch.setenv('AOS_INSTALLED_READONLY_CATALOG','untrusted inherited selection')
++    monkeypatch.setattr(entry.previous,'_port_free',lambda port:True)
++    monkeypatch.setattr(entry,'require_api_source_candidate',lambda path:tmp_path)
++    monkeypatch.setattr(entry,'load_management_oidc_config',lambda path:{'AOS_AUTH_ALLOW_DEV':'0'})
++    monkeypatch.setattr(entry,'preflight',lambda path:None)
++    monkeypatch.setattr(entry,'select_current_installation',lambda **kw:observed.append(kw['installation_id']))
++    monkeypatch.setattr(entry,'_identity_parameters',lambda path:{'host':'127.0.0.1','port':1,'dbname':'fixture','user':'fixture','pgpassFile':'/protected/passfile'})
++    class Connection:
++        def __enter__(self):return self
++        def __exit__(self,*args):pass
++        def execute(self,sql):return SimpleNamespace(fetchone=lambda:('on',))
++    monkeypatch.setattr('psycopg.connect',lambda *args,**kw:Connection())
++    monkeypatch.setattr(entry.os,'chdir',lambda path:None)
++    class CapturedLaunch(Exception):pass
++    def capture(executable,command,environment):
++        import json
++        assert json.loads(environment['AOS_INSTALLED_READONLY_CATALOG'])['installationId']==selected
++        assert environment['AOS_AUTH_ALLOW_DEV']=='0'
++        assert 'default_transaction_read_only=on' in environment['AOS_DATABASE_URL']
++        assert observed == [selected]
++        raise CapturedLaunch()
++    monkeypatch.setattr(entry.os,'execve',capture)
++    with pytest.raises(CapturedLaunch):
++        entry.serve_management_readonly(identity_file=tmp_path/'identity',bundle_root=tmp_path,
++            trust_roots_file=tmp_path/'trust',source_candidate=tmp_path/'source',
++            management_oidc_config=tmp_path/'oidc',installed_readonly_installation=selected)

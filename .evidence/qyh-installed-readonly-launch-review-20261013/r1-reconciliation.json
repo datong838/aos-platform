@@ -1,0 +1,10 @@
+{
+  "outcome": "STRICT_RESPONSE_PARSE_REJECTED",
+  "transportExit": 0,
+  "consumed": false,
+  "materialsHadAdditionalTestFixtureFailure": true,
+  "correctedLatestEvidence": "85 passed",
+  "toolsDisabled": true,
+  "externalBusinessEffects": false,
+  "retryFreshRequest": "request-r2.json"
+}

@@ -1,0 +1,52 @@
+{
+  "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py": [
+    "test_management_readonly_blocks_mutations_before_product_app",
+    "test_management_reads_delegate_without_fabricating_auth",
+    "test_explicit_password_login_delegates_only_original_auth_endpoint",
+    "test_owned_exact_local_oidc_config",
+    "test_local_oidc_rejects_duplicate_symlink_fifo_and_extra_fields",
+    "test_login_optin_does_not_accept_truthy_nonboolean",
+    "test_local_login_config_requires_management_start",
+    "test_management_websocket_never_reaches_product",
+    "test_management_preserves_product_lifespan",
+    "test_management_and_formal_runtime_start_are_mutually_exclusive",
+    "test_management_start_uses_fresh_interpreter_and_frozen_factory",
+    "test_wrong_database_or_tenant_rejected",
+    "test_schema_must_match_current_code",
+    "test_migrated_preserved_cluster_matches_current_code",
+    "test_unknown_or_partial_migration_never_attaches",
+    "test_migrated_schema_keeps_original_tenant_and_volume_identity",
+    "test_preserved_data_does_not_grant_start_or_workshop_readiness",
+    "test_current_installation_cannot_use_historical_or_ambiguous_releases",
+    "test_exact_installation_evidence_does_not_grant_api_or_runtime_start",
+    "test_limited_start_rejects_missing_or_invalid_formal_login_before_database",
+    "test_limited_start_does_not_reuse_occupied_port",
+    "test_limited_launch_replaces_inherited_database_code_and_execution_environment",
+    "test_frozen_source_candidate_cannot_accept_a_source_path_outside_task",
+    "test_frozen_source_candidate_matches_committed_api_not_worktree",
+    "test_frozen_source_candidate_rejects_drift_before_process_start",
+    "test_installed_readonly_directory_requires_canonical_selection_and_real_login",
+    "test_installed_readonly_selection_cannot_be_used_for_formal_start",
+    "test_management_launch_revalidates_selected_installation_and_scrubs_inherited_config"
+  ],
+  "services/aos-api/tests/asset_registry/test_ecommerce_installed_readonly_catalog.py": [
+    "test_signed_installed_modules_are_visible_but_never_executable",
+    "test_cross_tenant_has_no_source_access",
+    "test_unselected_installation_is_not_visible",
+    "test_original_permissions_remain_required",
+    "test_content_drift_is_rejected",
+    "test_revoked_installation_is_re_read_instead_of_cached",
+    "test_unconfigured_server_catalog_is_empty_without_database",
+    "test_invalid_server_configuration_fails_closed",
+    "test_separate_http_view_does_not_replace_original_business_catalog"
+  ],
+  "services/aos-api/tests/test_ecommerce_workshop_api.py": [
+    "test_routes_use_principal_tenant_and_have_no_scope_injection_surface",
+    "test_content_campaign_workflow_command_is_installed_tenant_scoped_and_receipted",
+    "test_creator_internal_workflow_is_tenant_scoped_receipted_and_query_closed",
+    "test_not_installed_and_invalid_module_id_fail_explicitly",
+    "test_source_readiness_is_installation_gated_and_principal_scoped",
+    "test_source_readiness_zero_visible_modules_and_tenant_drift_fail_closed",
+    "test_openapi_freezes_workshop_reads_and_governed_internal_commands"
+  ]
+}

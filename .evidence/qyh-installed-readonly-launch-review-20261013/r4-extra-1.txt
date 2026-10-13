@@ -1,0 +1,42 @@
+scripts/a0v_qyh_restored_http.py ReadOnlyManagementApp byte-identical to HEAD 490daf65009abaec812b6c5a35fb094f9282fa717ae8f958139ed51480aee523
+class ReadOnlyManagementApp:
+    """Local inspection only; product authentication and tenant checks still run."""
+    def __init__(self, app, *, allow_password_login=False):
+        self.app = app
+        self.allow_password_login = allow_password_login is True
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] == 'websocket':
+            await send({'type': 'websocket.close', 'code': 1008})
+            return
+        login = (self.allow_password_login and scope['type'] == 'http'
+                 and scope['method'] == 'POST' and scope['path'] == '/v1/auth/token')
+        if scope['type'] == 'http' and scope['method'] not in {'GET', 'HEAD', 'OPTIONS'} and not login:
+            body = b'{"code":"RESTORED_MANAGEMENT_READ_ONLY","message":"Management inspection is read only."}'
+            await send({'type': 'http.response.start', 'status': 405,
+                        'headers': [(b'content-type', b'application/json'), (b'cache-control', b'no-store')]})
+            await send({'type': 'http.response.body', 'body': body})
+            return
+        await self.app(scope, receive, send)
+
+scripts/a0v_current_preview_http.py FLAGS byte-identical to HEAD 7fabc7ea485299b24bc4ea48beabfdfda2b0d82d9aafe1b07dd936926ae070fd
+FLAGS = {
+    "AOS_DOTENV_DISABLED": "1", "AOS_DB_MIGRATION_MODE": "disabled",
+    "AOS_AIP_BINDING_REQUIRE_PRIVATE": "1",
+    "AOS_QYH_CRON_ENABLED": "false", "AOS_AIP_LOGIC_AUTOMATION_ENABLED": "false",
+    "AOS_SNAPSHOT_GROUP_WORKER_ENABLED": "false",
+    "AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED": "false",
+    "AOS_EXTENSION_RUNTIME_HOST_ENABLED": "0", "AOS_JDBC_SSH_PREBUILD_ENABLED": "false",
+    "AOS_ECOM_CONTENT_TASKRUN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_AGENTRUN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_CAPACITY_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED": "false",
+    "AOS_ECOM_FEEDBACK_WORKER_ENABLED": "false",
+    "AOS_ECOM_IMPROVEMENT_WORKER_ENABLED": "false",
+    "AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED": "false",
+    "AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_STEP_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED": "false",
+}

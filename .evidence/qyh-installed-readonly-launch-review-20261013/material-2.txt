@@ -1,0 +1,91 @@
+................................................................F....... [ 84%]
+.............                                                            [100%]
+=================================== FAILURES ===================================
+_ test_management_launch_revalidates_selected_installation_and_scrubs_inherited_config _
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11eafc5d0>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-143/test_management_launch_revalid0')
+
+    def test_management_launch_revalidates_selected_installation_and_scrubs_inherited_config(entry, monkeypatch, tmp_path):
+        selected='ab2fd72f-d81c-400d-bbbc-e1589a159d6b'
+        observed=[]
+        monkeypatch.setenv('AOS_INSTALLED_READONLY_CATALOG','untrusted inherited selection')
+        monkeypatch.setattr(entry.previous,'_port_free',lambda port:True)
+        monkeypatch.setattr(entry,'require_api_source_candidate',lambda path:tmp_path)
+        monkeypatch.setattr(entry,'load_management_oidc_config',lambda path:{'AOS_AUTH_ALLOW_DEV':'0'})
+        monkeypatch.setattr(entry,'preflight',lambda path:None)
+        monkeypatch.setattr(entry,'select_current_installation',lambda **kw:observed.append(kw['installation_id']))
+        monkeypatch.setattr(entry,'_identity_parameters',lambda path:{'host':'127.0.0.1','port':1,'dbname':'fixture','user':'fixture','pgpassFile':'/protected/passfile'})
+        class Connection:
+            def __enter__(self):return self
+            def __exit__(self,*args):pass
+            def execute(self,sql):return SimpleNamespace(fetchone=lambda:('on',))
+        monkeypatch.setattr('psycopg.connect',lambda *args,**kw:Connection())
+        monkeypatch.setattr(entry.os,'chdir',lambda path:None)
+        class CapturedLaunch(Exception):pass
+        def capture(executable,command,environment):
+            import json
+            assert json.loads(environment['AOS_INSTALLED_READONLY_CATALOG'])['installationId']==selected
+            assert environment['AOS_AUTH_ALLOW_DEV']=='0'
+            assert 'default_transaction_read_only=on' in environment['AOS_DATABASE_URL']
+            assert observed == [selected]
+            raise CapturedLaunch()
+        monkeypatch.setattr(entry.os,'execve',capture)
+        with pytest.raises(CapturedLaunch):
+>           entry.serve_management_readonly(identity_file=tmp_path/'identity',bundle_root=tmp_path,
+                trust_roots_file=tmp_path/'trust',source_candidate=tmp_path/'source',
+                management_oidc_config=tmp_path/'oidc',installed_readonly_installation=selected)
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:423: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/a0v_qyh_restored_http.py:385: in serve_management_readonly
+    'AOS_BUNDLE_TRUST_ROOTS_FILE': str(trust_roots_file.resolve(strict=True))})
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py:993: in resolve
+    s = os.path.realpath(self, strict=strict)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen posixpath>:413: in realpath
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = '/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-143/test_management_launch_revalid0'
+rest = '', strict = True, seen = {}
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-143/test_management_launch_revalid0/trust'
+
+<frozen posixpath>:457: FileNotFoundError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_management_launch_revalidates_selected_installation_and_scrubs_inherited_config
+1 failed, 84 passed, 7 warnings in 4.36s

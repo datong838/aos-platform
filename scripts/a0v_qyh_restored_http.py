@@ -336,13 +336,34 @@ def serve_limited(**arguments):
     os.execve(sys.executable, command, environment)
 
 
+def installed_readonly_environment(installation_id, *, management_oidc_config):
+    """Explicit viewing selection; never a runtime-start or approval flag."""
+    if installation_id is None:
+        return {}
+    from uuid import UUID
+    try:
+        if not isinstance(installation_id, str) or str(UUID(installation_id)) != installation_id:
+            raise ValueError('Canonical UUID required')
+    except (ValueError, TypeError, AttributeError):
+        raise RestorationBlocked('INSTALLED_READONLY_SELECTION_INVALID') from None
+    if management_oidc_config is None:
+        raise RestorationBlocked('INSTALLED_READONLY_REAL_LOGIN_REQUIRED')
+    return {'AOS_INSTALLED_READONLY_CATALOG': json.dumps({
+        'installationId': installation_id, 'orgId': 'org-org', 'projectId': 'dev-project'})}
+
+
 def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, source_candidate,
-                              management_oidc_config=None):
+                              management_oidc_config=None, installed_readonly_installation=None):
     """Attach preserved local management data without enabling formal execution."""
     if not previous._port_free(LIMITED_PORT):
         raise RestorationBlocked('RESTORED_HTTP_PORT_OCCUPIED')
     source = require_api_source_candidate(source_candidate)
     oidc_environment = load_management_oidc_config(management_oidc_config) if management_oidc_config is not None else None
+    readonly_catalog_environment = installed_readonly_environment(
+        installed_readonly_installation, management_oidc_config=management_oidc_config)
+    if installed_readonly_installation is not None:
+        select_current_installation(identity_file=identity_file, bundle_root=bundle_root,
+            trust_roots_file=trust_roots_file, installation_id=installed_readonly_installation)
     preflight(identity_file)
     identity = _identity_parameters(identity_file)
     from psycopg import connect
@@ -362,6 +383,7 @@ def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, s
         'PGPASSFILE': identity['pgpassFile'], 'AOS_DATABASE_URL': dsn,
         'AOS_BUNDLE_ROOT': str(bundle_root.resolve(strict=True)),
         'AOS_BUNDLE_TRUST_ROOTS_FILE': str(trust_roots_file.resolve(strict=True))})
+    environment.update(readonly_catalog_environment)
     environment['PYTHONPATH'] = os.pathsep.join([str(source / 'services/aos-api'), str(source / 'scripts')])
     if oidc_environment is not None:
         environment.update(oidc_environment)
@@ -402,10 +424,13 @@ def main():
     parser.add_argument('--serve-limited', action='store_true')
     parser.add_argument('--serve-management-readonly', action='store_true')
     parser.add_argument('--management-oidc-config', type=Path)
+    parser.add_argument('--installed-readonly-installation')
     parser.add_argument('--source-candidate', type=Path)
     args = parser.parse_args()
     if args.management_oidc_config is not None and not args.serve_management_readonly:
         parser.error('local management OIDC requires explicit management readonly serving')
+    if args.installed_readonly_installation is not None and not args.serve_management_readonly:
+        parser.error('installed readonly selection requires management readonly serving')
     values = (args.current_installation, args.bundle_root, args.trust_roots_file)
     if args.serve_management_readonly:
         if (args.serve_limited or args.current_installation is not None
@@ -413,7 +438,8 @@ def main():
             parser.error('management inspection requires bundle root, trust roots, source candidate; no runtime installation or limited start')
         serve_management_readonly(identity_file=args.api_identity_file, bundle_root=args.bundle_root,
             trust_roots_file=args.trust_roots_file, source_candidate=args.source_candidate,
-            management_oidc_config=args.management_oidc_config)
+            management_oidc_config=args.management_oidc_config,
+            installed_readonly_installation=args.installed_readonly_installation)
         return
     if args.serve_limited:
         if any(value is None for value in values) or args.source_candidate is None:

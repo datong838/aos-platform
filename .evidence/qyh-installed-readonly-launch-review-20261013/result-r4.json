@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-installed-readonly-launch-review-20261013-r4-original-fences",
+    "task_id": "qyh-installed-readonly-launch-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "13d532ebf11f252d47b918d0dc290d1fff80e4a1",
+      "authority_revision": "AOS-002009",
+      "files": {
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-0.txt": "5e51736fa6bbe0fcea32f8c7882f66b81b57a7711b5051931bdd595be9281578",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-1.txt": "40fd63c69fdfa2f6f224dbfc27728cfb96a6a99378b42d6f5515c6da5d55a960",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-2.txt": "ba8148814484e3f69366192ed9b391985b3243121bd5018d631f340f7218c87f",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-3.txt": "c3dc2a9661a8a4184d08bfd005b141729add24a111641cdead8280e137048751",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r4-extra-0.txt": "f7baafe5cc861c1e6e67bc17713a0acc9ce5015acf3161103a364926996b3cde",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r4-extra-1.txt": "49ee0a83a655f6e67d4af2674c376bf60be95c33f28ab0de623d321e38367491"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Original readonly management launcher adds an explicit canonical installation UUID option restricted to management readonly mode, requiring existing local OIDC config, and reuses select_current_installation before startup. Environment is scrubbed and only bounded server-selected org-org/dev-project installed readonly configuration is injected; readonly DB, original mutation and websocket fences, Host/worker/Provider OFF remain unchanged. This grants installed asset viewing only, not business/runtime or approval authority.",
+        "evidence": "Material r2-material-0.txt (diff for scripts/a0v_qyh_restored_http.py): (1) New function installed_readonly_environment accepts installation_id with canonical UUID validation (str(UUID(installation_id)) != installation_id raises RestorationBlocked('INSTALLED_READONLY_SELECTION_INVALID')) and requires non-None management_oidc_config (raises RestorationBlocked('INSTALLED_READONLY_REAL_LOGIN_REQUIRED')), injecting only {'installationId':..., 'orgId':'org-org', 'projectId':'dev-project'} into AOS_INSTALLED_READONLY_CATALOG. (2) serve_management_readonly gains installed_readonly_installation parameter; if provided, calls select_current_installation(...) and merges readonly_catalog_environment into environment. (3) main() CLI validates '--installed-readonly-installation' requires '--serve-management-readonly' (parser.error). Material r2-material-3.txt (build_installed_readonly_catalog): enforces bounded set(config) == {'installationId','orgId','projectId'}, canonical string checks, and requires AOS_LOCAL_MANAGEMENT_OIDC_CONFIG + AOS_BUNDLE_ROOT + trust roots. Material r4-extra-1.txt: ReadOnlyManagementApp still rejects websocket (code 1008) and non-GET/HEAD/OPTIONS/POST-token with 405 RESTORED_MANAGEMENT_READ_ONLY; FLAGS remain byte-identical to HEAD with Host/worker/Provider disabled.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "85 focused and adjacent launcher/catalog/API tests passed, including invalid/no identity/UUID, formal-mode option rejection, revalidation and inherited-config scrubbing, existing business routes and readonly mutation fences. Live API/Web cutover and actual authenticated eight-page browser verification remain pending; review freezes only this code change and plan.",
+        "evidence": "Material r2-material-2.txt: pytest output shows '85 passed, 7 warnings in 7.77s'. Material r4-extra-0.txt: test list confirms the three new tests present—test_installed_readonly_directory_requires_canonical_selection_and_real_login, test_installed_readonly_selection_cannot_be_used_for_formal_start, test_management_launch_revalidates_selected_installation_and_scrubs_inherited_config—as well as existing adjacent launcher/catalog/API tests. Material r4-extra-1.txt: ReadOnlyManagementApp and FLAGS are byte-identical to HEAD, confirming original fences unchanged. Material r2-material-1.txt explicitly states 'Live API/Web cutover and actual authenticated eight-page browser verification remain pending; review freezes only this code change and plan.'",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前冻结基线 13d532ebf11f252d47b918d0dc290d1fff80e4a1/AOS-002009 不变；等待实际栖月汇安装恢复任务启动时，使用同一 HEAD 基线进行后续业务验收审阅。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-installed-readonly-launch-review-20261013-r4-original-fences",
+  "task_id": "qyh-installed-readonly-launch-review-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "13d532ebf11f252d47b918d0dc290d1fff80e4a1",
+    "authority_revision": "AOS-002009",
+    "files": {
+      ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-0.txt": "5e51736fa6bbe0fcea32f8c7882f66b81b57a7711b5051931bdd595be9281578",
+      ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-1.txt": "40fd63c69fdfa2f6f224dbfc27728cfb96a6a99378b42d6f5515c6da5d55a960",
+      ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-2.txt": "ba8148814484e3f69366192ed9b391985b3243121bd5018d631f340f7218c87f",
+      ".evidence/qyh-installed-readonly-launch-review-20261013/r2-material-3.txt": "c3dc2a9661a8a4184d08bfd005b141729add24a111641cdead8280e137048751",
+      ".evidence/qyh-installed-readonly-launch-review-20261013/r4-extra-0.txt": "f7baafe5cc861c1e6e67bc17713a0acc9ce5015acf3161103a364926996b3cde",
+      ".evidence/qyh-installed-readonly-launch-review-20261013/r4-extra-1.txt": "49ee0a83a655f6e67d4af2674c376bf60be95c33f28ab0de623d321e38367491"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "58c46d46b46a1d364364a19edfd81d1b9c32e92eb7a9c4e08133b977dd61524a",
+  "transport_sha256": "c3202034c204c01c608f5c911b29bd899aedd00d933ac771d45aaf3448b6dce5"
+}
