@@ -1,0 +1,11 @@
+{
+  "head": "c8e6239319da4c1f8acc738dc107f88d6f8988ef",
+  "onlyOriginalFunctionAnnotationChanges": [
+    "get_ecommerce_workshop_task_cockpit_feedback",
+    "get_ecommerce_workshop_task_cockpit_dispatch_scenario",
+    "get_ecommerce_workshop_task_cockpit_batch_scenario"
+  ],
+  "allOtherOriginalAstEqual": true,
+  "liveApiUpdated": false,
+  "businessComplete": false
+}

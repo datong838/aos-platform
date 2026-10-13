@@ -1,0 +1,103 @@
+{
+  "codeHead": "97c7509f395e2c976022df8db4ae6602906fb396",
+  "authority": "AOS-002016",
+  "tables650Unchanged": true,
+  "originalCluster": "7695302940039200809",
+  "originalSchema": "a0v_161",
+  "enabledBindings": 0,
+  "samePgStartedAt": true,
+  "apiOnlyReload": {
+    "pid": 92226,
+    "head": "97c7509f395e2c976022df8db4ae6602906fb396",
+    "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-97c7509f395e2c976022df8db4ae6602906fb396",
+    "port": 18080,
+    "terminalVerified": false,
+    "pgWebChromeTouched": false
+  },
+  "browser": {
+    "sourceHead": "97c7509f395e2c976022df8db4ae6602906fb396",
+    "authority": "AOS-002016",
+    "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+    "url": "http://127.0.0.1:18434/workshop/cockpit",
+    "reads": [
+      {
+        "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "itemCount": 2,
+        "blockers": [
+          "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED",
+          "TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT"
+        ],
+        "commands": null
+      },
+      {
+        "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "itemCount": 0,
+        "blockers": [],
+        "commands": null
+      },
+      {
+        "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+        "status": 200,
+        "tenant": null,
+        "itemCount": null,
+        "blockers": [
+          "TASK_GRAPH_EXACT_ROOT_REQUIRED"
+        ],
+        "commands": {
+          "dispatch": false,
+          "decideHandoff": false,
+          "requestTakeover": false,
+          "approveTakeover": false,
+          "mutateOwner": false
+        }
+      },
+      {
+        "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+        "status": 200,
+        "tenant": null,
+        "itemCount": null,
+        "blockers": [
+          "BATCH_EXACT_ROOTS_REQUIRED"
+        ],
+        "commands": {
+          "prepare": false,
+          "start": false,
+          "cancel": false,
+          "reconcile": false
+        }
+      }
+    ],
+    "settled": true,
+    "readFailure": false,
+    "taskCount2": true,
+    "cancelledOriginalTaskVisible": true,
+    "unplannedOriginalTaskVisible": true,
+    "feedbackEmpty": true,
+    "wikiNotInvented": true,
+    "ordinaryMenuClickVerified": true,
+    "businessComplete": false,
+    "session": {
+      "priorExpired401Verified": true,
+      "formFillToolTimedOut": true,
+      "kernelReconnectedSameOwnedTab": true,
+      "authToken200Observed": true,
+      "repeatedCredentialSubmission": false,
+      "authenticatedCurrentReads200": true,
+      "exactRecoveryAttemptOutcome": "not attributed to timedout fill; only final auth and read state verified"
+    }
+  },
+  "tests": "51 focused and original adjacent +3 feedback original adjacent;7 warnings existing",
+  "primeCodeConsumed": true,
+  "businessComplete": false,
+  "risk": "feedback empty is not nonempty branch; dispatch/batch readers unwired; original cancelled/task waiting not a natural successful chain"
+}

@@ -1,0 +1,256 @@
+FFFFFFF...FF                                                             [100%]
+=================================== FAILURES ===================================
+___ test_cockpit_read_uses_selected_admission[/views/task-cockpit/feedback] ____
+
+path = '/views/task-cockpit/feedback'
+
+    @pytest.mark.parametrize('path', PATHS)
+    def test_cockpit_read_uses_selected_admission(path):
+        client, legacy, reader = client_with_catalogs()
+        assert client.get('/v1/ecommerce-workshop' + path).status_code == 404
+>       assert not legacy.calls
+E       AssertionError: assert not [{'module_id': 'ecommerce.task-cockpit', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}]
+E        +  where [{'module_id': 'ecommerce.task-cockpit', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x119e87610>.calls
+
+services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py:25: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:33:58.817578+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:58.934130+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:58.934695+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/feedback \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/feedback "HTTP/1.1 404 Not Found"
+_ test_cockpit_read_uses_selected_admission[/views/task-cockpit/dispatch-scenario] _
+
+path = '/views/task-cockpit/dispatch-scenario'
+
+    @pytest.mark.parametrize('path', PATHS)
+    def test_cockpit_read_uses_selected_admission(path):
+        client, legacy, reader = client_with_catalogs()
+        assert client.get('/v1/ecommerce-workshop' + path).status_code == 404
+>       assert not legacy.calls
+E       AssertionError: assert not [{'module_id': 'ecommerce.task-cockpit', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}]
+E        +  where [{'module_id': 'ecommerce.task-cockpit', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x11a0fd0d0>.calls
+
+services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py:25: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:33:58.982869+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.093190+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.093642+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario "HTTP/1.1 404 Not Found"
+_ test_cockpit_read_uses_selected_admission[/views/task-cockpit/batch-scenario] _
+
+path = '/views/task-cockpit/batch-scenario'
+
+    @pytest.mark.parametrize('path', PATHS)
+    def test_cockpit_read_uses_selected_admission(path):
+        client, legacy, reader = client_with_catalogs()
+        assert client.get('/v1/ecommerce-workshop' + path).status_code == 404
+>       assert not legacy.calls
+E       AssertionError: assert not [{'module_id': 'ecommerce.task-cockpit', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}]
+E        +  where [{'module_id': 'ecommerce.task-cockpit', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x11a0accd0>.calls
+
+services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py:25: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:33:59.095480+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.206293+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.206788+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/batch-scenario \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/batch-scenario "HTTP/1.1 404 Not Found"
+_ test_default_scenario_returns_missing_roots_and_no_execution[dispatch-TASK_GRAPH_EXACT_ROOT_REQUIRED] _
+
+name = 'dispatch', code = 'TASK_GRAPH_EXACT_ROOT_REQUIRED'
+
+    @pytest.mark.parametrize('name,code', [
+        ('dispatch', 'TASK_GRAPH_EXACT_ROOT_REQUIRED'),
+        ('batch', 'BATCH_EXACT_ROOTS_REQUIRED'),
+    ])
+    def test_default_scenario_returns_missing_roots_and_no_execution(name, code):
+        client, legacy, reader = client_with_catalogs()
+        admit(reader)
+        response = client.get('/v1/ecommerce-workshop/views/task-cockpit/' + name + '-scenario')
+>       assert response.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py:38: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:33:59.208729+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.319815+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.320325+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario "HTTP/1.1 404 Not Found"
+_ test_default_scenario_returns_missing_roots_and_no_execution[batch-BATCH_EXACT_ROOTS_REQUIRED] _
+
+name = 'batch', code = 'BATCH_EXACT_ROOTS_REQUIRED'
+
+    @pytest.mark.parametrize('name,code', [
+        ('dispatch', 'TASK_GRAPH_EXACT_ROOT_REQUIRED'),
+        ('batch', 'BATCH_EXACT_ROOTS_REQUIRED'),
+    ])
+    def test_default_scenario_returns_missing_roots_and_no_execution(name, code):
+        client, legacy, reader = client_with_catalogs()
+        admit(reader)
+        response = client.get('/v1/ecommerce-workshop/views/task-cockpit/' + name + '-scenario')
+>       assert response.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py:38: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:33:59.322283+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.438152+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.438604+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/batch-scenario \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/batch-scenario "HTTP/1.1 404 Not Found"
+__ test_feedback_receives_authenticated_scope_and_keeps_source_unavailable[1] __
+
+limit = 1
+
+    @pytest.mark.parametrize('limit', [1, 20])
+    def test_feedback_receives_authenticated_scope_and_keeps_source_unavailable(limit):
+        client, legacy, reader = client_with_catalogs()
+        admit(reader)
+        class Unavailable:
+            def read(self, scope, **kwargs):
+                assert scope == TenantScope('org-org', 'dev-project')
+                assert kwargs == {'limit': limit}
+                raise FeedbackReadUnavailable('source unavailable')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_feedback_read_model] = lambda: Unavailable()
+        response = client.get(f'/v1/ecommerce-workshop/views/task-cockpit/feedback?limit={limit}')
+>       assert response.status_code == 503
+E       assert 404 == 503
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py:57: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:33:59.440520+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.554151+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.554621+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=1 \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=1 "HTTP/1.1 404 Not Found"
+_ test_feedback_receives_authenticated_scope_and_keeps_source_unavailable[20] __
+
+limit = 20
+
+    @pytest.mark.parametrize('limit', [1, 20])
+    def test_feedback_receives_authenticated_scope_and_keeps_source_unavailable(limit):
+        client, legacy, reader = client_with_catalogs()
+        admit(reader)
+        class Unavailable:
+            def read(self, scope, **kwargs):
+                assert scope == TenantScope('org-org', 'dev-project')
+                assert kwargs == {'limit': limit}
+                raise FeedbackReadUnavailable('source unavailable')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_feedback_read_model] = lambda: Unavailable()
+        response = client.get(f'/v1/ecommerce-workshop/views/task-cockpit/feedback?limit={limit}')
+>       assert response.status_code == 503
+E       assert 404 == 503
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py:57: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:33:59.556457+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.667713+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:33:59.668166+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=20 \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=20 "HTTP/1.1 404 Not Found"
+________________ test_feedback_limit_rejected_before_reader[0] _________________
+
+limit = 0
+
+    @pytest.mark.parametrize('limit', [0, 21])
+    def test_feedback_limit_rejected_before_reader(limit):
+        client, legacy, reader = client_with_catalogs()
+>       assert client.get(f'/v1/ecommerce-workshop/views/task-cockpit/feedback?limit={limit}').status_code == 422
+E       AssertionError: assert 400 == 422
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+E        +    where <Response [400 Bad Request]> = get('/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=0')
+E        +      where get = <starlette.testclient.TestClient object at 0x11c510690>.get
+
+services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py:72: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:34:00.000658+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:34:00.111386+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.errors", "msg": "validation_error count=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:34:00.111971+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=0 \"HTTP/1.1 400 Bad Request\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+INFO     aos-api.errors:errors.py:156 validation_error count=1
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=0 "HTTP/1.1 400 Bad Request"
+________________ test_feedback_limit_rejected_before_reader[21] ________________
+
+limit = 21
+
+    @pytest.mark.parametrize('limit', [0, 21])
+    def test_feedback_limit_rejected_before_reader(limit):
+        client, legacy, reader = client_with_catalogs()
+>       assert client.get(f'/v1/ecommerce-workshop/views/task-cockpit/feedback?limit={limit}').status_code == 422
+E       AssertionError: assert 400 == 422
+E        +  where 400 = <Response [400 Bad Request]>.status_code
+E        +    where <Response [400 Bad Request]> = get('/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=21')
+E        +      where get = <starlette.testclient.TestClient object at 0x11bcc15d0>.get
+
+services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py:72: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:34:00.113823+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:34:00.223917+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.errors", "msg": "validation_error count=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:34:00.224368+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=21 \"HTTP/1.1 400 Bad Request\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+INFO     aos-api.errors:errors.py:156 validation_error count=1
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=21 "HTTP/1.1 400 Bad Request"
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py::test_cockpit_read_uses_selected_admission[/views/task-cockpit/feedback]
+FAILED services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py::test_cockpit_read_uses_selected_admission[/views/task-cockpit/dispatch-scenario]
+FAILED services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py::test_cockpit_read_uses_selected_admission[/views/task-cockpit/batch-scenario]
+FAILED services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py::test_default_scenario_returns_missing_roots_and_no_execution[dispatch-TASK_GRAPH_EXACT_ROOT_REQUIRED]
+FAILED services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py::test_default_scenario_returns_missing_roots_and_no_execution[batch-BATCH_EXACT_ROOTS_REQUIRED]
+FAILED services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py::test_feedback_receives_authenticated_scope_and_keeps_source_unavailable[1]
+FAILED services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py::test_feedback_receives_authenticated_scope_and_keeps_source_unavailable[20]
+FAILED services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py::test_feedback_limit_rejected_before_reader[0]
+FAILED services/aos-api/tests/test_ecommerce_cockpit_read_dependencies.py::test_feedback_limit_rejected_before_reader[21]
+9 failed, 3 passed, 7 warnings in 1.69s

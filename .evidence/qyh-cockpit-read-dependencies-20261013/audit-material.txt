@@ -1,0 +1,46 @@
+{
+  "head": "cbf1f48cc1e80c2ec461a2fc53dcb7a4f2d491d0",
+  "authority": "AOS-002016",
+  "status": "STATIC_CALL_PATH_AUDITED_NATIVE_AND_HTTP_PENDING",
+  "sourceHashes": {
+    "ecommerce_workshop_feedback_read_model.py": "fc6e71acd789524ffede8e7860bfd46b6d0449c3608a6f9184a60dc8d999dcd7",
+    "ecommerce_growth_host_ports.py": "1f32bc3fe0d95830d110d12ce179921eee688bc188baa9e694d23752ebd14a62",
+    "ecommerce_growth_feedback_port.py": "bd5bd8737caa4b06c2f53080b38f17c2714ba363fa7e4e88bf76efa376b142ba",
+    "ecommerce_growth_daily_review_target.py": "3c74713a319872fa99f899581406ead082a8e876956483c0c898f1161b4842fe",
+    "ecommerce_growth_improvement_target.py": "eb8b90c84bf6f9070a8b90475cf3b2a6c63995d77cd5872eed602d070692ddd4",
+    "ecommerce_growth_memory_candidate_target.py": "555ccfb0e73547efffeaa95f36af8cb53eb505afb1a3bc0671340eaa5a5ab17f",
+    "ecommerce_growth_effect_review_owner.py": "0548207287b21aad631b439271c8964b3ef1f822956c59bc4e6ad01342897441",
+    "aip_memory_store.py": "ac48bb03975c9c3f98449a7d61e83719842ddd9afbc57e87b48e856f24b1f75e",
+    "aip_effect_review_store.py": "15e02486d5fb992b2ff77d81edf8c8824c3bcf212f2da5c6996f0400e036e233",
+    "db.py": "a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010",
+    "tenant_scope.py": "4c727d12810e6e2e9f1bba218d5fed6277afcaf4ddb7eb2ae4f67c73fc532fa6",
+    "ecommerce_workshop_dispatch_scenario.py": "4a684288c5c9394909b36746e2c993cec1f0d0671244110e628e1746ba94ef9e",
+    "ecommerce_workshop_batch_scenario.py": "dac761d0d9da49fbf9cae6493a949caeb88bc5cee76725cd266678d9c37ff670",
+    "routers/ecommerce_workshop.py": "ef62df1e95e012dbd53bd598e5a5fe0f919cefb2b21cc4f33bacc988b8a1d979"
+  },
+  "feedbackConnection": "aos_api.db.connect_read_only default; REPEATABLE_READ/read_only before first SQL; explicit tenant transaction local role and GUCs; runtime_connection is NOT its default",
+  "readPaths": [
+    "HostTransaction.__init__/execute only stores connection/delegates query",
+    "feedback port constructor only validates/stores; read has 3 scoped table SELECTs and pure DTO deepcopy",
+    "daily/improvement constructors only scoped refs; read_receipt scoped SELECT/hash equality, no put call",
+    "candidate constructor AipMemoryStore constructor only retains factory; read_receipt invokes scoped candidate/origin/effect SELECT and pure exact ref/hash checks; no store write invoked",
+    "EffectReviewOwner._existing scoped SELECT; _verify_review pure canonical hash and insufficient evidence validation",
+    "original Artifact/Run, candidate status/item SELECTs and exact checks; claimed/unknown preserved; no acknowledgement inferred"
+  ],
+  "dispatchAndBatch": "actual cached router factories both instantiate reader=None; current read only composes missing exact roots/blocked DTO; any future reader binding requires separate audit",
+  "excludedMethods": [
+    "enqueue",
+    "put",
+    "claim_current",
+    "acknowledge",
+    "mark_unknown",
+    "reconcile_claim",
+    "run_one",
+    "run_once",
+    "serve",
+    "create_source_revision_in_transaction",
+    "submit_candidate_in_transaction"
+  ],
+  "runtimeProofPending": true,
+  "businessComplete": false
+}

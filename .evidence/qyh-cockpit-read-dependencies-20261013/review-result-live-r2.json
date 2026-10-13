@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-cockpit-read-dependencies-20261013-live-r2",
+    "task_id": "qyh-cockpit-read-dependencies-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "97c7509f395e2c976022df8db4ae6602906fb396",
+      "authority_revision": "AOS-002016",
+      "files": {
+        ".evidence/qyh-cockpit-read-dependencies-20261013/live-material-verification-live.json.txt": "51d39ab75fabda067f51ab1cbaad84360e9aa1fee57910ba44c7013c480e0869",
+        ".evidence/qyh-cockpit-read-dependencies-20261013/live-material-browser-readback.json.txt": "794fe6ddf840124e3a97313ec7621b17a4ac33a6220ff76fdddbc61a5929d35a",
+        ".evidence/qyh-cockpit-read-dependencies-20261013/live-material-review-consumption-r1.json.txt": "cabc89131a17c7daf25c0107454e80c98e8097eff97a30dae9abf78764bcbe97",
+        ".evidence/qyh-cockpit-read-dependencies-20261013/live-material-tests-feedback-adjacent.txt.txt": "7665e2339538bc14266aa7ff0b1b630b208af82d2daffa72cf9ce4d9f70a8b14"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "本波97c7509f3仅3个审计GET代码改动已有独立code PASS消费、51+3验证；受支持原维护入口API-only由86349到92226，PG/Web/Chrome未发信号，不作为新全面重启。",
+        "evidence": "材料 .evidence/qyh-cockpit-read-dependencies-20261013/live-material-verification-live.json.txt 中 codeHead=97c7509f3...、apiOnlyReload.pid=92226、pgWebChromeTouched=false、tests=51 focused and original adjacent +3 feedback original adjacent;7 warnings existing、primeCodeConsumed=true。终端验证为false但未要求true；test文件 3 passed 0.66s 与 warnings 7 对应.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "实际原owned菜单读取当前任务总控root+feedback+dispatch+batch均200且页面已稳定无读取失败；反馈0不作非空或经营闭环证明，原2业务任务分别取消/待规划，dispatch/batch exact根缺失且全部commands false；原650表指纹与前波逐项一致，bindings0、Goal业务仍pending。",
+        "evidence": "材料 .evidence/qyh-cockpit-read-dependencies-20261013/live-material-verification-live.json.txt 中 browser.reads 四项 status=200、readFailure=false、settled=true、taskCount2=true、cancelledOriginalTaskVisible=true、unplannedOriginalTaskVisible=true、feedbackEmpty=true、businessComplete=false；blocks 含 TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED/TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT/TASK_GRAPH_EXACT_ROOT_REQUIRED/BATCH_EXACT_ROOTS_REQUIRED；dispatch/batch commands 全false；originalCluster/originalSchema/enabledBindings=0/tables650Unchanged=true。r1 review 状态 CONSUMED_MATERIAL_REVIEW transport_sha256 可定位前波审阅消费点。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续按 AOS-002016 基线推进，先解除 TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED 与 TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT 两个 blocker 所需的 root/scoped 数据与 snapshot，再重跑 cockpit 总控读取验证；不要以 API-only 92226 重启 PG/Web/Chrome 链路，避免 scope 漂移。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

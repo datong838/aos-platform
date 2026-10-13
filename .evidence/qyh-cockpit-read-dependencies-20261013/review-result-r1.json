@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-cockpit-read-dependencies-20261013-r1",
+    "task_id": "qyh-cockpit-read-dependencies-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "c8e6239319da4c1f8acc738dc107f88d6f8988ef",
+      "authority_revision": "AOS-002016",
+      "files": {
+        ".evidence/qyh-cockpit-read-dependencies-20261013/plan-material.txt": "524bb222ed6e5a1bf4b665007be06495d21a904fc34f321b68f2170b49f0ac27",
+        ".evidence/qyh-cockpit-read-dependencies-20261013/audit-material.txt": "a0fb450a97170fac3aa8f5ced5b90586b0f473b6bc39aa4bf02e8238a8d5bd7f",
+        ".evidence/qyh-cockpit-read-dependencies-20261013/native-material.txt": "750ba5b96adad351966f3b7c66e77c77c7e16d93d810eb3e5f37a0747767bd0c",
+        ".evidence/qyh-cockpit-read-dependencies-20261013/compatibility-material.txt": "35a48656e8b9ed6b00b66d37e66a6cce02fef69ef031ea5dfe836f303427821e",
+        ".evidence/qyh-cockpit-read-dependencies-20261013/tests-material.txt": "43242bac017d2a30822bb58f11f6bc95c61856f5090d9dfc24f122ac0f0eea52",
+        ".evidence/qyh-cockpit-read-dependencies-20261013/router-diff-material.txt": "2cc35e898e70f399e8aee5f5b39179e9a171feabe6ff6bd10c321ddc386266e2"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "候选仅三条已审计任务总控GET目录参数换ReadCatalogDependency，全部原函数体、其他函数与POST保持。读取准入不构成运行授权，反馈Receipt/unknown校验保留。",
+        "evidence": ".evidence/qyh-cockpit-read-dependencies-20261013/router-diff-material.txt 显示仅 get_ecommerce_workshop_task_cockpit_feedback / get_ecommerce_workshop_task_cockpit_dispatch_scenario / get_ecommerce_workshop_task_cockpit_batch_scenario 三个 GET 路由的 catalog 参数由 CatalogDependency 换为 ReadCatalogDependency；.evidence/qyh-cockpit-read-dependencies-20261013/compatibility-material.txt 声明 allOtherOriginalAstEqual=true；plan-material.txt 声明 feedback/dispatch/batch 功能不变，仅换目录接入点。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "51项HTTP及场景相邻通过：反馈不可用仍503、tenant/limit/unknown参数原门不变，默认dispatch/batch exact根缺失且所有commands false。原普通runtime原生feedback空0明确不作非空反馈或经营完成证明；实际新版API/真实页面尚待。",
+        "evidence": ".evidence/qyh-cockpit-read-dependencies-20261013/tests-material.txt 报告 51 passed；其中 test_feedback_receives_authenticated_scope_and_keeps_source_unavailable 验证 FeedbackReadUnavailable 仍返回 503 并含 TASK_COCKPIT_FEEDBACK_UNAVAILABLE；test_default_scenario_returns_missing_roots_and_no_execution 验证 dispatch 返回 TASK_GRAPH_EXACT_ROOT_REQUIRED、batch 返回 BATCH_EXACT_ROOTS_REQUIRED 且所有 commands=false；test_cockpit_unknown_query_rejected_before_admission 与 test_feedback_limit_rejected_before_reader 验证 unknown/limit=0,21 在准入前被拒；.evidence/qyh-cockpit-read-dependencies-20261013/native-material.txt 反馈 item_count=0 hasMore=false、dispatch/blockers=[TASK_GRAPH_EXACT_ROOT_REQUIRED]、batch/blockers=[BATCH_EXACT_ROOTS_REQUIRED]、businessComplete=false；.evidence/qyh-cockpit-read-dependencies-20261013/audit-material.txt runtimeProofPending=true、businessComplete=false。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "当前 GET 仅换 ReadCatalogDependency 已完成静态审计与 51 项 HTTP 回归；继续按 plan 把此次已审计范围提交 Authority 注册，同时为下次覆盖的 private GET 登记独立审计/RED 再进入新 scope。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}
