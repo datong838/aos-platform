@@ -1,0 +1,16 @@
+{
+  "outcome": "CURRENT_COMPLETE_ISOLATED_RESTORE_GREEN",
+  "sourceContainer": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "cloneContainer": "752677f1570b2f317f1df9f5f1fb3d1337cc0b498d0b885a6a90d32d1f9746d5",
+  "cloneVolume": "qyh-installation-preparation-full-restore-20261013",
+  "tables": 650,
+  "twoVerifiedBackups": true,
+  "all650TablesAndSourceMetadataUnchanged": true,
+  "schemaFiniteExactComparisonPassed": true,
+  "currentDatabaseWrites": false,
+  "currentServicesRestarted": false,
+  "runtimeOperationRequested": false,
+  "hostStarted": false,
+  "eightPagesAccepted": false,
+  "scriptSHA256": "72f7384f1518c4ea7a26ec5cc65243fac27619adb9696030af75454c63a1f7e6"
+}

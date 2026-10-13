@@ -1,0 +1,45 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-selected-installation-preparation-scheduler-20261013-r1",
+    "task_id": "qyh-selected-installation-preparation-scheduler-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "b514011bd244305c85d48ac4b92860f5b0303b50",
+      "authority_revision": "AOS-002003",
+      "files": {
+        ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-0.txt": "e7e647340d07149eb6617587949b0257115ca96901fddbe51629ab51bc9726b5",
+        ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-1.txt": "cb90145fce2b0ee604c90a15d0a46f72a6ca153fd22159d2d9d80b48c0b5564a",
+        ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-2.txt": "404af6ba8c87260471e49fe7d21a6adaf2ebc814106fc7d4e548e43572a0c31e",
+        ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-3.txt": "db1d616847a127818f3c53cbc9224c5da3df8bec4becd17cd138ae74b7b87380",
+        ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-4.txt": "20bdc88796f057d18c8d4f2c4284b6df5104db25a2ac7e4957ae72b049a0370e",
+        ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-5.txt": "959e74d92a0b220d9c4b072f8760c68556f16a59a999663325fa44f780bea8fa",
+        ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-6.txt": "a847d1173ed7f44e4f0ab1c0a05f3dcb16a6aa090b7ec4fb2828ccf3145470d2",
+        ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-7.txt": "366366584b2854924e02beb50192107b8dc417264f4905000210ed74ef578e78"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Selected original scheduler tick filters real bounded unique same-scope descriptors to one UUID, retains its original owner in find_owner, and uses the existing mutual exclusion, cancellation shield and cleanup; the default all-scope run_once behavior remains unchanged.",
+        "evidence": "material-1.txt: LiveInstallationScheduler._run(descriptor filtering by selected_installation; LIMIT/bounded checks; _owners retention); run_selected_once calls _start_tick(selected_installation); run_once unchanged; _start_tick asyncio.shield/already-in-progress guard; stop/_close/idle semantics preserved.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Nine new tests cover target-only dispatch, unchanged unrelated existing owners, owner continuity with original Host verify admission, missing target, wrong UUID type, duplicate/cross-scope descriptors and shared concurrent/closing guards;117 pure unit and adjacent cases passed, without claiming mock tests are PostgreSQL acceptance.",
+        "evidence": "material-2.txt: 6 pytest functions (test_selected_retains_only_native_selected_owner_for_followup, test_selected_does_not_dispatch_an_existing_unselected_owner, test_missing_target_has_no_fabricated_descriptor_or_owner, test_selected_rejects_non_uuid_before_directory_read, test_selected_rejects_duplicate_or_cross_scope_native_page, test_selected_and_legacy_share_one_tick_and_stop_awaits_owned_work); material-3.txt: existing test module; material-4.txt: '117 passed'. material-0.txt: disclaimer against mock=PG acceptance.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Actual frozen b514 code on the independently restored clone completed original reset, apply and verify through the same original scheduler owner with enable_allowed=false; native records show active installation and succeeded apply/verify, while old407 undelivered outboxes stay3 and current650 tables/metadata unchanged. This is isolated acceptance, not current system installation or visible eight-page completion.",
+        "evidence": "material-7.txt: run Selected once loop; enable_allowed asserted False; runtime-verify requested with preparation_admission; material-6.txt: ticks include succeeded apply+verify acknowledged, sameOriginalOwner=True, enableAllowed=False, currentDatabaseWrites=False; material-5.txt: installation state active revision 7, old407Undelivered=3, current650TablesAndMetadataUnchanged=True, currentDatabaseWrites=False, sourceHead=b514011bd244305c85d48ac4b92860f5b0303b50; material-0.txt: isolated acceptance disclaimer.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留本次 b514 冻结下的 PASS 结论；进入下一阶段前，按 material-0.txt 要求在同一 b514 基线下完成 reset/apply/verify 连续演练与独立复审，并更新 AOS delivery milestone 记录。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

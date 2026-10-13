@@ -1,0 +1,9 @@
+{
+  "cloneOnly": true,
+  "hostStarted": false,
+  "schedulerClosed": true,
+  "currentDatabaseWrites": false,
+  "eightPagesAccepted": false,
+  "verifyRequested": true,
+  "enableRequested": false
+}

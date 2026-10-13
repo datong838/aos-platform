@@ -5,8 +5,8 @@
   "task_id": "qyh-full-system-restoration-20261011",
   "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
   "task_base_revision": "AOS-001842",
-  "authority_revision": "AOS-001997",
-  "step": "approved_installation_runtime_preparation_dependency_reconciliation",
+  "authority_revision": "AOS-002004",
+  "step": "approved_current_installation_selected_preparation_reconciliation",
   "code_files": [
     "scripts/a0v_qyh_restored_http.py",
     "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py"
@@ -90,5 +90,6 @@
       "state": "VERIFIED_LOCAL",
       "proof": ".evidence/qyh-full-system-restoration-20261011/checkpoint-reconciliation-20261012/actual_current_assets_and_submitted_eight_installation-proof.json"
     }
-  ]
+  ],
+  "next_step": "REVIEW_STEP:current_original_apply_verify_and_eight_configuration_readiness"
 }

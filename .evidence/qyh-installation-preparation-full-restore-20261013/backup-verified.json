@@ -1,0 +1,10 @@
+{
+  "hashes": {
+    "current.dump": "395ac9ce55285de9adb1ba6f1fe766e40900ecdc70cb52180bdda1588108cb01",
+    "current.dump.second": "395ac9ce55285de9adb1ba6f1fe766e40900ecdc70cb52180bdda1588108cb01",
+    "globals.sql": "1043b0ea3d6f3f4b156cbf4a34aa741aed11ba567e51cbedd6629a9bac3cb0cd",
+    "globals.sql.second": "1043b0ea3d6f3f4b156cbf4a34aa741aed11ba567e51cbedd6629a9bac3cb0cd"
+  },
+  "sourceUnchanged": true,
+  "fullDecodePassed": true
+}

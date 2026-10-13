@@ -1,0 +1,92 @@
+{
+  "native": {
+    "installation": {
+      "etag_version": 7,
+      "current_revision": 7,
+      "active_revision": 7,
+      "state": "active"
+    },
+    "operations": [
+      {
+        "operation_id": "436c09d2-d1fa-48c9-9223-da768797fd16",
+        "kind": "runtime-apply",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 16,
+        "failure_code": null,
+        "idempotency_key": "qyh-isolated-original-apply-20261013"
+      },
+      {
+        "operation_id": "b8ab8575-9e1d-49e6-9ac5-26c9bdb40d63",
+        "kind": "runtime-apply",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 16,
+        "failure_code": null,
+        "idempotency_key": "qyh-isolated-original-apply-r3-20261013"
+      },
+      {
+        "operation_id": "058e9581-f717-4728-977c-fb172d310105",
+        "kind": "runtime-verify",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 5,
+        "failure_code": null,
+        "idempotency_key": "qyh-isolated-original-verify-r3-20261013"
+      }
+    ],
+    "bindings": [
+      {
+        "enabled": false,
+        "operation_fence": true,
+        "desired_state": "disabled",
+        "observed_state": "unknown",
+        "generation": "88c6730f-4a97-414a-98b8-3825ae29ee0c"
+      }
+    ],
+    "resourceRelease": [
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      }
+    ],
+    "old407Undelivered": 3
+  },
+  "changedLabTables": [
+    "public.bundle_installation",
+    "public.bundle_installation_command",
+    "public.bundle_installation_event",
+    "public.bundle_installation_revision",
+    "public.extension_runtime_binding",
+    "public.extension_runtime_event",
+    "public.extension_runtime_operation",
+    "public.extension_runtime_outbox",
+    "public.extension_runtime_resource_lease"
+  ],
+  "current650TablesAndMetadataUnchanged": true,
+  "currentDatabaseWrites": false,
+  "old407OutboxesUntouched": true,
+  "runtimeEnableRequested": false,
+  "eightPagesAccepted": false,
+  "sourceHead": "b514011bd244305c85d48ac4b92860f5b0303b50"
+}

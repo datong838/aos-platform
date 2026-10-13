@@ -1,0 +1,26 @@
+# 栖月汇原安装预备流程独立全恢复基线
+
+Rules：231-2/3/4/6，既有用户全恢复/安装批准，唯一m1写者，当前库只读；不改审批/安装状态、不启动当前Host/worker/Provider、不重放未知operation、不读商城源、不push。已登记Task/Lease AOS-002003，新增文件仅本目录restore.py与公开证据；私密备份0700/0600且不入Git。
+
+候选A：原签名四包的runtime-apply/verify安装预备独立演练，依赖当前approved3、真实3plane身份与原Host assignment。候选B：Source兼容实验需原归档独立恢复。选A先建立最新650表全恢复基线。本步骤不提交当前或副本的安装命令，不把restore通过当八台恢复。
+
+当前source container84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c、卷aos-qyh-history159-prepared-data-20261011、cluster7695302940039200809/db aos_meta_head@161，bindings=0。只读单一repeatable snapshot、逐表1MB/5s/parallel0，保存650表fingerprints、schema固定restrict-key与roles/membership/sequences状态。两份完整custom备份和无密码globals分别核hash和全量decode；采用原aos_app bootstrap并只跳exact CREATE ROLE aos_app，不改GRANTED BY，不给current角色新权。
+
+新独立命名卷/容器qyh-installation-preparation-full-restore-20261013，固定既有image digest，network none/无端口、512MiB内存及低PG缓存，测得可用内存需>=768MiB才创建。原库/卷永不复用；新卷备份保留，不清理未知容器。journal每个副作用写前独占建立，未知效果禁止重跑脚本；断联只读对账。原pg_restore single-transaction/exit-on-error；全650行hash及角色/成员/sequence要一致。schema不做通用归一化；仅原已登记两个CHECK的结合AND重组可按精确bytes旧差异复核，任何新差异失败。
+
+完整恢复后再次核current650/schema/roles/seq与初始完全一致，并核权威PG启动时间/命名卷/所有容器清单，仅允许本owned新lab新增，不重启现服务。独立复审冻结材料，Delivery/精确提交/上下文同步。随后原安装服务演练连接方式和副本凭证另明确计划，禁止fake admission、伪ACTIVE、人工重写profilepredicate；完整执行Owner/八配置/预算仍保持独立未验收。
+
+实际restore已通过650全指纹/角色成员序列与两具名CHECK精确差异，当前650和metadata再次不变。r1需补有限schema差异，r2需补实际电商依赖类型观测，均已补充真实只读证据；r3严格JSON解析失败不消费、不削弱解析器，记录无外部效果并33秒退避后新request r4。当前八台仍未验收、Goal未改。
+
+完整恢复的独立模型复审仍有格式局部失败，不宣称PASS/完成Delivery、不因此停止已授权独立lab准备。新增lab_transport.py；本Task唯一维护范围覆盖本owned新lab。后续仅本clone干净停止并留原container/CID、同volume由suffix-transport容器在唯一18549 loopback端口加载，独立internal网络禁止外联，无current服务重启。操作前exactLease、CID、volume/image/memory/当前bindings0与650保存；每个副作用有intent，不重复未知。仅lab三已有角色新随机SCRAM、原HBA host规则trust改SCRAM/local不动，不新grant/membership/角色；private身份文件0700/0600，密码只stdin传原PG、不输出/CLI/env/Git。原physical-isolation probes用真实psycopg三个连接与wrong-password负门；通过仅代表副本连接资格。实际安装请求另原CAS/deadline合同连续执行，无runtime-enable/旧Run/Source/Provider。
+
+Lab transport实际失败在Mac连接，Docker internal network不会发布host port，docker port空/VM18549未监听；原Lab650/restored161已在run、全部SCRAM规则native无error、setup效果已确认，不重发任何secret/HBA/setup。最小改为现有Colima受支持SSH配置建立本机127.0.0.1:18549→唯一owned clone172.19.0.2:5432隧道，internal网络/无外联保持，原container与source服务均不重启。隧道仅读原SSH配置不复制密钥，独立owned进程/PID/参数receipt；之后只续尚未运行原三plane probes/负门/指纹，不重跑lab_transport.py。
+
+隧道下三个实际角色SCRAM连接/原isolation探针与错误密码负门成功。首probes-only核对误将clone已登记CHECK重组后的schema hash与source原schema hash直接比较而失败（未写任何DB），纠正仅使用本次review-supplement的实际cloneSchemaSHA256精确比对；roles/memberships/sequences和650rows仍逐项精确比较，不新增normalize，不重做任何transport/secret/HBA。失败日志保留。
+
+真实internal隧道连接已通过全部3角色原probe、全部错误secret拒绝、clone原schema精确hash/650/角色序列和current650完全不变。下一原安装服务的独立连续演练，新增original_preparation_lab.py/launch_original_preparation_lab.py：冻结25b8代码，原build_runtime_control_plane(dependent原电商对象)，仅lab普通runtime角色作为原Store连接（私密pgpass、环境DSN无密码）；原三plane file保持distinct、web不授runtime member。通过公开的原ProductionPreparationDependencies/RuntimeWorkerDependencies与select_production_runtime_host进行实际副本identity/目录门（不伪造当前physical preflight）。原native cloneCID/cluster/db@161、human admin member、目标approved3/全scope pending0回读后，使用原service request_preparation(runtime-apply)、真实host.has_current_preparation_assignment、原CAS3与新lab幂等键，仅原live scheduler(preparation_only=True/include_rehydrate=false)推进该target。不得调用Host.run_once/旧attempt recovery/enable/Source/Provider；原owner不允许enable。5min deadline同轮执行，任何未知receipt不重发，新fixture命令不制造旧Runs。读取原status/receipt与bounded error诊断，真实失败保存RED并再按file级合同修复。只在本隔离库产生新operation/lease/3网络noneOCI沙盒，不启动自然业务链，记录close原owner后的资源状态。
+原lab service首检查失败在全scope目录非空，尚未创建apply intent/receipt。native确认仅旧407.../6b668e... succeeded三未ACK outbox，并非未终态operation。保留旧记录/不ACK/不重发。本次精确target原owner路径r2：原PostgresPendingPreparationDirectory实际读出新descriptor，再原scheduler.factory(target)构造同scope/已授权新实例的LiveInstallationLifecycleOwner，原owner.run_once仅target且enable_allowed=false；不调用scheduler全scope.run_once，不运行任何旧descriptor，原服务/权限/签名/幂等门不变。原private pgpass已生成仅exact读取复用，不重发secretsetup。
+
+首原apply成功（202/operation436c... succeeded/installation applied4），关闭原Owner后三原资源native released/Bindings0；这是演练资源收口，不宣称verify成功。原reset_preparation已复习validate_reset_snapshot/CurrentPermission/immutable proof/原CAS4，仅lab满足applied+无binding+3released+originalsucceededproof，原服务reset→approved5；新idem/CAS5再apply→applied6，最新b514冻结原scheduler.run_selected_once真正登记Owner；使用同一个实际Host materialized scheduler及原verify-admission，原verify/CAS6→同Owner selected tick，不停Owner直到验证回读完成；全Host.run不调用/Old407 descriptor不dispatch/enable false。上一已知终态lab-apply的原outboxACK由原targetConsumer正常执行，不回放未知或旧12Run。代码修改117累计PASS已提交，独立review仍局部未完，保留Taskactive。
+
+R3原reset与newapply已真实受理，失败发生在本地旧descriptor集合比较包含target而左侧已排除target，不是产品状态机故障。r4仅将左右均排除target并原native receipt表+actor+deadline匹配，继续尚未执行的accepted operation，绝不重发reset/apply、重置deadline或权限；尚未生成owner/新OCI资源，旧scheduler已无Owner关闭。同轮继续原selected owner/apply/verify。

@@ -1,0 +1,18 @@
+{
+  "native": {
+    "targetMarkings": [],
+    "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+    "membershipActors": [
+      {
+        "subject": "user:dev",
+        "role": "admin"
+      },
+      {
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "role": "admin"
+      }
+    ]
+  },
+  "membershipModified": false,
+  "approvalRepeated": false
+}

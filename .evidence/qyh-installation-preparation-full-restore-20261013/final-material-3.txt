@@ -1,0 +1,6 @@
+{
+  "all650TablesEqual": true,
+  "rolesMembershipsSequencesEqual": true,
+  "schemaBytesEqual": false,
+  "schemaEqualExceptExactRegisteredRegroupings": true
+}

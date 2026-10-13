@@ -1,0 +1,60 @@
+{
+  "native": {
+    "installation": {
+      "installation_id": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+      "current_revision": 3,
+      "active_revision": null,
+      "previous_active_revision": null,
+      "etag_version": 3,
+      "state": "approved",
+      "requested_by": "user:dev",
+      "decision_id": "24de749e-d3bd-45a0-8ba7-f8a2a5303ac2",
+      "created_by": "user:dev"
+    },
+    "operations": [],
+    "decisions": [
+      {
+        "decision_id": "24de749e-d3bd-45a0-8ba7-f8a2a5303ac2",
+        "submitted_revision": 2,
+        "decision": "approved",
+        "actor": "human:conversation-owner:01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+        "lock_hash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+        "created_at": "2026-10-12T16:15:37.868987+00:00"
+      }
+    ],
+    "commands": [
+      {
+        "operation": "bundle_installations.create",
+        "idempotency_key": "qyh-current-admin-install-20261012-create",
+        "subject": "user:dev",
+        "status_code": 201,
+        "response_etag": "\"1\"",
+        "created_at": "2026-10-12T12:59:53.807026+00:00"
+      },
+      {
+        "operation": "bundle_installations.submit",
+        "idempotency_key": "qyh-current-admin-install-20261012-submit",
+        "subject": "user:dev",
+        "status_code": 200,
+        "response_etag": "\"2\"",
+        "created_at": "2026-10-12T12:59:53.934033+00:00"
+      },
+      {
+        "operation": "bundle_installations.approve",
+        "idempotency_key": "qyh-explicit-human-approval-20261013",
+        "subject": "human:conversation-owner:01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+        "status_code": 200,
+        "response_etag": "\"3\"",
+        "created_at": "2026-10-12T16:15:37.793733+00:00"
+      }
+    ],
+    "currentHumanMembership": [
+      {
+        "role": "admin"
+      }
+    ]
+  },
+  "unknownOperationsReplayed": false,
+  "installationChanged": false,
+  "currentDatabaseWrites": false
+}

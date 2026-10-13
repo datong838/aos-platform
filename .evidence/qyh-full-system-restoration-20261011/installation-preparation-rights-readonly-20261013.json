@@ -1,0 +1,30 @@
+{
+  "native": {
+    "lockColumns": [
+      "org_id",
+      "project_id",
+      "composition_pk",
+      "revision",
+      "lock_payload",
+      "lock_hash",
+      "permission_diff_json",
+      "permission_diff_hash",
+      "migration_plan_json",
+      "migration_plan_hash",
+      "contribution_diff_json",
+      "contribution_diff_hash",
+      "created_by",
+      "created_at"
+    ],
+    "runtimeRights": {
+      "membershipSelect": true,
+      "membershipUpdate": true,
+      "markingSelect": true,
+      "markingUpdate": true,
+      "installationSelect": true,
+      "installationUpdate": true
+    }
+  },
+  "currentDatabaseWrites": false,
+  "runtimeHostStarted": false
+}

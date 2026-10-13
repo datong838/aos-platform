@@ -1,0 +1,23 @@
+{
+  "exactRegisteredDifferences": [
+    {
+      "constraint": "aip_skill_eval_dispatch_case_id_check",
+      "original": "    CONSTRAINT aip_skill_eval_dispatch_case_id_check CHECK ((((length(case_id) >= 1) AND (length(case_id) <= 160)) AND (case_id = btrim(case_id)))),",
+      "restored": "    CONSTRAINT aip_skill_eval_dispatch_case_id_check CHECK (((length(case_id) >= 1) AND (length(case_id) <= 160) AND (case_id = btrim(case_id)))),",
+      "proof": "Only associative AND regrouping; same three immutable operands, comparison operators and limits. SQL three-valued AND is associative."
+    },
+    {
+      "constraint": "aip_skill_eval_intent_idempotency_key_check",
+      "original": "    CONSTRAINT aip_skill_eval_intent_idempotency_key_check CHECK ((((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160)) AND (idempotency_key = btrim(idempotency_key)))),",
+      "restored": "    CONSTRAINT aip_skill_eval_intent_idempotency_key_check CHECK (((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160) AND (idempotency_key = btrim(idempotency_key)))),",
+      "proof": "Only associative AND regrouping; same three immutable operands, comparison operators and limits. SQL three-valued AND is associative."
+    }
+  ],
+  "otherSchemaBytesEqual": true,
+  "source650AndMetadataRecheckedUnchanged": true,
+  "eightPagesAccepted": false,
+  "runtimeOperationRequested": false,
+  "hostStarted": false,
+  "currentSourceSchemaSHA256": "e9b082c3088d6aa699b16bdccd2c9d0b1edc85dc659f0581ac47300e1344b0a2",
+  "cloneSchemaSHA256": "bde9866ac92e6330784b2f20f87755c62077164cb3bb024b0a01e0edf7f97ac5"
+}

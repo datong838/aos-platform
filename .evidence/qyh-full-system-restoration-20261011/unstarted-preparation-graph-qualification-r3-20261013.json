@@ -1,0 +1,22 @@
+{
+  "candidateHead": "25b8a87ca69d7b412d531624e9a0d5e471f38a5e",
+  "exitCode": 0,
+  "nativeProductionGraph": {
+    "controlPlaneDependentType": "EcommerceGrowthDisableDependent",
+    "dependentExactType": true,
+    "dependentSourceSHA256": "2808f297302c075902f2e1cb7c091fb6582e2ccccf1f1b27a9475eecd482679b",
+    "eightPagesAccepted": false,
+    "selectionStatus": "ACTIVE",
+    "errorCode": null,
+    "preparationOnly": true,
+    "observedOriginalPreparationAssignment": true,
+    "hostStarted": false,
+    "workerTickCalled": false,
+    "runtimeOperationRequested": false,
+    "apiStarted": false
+  },
+  "dockerInventoryUnchanged": true,
+  "liveAPIFlagsChanged": false,
+  "currentDatabaseWrites": false,
+  "stderr": ""
+}

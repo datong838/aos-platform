@@ -1,0 +1,17 @@
+{
+  "outcome": "REAL_ISOLATED_THREE_PLANE_LAB_TRANSPORT_GREEN",
+  "container": "da8d18fa81e04b757caba3eb2ac519469b0793b2183aff5c0badbb1e54d71546",
+  "volume": "qyh-installation-preparation-full-restore-20261013",
+  "internalNetwork": "6b7898e8ff065ad5b479645737e5d33df805db1fd7d94cd9bddbe49661055198",
+  "loopbackPort": 18549,
+  "transport": "owned local SSH tunnel to internal exact clone",
+  "allThreeOriginalPhysicalIdentityProbesPassed": true,
+  "allThreeWrongPasswordRejected": true,
+  "lab650TablesMetadataUnchanged": true,
+  "current650TablesMetadataUnchanged": true,
+  "newGrants": false,
+  "currentDatabaseWrites": false,
+  "runtimeOperationRequested": false,
+  "hostStarted": false,
+  "eightPagesAccepted": false
+}

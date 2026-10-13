@@ -1,0 +1,13 @@
+{
+  "ticks": [
+    "LiveInstallationSchedulerTick(deliveries=((UUID('ab2fd72f-d81c-400d-bbbc-e1589a159d6b'), LiveInstallationTick(preparation=PreparationDeliveryResult(operation_id=UUID('b8ab8575-9e1d-49e6-9ac5-26c9bdb40d63'), operation_status='succeeded', delivery_status='acknowledged'), verification=OwnedDeliveryResult(operation_id=UUID('058e9581-f717-4728-977c-fb172d310105'), operation_status='succeeded', delivery_status='acknowledged'), enablement=None)),))"
+  ],
+  "status": {
+    "status": "succeeded",
+    "phase": "succeeded",
+    "failure_code": null
+  },
+  "sameOriginalOwner": true,
+  "enableAllowed": false,
+  "currentDatabaseWrites": false
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-installation-preparation-full-restore-20261013-r8-fresh-post-installation",
+    "task_id": "qyh-installation-preparation-full-restore-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "b514011bd244305c85d48ac4b92860f5b0303b50",
+      "authority_revision": "AOS-002003",
+      "files": {
+        ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-0.txt": "72f7384f1518c4ea7a26ec5cc65243fac27619adb9696030af75454c63a1f7e6",
+        ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-1.txt": "2110ef3e1389dd1b738fdf13408b19558b611bf1d2a92afafa76e14c963445cc",
+        ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-2.txt": "40ac9ddabe405d99c3663d69e543891aff46e64d894562aac65b2c78fbc4c667",
+        ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-3.txt": "0a391febc13cde5913dffd7f67d404b004c082bee4d5c834b7ac79b4b4af6c16",
+        ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-4.txt": "077efe8d1b05eb9f579c7907f057c5b94f0b27f1d90ec67fb4117c9e39a68fcd",
+        ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-5.txt": "c73eb170859d043efa94c9b99dedb24bfe00e69c3af1a366a33f066c95a795c1",
+        ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-6.txt": "61c0793e2a0f60293f50e452e9acb6950361ff6015c43f282e088ca7c61077bf",
+        ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-7.txt": "959e74d92a0b220d9c4b072f8760c68556f16a59a999663325fa44f780bea8fa",
+        ".evidence/qyh-installation-preparation-full-restore-20261013/final-material-8.txt": "2c7555eeecd7d8ac48771020fc658c5ee0b440fcbcfee83ec4cc80b7ab72ea0e"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Before any isolated installation commands, the fresh current161 backup was independently restored on a separate named volume with all650 row fingerprints and roles/memberships/sequences equal; native full archive decoding and two hash-equal copies passed. Schema equality accepts only the two explicitly recorded named CHECK regroupings, with every other schema byte equal.",
+        "evidence": "final-material-1.txt shows outcome CURRENT_COMPLETE_ISOLATED_RESTORE_GREEN, clone volume qyh-installation-preparation-full-restore-20261013, tables 650, all650TablesAndSourceMetadataUnchanged true, schemaFiniteExactComparisonPassed true, currentDatabaseWrites false. final-material-2.txt shows two SHA-256 hashes match for current.dump and globals.sql (fullDecodePassed true). final-material-3.txt shows all650TablesEqual true, rolesMembershipsSequencesEqual true, schemaEqualExceptExactRegisteredRegroupings true. final-material-4.txt records exactly two exactRegisteredDifferences (constraint aip_skill_eval_dispatch_case_id_check and aip_skill_eval_intent_idempotency_key_check), otherSchemaBytesEqual true, source650AndMetadataRecheckedUnchanged true. final-material-0.txt script SHA is 72f7384f... matching baseline, and material-0 asserts authority revision AOS-002003.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The clone subsequently completed actual protected three-plane SCRAM probes and all3 wrong-password negatives, then original reset/apply/verify under frozen b514 code. Native installation is active7, only9 installation/runtime tables changed in the clone, all6 sandbox resources were released, binding remains disabled/fenced and old407 undelivered outboxes remain3; current650 tables and metadata stay unchanged. This does not claim current installation, visible eight pages, full Host or business-chain completion.",
+        "evidence": "final-material-6.txt outcome REAL_ISOLATED_THREE_PLANE_LAB_TRANSPORT_GREEN, container da8d18fa..., volume qyh-installation-preparation-full-restore-20261013, allThreeOriginalPhysicalIdentityProbesPassed true, allThreeWrongPasswordRejected true, lab650TablesMetadataUnchanged true, current650TablesMetadataUnchanged true, currentDatabaseWrites false, runtimeOperationRequested false, hostStarted false, eightPagesAccepted false. final-material-7.txt shows native installation state active with etag_version/current_revision/active_revision=7, three operations succeeded (two runtime-apply, one runtime-verify), bindings enabled=false operation_fence=true desired_state=disabled observed_state=unknown, six resourceRelease entries each cleanup_state=released observed_release=true, old407Undelivered=3, changedLabTables lists exactly nine installation/runtime tables, current650TablesAndMetadataUnchanged=true, sourceHead=b514011bd244305c85d48ac4b92860f5b0303b50. The claim's negative qualifications (does not claim current installation, eight pages, full Host, business-chain completion) are consistent with currentDatabaseWrites=false, hostStarted=false, eightPagesAccepted=false in the evidence.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留本PASS结论并归档；如需推进下一步，建议明确是释放 clone 容器/卷还是继续后续安装阶段，并在新阶段开始前以 b514011bd244305c85d48ac4b92860f5b0303b50 为基线发起新复核。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

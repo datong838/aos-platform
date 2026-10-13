@@ -1,0 +1,24 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-selected-installation-preparation-scheduler-20261013-r1",
+  "task_id": "qyh-selected-installation-preparation-scheduler-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "b514011bd244305c85d48ac4b92860f5b0303b50",
+    "authority_revision": "AOS-002003",
+    "files": {
+      ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-0.txt": "e7e647340d07149eb6617587949b0257115ca96901fddbe51629ab51bc9726b5",
+      ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-1.txt": "cb90145fce2b0ee604c90a15d0a46f72a6ca153fd22159d2d9d80b48c0b5564a",
+      ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-2.txt": "404af6ba8c87260471e49fe7d21a6adaf2ebc814106fc7d4e548e43572a0c31e",
+      ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-3.txt": "db1d616847a127818f3c53cbc9224c5da3df8bec4becd17cd138ae74b7b87380",
+      ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-4.txt": "20bdc88796f057d18c8d4f2c4284b6df5104db25a2ac7e4957ae72b049a0370e",
+      ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-5.txt": "959e74d92a0b220d9c4b072f8760c68556f16a59a999663325fa44f780bea8fa",
+      ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-6.txt": "a847d1173ed7f44e4f0ab1c0a05f3dcb16a6aa090b7ec4fb2828ccf3145470d2",
+      ".evidence/qyh-selected-installation-preparation-scheduler-20261013/material-7.txt": "366366584b2854924e02beb50192107b8dc417264f4905000210ed74ef578e78"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "08dd528ca41f375d2049422fafcd07209bf1f2aeb49866879091b2df59211c5d",
+  "transport_sha256": "3d46a6fb3c664956311d49bd91b1964cb89735c96468141fb76841fe8aff9d60"
+}
