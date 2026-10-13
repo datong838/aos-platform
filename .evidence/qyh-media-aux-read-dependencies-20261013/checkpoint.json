@@ -6,5 +6,21 @@
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
   "authority_revision": "AOS-002017",
   "task_base_revision": "AOS-002017",
-  "step": "1/8 plan/Lease registered;next actual two-reader transitive audit before any code"
+  "step": "4/8 static/transitive audit+normal runtime native2+HTTP RED4/2PASS; minimal2GET annotations and whitelist candidate,52PASS/2PG-environmentFAIL;isolated PG/Prime/live/Delivery still pending",
+  "candidateCodeFiles": [
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    "services/aos-api/tests/test_ecommerce_media_read_dependencies.py"
+  ],
+  "candidateHashes": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "74bb9d9725d6c279b821c4b736e2b7e4453436f70ddff0ac66277c3f57eb05d4",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "fb94f6e545ee043272b9af5088bca87d0ff276a82f0ac516ca5231f69881eedd",
+    "services/aos-api/tests/test_ecommerce_media_read_dependencies.py": "33eabb5a651f547662ce0adda03aa2d60a5dccca2e55c5f2bbbe74c7960e90bd"
+  },
+  "currentRuntimeUnchanged": {
+    "apiPid": 92226,
+    "apiSourceHead": "97c7509f395e2c976022df8db4ae6602906fb396",
+    "webPid": 81203
+  },
+  "nextAction": "Provide isolated disposable PostgreSQL for original2 integration cases;never use authoritative original DB for fixture writes;then exactPrime and only after consumption current API frozen/live verification"
 }

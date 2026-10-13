@@ -1,0 +1,160 @@
+..................................FF..................                   [100%]
+=================================== FAILURES ===================================
+____ test_real_postgres_stores_preserve_replay_history_and_tenant_isolation ____
+
+    def test_real_postgres_stores_preserve_replay_history_and_tenant_isolation():
+        service = EcommerceMediaInternalWorkflow()
+        key = f"media-pg-{uuid.uuid4().hex}"
+>       created = service.execute(SCOPE, "test:r5-m03", key, request())
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_media_internal_workflow.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/aos-api/aos_api/ecommerce_media_internal_workflow.py:67: in execute
+    replay = self._receipt_reader(scope, operation, receipt_key) is not None
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/aos_api/ecommerce_media_internal_workflow.py:280: in _receipt
+    with connect_read_only(scope) as conn:
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+services/aos-api/aos_api/db.py:41: in _connect
+    with psycopg.connect(dsn, row_factory=dict_row) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=placeholder password=placeholder dbname=unused host=127.0.0.1 port=1 hostaddr=127.0.0.1'
+autocommit = False, prepare_threshold = 5, context = None
+row_factory = <function dict_row at 0x107242fc0>, cursor_factory = None
+kwargs = {}
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 1 failed: could not receive data from server: Connection refused
+
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:122: OperationalError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:47:51.172752+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+____ test_real_http_routes_are_principal_scoped_receipted_and_query_closed _____
+
+    def test_real_http_routes_are_principal_scoped_receipted_and_query_closed():
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(ecommerce_workshop.router)
+        app.dependency_overrides[require_principal] = lambda: Principal(
+            subject="test:r5-m03-http",
+            org_id=SCOPE.org_id,
+            project_id=SCOPE.project_id,
+            roles=["operator"],
+            markings=["public"],
+        )
+        app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_workshop_catalog
+        ] = lambda: type(
+            "InstalledMediaCatalog",
+            (),
+            {"get_readiness": lambda self, **kwargs: object()},
+        )()
+        app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_media_internal_workflow
+        ] = lambda: EcommerceMediaInternalWorkflow()
+    
+        key = f"media-http-{uuid.uuid4().hex}"
+        with TestClient(app, raise_server_exceptions=False) as client:
+            created = client.post(
+                "/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+                headers={"Idempotency-Key": key},
+                json=request().model_dump(mode="json", by_alias=True),
+            )
+>           assert created.status_code == 200
+E           assert 500 == 200
+E            +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+services/aos-api/tests/test_ecommerce_media_internal_workflow.py:252: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:47:51.245171+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:51.368591+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:51.369103+00:00", "level": "error", "service": "aos-api", "logger": "aos-api.errors", "msg": "unhandled_api_error type=OperationalError", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:51.369271+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: POST http://testserver/v1/ecommerce-workshop/views/media-studio/workflow/commands \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+DEBUG    aos-api.db:db.py:40 db_connect host_port_from_env=True
+ERROR    aos-api.errors:errors.py:168 unhandled_api_error type=OperationalError
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/v1/ecommerce-workshop/views/media-studio/workflow/commands "HTTP/1.1 500 Internal Server Error"
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_media_internal_workflow.py::test_real_postgres_stores_preserve_replay_history_and_tenant_isolation
+FAILED services/aos-api/tests/test_ecommerce_media_internal_workflow.py::test_real_http_routes_are_principal_scoped_receipted_and_query_closed
+2 failed, 52 passed, 7 warnings in 6.51s

@@ -1,0 +1,121 @@
+FFFF..                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_media_read_uses_selected_admission[/views/media-studio/full-production-scenario] _
+
+path = '/views/media-studio/full-production-scenario'
+
+    @pytest.mark.parametrize('path', PATHS)
+    def test_media_read_uses_selected_admission(path):
+        client, legacy, reader = client_with_catalogs()
+        assert client.get('/v1/ecommerce-workshop' + path).status_code == 404
+>       assert not legacy.calls
+E       AssertionError: assert not [{'module_id': 'ecommerce.media-studio', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}]
+E        +  where [{'module_id': 'ecommerce.media-studio', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x1185a5c10>.calls
+
+services/aos-api/tests/test_ecommerce_media_read_dependencies.py:18: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:47:19.327046+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:19.457326+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:19.457961+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio/full-production-scenario \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio/full-production-scenario "HTTP/1.1 404 Not Found"
+_ test_media_read_uses_selected_admission[/views/media-studio/workflow/drafts] _
+
+path = '/views/media-studio/workflow/drafts'
+
+    @pytest.mark.parametrize('path', PATHS)
+    def test_media_read_uses_selected_admission(path):
+        client, legacy, reader = client_with_catalogs()
+        assert client.get('/v1/ecommerce-workshop' + path).status_code == 404
+>       assert not legacy.calls
+E       AssertionError: assert not [{'module_id': 'ecommerce.media-studio', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}]
+E        +  where [{'module_id': 'ecommerce.media-studio', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x118419710>.calls
+
+services/aos-api/tests/test_ecommerce_media_read_dependencies.py:18: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:47:19.514956+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:19.636105+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:19.636601+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio/workflow/drafts \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio/workflow/drafts "HTTP/1.1 404 Not Found"
+______________ test_full_video_keeps_all_execution_commands_false ______________
+
+    def test_full_video_keeps_all_execution_commands_false():
+        client, legacy, reader = client_with_catalogs()
+        admit(reader)
+        response = client.get('/v1/ecommerce-workshop' + PATHS[0])
+>       assert response.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_media_read_dependencies.py:26: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:47:19.638595+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:19.758968+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:19.759479+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio/full-production-scenario \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio/full-production-scenario "HTTP/1.1 404 Not Found"
+___________ test_draft_reader_receives_original_authenticated_scope ____________
+
+    def test_draft_reader_receives_original_authenticated_scope():
+        client, legacy, reader = client_with_catalogs()
+        admit(reader)
+        class Probe:
+            def list(self, scope):
+                assert scope == TenantScope('org-org', 'dev-project')
+                raise ReadReached('media-draft-source')
+        client.app.dependency_overrides[routes.get_ecommerce_media_internal_workflow] = lambda: Probe()
+>       with pytest.raises(ReadReached, match='media-draft-source'):
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_media_read_dependencies.py:43: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T11:47:19.761591+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:19.878966+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T11:47:19.879592+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio/workflow/drafts \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio/workflow/drafts "HTTP/1.1 404 Not Found"
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_media_read_dependencies.py::test_media_read_uses_selected_admission[/views/media-studio/full-production-scenario]
+FAILED services/aos-api/tests/test_ecommerce_media_read_dependencies.py::test_media_read_uses_selected_admission[/views/media-studio/workflow/drafts]
+FAILED services/aos-api/tests/test_ecommerce_media_read_dependencies.py::test_full_video_keeps_all_execution_commands_false
+FAILED services/aos-api/tests/test_ecommerce_media_read_dependencies.py::test_draft_reader_receives_original_authenticated_scope
+4 failed, 2 passed, 7 warnings in 1.10s
