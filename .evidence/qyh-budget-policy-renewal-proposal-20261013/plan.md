@@ -1,0 +1,7 @@
+# 既有预算策略续期的隔离提案合同
+Rules：用户AGENTS、AOS工程交付闭环、231及E17-s3g。既有全恢复授权覆盖方案与隔离实现；不再次索要旧安装审批。本Task只实现提案输入，不发布/审批/消费或改当前库。
+当前已证：BudgetRevision1 active有效，BudgetPolicy13和费用授权过期；原预算首次激活只接受draft，原通用BudgetPolicy发布拒绝active。不能绕开这些原门。
+文件：services/aos-api/aos_api/aip_budget_policy_renewal_proposal.py；services/aos-api/tests/aip/test_budget_policy_renewal_proposal.py；本evidence目录。
+新增纯BudgetPolicyRenewalProposal，sourcePolicy原完整历史版本、targetPolicy必须draft。保留同org-org/dev-project、同policyId/owner/原exact BudgetRevision、原Provider/model，目标修订source+1；要求新授权提案approvalRef区别于旧Ref、目标窗口在其授权窗口内且晚于原结束时间。maker/checker各自canonical且不同，version/expectedHeadVersion严格整型正值；禁止零价与引入新的零价批准。canonical_payload重新完整验证，嵌套mutation不能绕过约束；proposalHash仅内容相等，不是授权。
+原Budget/费用提案类型、Store、SQL、HTTP路由不改。无DB连接和HTTP/Provider调用；新类型不作为runtime候选。后续producer必须从Owner同一scoped事务加载当前head/source/budget/ref/成员，签名并校验真人既有授权与费用时窗，再原低权消费；本类型不承担或伪造这些事实。
+RED：不存在模块；测试覆盖合法草稿、来源/预算/租户/Owner/Provider/model漂移、旧批准复用、窗口过界、active目标拒绝、同maker/checker、bool/int精度边界、嵌套copy后重验证及hash稳定。专项GREEN后原BudgetPolicy/费用合同相邻回归与代码方案复审，独立审阅只冻结无秘密材料。当前库与运行绑定不变；八台/首链仍pending。

@@ -1,0 +1,13 @@
+{
+  "firstRequest": "r1",
+  "failure": "terminal Connection error; exit0 is failure",
+  "modelToolsDisabled": true,
+  "externalEffects": false,
+  "retryNumber": 1,
+  "minimumWaitSeconds": 30,
+  "jitterSeconds": 4,
+  "retryAfterObserved": false,
+  "notBeforeUtc": "2026-10-13T04:18:07.718236+00:00",
+  "goalStateChanged": false,
+  "supportedModelSwitchPerformed": false
+}

@@ -1,0 +1,4 @@
+# 续期提案后的原Owner生产者路径
+候选一：新增受限只读preflight，原scoped事务加载sourcePolicy/headVersion、原BudgetRevision当前head/hash/lifecycle/window、原ProviderRevision/hash/model、maker/checker原membership；返回拒绝原因和绑定摘要，不发布任何东西。候选二：签名独立审核/低权持久化链，依赖候选一及真实人类批准与原预算/费用上界窗口绑定，不把草稿中的approvalRef当批准。
+下一波先选候选一，不请求真人再次安装审批，不创建第二真人。需要登记新Task及文件级计划后实现；使用独立恢复库测试，当前库仅READ ONLY；禁止使用superuser读取得出的scope判断替代正常角色验证。签名发布/费用消费角色仍NOLOGIN是执行部署缺口，不能直接ALTER角色或复用通用库身份绕过隔离。
+持久化合同至少要求同一原tenant、原budgetRef与当前head及固定Owner、exactProvider/model、target draft/source current head CAS、原真实membership，禁止source suspended/revoked、source hash漂移和并发head替换。独立机器maker与唯一真人checker须由原服务角色/真实OIDC成立；提案、审核和消费各自幂等、未知结果只读对账。没有受支持真人授权消费入口时只完成隔离实现，不能伪造审批或以模型审阅授运行权。

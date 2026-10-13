@@ -1,0 +1,20 @@
+{
+  "outcome": "DRAFT_ONLY_RENEWAL_PROPOSAL_CONTRACT_GREEN",
+  "sourceFiles": {
+    "services/aos-api/aos_api/aip_budget_policy_renewal_proposal.py": "685114615d6dbfb4a2509c2bd5b77982ef6deb0dd1dab1acc68dd29fa70a15af",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_proposal.py": "c7989a60717503a2030463fe4cc657d5d10e3b1397d4c7d7f08ec59048cc3f0c"
+  },
+  "red": "original module missing before implementation",
+  "unitSummary": "25 passed",
+  "adjacentSummary": "https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n116 passed, 7 warnings in 0.42s",
+  "databaseWrites": false,
+  "providerCalls": false,
+  "policyPublished": false,
+  "approvalCreated": false,
+  "runtimeActivationAllowed": false,
+  "eightWorkbenchesAccepted": false,
+  "limitations": [
+    "Proposal-only input type; persistence/current-Owner/approval verification and low-privilege consumption are not implemented or accepted by this Task",
+    "Contract validation and hashes do not establish current heads, true membership, human approval or spending authority"
+  ]
+}

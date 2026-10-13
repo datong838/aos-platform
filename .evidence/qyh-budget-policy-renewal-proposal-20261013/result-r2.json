@@ -1,0 +1,37 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-proposal-20261013-r2",
+    "task_id": "qyh-budget-policy-renewal-proposal-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "b271f96f54a45145c7fc8bf751f948a0fd62631e",
+      "authority_revision": "AOS-002007",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-proposal-20261013/material-0.txt": "685114615d6dbfb4a2509c2bd5b77982ef6deb0dd1dab1acc68dd29fa70a15af",
+        ".evidence/qyh-budget-policy-renewal-proposal-20261013/material-1.txt": "c7989a60717503a2030463fe4cc657d5d10e3b1397d4c7d7f08ec59048cc3f0c",
+        ".evidence/qyh-budget-policy-renewal-proposal-20261013/material-2.txt": "00bd9bd0d5185a3ab3fe9e6bb62089cdcc88e1f24d9183fdcec8c31e00746d9e",
+        ".evidence/qyh-budget-policy-renewal-proposal-20261013/material-3.txt": "2017a0fd68c59b42765ba219aa465746611603c275ff27cc81a35b42d879a149",
+        ".evidence/qyh-budget-policy-renewal-proposal-20261013/next-producer-plan.md": "eb4cba91b56676cc2d4a8305c7c3b1bdad9a249ea5277ae95f1cbc11093896e3"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The new standalone BudgetPolicyRenewalProposal accepts only draft targets for a historical active policy, preserves exact existing BudgetRevision, owner, tenant, Provider and model, rejects reused approval refs and zero pricing, and revalidates nested copies when computing its canonical payload/hash; original activation/cost/store contracts are unchanged.",
+        "evidence": "material-0.txt (services/aos-api/aos_api/aip_budget_policy_renewal_proposal.py) 中 BudgetPolicyRenewalProposal._scope 强制 target.lifecycle=ModelGovernancePolicyLifecycle.DRAFT、source.lifecycle=ACTIVE；要求 (tenant.org_id, tenant.project_id)==(\"org-org\", \"dev-project\")、target.policy_id==source.policy_id、target.revision==source.revision+1、target.owner==source.owner、target.budget_revision_ref==source.budget_revision_ref、target.approval_ref!=source.approval_ref；并拒绝 allow_zero_price 或 zero_price_approval_ref。canonical_payload 内部调用 type(self).model_validate(...)，嵌套 mutation 会被重验证拦截（见 material-1.txt test_copy_and_nested_mutation_cannot_create_usable_hash）。material-2.txt 明确 '原Budget/费用提案类型、Store、SQL、HTTP路由不改'；material-3.txt 中 databaseWrites/policyPublished/approvalCreated/runtimeActivationAllowed 均为 false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "25 new unit cases and the reported adjacent contract tests pass without current database writes or Provider calls. This is only proposal/schema validation; it does not verify current heads or human approval, authorize spending, publish ACTIVE policies, activate bindings or make eight workbenches available.",
+        "evidence": "material-3.txt outcome=DRAFT_ONLY_RENEWAL_PROPOSAL_CONTRACT_GREEN、unitSummary='25 passed'、adjacentSummary='116 passed, 7 warnings'；databaseWrites/providerCalls/policyPublished/approvalCreated/runtimeActivationAllowed/eightWorkbenchesAccepted 均为 false。limitations 明确 'Contract validation and hashes do not establish current heads, true membership, human approval or spending authority'，并指出当前 Task 不实现 persistence/current-Owner/approval verification 与 low-privilege consumption（material-2.txt/next-producer-plan.md 进一步规划后续 producer 路径而非由本类型承担）。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前库冻结且不可用于运行授权；按 next-producer-plan.md 登记新 Task，先实现候选一受限只读 preflight（从 Owner 同 scoped 事务加载 sourcePolicy/headVersion、原 BudgetRevision 当前 head/hash/lifecycle/window、原 ProviderRevision/hash/model、maker/checker 原 membership），仅返回拒绝原因与绑定摘要，不发布任何东西；禁止使用 superuser 读替代角色验证或 ALTER 角色绕过 NOLOGIN 隔离。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-budget-policy-renewal-proposal-20261013-r2",
+  "task_id": "qyh-budget-policy-renewal-proposal-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "b271f96f54a45145c7fc8bf751f948a0fd62631e",
+    "authority_revision": "AOS-002007",
+    "files": {
+      ".evidence/qyh-budget-policy-renewal-proposal-20261013/material-0.txt": "685114615d6dbfb4a2509c2bd5b77982ef6deb0dd1dab1acc68dd29fa70a15af",
+      ".evidence/qyh-budget-policy-renewal-proposal-20261013/material-1.txt": "c7989a60717503a2030463fe4cc657d5d10e3b1397d4c7d7f08ec59048cc3f0c",
+      ".evidence/qyh-budget-policy-renewal-proposal-20261013/material-2.txt": "00bd9bd0d5185a3ab3fe9e6bb62089cdcc88e1f24d9183fdcec8c31e00746d9e",
+      ".evidence/qyh-budget-policy-renewal-proposal-20261013/material-3.txt": "2017a0fd68c59b42765ba219aa465746611603c275ff27cc81a35b42d879a149",
+      ".evidence/qyh-budget-policy-renewal-proposal-20261013/next-producer-plan.md": "eb4cba91b56676cc2d4a8305c7c3b1bdad9a249ea5277ae95f1cbc11093896e3"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "d5389114d3f12b5fd89ed7799188dd5f1d1476c5d294e374fab3306401769bbb",
+  "transport_sha256": "8e16371025fa1ac773934166b2075ee081b62cd7109107036e6feb296d75636b"
+}
