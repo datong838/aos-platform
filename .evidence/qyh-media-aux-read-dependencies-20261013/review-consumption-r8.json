@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-media-aux-read-dependencies-20261013-r8",
+  "task_id": "qyh-media-aux-read-dependencies-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "69fd922fe012df5ba9608124b24a37772ae04819",
+    "authority_revision": "AOS-002017",
+    "files": {
+      ".evidence/qyh-media-aux-read-dependencies-20261013/review-package-r8.txt": "ea9ea7b242d6e51e05a287c43a97b5bae00885dcf10e2299a09704fc8bfd207c"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "2599f3bc7f1b91cb5accd3cb9338f36a8153c3c1603913e55b4c9c88fc66ea05",
+  "transport_sha256": "1d7f3a55ccae647a0be73f7f78973f8f77a1e53850e961257707b2f5c28c9740"
+}

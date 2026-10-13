@@ -1,0 +1,5 @@
+# 经营参谋learning场景读取及真实生产前置接续
+Rules：AGENTS/AOS工程交付/231完整Goal/双侧增长；唯一m1writer、先实际审计/方案/RED再最小编码，原650表READ ONLY、Host worker Provider OFF，未知操作/旧Runs不重放。Authority2018；Media只读恢复已精确Delivery，当前API98070/code4e、原Web81203，原最后full2324与API-only分开，不称生产闭环。
+本波审计原GET /views/analyst/learning-scenario 的真实factory/read/传递helper，无副作用才能仅改get_ecommerce_workshop_analyst_learning_scenario目录参数。factory未来reader变更需重新审计；不得补伪learning/source/positive经验或放宽门。文件：routers/ecommerce_workshop.py、test_ecommerce_workshop_read_http.py、新test_ecommerce_analyst_read_dependency.py、本证据目录/D-wave。若reader需改动先补精确scope方案。
+步骤：当前租约/上位方案复习→实际调用审计→RED/最小注入→原专项相邻→normal-role及actualreadonly HTTP/真实OIDC页→代码/实际两阶段独立review，只PASS合法消费后才局部维护切换→准确Delivery/Authority+AOS/Prime同步→下一登记privateGET或独立budget formal consumer。原始review格式/基线失败及NEED_EVIDENCE不算PASS，controller必须assert verdict/消费状态/canonicalSHA。实际登录过期原clearAccessToken/login，未知submit先对账不重发。
+保留所有上位缺口：Source/currentProducer/TaskGraph/Batch/fullVideo/owner/scenario/budget真正生效、自然CaseRun→建议→exactreview→内容任务→能力→产物→人审续跑→Wiki及八场景/观察/发布。只读恢复不是首链。Media create draft enabled仅观察未点、HTTP405保留，后继UI禁入提示改进单独登记，不在此GET偷改。

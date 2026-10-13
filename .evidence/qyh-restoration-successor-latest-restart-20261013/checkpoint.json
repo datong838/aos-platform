@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "qyh-restoration-successor-latest-restart-20261013",
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
-  "authority_revision": "AOS-002017",
+  "authority_revision": "AOS-002018",
   "task_base_revision": "AOS-002013",
   "step": "7/8 fullsame-volume2324 and API-only972/Operations readonly view delivered;other auxiliary/whole restoration/business remain open",
   "code_files": [
@@ -18,14 +18,13 @@
     ".evidence/qyh-restoration-successor-latest-restart-20261013/ops-api-started.json"
   ],
   "currentApi": {
-    "pid": 95538,
+    "pid": 98070,
     "port": 18080,
-    "sourceHead": "62e43d5323ccd5d1d4e2b21a8e03eec20303f6b6",
-    "codeContentSameAs": "97c7509f395e2c976022df8db4ae6602906fb396",
-    "reload": "MEDIA_REVIEW_NEED_EVIDENCE_CORRECTIVE_API_ONLY",
+    "sourceHead": "4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+    "reload": "MEDIA_CODE_R8_PASS_CONSUMED_API_ONLY",
     "notNewFullRestart": true
   },
   "lastCockpit": "actualroot+3helpers200/settled,2 original cancelled/unplanned tasks,feedback0,exact roots missing commandsfalse,650 unchanged",
-  "nextTask": "qyh-media-aux-read-dependencies-20261013",
-  "lastMedia": "isolated54PASS;reviewr5 NEED_EVIDENCE notPASS;premature switch corrected by own revert;650 unchanged;task/Goal active"
+  "nextTask": "qyh-analyst-learning-read-dependency-20261013",
+  "lastMedia": "real normal OIDC3GET200/settled/degraded/zeroDrafts/fullVideo8commandsfalse;54full/8subset/1launch/code r8+live r9 PASS consumed;650 preserved;scope Delivery only"
 }

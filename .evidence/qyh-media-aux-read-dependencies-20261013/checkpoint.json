@@ -4,9 +4,9 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "qyh-media-aux-read-dependencies-20261013",
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
-  "authority_revision": "AOS-002017",
+  "authority_revision": "AOS-002018",
   "task_base_revision": "AOS-002017",
-  "step": "5/8 candidate54 unchanged;actual HTTP management identity readonly proof/launch1/independent8 pass;ASGI2GET realcatalog+Store200 after original OIDC marker repair,unknown400/POST405;650 unchanged; r6/r7 NEED_EVIDENCE,notPASS;next new exact review supplement ASGI before production switch",
+  "step": "8/8 precise readonly Media Delivery complete;code r8/live r9 PASS consumed,realOIDC3GET200/degraded/drafts0/8commandsfalse/650unchanged;next registered Analyst fullaudit;Goalbusiness incomplete",
   "candidateCodeFiles": [
     "services/aos-api/aos_api/routers/ecommerce_workshop.py",
     "services/aos-api/tests/test_ecommerce_workshop_read_http.py",
@@ -23,7 +23,7 @@
     "apiCodeContentSameAs": "97c7509f395e2c976022df8db4ae6602906fb396",
     "webPid": 81203
   },
-  "nextAction": "Freeze exact new review with ASGI r3 source+result/harness failures+root cause and actual role readonly;explicit test-onlyPrincipal not真人;only verdict PASS and strict consumed status permit later supported candidate API-only update,then true OIDC/browser and live independent review/Delivery",
+  "nextAction": "qyh-analyst-learning-read-dependency-20261013 actual reader audit",
   "isolatedVerification": {
     "passes": 54,
     "fixtureCluster": "7696118414481760296",
@@ -40,5 +40,5 @@
     "r6": "NEED_EVIDENCE;PASS assertion blocked all effects",
     "r7": "NEED_EVIDENCE;noeffects;requested actualHTTP audit now has bounded realcatalog/Store ASGI proof"
   },
-  "candidateStatus": "same f28 candidate re-applied uncommitted;current service95538 remains restored original97 content"
+  "candidateStatus": "committed4eaf5e1b6/actual localreadonlyAPI98070;not production or business execution"
 }

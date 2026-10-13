@@ -1,0 +1,122 @@
+{
+  "codeHead": "4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+  "authority": "AOS-002017",
+  "api": {
+    "pid": 98070,
+    "head": "4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+    "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+    "port": 18080,
+    "terminalVerified": false,
+    "pgWebChromeTouched": false
+  },
+  "apiOnlyNotFullRestart": true,
+  "codeReviewPassConsumed": true,
+  "browser": {
+    "sourceHead": "4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+    "authority": "AOS-002017",
+    "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+    "url": "http://127.0.0.1:18434/workshop/media-studio",
+    "authResponses": [
+      {
+        "path": "/api/v1/auth/token",
+        "status": 200
+      },
+      {
+        "path": "/api/v1/me",
+        "status": 200
+      }
+    ],
+    "normalLoginFormSubmitOnce": true,
+    "noTokenOrCredentialExport": true,
+    "reads": [
+      {
+        "path": "/api/v1/ecommerce-workshop/views/media-studio",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "schemaVersion": "aos.ecommerce-workshop.media-studio-view/v6",
+        "count": null,
+        "blockers": [],
+        "commands": null
+      },
+      {
+        "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+        "status": 200,
+        "tenant": null,
+        "schemaVersion": "aos.ecommerce-workshop.full-video-scenario/v1",
+        "count": null,
+        "blockers": [
+          "FULL_VIDEO_EXACT_ROOT_REQUIRED"
+        ],
+        "commands": {
+          "prepare": false,
+          "start": false,
+          "resume": false,
+          "takeover": false,
+          "cancel": false,
+          "reconcile": false,
+          "publish": false,
+          "settle": false
+        }
+      },
+      {
+        "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "schemaVersion": null,
+        "count": 0,
+        "blockers": [],
+        "commands": null
+      }
+    ],
+    "settled": true,
+    "pageReadFailure": false,
+    "ownerUnbound": true,
+    "scenarioUnbound": true,
+    "partialSource": true,
+    "noDeliveryOutcome": true,
+    "productionButtonsObservedOnly": [
+      {
+        "label": "样片准备",
+        "disabled": true
+      },
+      {
+        "label": "选择模板",
+        "disabled": true
+      },
+      {
+        "label": "安排生产",
+        "disabled": true
+      },
+      {
+        "label": "直播控制",
+        "disabled": true
+      },
+      {
+        "label": "创建交付草稿",
+        "disabled": false
+      },
+      {
+        "label": "提交发布审批",
+        "disabled": true
+      },
+      {
+        "label": "批量生产准备",
+        "disabled": true
+      }
+    ],
+    "actionButtonsNotClicked": true,
+    "businessComplete": false
+  },
+  "sameOriginal650Fingerprints": true,
+  "enabledBindings": 0,
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "samePgStartedAt": true,
+  "businessComplete": false,
+  "remaining": "real producing root/owner/scenario/Source/budget/human review/resume/wiki/eight scenarios and observation/release pending;create draft visible/enabled is not mutation permission,readonlyHTTP405 still enforced;no action clicked"
+}

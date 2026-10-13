@@ -25,3 +25,5 @@ Operations两helper代码972c16c5e已55相邻/精确Prime r2消费；原frozen23
 Media辅助GET候选54原完整隔离PG通过；独立r5原始JSON/exactbaseline合法消费，前r1..r4失败不消费保留。新successor-media-aux-current-api-20261013冻结，仅API-only精确替换原92226/97c7509，原PG/Web/Chrome不发信号；一次intent先行，unknown只读对账。不是新全面重启或经营生产闭环。
 
 纠错：Media r5消费状态NEED_EVIDENCE，误将合法消费当PASS导致提前API-only切换95278/f28ef48c4，禁止声称复审通过/交付。仅撤回本次3文件own提交，新Git revert保留历史。新successor-media-reviewgate-restored-api-20261013冻结当前回退代码，通过原one-intent精确95278 cwd/port/Lease控制恢复上一版读取内容；PG/Web/Chrome不发信号。补r5所需隔离日志/52→54两个原集成差异/exact terminal原始核验输出再独立复审，不得手补PASS。
+
+Media r8独立PASS已合法消费。新增media_reviewed_r8_api_reload.py在信号前assert verdict=PASS/CONSUMED_MATERIAL_REVIEW/原消费合同canonical envelope SHA，再TaskLease/cwd/18080/sourceguard/onceintent；第一次保护性检查误用原始filebytes SHA已在无效果前拒绝，现严格按原consumer json.dumps(sort_keys=True)合同核对。仅本机readonly API-only95538→新source，不授生产发布/业务执行，不作为新full重启；后续真实OIDC/原owned页/650/live独立复审。

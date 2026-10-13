@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-media-aux-read-dependencies-20261013-r8",
+    "task_id": "qyh-media-aux-read-dependencies-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "69fd922fe012df5ba9608124b24a37772ae04819",
+      "authority_revision": "AOS-002017",
+      "files": {
+        ".evidence/qyh-media-aux-read-dependencies-20261013/review-package-r8.txt": "ea9ea7b242d6e51e05a287c43a97b5bae00885dcf10e2299a09704fc8bfd207c"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "同一已验证候选仅改Media两个GET的目录参数和明确白名单，原函数体/其他GET/POST/写factory保留。实际HTTP集成使用原目录与Store及原管理只读身份，两GET200、未知参数400、POST405；Principal明确test-only，不声称真人登录或生产浏览器验收。",
+        "evidence": "review-package-r8.txt diff 显示仅 ecommerce_workshop.py 两个函数签名由 CatalogDependency 改为 ReadCatalogDependency；test_ecommerce_workshop_read_http.py 新增两个 PATH 到只读路由集合；actual-asgi-media-read-r3.json 显示两个 GET 状态 200、加 ?orgId=dev-org 返回 400、POST 返回 405；asgi-harness-root-cause.json 标识缺失 OIDC 标记为根因并已修复；review-package-r8.txt 中 reviewgate-correction.json 记录 r5 误判为 PASS 且已回滚；actual-asgi-media-read-r3.py 显式设置 Principal 为 test fixture。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原54用例及新增独立8用例、原只读启动约束1用例通过；补充实际HTTP集成的配置标记遗漏根因与原入口校验修复，未放宽产品门。草稿0、视频8命令false及原650表不变明确保留；候选尚未正式部署，真实OIDC页面和经营首链仍待。",
+        "evidence": "tests-isolated-r3.txt 显示 54 passed；tests-isolated-independent-r4.txt 显示 8 passed；readonly-launch-test.txt 显示 1 passed；actual-asgi-media-read-r3.json 显示草稿 count=0、full-production-scenario 视频 8 命令全部 false；review-package-r8.txt 声明 candidate not deployed；verification-asgi.json 列明 unknownQuery400、postBlocked405、twoGetStatus200、candidateLiveServiceUpdated=false、businessComplete=false。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前未部署候选状态，不推进正式投放；下一步应由独立 PASS 消费后再安排真实 OIDC 页面和经营首链的 TCP/browser 验收，当前 ASGI TestClient 结果仅作质量审计依据。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

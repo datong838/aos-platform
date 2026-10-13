@@ -1,0 +1,296 @@
+
+FILE verification-live-r8.json
+{
+  "codeHead": "4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+  "authority": "AOS-002017",
+  "api": {
+    "pid": 98070,
+    "head": "4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+    "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+    "port": 18080,
+    "terminalVerified": false,
+    "pgWebChromeTouched": false
+  },
+  "apiOnlyNotFullRestart": true,
+  "codeReviewPassConsumed": true,
+  "browser": {
+    "sourceHead": "4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+    "authority": "AOS-002017",
+    "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+    "url": "http://127.0.0.1:18434/workshop/media-studio",
+    "authResponses": [
+      {
+        "path": "/api/v1/auth/token",
+        "status": 200
+      },
+      {
+        "path": "/api/v1/me",
+        "status": 200
+      }
+    ],
+    "normalLoginFormSubmitOnce": true,
+    "noTokenOrCredentialExport": true,
+    "reads": [
+      {
+        "path": "/api/v1/ecommerce-workshop/views/media-studio",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "schemaVersion": "aos.ecommerce-workshop.media-studio-view/v6",
+        "count": null,
+        "blockers": [],
+        "commands": null
+      },
+      {
+        "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+        "status": 200,
+        "tenant": null,
+        "schemaVersion": "aos.ecommerce-workshop.full-video-scenario/v1",
+        "count": null,
+        "blockers": [
+          "FULL_VIDEO_EXACT_ROOT_REQUIRED"
+        ],
+        "commands": {
+          "prepare": false,
+          "start": false,
+          "resume": false,
+          "takeover": false,
+          "cancel": false,
+          "reconcile": false,
+          "publish": false,
+          "settle": false
+        }
+      },
+      {
+        "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+        "status": 200,
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "schemaVersion": null,
+        "count": 0,
+        "blockers": [],
+        "commands": null
+      }
+    ],
+    "settled": true,
+    "pageReadFailure": false,
+    "ownerUnbound": true,
+    "scenarioUnbound": true,
+    "partialSource": true,
+    "noDeliveryOutcome": true,
+    "productionButtonsObservedOnly": [
+      {
+        "label": "样片准备",
+        "disabled": true
+      },
+      {
+        "label": "选择模板",
+        "disabled": true
+      },
+      {
+        "label": "安排生产",
+        "disabled": true
+      },
+      {
+        "label": "直播控制",
+        "disabled": true
+      },
+      {
+        "label": "创建交付草稿",
+        "disabled": false
+      },
+      {
+        "label": "提交发布审批",
+        "disabled": true
+      },
+      {
+        "label": "批量生产准备",
+        "disabled": true
+      }
+    ],
+    "actionButtonsNotClicked": true,
+    "businessComplete": false
+  },
+  "sameOriginal650Fingerprints": true,
+  "enabledBindings": 0,
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "samePgStartedAt": true,
+  "businessComplete": false,
+  "remaining": "real producing root/owner/scenario/Source/budget/human review/resume/wiki/eight scenarios and observation/release pending;create draft visible/enabled is not mutation permission,readonlyHTTP405 still enforced;no action clicked"
+}
+
+FILE browser-readback-r8.json
+{
+  "sourceHead": "4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+  "authority": "AOS-002017",
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "url": "http://127.0.0.1:18434/workshop/media-studio",
+  "authResponses": [
+    {
+      "path": "/api/v1/auth/token",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "status": 200
+    }
+  ],
+  "normalLoginFormSubmitOnce": true,
+  "noTokenOrCredentialExport": true,
+  "reads": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.media-studio-view/v6",
+      "count": null,
+      "blockers": [],
+      "commands": null
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "status": 200,
+      "tenant": null,
+      "schemaVersion": "aos.ecommerce-workshop.full-video-scenario/v1",
+      "count": null,
+      "blockers": [
+        "FULL_VIDEO_EXACT_ROOT_REQUIRED"
+      ],
+      "commands": {
+        "prepare": false,
+        "start": false,
+        "resume": false,
+        "takeover": false,
+        "cancel": false,
+        "reconcile": false,
+        "publish": false,
+        "settle": false
+      }
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": null,
+      "count": 0,
+      "blockers": [],
+      "commands": null
+    }
+  ],
+  "settled": true,
+  "pageReadFailure": false,
+  "ownerUnbound": true,
+  "scenarioUnbound": true,
+  "partialSource": true,
+  "noDeliveryOutcome": true,
+  "productionButtonsObservedOnly": [
+    {
+      "label": "样片准备",
+      "disabled": true
+    },
+    {
+      "label": "选择模板",
+      "disabled": true
+    },
+    {
+      "label": "安排生产",
+      "disabled": true
+    },
+    {
+      "label": "直播控制",
+      "disabled": true
+    },
+    {
+      "label": "创建交付草稿",
+      "disabled": false
+    },
+    {
+      "label": "提交发布审批",
+      "disabled": true
+    },
+    {
+      "label": "批量生产准备",
+      "disabled": true
+    }
+  ],
+  "actionButtonsNotClicked": true,
+  "businessComplete": false
+}
+
+FILE review-consumption-r8.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-media-aux-read-dependencies-20261013-r8",
+  "task_id": "qyh-media-aux-read-dependencies-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "69fd922fe012df5ba9608124b24a37772ae04819",
+    "authority_revision": "AOS-002017",
+    "files": {
+      ".evidence/qyh-media-aux-read-dependencies-20261013/review-package-r8.txt": "ea9ea7b242d6e51e05a287c43a97b5bae00885dcf10e2299a09704fc8bfd207c"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "2599f3bc7f1b91cb5accd3cb9338f36a8153c3c1603913e55b4c9c88fc66ea05",
+  "transport_sha256": "1d7f3a55ccae647a0be73f7f78973f8f77a1e53850e961257707b2f5c28c9740"
+}
+FILE reviewgate-correction.json
+{
+  "r5Verdict": "NEED_EVIDENCE",
+  "notPASS": true,
+  "mistake": "treated successful protocol consumption as PASS;premature API-only switch",
+  "prematureCode": "f28ef48c48ae4cebd144f3b986635cbc2a52de04",
+  "prematureApiPid": 95278,
+  "correctiveRevert": "62e43d5323ccd5d1d4e2b21a8e03eec20303f6b6",
+  "restoredApiPid": 95538,
+  "sameSourceManifestAsOriginal97": true,
+  "original650TablesUnchanged": true,
+  "pgWebChromeSignals": false,
+  "noPOSTOrProducerInitiated": true,
+  "authorityStill2017": true,
+  "scopedDeliveryNotClaimed": true
+}
+
+READONLY MAINTENANCE CONTROLLER
+"""Fresh one-attempt reload of exact current readonly API; no PG/Web/Chrome action."""
+from pathlib import Path
+import datetime,json,os,signal,subprocess,sys,time
+sys.dont_write_bytecode=True
+R=Path(__file__).resolve().parents[2];P=Path(__file__).resolve().parent;F=R/'.evidence/qyh-full-system-restoration-20261011';PY=R/'services/aos-api/.venv/bin/python'
+Q=R/'.evidence/qyh-media-aux-read-dependencies-20261013'
+import hashlib
+_review=json.loads((Q/'review-result-r8.json').read_text());_consume=json.loads((Q/'review-consumption-r8.json').read_text())
+assert _review['result']['verdict']=='PASS' and _consume['status']=='CONSUMED_MATERIAL_REVIEW','No effects before exact consumed PASS'
+assert _consume['result_sha256']==hashlib.sha256(json.dumps(_review,sort_keys=True).encode()).hexdigest()
+OWNER='codex-01a13484-f019-7d82-94ce-812396db9124';OLD=95538;OLD_SOURCE=F/'private/api-source-62e43d5323ccd5d1d4e2b21a8e03eec20303f6b6';REPORT=F/'successor-media-reviewed-r8-api-20261013.json'
+assert not (P/'media-reviewed-r8-api-reload-intent.json').exists() and not (P/'media-reviewed-r8-api-started.json').exists(),'Existing operation: readonly reconcile,never resend'
+m=R.parent/'docs/palantier/AOS项目开发上下文/memory';lease=[x for x in json.loads((m/'leases.json').read_text())['leases'] if x['task_id']==P.name];assert len(lease)==1 and lease[0]['owner']==OWNER and datetime.datetime.fromisoformat(lease[0]['lease_expires_at'])>datetime.datetime.now(datetime.timezone.utc)
+sys.path.insert(0,str(R/'scripts'));import a0v_qyh_restored_http as guard
+source=guard.require_api_source_candidate(REPORT.resolve());report=json.loads(REPORT.read_text());assert report['head']==subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()
+assert 'n'+str(OLD_SOURCE)+'\n' in subprocess.check_output(['lsof','-a','-p',str(OLD),'-d','cwd','-Fn'],text=True)
+def listeners():
+ x=subprocess.run(['lsof','-t','-nP','-iTCP:18080','-sTCP:LISTEN'],capture_output=True,text=True);return sorted({int(i) for i in x.stdout.split()})
+assert listeners()==[OLD]
+def record(name,value):
+ with (P/name).open('x') as f:json.dump(value,f,ensure_ascii=False,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
+record('media-reviewed-r8-api-reload-intent.json',{'oldPid':OLD,'oldCwd':str(OLD_SOURCE),'newHead':report['head'],'source':str(source),'port':18080,'sourceGuardPassed':True,'pgWebChromeTouched':False,'normalReadonlyFlagsRetained':True})
+os.kill(OLD,signal.SIGTERM)
+for _ in range(100):
+ if not listeners():break
+ time.sleep(.2)
+assert not listeners(),'old stop not settled;reconcile-only'
+record('media-reviewed-r8-api-old-stop.json',{'oldPid':OLD,'portFree':True})
+args=[str(PY),str(R/'scripts/a0v_qyh_restored_http.py'),'--api-identity-file',str(F/'private/restored-identity.json'),'--serve-management-readonly','--bundle-root',str(F/'selected-public-bundles'),'--trust-roots-file',str(F/'restoration-public-trust-roots.json'),'--source-candidate',str(REPORT),'--management-oidc-config','/Users/ddt/.aos-local-identities/qyh-20261013/aos-management-oidc.json','--installed-readonly-installation','ab2fd72f-d81c-400d-bbbc-e1589a159d6b']
+with (P/'live-api-media-reviewed-r8.log').open('x') as log:proc=subprocess.Popen(args,cwd=R,env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'},stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+record('media-reviewed-r8-api-started.json',{'pid':proc.pid,'head':report['head'],'source':str(source),'port':18080,'terminalVerified':False,'pgWebChromeTouched':False});print(json.dumps({'newPid':proc.pid,'spawnedOnly':True,'pgWebChromeTouched':False}))
