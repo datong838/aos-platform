@@ -73,6 +73,9 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
     assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
         '/v1/ecommerce-workshop/views/operations/cases',
         '/v1/ecommerce-workshop/commands/operations/readiness',
+        '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+        '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+        '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
     }
 
 

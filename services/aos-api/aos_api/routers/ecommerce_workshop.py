@@ -2941,7 +2941,7 @@ def get_ecommerce_workshop_task_cockpit_core(
 def get_ecommerce_workshop_task_cockpit_feedback(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     feedback: FeedbackReadDependency,
     limit: Annotated[int, Query(ge=1, le=20)] = 20,
 ) -> FeedbackReadEnvelope:
@@ -2966,7 +2966,7 @@ def get_ecommerce_workshop_task_cockpit_feedback(
 def get_ecommerce_workshop_task_cockpit_dispatch_scenario(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     scenario: DispatchScenarioDependency,
 ) -> DispatchScenarioContribution:
     _reject_unknown_query_parameters(request, allowed=frozenset())
@@ -2986,7 +2986,7 @@ def get_ecommerce_workshop_task_cockpit_dispatch_scenario(
 def get_ecommerce_workshop_task_cockpit_batch_scenario(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     scenario: BatchScenarioDependency,
 ) -> BatchScenarioContribution:
     _reject_unknown_query_parameters(request, allowed=frozenset())
