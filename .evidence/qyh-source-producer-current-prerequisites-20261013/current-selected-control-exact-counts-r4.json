@@ -1,0 +1,27 @@
+{
+  "authority": "AOS-002023",
+  "readonlyIdentityVerified": true,
+  "selectedInstallationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+  "exactCounts": {
+    "pipeline_runtime_control_revision": {
+      "tenant_total": 2240,
+      "selected_total": 0
+    },
+    "pipeline_source_selection_revision": {
+      "tenant_total": 2240,
+      "selected_total": 0
+    },
+    "pipeline_schedule_control_binding": {
+      "tenant_total": 2240,
+      "selected_total": 0
+    },
+    "pipeline_snapshot_schedule_definition_head": {
+      "tenant_total": 4,
+      "selected_total": 0
+    }
+  },
+  "previousR3SampleLimit100NotGlobalProof": true,
+  "sourceFetches": 0,
+  "commandsExecuted": 0,
+  "businessComplete": false
+}

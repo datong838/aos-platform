@@ -4,7 +4,7 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "qyh-restoration-successor-latest-restart-20261013",
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
-  "authority_revision": "AOS-002023",
+  "authority_revision": "AOS-002024",
   "task_base_revision": "AOS-002013",
   "step": "7/8 fullsame-volume2324 and API-only972/Operations readonly view delivered;other auxiliary/whole restoration/business remain open",
   "code_files": [
@@ -46,5 +46,19 @@
     "pgWebChromeRestarted": false,
     "original650Unchanged": true,
     "nextTask": "qyh-source-producer-current-prerequisites-20261013"
+  },
+  "lastReadonlyDiagnostic": {
+    "task": "qyh-source-producer-current-prerequisites-20261013",
+    "selectedProducerCounts": 0,
+    "budgetPolicyRevision": 13,
+    "budgetPolicyEffective": false,
+    "canonicalBudgetRevision": 1,
+    "canonicalBudgetEffective": true,
+    "sourceSchedulesDisabled": 12,
+    "oldRunningUnreplayed": 12,
+    "apiPidUnchanged": 14134,
+    "webPidUnchanged": 7590,
+    "nextTask": "qyh-budget-renewal-actor-consumer-plan-20261013",
+    "fullGoalActive": true
   }
 }

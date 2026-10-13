@@ -1,0 +1,2078 @@
+{
+  "authority": "AOS-002023",
+  "readonlyIdentityVerified": true,
+  "allCanonicalScheduleMetadata": [
+    {
+      "id": "sch-p01-qyh-controlled-20260913-v1",
+      "pipeline_id": "P01-shop-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P01-shop-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p02-qyh-controlled-20260913-v1",
+      "pipeline_id": "P02-product-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P02-product-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p03-product-sku-qyh-snapshot-y5-20260916",
+      "pipeline_id": "P03-product-sku-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P03-product-sku-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p04-category-qyh-snapshot-y5-20260916",
+      "pipeline_id": "P04-category-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P04-category-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p05-order-qyh-snapshot-y5-20260916",
+      "pipeline_id": "P05-order-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P05-order-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p06-order-line-qyh-snapshot-y5-20260916",
+      "pipeline_id": "P06-order-line-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P06-order-line-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p07-shipment-qyh-snapshot-y5-20260916",
+      "pipeline_id": "P07-shipment-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P07-shipment-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p08-customer-lite-qyh-snapshot-y5-20260916",
+      "pipeline_id": "P08-customer-lite-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P08-customer-lite-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p09-weapp-qyh-snapshot-y5-20260916",
+      "pipeline_id": "P09-weapp-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P09-weapp-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p10-system-config-qyh-snapshot-y5-20260916",
+      "pipeline_id": "P10-system-config-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P10-system-config-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p11-product-review-qyh-snapshot-y5-20260916",
+      "pipeline_id": "P11-product-review-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P11-product-review-qyh",
+      "ingest_source": null
+    },
+    {
+      "id": "sch-p12-payment-qyh-snapshot-y5-20260916",
+      "pipeline_id": "P12-payment-qyh",
+      "cron": "0 * * * *",
+      "enabled": false,
+      "kind": "pipeline-live-v1",
+      "ingest_pipeline": "P12-payment-qyh",
+      "ingest_source": null
+    }
+  ],
+  "currentSourceConfigurationMetadata": [
+    {
+      "id": "niushop-qyh",
+      "current_revision": "a84b6c79-8654-48f0-98c2-57d41b067b3d",
+      "source_type": "jdbc-mysql-ssh",
+      "status": "registered",
+      "plugin_id": "jdbc-mysql-ssh",
+      "authority": {
+        "type": "jdbc-mysql-ssh",
+        "status": "registered",
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "pluginId": "jdbc-mysql-ssh",
+        "sourceId": "niushop-qyh",
+        "revisionId": "a84b6c79-8654-48f0-98c2-57d41b067b3d",
+        "schemaVersion": "aos.source-configuration-identity/v1",
+        "priorRevisionId": null,
+        "configurationIdentityOnly": true,
+        "secretMaterialVersionKnown": false
+      },
+      "content_hash": "1bb98e27d0cac5033e1a0e0bf69f8d3919a9439759bd3e15efa82374e1010fb7",
+      "recorded_at": "2026-09-12 06:39:20.481197+00:00"
+    }
+  ],
+  "controlBudgetColumnInventory": [
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "decision_id"
+    },
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "preview_id"
+    },
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "preview_hash"
+    },
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "target_hash"
+    },
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "checker_subject"
+    },
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "decision"
+    },
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "reason"
+    },
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "expires_at"
+    },
+    {
+      "table_name": "aip_budget_activation_decision",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "preview_id"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "budget_id"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "draft_revision"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "expected_head_version"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "target_revision"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "target_hash"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "target_payload"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "preview_hash"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "maker_subject"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "checker_subject"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "internal_ledger_checked_at"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "external_usage_proven"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "expires_at"
+    },
+    {
+      "table_name": "aip_budget_activation_preview",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_activation_receipt",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_activation_receipt",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_activation_receipt",
+      "column_name": "receipt_id"
+    },
+    {
+      "table_name": "aip_budget_activation_receipt",
+      "column_name": "operation"
+    },
+    {
+      "table_name": "aip_budget_activation_receipt",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "aip_budget_activation_receipt",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "aip_budget_activation_receipt",
+      "column_name": "result_ref"
+    },
+    {
+      "table_name": "aip_budget_activation_receipt",
+      "column_name": "actor_subject"
+    },
+    {
+      "table_name": "aip_budget_activation_receipt",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_activation_revocation",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_activation_revocation",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_activation_revocation",
+      "column_name": "revocation_id"
+    },
+    {
+      "table_name": "aip_budget_activation_revocation",
+      "column_name": "decision_id"
+    },
+    {
+      "table_name": "aip_budget_activation_revocation",
+      "column_name": "actor_subject"
+    },
+    {
+      "table_name": "aip_budget_activation_revocation",
+      "column_name": "reason"
+    },
+    {
+      "table_name": "aip_budget_activation_revocation",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "bucket_kind"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "account_id"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "period_start"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "period_end"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "currency"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "limit_minor"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "held_minor"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "submitted_minor"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "settled_minor"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "unknown_minor"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "version"
+    },
+    {
+      "table_name": "aip_budget_bucket",
+      "column_name": "updated_at"
+    },
+    {
+      "table_name": "aip_budget_cost_decision",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_cost_decision",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_cost_decision",
+      "column_name": "decision_id"
+    },
+    {
+      "table_name": "aip_budget_cost_decision",
+      "column_name": "proposal_id"
+    },
+    {
+      "table_name": "aip_budget_cost_decision",
+      "column_name": "proposal_hash"
+    },
+    {
+      "table_name": "aip_budget_cost_decision",
+      "column_name": "actor_subject"
+    },
+    {
+      "table_name": "aip_budget_cost_decision",
+      "column_name": "decision"
+    },
+    {
+      "table_name": "aip_budget_cost_decision",
+      "column_name": "source_ref"
+    },
+    {
+      "table_name": "aip_budget_cost_decision",
+      "column_name": "expires_at"
+    },
+    {
+      "table_name": "aip_budget_cost_decision",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_cost_issuer_receipt",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_cost_issuer_receipt",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_cost_issuer_receipt",
+      "column_name": "actor_subject"
+    },
+    {
+      "table_name": "aip_budget_cost_issuer_receipt",
+      "column_name": "operation"
+    },
+    {
+      "table_name": "aip_budget_cost_issuer_receipt",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "aip_budget_cost_issuer_receipt",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "aip_budget_cost_issuer_receipt",
+      "column_name": "result"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "proposal_id"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "budget_id"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "maker_subject"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "checker_subject"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "proposal_hash"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "payload"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "status"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "source_verification"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "activation_eligible"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal",
+      "column_name": "expires_at"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal_receipt",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal_receipt",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal_receipt",
+      "column_name": "actor_subject"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal_receipt",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal_receipt",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal_receipt",
+      "column_name": "proposal_id"
+    },
+    {
+      "table_name": "aip_budget_cost_proposal_receipt",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_cost_revocation",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_cost_revocation",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_cost_revocation",
+      "column_name": "revocation_id"
+    },
+    {
+      "table_name": "aip_budget_cost_revocation",
+      "column_name": "decision_id"
+    },
+    {
+      "table_name": "aip_budget_cost_revocation",
+      "column_name": "actor_subject"
+    },
+    {
+      "table_name": "aip_budget_cost_revocation",
+      "column_name": "reason"
+    },
+    {
+      "table_name": "aip_budget_cost_revocation",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_cost_runtime_fence",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_cost_runtime_fence",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_cost_runtime_fence",
+      "column_name": "budget_id"
+    },
+    {
+      "table_name": "aip_budget_cost_runtime_fence",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "aip_budget_cost_runtime_fence",
+      "column_name": "decision_id"
+    },
+    {
+      "table_name": "aip_budget_cost_runtime_fence",
+      "column_name": "version"
+    },
+    {
+      "table_name": "aip_budget_head",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_head",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_head",
+      "column_name": "budget_id"
+    },
+    {
+      "table_name": "aip_budget_head",
+      "column_name": "current_revision"
+    },
+    {
+      "table_name": "aip_budget_head",
+      "column_name": "version"
+    },
+    {
+      "table_name": "aip_budget_head",
+      "column_name": "updated_at"
+    },
+    {
+      "table_name": "aip_budget_receipt",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_receipt",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_receipt",
+      "column_name": "receipt_id"
+    },
+    {
+      "table_name": "aip_budget_receipt",
+      "column_name": "operation"
+    },
+    {
+      "table_name": "aip_budget_receipt",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "aip_budget_receipt",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "aip_budget_receipt",
+      "column_name": "result_ref"
+    },
+    {
+      "table_name": "aip_budget_receipt",
+      "column_name": "created_by"
+    },
+    {
+      "table_name": "aip_budget_receipt",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "reservation_id"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "invocation_id"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "operation_id"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "invocation_key"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "task_ref"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "policy_ref"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "pricing_ref"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "approval_ref"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "currency"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "upper_bound_minor"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "actual_minor"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "state"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "provider_request_receipt_ref"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "provider_receipt_ref"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "usage_receipt_refs"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "reconciliation_evidence_ref"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_reservation",
+      "column_name": "updated_at"
+    },
+    {
+      "table_name": "aip_budget_reservation_bucket",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_reservation_bucket",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_reservation_bucket",
+      "column_name": "reservation_id"
+    },
+    {
+      "table_name": "aip_budget_reservation_bucket",
+      "column_name": "bucket_kind"
+    },
+    {
+      "table_name": "aip_budget_reservation_bucket",
+      "column_name": "account_id"
+    },
+    {
+      "table_name": "aip_budget_reservation_bucket",
+      "column_name": "period_start"
+    },
+    {
+      "table_name": "aip_budget_reservation_bucket",
+      "column_name": "currency"
+    },
+    {
+      "table_name": "aip_budget_reservation_bucket",
+      "column_name": "reserved_minor"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "event_id"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "reservation_id"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "sequence"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "from_state"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "to_state"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "evidence_ref"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "event_hash"
+    },
+    {
+      "table_name": "aip_budget_reservation_event",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "budget_id"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "lifecycle"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "environment"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "currency"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "daily_limit_minor"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "monthly_limit_minor"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "alert_threshold_pct"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "hard_stop"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "unknown_usage_behavior"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "effective_from"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "effective_until"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "owner"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "over_budget_approver"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "payload"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "created_by"
+    },
+    {
+      "table_name": "aip_budget_revision",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_budget_usage_settlement",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_budget_usage_settlement",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_budget_usage_settlement",
+      "column_name": "usage_receipt_id"
+    },
+    {
+      "table_name": "aip_budget_usage_settlement",
+      "column_name": "reservation_id"
+    },
+    {
+      "table_name": "aip_budget_usage_settlement",
+      "column_name": "usage_receipt_ref"
+    },
+    {
+      "table_name": "aip_budget_usage_settlement",
+      "column_name": "actual_minor"
+    },
+    {
+      "table_name": "aip_budget_usage_settlement",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "reservation_id"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "request_id"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "proposal_id"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "proposal_hash"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "approval_event_id"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "budget_policy_ref"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "budget_revision_ref"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "price_ref"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "currency"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "upper_bound_minor"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "state"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation_bucket",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation_bucket",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation_bucket",
+      "column_name": "reservation_id"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation_bucket",
+      "column_name": "bucket_kind"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation_bucket",
+      "column_name": "account_id"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation_bucket",
+      "column_name": "period_start"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation_bucket",
+      "column_name": "currency"
+    },
+    {
+      "table_name": "aip_model_eval_budget_reservation_bucket",
+      "column_name": "reserved_minor"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "reservation_id"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "purpose"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "request_id"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "proposal_id"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "proposal_hash"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "approval_event_id"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "approval_ref"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "budget_policy_ref"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "budget_revision_ref"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "price_ref"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "currency"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "upper_bound_minor"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "state"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation_bucket",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation_bucket",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation_bucket",
+      "column_name": "reservation_id"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation_bucket",
+      "column_name": "bucket_kind"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation_bucket",
+      "column_name": "account_id"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation_bucket",
+      "column_name": "period_start"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation_bucket",
+      "column_name": "currency"
+    },
+    {
+      "table_name": "aip_model_judge_budget_reservation_bucket",
+      "column_name": "reserved_minor"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "review_key"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "task_run_id"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "agent_run_id"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "capacity_reservation_id"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "command_key"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "installation_id"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "generation"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "execution_epoch"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "state"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "attempt"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "claim_token"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "budget_reservation_id"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "ecommerce_growth_content_budget_command_intent",
+      "column_name": "updated_at"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "run_id"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "installation_id"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "generation"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "pipeline_id"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "control_id"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "control_revision"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "control_hash"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "call_ordinal"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "pipeline_controlled_source_claim",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_registration_receipt",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_registration_receipt",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_registration_receipt",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "pipeline_registration_receipt",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_registration_receipt",
+      "column_name": "pipeline_id"
+    },
+    {
+      "table_name": "pipeline_registration_receipt",
+      "column_name": "source_id"
+    },
+    {
+      "table_name": "pipeline_registration_receipt",
+      "column_name": "source_configuration_revision"
+    },
+    {
+      "table_name": "pipeline_registration_receipt",
+      "column_name": "dataset_rid"
+    },
+    {
+      "table_name": "pipeline_registration_receipt",
+      "column_name": "response_metadata"
+    },
+    {
+      "table_name": "pipeline_registration_receipt",
+      "column_name": "recorded_at"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "installation_id"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "generation"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "pipeline_id"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "control_id"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "selection_id"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "selection_revision"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "selection_hash"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "payload"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "previous_revision"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "previous_hash"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "pipeline_runtime_control_revision",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "schedule_id"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "binding_id"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "installation_id"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "generation"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "pipeline_id"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "control_id"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "control_revision"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "control_hash"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "previous_revision"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "previous_hash"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "pipeline_schedule_control_binding",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_claim",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_claim",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_claim",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_claim",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_claim",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_claim",
+      "column_name": "member_count"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_claim",
+      "column_name": "binding"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_claim",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_input",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_input",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_input",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_input",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_input",
+      "column_name": "read_started_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_input",
+      "column_name": "read_completed_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_input",
+      "column_name": "snapshot_basis"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_input",
+      "column_name": "manifest_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_input",
+      "column_name": "manifest"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_input",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_link_command",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_link_command",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_link_command",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_link_command",
+      "column_name": "assessment_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_link_command",
+      "column_name": "link_count"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_link_command",
+      "column_name": "command_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_link_command",
+      "column_name": "command"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_link_command",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_member",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_member",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_member",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_member",
+      "column_name": "ordinal"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_member",
+      "column_name": "run_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "previous_revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "previous_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "definition_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "original_definition_revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "original_definition_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "current_definition_revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "current_definition_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "original_schedule_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "original_source_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "input_manifest_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "executor"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "policy_ref"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "request"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "body"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_recovery_receipt",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_relationship",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_relationship",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_relationship",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_relationship",
+      "column_name": "input_manifest_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_relationship",
+      "column_name": "policy_ref"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_relationship",
+      "column_name": "policy_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_relationship",
+      "column_name": "assessment_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_relationship",
+      "column_name": "assessment"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_relationship",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_retirement",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_retirement",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_retirement",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_retirement",
+      "column_name": "parent_command_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_retirement",
+      "column_name": "audit_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_retirement",
+      "column_name": "audit"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_retirement",
+      "column_name": "prepared_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_retirement",
+      "column_name": "preparation_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_retirement",
+      "column_name": "command"
+    },
+    {
+      "table_name": "pipeline_snapshot_group_retirement",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "scheduled_for"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "trigger"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "request"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "record"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_claim",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_current_member",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_current_member",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_current_member",
+      "column_name": "schedule_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_current_member",
+      "column_name": "definition_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_current_member",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_head",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_head",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_head",
+      "column_name": "definition_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_head",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_head",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_head",
+      "column_name": "state"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_head",
+      "column_name": "installation_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_head",
+      "column_name": "generation"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_member",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_member",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_member",
+      "column_name": "definition_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_member",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_member",
+      "column_name": "ordinal"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_member",
+      "column_name": "schedule_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_member",
+      "column_name": "binding_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_member",
+      "column_name": "binding_revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_member",
+      "column_name": "binding_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "definition_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "previous_revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "previous_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "installation_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "generation"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "state"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "request"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "body"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_definition_revision",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_member",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_member",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_member",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_member",
+      "column_name": "ordinal"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_member",
+      "column_name": "schedule_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_member",
+      "column_name": "binding_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_member",
+      "column_name": "binding_revision"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_member",
+      "column_name": "binding_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_schedule_member",
+      "column_name": "run_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_stalled_group_closure_receipt",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_stalled_group_closure_receipt",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_stalled_group_closure_receipt",
+      "column_name": "receipt_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_stalled_group_closure_receipt",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_stalled_group_closure_receipt",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "pipeline_snapshot_stalled_group_closure_receipt",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_stalled_group_closure_receipt",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "pipeline_snapshot_stalled_group_closure_receipt",
+      "column_name": "authority_data"
+    },
+    {
+      "table_name": "pipeline_snapshot_stalled_group_closure_receipt",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_stalled_group_closure_receipt",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_snapshot_unaccepted_group_closure_receipt",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_unaccepted_group_closure_receipt",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_unaccepted_group_closure_receipt",
+      "column_name": "receipt_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_unaccepted_group_closure_receipt",
+      "column_name": "group_id"
+    },
+    {
+      "table_name": "pipeline_snapshot_unaccepted_group_closure_receipt",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "pipeline_snapshot_unaccepted_group_closure_receipt",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_unaccepted_group_closure_receipt",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "pipeline_snapshot_unaccepted_group_closure_receipt",
+      "column_name": "authority_data"
+    },
+    {
+      "table_name": "pipeline_snapshot_unaccepted_group_closure_receipt",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "pipeline_snapshot_unaccepted_group_closure_receipt",
+      "column_name": "created_at"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "org_id"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "project_id"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "installation_id"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "generation"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "pipeline_id"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "selection_id"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "revision"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "source_id"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "source_configuration_revision"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "payload"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "content_hash"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "previous_revision"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "previous_hash"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "request_hash"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "idempotency_key"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "actor"
+    },
+    {
+      "table_name": "pipeline_source_selection_revision",
+      "column_name": "created_at"
+    }
+  ],
+  "sourcePropertiesNeverRead": true,
+  "sourceFetches": 0,
+  "commandsExecuted": 0,
+  "businessComplete": false
+}

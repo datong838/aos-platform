@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-source-producer-current-prerequisites-20261013-r2",
+  "task_id": "qyh-source-producer-current-prerequisites-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "4bfe2af1363641812c661718d109b1fc186bd571",
+    "authority_revision": "AOS-002023",
+    "files": {
+      ".evidence/qyh-source-producer-current-prerequisites-20261013/review-package-r2.txt": "9d2eff8551bb9ba52cb0da342b443202779f0db9c25f68d0573dde993200777c"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "bf1e11331aacfbe179387891ee37cb016ecdcbe2cd83ae0e92b95706e0937db4",
+  "transport_sha256": "6c8dbdf74fbf2ec5cfb4e3bd4abe0466afed748fa9b7fedd1758298fdf7befa6"
+}

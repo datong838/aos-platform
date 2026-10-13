@@ -1,0 +1,110 @@
+{
+  "authority": "AOS-002023",
+  "nativeReadonlyIdentity": true,
+  "queryBinding": {
+    "expectedBindingId": "ecommerce.data_advisor.strategy.plan.r2",
+    "expectedCapabilityId": "strategy.plan",
+    "observed": null,
+    "canonicalExactRefAvailable": false
+  },
+  "pipelineCount": 12,
+  "scheduleCount": 12,
+  "allSchedulesDisabled": true,
+  "cronProfile": "actualhourly vs repositorydaily2..13 UTC",
+  "ingestSourceIdAbsentAll": true,
+  "pipelineSourceIds": [
+    "niushop-qyh"
+  ],
+  "oldScheduleRuns": [
+    {
+      "status": "failed",
+      "count": 39
+    },
+    {
+      "status": "running",
+      "count": 12
+    },
+    {
+      "status": "succeeded",
+      "count": 14
+    }
+  ],
+  "selectedControlExactCounts": {
+    "pipeline_runtime_control_revision": {
+      "tenant_total": 2240,
+      "selected_total": 0
+    },
+    "pipeline_source_selection_revision": {
+      "tenant_total": 2240,
+      "selected_total": 0
+    },
+    "pipeline_schedule_control_binding": {
+      "tenant_total": 2240,
+      "selected_total": 0
+    },
+    "pipeline_snapshot_schedule_definition_head": {
+      "tenant_total": 4,
+      "selected_total": 0
+    }
+  },
+  "sampleR3Limit100NotGlobalProof": true,
+  "sourceConfig": [
+    {
+      "id": "niushop-qyh",
+      "current_revision": "a84b6c79-8654-48f0-98c2-57d41b067b3d",
+      "source_type": "jdbc-mysql-ssh",
+      "status": "registered",
+      "plugin_id": "jdbc-mysql-ssh",
+      "authority": {
+        "type": "jdbc-mysql-ssh",
+        "status": "registered",
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "pluginId": "jdbc-mysql-ssh",
+        "sourceId": "niushop-qyh",
+        "revisionId": "a84b6c79-8654-48f0-98c2-57d41b067b3d",
+        "schemaVersion": "aos.source-configuration-identity/v1",
+        "priorRevisionId": null,
+        "configurationIdentityOnly": true,
+        "secretMaterialVersionKnown": false
+      },
+      "content_hash": "1bb98e27d0cac5033e1a0e0bf69f8d3919a9439759bd3e15efa82374e1010fb7",
+      "recorded_at": "2026-09-12 06:39:20.481197+00:00"
+    }
+  ],
+  "canonicalBudget": [
+    {
+      "budget_id": "a0v-ecommerce-hard-stop-budget-v1",
+      "revision": 1,
+      "lifecycle": "active",
+      "environment": "development",
+      "hard_stop": true,
+      "effective_from": "2026-09-10 00:00:00+00:00",
+      "effective_until": "2027-09-10 00:00:00+00:00",
+      "content_hash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+    }
+  ],
+  "budgetPolicy": [
+    {
+      "policy_id": "a0v-ecommerce-budget-policy-v1",
+      "revision": 13,
+      "lifecycle": "active",
+      "effective_from": "2026-09-24 02:53:28.637050+00:00",
+      "effective_until": "2026-09-25 02:52:33.666717+00:00",
+      "content_hash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696",
+      "budget_ref": {
+        "assetId": "a0v-ecommerce-hard-stop-budget-v1",
+        "revision": 1,
+        "assetType": "BudgetRevision",
+        "contentHash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+      },
+      "effectiveNow": false
+    }
+  ],
+  "noCodeDataServiceChanges": true,
+  "sourceFetched": false,
+  "oldRunsReplayed": false,
+  "businessComplete": false
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-source-producer-current-prerequisites-20261013-r2",
+    "task_id": "qyh-source-producer-current-prerequisites-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "4bfe2af1363641812c661718d109b1fc186bd571",
+      "authority_revision": "AOS-002023",
+      "files": {
+        ".evidence/qyh-source-producer-current-prerequisites-20261013/review-package-r2.txt": "9d2eff8551bb9ba52cb0da342b443202779f0db9c25f68d0573dde993200777c"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Readonly current metadata proves missing selected-installation producer prerequisites without borrowing historical controls or replaying old Runs.",
+        "evidence": ".evidence/qyh-source-producer-current-prerequisites-20261013/review-package-r2.txt FRESH METADATA SUMMARY selectedControlExactCounts pipeline_runtime_control_revision/pipeline_source_selection_revision/pipeline_schedule_control_binding selected_total=0/tenant_total=2240; allSchedulesDisabled true; ingestSourceIdAbsentAll true; queryCapability observed null. READONLY CURRENT SOURCE PRODUCER PREREQUISITE DIAGNOSIS asserts no historicalRun/controls borrowed, sourceFetches=0, commandsExecuted=0, readonlyIdentityVerified=true.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Canonical BudgetRevision1 is effective while BudgetPolicyRevision13 is expired; exact source and budget gates remain mandatory.",
+        "evidence": ".evidence/qyh-source-producer-current-prerequisites-20261013/review-package-r2.txt FRESH METADATA SUMMARY canonicalBudget budget_id a0v-ecommerce-hard-stop-budget-v1 revision 1 lifecycle active effective_until 2027-09-10; budgetPolicy policy_id a0v-ecommerce-budget-policy-v1 revision 13 effective_until 2026-09-25T02:52:33Z effectiveNow false. services/aos-api/aos_api/aip_runtime_configuration_sources.py:300 check enforces lifecycle=active and checked_at within effective_from/effective_until window.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The inspected renewal proposal and preflight remain non-authoritative; the original policy store rejects active budget publication and its guard must be preserved.",
+        "evidence": ".evidence/qyh-source-producer-current-prerequisites-20261013/review-package-r2.txt FRESH OWNER CONTRACT CLARIFICATION states proposal/preflight only draft/read and publisher rejects active budget with BudgetPolicyApprovalRequired; services/aos-api/aos_api/aip_budget_policy_renewal_proposal.py header confirms pure envelope without approval/authority; services/aos-api/aos_api/pipeline_source_selection_candidate.py compile_source_selection_candidate comment confirms pure preparation without proving current installation/config. Store active gate exact200..210 raises BudgetPolicyApprovalRequired for active lifecycle.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前只读检查结果和 ACTIVE budget policy guard；准备独立于本 read scope 的 BudgetPolicyRevision14 续订 Task，由原 bounded consumer/producer 在 realRuntime role 下通过 maker+independent human checker 审批后发布，不得复用本 read session 的安装/控制元数据。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

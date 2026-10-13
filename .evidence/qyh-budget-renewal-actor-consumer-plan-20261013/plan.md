@@ -1,0 +1,6 @@
+# BudgetPolicy续期真实身份与有界消费实施方案编制
+Rules：用户AGENTS/工程交付/231完整Goal/唯一m1writer；Authority2024；sourceproducer当前只读诊断已Delivery，BudgetPolicy13过期但Budget1有效，原selectedsource四类记录0；当前原卷只读/Host worker Provider OFF/旧12unknown不重放。
+本Task仅方案/evidence/Dwave，先完整复习预算原Owner、提案/预检、独立评审消费及原next-producer-plan、真实身份与权限合同、当前context和产品方案。不得改代码/ACL/数据/角色/服务，不能将受支持原Store.publish_budget的ACTIVE拒绝门删掉；原安装批准不授预算续期批准。
+输出一份可逐文件执行的方案：独立真实机器maker的认证/授权来源与唯一真人checker的原OIDC绑定；续期提案/审核/发布/消费及幂等Receipt/unknown只读对账；同一current tenant sourcePolicy/headVersion/Budget/Provider/model/exacthash/期限/价格上界/费用scope在消费锁内再核，当前锁/CAS/时钟/撤销/漂移必败；低权独立publisher在原AIPBudgetPolicy authority写入受审新revision，保持active一般写入拒绝且不复制BudgetRevision初始activation流程，不读原源props或运行Provider。真实权限/角色配置另受控部署，不以mock或假第二human验收。
+形成具体新文件/原接口复用/必要持久化表与角色范围/隔离PG正反例/回滚/有界超时及审阅包，独立planPASS才另登记精确codingScope进入RED；本Task无编码权。用户已有长程授权覆盖安全开发，但任何预算真实批准仍须完成可审阅结果后原受支持真人动作。
+并列列出当前selectedsource准备context缺口，复用compile_source_selection_candidate只准备唯一fixedsnapshotdraft：realinstallation/configuration/generation/executionepoch/sourceconfiguration/package/graph/mapping/schema/mask/limits，缺任何当前ref不能捏造。SourceSelection/Control/ScheduleDefinition、查询能力、配置/预算各门独立，无旧Schedule先启用。完整安装生命周期/新自然CaseRun人审续跑/Wiki/八台场景/观察发布长期Goal不缩小；每日aos最新m1原卷全面PG→API→Web义务及aos2不重启保持。

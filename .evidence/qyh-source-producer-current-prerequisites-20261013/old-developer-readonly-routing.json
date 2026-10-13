@@ -1,0 +1,17 @@
+{
+  "thread": "01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "turn": "01a135d7-a795-7d13-974d-8758c5f1fc28",
+  "source": "authorized olddeveloper readonly response;verified current code before use",
+  "oldWriterStopped": true,
+  "budgetRoutes": [
+    ".evidence/qyh-budget-policy-renewal-proposal-20261013/next-producer-plan.md",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_proposal.py",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_preflight.py",
+    ".evidence/qyh-budget-owner-preflight-review-20261013/request-r1.json"
+  ],
+  "boundedActivationConsumerExists": false,
+  "doNotRetryOldPreflightTimeoutR2": true,
+  "sourcePreparation": "compile_source_selection_candidate pureonly,requires currentexactcontext,no historicalborrow",
+  "receiptReadNotPermit": "PipelineSourceSelectionOwner.read_receipt requiresactual aos_runtime,do not SETROLE;run_current isexecutionnotplainread",
+  "noWritesAuthorizedByResponse": true
+}

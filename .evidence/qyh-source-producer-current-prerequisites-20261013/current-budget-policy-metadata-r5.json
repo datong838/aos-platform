@@ -1,0 +1,26 @@
+{
+  "authority": "AOS-002023",
+  "readonlyIdentityVerified": true,
+  "checkedAt": "2026-10-13 15:19:02.172063+00:00",
+  "currentBudgetPolicyHeads": [
+    {
+      "policy_id": "a0v-ecommerce-budget-policy-v1",
+      "revision": 13,
+      "lifecycle": "active",
+      "effective_from": "2026-09-24 02:53:28.637050+00:00",
+      "effective_until": "2026-09-25 02:52:33.666717+00:00",
+      "content_hash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696",
+      "budget_ref": {
+        "assetId": "a0v-ecommerce-hard-stop-budget-v1",
+        "revision": 1,
+        "assetType": "BudgetRevision",
+        "contentHash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+      },
+      "effectiveNow": false
+    }
+  ],
+  "noSelectedRuntimeBindingInvented": true,
+  "sourceFetches": 0,
+  "commandsExecuted": 0,
+  "businessComplete": false
+}
