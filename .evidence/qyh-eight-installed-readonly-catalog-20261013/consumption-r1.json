@@ -1,0 +1,23 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-eight-installed-readonly-catalog-20261013-r1",
+  "task_id": "qyh-eight-installed-readonly-catalog-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "5c99d59011722909b98405a2fbc5c021c92e35ff",
+    "authority_revision": "AOS-002008",
+    "files": {
+      ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-0.txt": "c3dc2a9661a8a4184d08bfd005b141729add24a111641cdead8280e137048751",
+      ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-1.txt": "d888a9e9ca4f2024b6057fce285ed536ee2282aa54c9e1f526791ed94d5ba9b6",
+      ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-2.txt": "bf98b97a20d7e71b0b605be12b502f85221baf64d844211d9f06e72ec6711a28",
+      ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-3.txt": "f843ceca5756ce633465875de8c29d358af610fa942880f5d3d82b0d90061412",
+      ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-4.txt": "aa26a2bb84f22a8e91429e25751581491226a4e67ff75024dde56ffed247b1fb",
+      ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-5.txt": "78fa568c582a0ceda077c9179bb4fa76a6b2f19f28cb42d597cba5b67110bf00",
+      ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-6.txt": "11102495e8addfa3af01d415f8b26635ac3ef450e05b77576adfdabae90373d1"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "5948a394c79b00f8aa16adc4c1ff629e89c0ecd8aff2728777b81bd87e459998",
+  "transport_sha256": "65993a03a8a3e782a7aad019381b3b1c4dba000f83cb2fba0ec18f078375a564"
+}

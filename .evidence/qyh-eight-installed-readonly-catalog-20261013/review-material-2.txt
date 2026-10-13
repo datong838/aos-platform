@@ -1,0 +1,62 @@
+diff --git a/apps/web/src/api/ecommerceWorkshop/client.ts b/apps/web/src/api/ecommerceWorkshop/client.ts
+index a0e265971..309f8820b 100644
+--- a/apps/web/src/api/ecommerceWorkshop/client.ts
++++ b/apps/web/src/api/ecommerceWorkshop/client.ts
+@@ -98,7 +98,12 @@ export class EcommerceWorkshopClient {
+     const auth = this.authHeaders(); const expectedTenant = requestTenant(auth); let response: Response; try { response = await this.fetchImpl(`${this.baseUrl().replace(/\/$/, "")}${path}`, { method: "POST", headers: { ...auth, Accept: "application/json", "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) }); } catch (cause) { const message = cause instanceof Error ? cause.message : String(cause); throw new EcommerceWorkshopClientError(message, { status: 0, body: { code: "NETWORK", message, details: null, traceId: "" }, operationId }); }
+     const payload: unknown = await response.json().catch(() => undefined); if (!response.ok) { const parsed = parseEcommerceWorkshopApiError(payload, response.statusText || `HTTP ${response.status}`); throw new EcommerceWorkshopClientError(parsed.message, { status: response.status, body: parsed, operationId }); } if (payload === undefined) throw new EcommerceWorkshopClientError("canonical API returned non-JSON success", { status: 0, body: { code: "INVALID_SUCCESS_RESPONSE", message: "canonical API returned non-JSON success", details: null, traceId: "" }, operationId }); assertResponseTenant(payload, expectedTenant); return payload;
+   }
+-  async listModules(): Promise<EcommerceWorkshopModuleListResponse> { return parseEcommerceWorkshopModuleList(await this.get("ecommerceWorkshopModulesList", "/v1/ecommerce-workshop/modules")); }
++  async listModules(): Promise<EcommerceWorkshopModuleListResponse> {
++    const legacy = parseEcommerceWorkshopModuleList(await this.get("ecommerceWorkshopModulesList", "/v1/ecommerce-workshop/modules"));
++    if (legacy.count > 0) return legacy;
++    // Viewing signed installed assets grants no runtime or business admission.
++    return parseEcommerceWorkshopModuleList(await this.get("ecommerceWorkshopInstalledReadonlyModulesList", "/v1/ecommerce-workshop/installed-readonly-modules"));
++  }
+   async getModuleReadiness(moduleId: string): Promise<EcommerceWorkshopModuleReadinessResponse> { if (!MODULE_ID.test(moduleId)) throw new TypeError("moduleId 无效"); return parseEcommerceWorkshopModuleReadiness(await this.get("ecommerceWorkshopModuleReadinessGet", `/v1/ecommerce-workshop/modules/${encodeURIComponent(moduleId)}/readiness`)); }
+   async getSourceReadiness(): Promise<SourceReadinessEnvelope> { return parseSourceReadinessEnvelope(await this.get("ecommerceWorkshopSourceReadinessGet", "/v1/ecommerce-workshop/source-readiness")); }
+   async getOperationsView(): Promise<OperationsViewResponse> { return parseOperationsView(await this.get("ecommerceWorkshopOperationsViewGet", "/v1/ecommerce-workshop/views/operations")); }
+diff --git a/services/aos-api/aos_api/routers/ecommerce_workshop.py b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+index ee8f24df9..bff154647 100644
+--- a/services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+@@ -1088,6 +1088,24 @@ def _require_visible_workshop_installation(
+         )
+ 
+ 
++@router.get(
++    "/installed-readonly-modules",
++    response_model=EcommerceWorkshopModuleListResponse,
++    operation_id="ecommerceWorkshopInstalledReadonlyModulesList",
++    responses=_ERRORS,
++)
++def list_installed_readonly_modules(
++    request: Request,
++    principal: PrincipalDependency,
++) -> EcommerceWorkshopModuleListResponse:
++    from aos_api.ecommerce_installed_readonly_catalog import build_installed_readonly_catalog
++
++    _reject_query_parameters(request)
++    return _invoke(lambda: build_installed_readonly_catalog().list_modules(
++        org_id=principal.org_id, project_id=principal.project_id,
++        roles=principal.roles, markings=principal.markings))
++
++
+ @router.get(
+     "/modules",
+     response_model=EcommerceWorkshopModuleListResponse,
+diff --git a/services/aos-api/tests/test_ecommerce_workshop_api.py b/services/aos-api/tests/test_ecommerce_workshop_api.py
+index afaafeb7c..1beb089d3 100644
+--- a/services/aos-api/tests/test_ecommerce_workshop_api.py
++++ b/services/aos-api/tests/test_ecommerce_workshop_api.py
+@@ -455,6 +455,10 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
+         if method in {"get", "post", "put", "patch", "delete"}
+     }
+     assert operations == {
++        "ecommerceWorkshopInstalledReadonlyModulesList": (
++            "/v1/ecommerce-workshop/installed-readonly-modules",
++            "get",
++        ),
+         "ecommerceWorkshopModulesList": (
+             "/v1/ecommerce-workshop/modules",
+             "get",

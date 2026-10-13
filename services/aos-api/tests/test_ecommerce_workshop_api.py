@@ -455,6 +455,10 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
         if method in {"get", "post", "put", "patch", "delete"}
     }
     assert operations == {
+        "ecommerceWorkshopInstalledReadonlyModulesList": (
+            "/v1/ecommerce-workshop/installed-readonly-modules",
+            "get",
+        ),
         "ecommerceWorkshopModulesList": (
             "/v1/ecommerce-workshop/modules",
             "get",

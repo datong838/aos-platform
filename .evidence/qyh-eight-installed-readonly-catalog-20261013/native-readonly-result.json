@@ -1,0 +1,2086 @@
+{
+  "outcome": "CURRENT_SIGNED_INSTALLED_EIGHT_READONLY_MODULES_VERIFIED",
+  "modules": {
+    "schemaVersion": "aos.ecommerce-workshop/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "evaluatedAt": "2026-10-13T05:58:39.019638Z",
+    "dataCutoff": "2026-10-12T12:59:53.700561Z",
+    "items": [
+      {
+        "moduleId": "ecommerce.task-cockpit",
+        "displayName": "电商日常任务总控大屏",
+        "menuLabel": "日常任务总控大屏",
+        "route": "/workshop/cockpit",
+        "slot": "workshop.primary.ecommerce",
+        "order": 10,
+        "installationRef": {
+          "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+          "revision": 5,
+          "compositionId": "cf1e45cf-6255-420d-83c7-998751438053",
+          "lockRevision": 1,
+          "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+          "overlayRevision": "qyh-ecommerce-restoration-20261012"
+        },
+        "moduleRef": {
+          "publisher": "aos",
+          "bundleId": "solution.ecommerce.growth",
+          "version": "1.13.0",
+          "bundleContentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+          "moduleArtifactRef": "bundle://a0v-qyh-current/solution.ecommerce.growth/1.13.0/content/workshops/ecommerce.task-cockpit.json",
+          "moduleArtifactHash": "sha256:5de3fe61847173eca8bfbc28e0562e1bf8e40f278201cffdf9374eedaf696c30"
+        },
+        "readiness": "disabled",
+        "blockers": [
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.agent-handoff",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.impact-preview",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.responsibility-plan",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.review-issue",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.stage-template",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.task-runtime",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "performance.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "strategy.plan",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "installation",
+            "dependencyId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+            "state": "unknown",
+            "reasonCode": "INSTALLED_ASSET_READONLY",
+            "recoverable": true,
+            "requiredAction": "已安装页面可只读查看；业务执行仍须完成正式运行准入。",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Checkpoint",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Handoff",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Task",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "TaskRun",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          }
+        ],
+        "dependencyRefs": [
+          {
+            "resourceType": "DataScopeGrant",
+            "resourceId": "ecommerce.workshop.read",
+            "revision": "installation:5/lock:1",
+            "contentHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+            "authority": "postgres:bundle_composition_lock"
+          }
+        ],
+        "permissions": {
+          "roles": [],
+          "markings": [],
+          "dataScopes": [
+            "ecommerce.workshop.read"
+          ],
+          "actionTypes": []
+        },
+        "requiredObjects": [
+          "Checkpoint",
+          "Handoff",
+          "Task",
+          "TaskRun"
+        ],
+        "requiredCapabilities": [
+          "performance.review",
+          "strategy.plan"
+        ],
+        "requiredAipFeatures": [
+          "aip.agent-handoff",
+          "aip.production.impact-preview",
+          "aip.production.responsibility-plan",
+          "aip.production.review-issue",
+          "aip.production.stage-template",
+          "aip.task-runtime"
+        ],
+        "viewRefs": [],
+        "evalPackRefs": [
+          "content/production-profiles/ecommerce.task-cockpit.json"
+        ],
+        "productionContractRefs": [
+          "content/production-profiles/ecommerce.task-cockpit.json"
+        ],
+        "responsibilityTemplateRefs": [
+          "content/production-profiles/ecommerce.task-cockpit.json"
+        ],
+        "impactCalculatorRefs": [],
+        "legacyAssetRefs": [],
+        "legacyRoutes": [
+          "/s2/task-cockpit"
+        ],
+        "minimumRuntimeVersion": "1.7.0",
+        "lastReceiptRef": null
+      },
+      {
+        "moduleId": "ecommerce.content-campaign",
+        "displayName": "内容与活动工作台",
+        "menuLabel": "内容与活动工作台",
+        "route": "/workshop/content-campaign",
+        "slot": "workshop.primary.ecommerce",
+        "order": 20,
+        "installationRef": {
+          "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+          "revision": 5,
+          "compositionId": "cf1e45cf-6255-420d-83c7-998751438053",
+          "lockRevision": 1,
+          "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+          "overlayRevision": "qyh-ecommerce-restoration-20261012"
+        },
+        "moduleRef": {
+          "publisher": "aos",
+          "bundleId": "solution.ecommerce.growth",
+          "version": "1.13.0",
+          "bundleContentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+          "moduleArtifactRef": "bundle://a0v-qyh-current/solution.ecommerce.growth/1.13.0/content/workshops/ecommerce.content-campaign.json",
+          "moduleArtifactHash": "sha256:2ba137cde2ac882247e1406d2389c952e5c66409f887825c25a0ba291096bfe5"
+        },
+        "readiness": "disabled",
+        "blockers": [
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.artifact-family",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.eval-contract",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.evidence-bundle",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.impact-preview",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.task-brief",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.task-runtime",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "content.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "copy.generate",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "material.collect",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "performance.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "platform.adapt",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "strategy.plan",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "installation",
+            "dependencyId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+            "state": "unknown",
+            "reasonCode": "INSTALLED_ASSET_READONLY",
+            "recoverable": true,
+            "requiredAction": "已安装页面可只读查看；业务执行仍须完成正式运行准入。",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "CalendarEntry",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "CampaignRevision",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "ContentVariant",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "CustomerLite",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Product",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "ProductSku",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          }
+        ],
+        "dependencyRefs": [
+          {
+            "resourceType": "DataScopeGrant",
+            "resourceId": "ecommerce.workshop.read",
+            "revision": "installation:5/lock:1",
+            "contentHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+            "authority": "postgres:bundle_composition_lock"
+          }
+        ],
+        "permissions": {
+          "roles": [],
+          "markings": [],
+          "dataScopes": [
+            "ecommerce.workshop.read"
+          ],
+          "actionTypes": []
+        },
+        "requiredObjects": [
+          "CalendarEntry",
+          "CampaignRevision",
+          "ContentVariant",
+          "CustomerLite",
+          "Product",
+          "ProductSku"
+        ],
+        "requiredCapabilities": [
+          "content.review",
+          "copy.generate",
+          "material.collect",
+          "performance.review",
+          "platform.adapt",
+          "strategy.plan"
+        ],
+        "requiredAipFeatures": [
+          "aip.production.artifact-family",
+          "aip.production.eval-contract",
+          "aip.production.evidence-bundle",
+          "aip.production.impact-preview",
+          "aip.production.task-brief",
+          "aip.task-runtime"
+        ],
+        "viewRefs": [],
+        "evalPackRefs": [
+          "content/production-profiles/ecommerce.content-campaign.json"
+        ],
+        "productionContractRefs": [
+          "content/production-profiles/ecommerce.content-campaign.json"
+        ],
+        "responsibilityTemplateRefs": [
+          "content/production-profiles/ecommerce.content-campaign.json"
+        ],
+        "impactCalculatorRefs": [],
+        "legacyAssetRefs": [],
+        "legacyRoutes": [
+          "/s2/content-campaign"
+        ],
+        "minimumRuntimeVersion": "1.7.0",
+        "lastReceiptRef": null
+      },
+      {
+        "moduleId": "ecommerce.operations",
+        "displayName": "统一运营驾驶舱",
+        "menuLabel": "统一运营驾驶舱",
+        "route": "/workshop/operations",
+        "slot": "workshop.primary.ecommerce",
+        "order": 30,
+        "installationRef": {
+          "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+          "revision": 5,
+          "compositionId": "cf1e45cf-6255-420d-83c7-998751438053",
+          "lockRevision": 1,
+          "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+          "overlayRevision": "qyh-ecommerce-restoration-20261012"
+        },
+        "moduleRef": {
+          "publisher": "aos",
+          "bundleId": "solution.ecommerce.operations-base",
+          "version": "1.2.2",
+          "bundleContentHash": "sha256:ca0f6e74bcb428efd78c868285cd9fbed136919d4676b46aee9e181e8eec33ec",
+          "moduleArtifactRef": "bundle://a0v-canonical/solution.ecommerce.operations-base/1.2.2/content/workshops/ecommerce.operations.json",
+          "moduleArtifactHash": "sha256:dde892c7b9f896b6fc09c361c0620e5cf4517c0dcba86e9e70f61ef90028dd5a"
+        },
+        "readiness": "disabled",
+        "blockers": [
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.action-runtime",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.eval-contract",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.evidence-bundle",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.impact-preview",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.task-brief",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.task-runtime",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "performance.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "installation",
+            "dependencyId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+            "state": "unknown",
+            "reasonCode": "INSTALLED_ASSET_READONLY",
+            "recoverable": true,
+            "requiredAction": "已安装页面可只读查看；业务执行仍须完成正式运行准入。",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Category",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "OperationCase",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Order",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "OrderLine",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Payment",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Product",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "ProductReview",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "ProductSku",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Shipment",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          }
+        ],
+        "dependencyRefs": [
+          {
+            "resourceType": "DataScopeGrant",
+            "resourceId": "ecommerce.workshop.read",
+            "revision": "installation:5/lock:1",
+            "contentHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+            "authority": "postgres:bundle_composition_lock"
+          }
+        ],
+        "permissions": {
+          "roles": [],
+          "markings": [],
+          "dataScopes": [
+            "ecommerce.workshop.read"
+          ],
+          "actionTypes": []
+        },
+        "requiredObjects": [
+          "Category",
+          "OperationCase",
+          "Order",
+          "OrderLine",
+          "Payment",
+          "Product",
+          "ProductReview",
+          "ProductSku",
+          "Shipment"
+        ],
+        "requiredCapabilities": [
+          "performance.review"
+        ],
+        "requiredAipFeatures": [
+          "aip.action-runtime",
+          "aip.production.eval-contract",
+          "aip.production.evidence-bundle",
+          "aip.production.impact-preview",
+          "aip.production.task-brief",
+          "aip.task-runtime"
+        ],
+        "viewRefs": [],
+        "evalPackRefs": [
+          "content/production-profiles/ecommerce.operations.json"
+        ],
+        "productionContractRefs": [
+          "content/production-profiles/ecommerce.operations.json"
+        ],
+        "responsibilityTemplateRefs": [
+          "content/production-profiles/ecommerce.operations.json"
+        ],
+        "impactCalculatorRefs": [],
+        "legacyAssetRefs": [
+          "content/workshops/w01-order-management.json",
+          "content/workshops/w02-product-inventory.json"
+        ],
+        "legacyRoutes": [
+          "/s2/orders",
+          "/workshop/inventory",
+          "/workshop/orders"
+        ],
+        "minimumRuntimeVersion": "1.7.0",
+        "lastReceiptRef": null
+      },
+      {
+        "moduleId": "ecommerce.creator-growth",
+        "displayName": "达人邀约与签约驾驶舱",
+        "menuLabel": "达人邀约驾驶舱",
+        "route": "/workshop/creator-growth",
+        "slot": "workshop.primary.ecommerce",
+        "order": 40,
+        "installationRef": {
+          "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+          "revision": 5,
+          "compositionId": "cf1e45cf-6255-420d-83c7-998751438053",
+          "lockRevision": 1,
+          "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+          "overlayRevision": "qyh-ecommerce-restoration-20261012"
+        },
+        "moduleRef": {
+          "publisher": "aos",
+          "bundleId": "solution.ecommerce.growth",
+          "version": "1.13.0",
+          "bundleContentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+          "moduleArtifactRef": "bundle://a0v-qyh-current/solution.ecommerce.growth/1.13.0/content/workshops/ecommerce.creator-growth.json",
+          "moduleArtifactHash": "sha256:644aae6100ec3a550a8a21d84c25635a6dcb1836653b1b31e9332c543fe19935"
+        },
+        "readiness": "disabled",
+        "blockers": [
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.agent-handoff",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.eval-contract",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.evidence-bundle",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.impact-preview",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.task-brief",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.task-runtime",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "content.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "copy.generate",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "material.collect",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "performance.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "strategy.plan",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "installation",
+            "dependencyId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+            "state": "unknown",
+            "reasonCode": "INSTALLED_ASSET_READONLY",
+            "recoverable": true,
+            "requiredAction": "已安装页面可只读查看；业务执行仍须完成正式运行准入。",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "ContractRef",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "CreatorCandidate",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "DeliveryRef",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "OutreachBatchRevision",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Product",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "RelationshipRevision",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          }
+        ],
+        "dependencyRefs": [
+          {
+            "resourceType": "DataScopeGrant",
+            "resourceId": "ecommerce.workshop.read",
+            "revision": "installation:5/lock:1",
+            "contentHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+            "authority": "postgres:bundle_composition_lock"
+          }
+        ],
+        "permissions": {
+          "roles": [],
+          "markings": [],
+          "dataScopes": [
+            "ecommerce.workshop.read"
+          ],
+          "actionTypes": []
+        },
+        "requiredObjects": [
+          "ContractRef",
+          "CreatorCandidate",
+          "DeliveryRef",
+          "OutreachBatchRevision",
+          "Product",
+          "RelationshipRevision"
+        ],
+        "requiredCapabilities": [
+          "content.review",
+          "copy.generate",
+          "material.collect",
+          "performance.review",
+          "strategy.plan"
+        ],
+        "requiredAipFeatures": [
+          "aip.agent-handoff",
+          "aip.production.eval-contract",
+          "aip.production.evidence-bundle",
+          "aip.production.impact-preview",
+          "aip.production.task-brief",
+          "aip.task-runtime"
+        ],
+        "viewRefs": [],
+        "evalPackRefs": [
+          "content/production-profiles/ecommerce.creator-growth.json"
+        ],
+        "productionContractRefs": [
+          "content/production-profiles/ecommerce.creator-growth.json"
+        ],
+        "responsibilityTemplateRefs": [
+          "content/production-profiles/ecommerce.creator-growth.json"
+        ],
+        "impactCalculatorRefs": [],
+        "legacyAssetRefs": [],
+        "legacyRoutes": [
+          "/s2/creator-growth"
+        ],
+        "minimumRuntimeVersion": "1.7.0",
+        "lastReceiptRef": null
+      },
+      {
+        "moduleId": "ecommerce.media-studio",
+        "displayName": "多媒体任务全过程闭环工作台",
+        "menuLabel": "多媒体内容生产",
+        "route": "/workshop/media-studio",
+        "slot": "workshop.primary.ecommerce",
+        "order": 50,
+        "installationRef": {
+          "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+          "revision": 5,
+          "compositionId": "cf1e45cf-6255-420d-83c7-998751438053",
+          "lockRevision": 1,
+          "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+          "overlayRevision": "qyh-ecommerce-restoration-20261012"
+        },
+        "moduleRef": {
+          "publisher": "aos",
+          "bundleId": "solution.ecommerce.growth",
+          "version": "1.13.0",
+          "bundleContentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+          "moduleArtifactRef": "bundle://a0v-qyh-current/solution.ecommerce.growth/1.13.0/content/workshops/ecommerce.media-studio.json",
+          "moduleArtifactHash": "sha256:be84d03fe909dc19af1b3fc743310ed1567ad379afc79ea17a46e8cd2b99cea3"
+        },
+        "readiness": "disabled",
+        "blockers": [
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.media-provider",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.model-route",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.artifact-family",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.eval-contract",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.evidence-bundle",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.impact-preview",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.responsibility-plan",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.review-issue",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.stage-template",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.task-brief",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.task-runtime",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "content.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "copy.generate",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "live.orchestrate",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "material.collect",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "performance.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "platform.adapt",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "script.compose",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "speech.synthesize",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "strategy.plan",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "video.compose",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "installation",
+            "dependencyId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+            "state": "unknown",
+            "reasonCode": "INSTALLED_ASSET_READONLY",
+            "recoverable": true,
+            "requiredAction": "已安装页面可只读查看；业务执行仍须完成正式运行准入。",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Artifact",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Checkpoint",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "ContentVariant",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Product",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "ReviewIssue",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "TaskRun",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          }
+        ],
+        "dependencyRefs": [
+          {
+            "resourceType": "DataScopeGrant",
+            "resourceId": "ecommerce.workshop.read",
+            "revision": "installation:5/lock:1",
+            "contentHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+            "authority": "postgres:bundle_composition_lock"
+          }
+        ],
+        "permissions": {
+          "roles": [],
+          "markings": [],
+          "dataScopes": [
+            "ecommerce.workshop.read"
+          ],
+          "actionTypes": []
+        },
+        "requiredObjects": [
+          "Artifact",
+          "Checkpoint",
+          "ContentVariant",
+          "Product",
+          "ReviewIssue",
+          "TaskRun"
+        ],
+        "requiredCapabilities": [
+          "content.review",
+          "copy.generate",
+          "live.orchestrate",
+          "material.collect",
+          "performance.review",
+          "platform.adapt",
+          "script.compose",
+          "speech.synthesize",
+          "strategy.plan",
+          "video.compose"
+        ],
+        "requiredAipFeatures": [
+          "aip.media-provider",
+          "aip.model-route",
+          "aip.production.artifact-family",
+          "aip.production.eval-contract",
+          "aip.production.evidence-bundle",
+          "aip.production.impact-preview",
+          "aip.production.responsibility-plan",
+          "aip.production.review-issue",
+          "aip.production.stage-template",
+          "aip.production.task-brief",
+          "aip.task-runtime"
+        ],
+        "viewRefs": [],
+        "evalPackRefs": [
+          "content/production-profiles/ecommerce.media-studio.json"
+        ],
+        "productionContractRefs": [
+          "content/media-production-templates/full.stage.json",
+          "content/media-production-templates/lite.stage.json",
+          "content/media-production-templates/standard.stage.json",
+          "content/production-profiles/ecommerce.media-studio.json"
+        ],
+        "responsibilityTemplateRefs": [
+          "content/media-production-templates/full.responsibility.json",
+          "content/media-production-templates/lite.responsibility.json",
+          "content/media-production-templates/standard.responsibility.json"
+        ],
+        "impactCalculatorRefs": [
+          "content/cost-projection-contracts/media.v1.json"
+        ],
+        "legacyAssetRefs": [],
+        "legacyRoutes": [
+          "/s2/media-studio"
+        ],
+        "minimumRuntimeVersion": "1.7.0",
+        "lastReceiptRef": null
+      },
+      {
+        "moduleId": "ecommerce.analyst",
+        "displayName": "经营参谋 · 增长指挥中心",
+        "menuLabel": "经营参谋 · 增长指挥中心",
+        "route": "/workshop/analyst",
+        "slot": "workshop.primary.ecommerce",
+        "order": 60,
+        "installationRef": {
+          "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+          "revision": 5,
+          "compositionId": "cf1e45cf-6255-420d-83c7-998751438053",
+          "lockRevision": 1,
+          "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+          "overlayRevision": "qyh-ecommerce-restoration-20261012"
+        },
+        "moduleRef": {
+          "publisher": "aos",
+          "bundleId": "solution.ecommerce.growth",
+          "version": "1.13.0",
+          "bundleContentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+          "moduleArtifactRef": "bundle://a0v-qyh-current/solution.ecommerce.growth/1.13.0/content/workshops/ecommerce.analyst.json",
+          "moduleArtifactHash": "sha256:74368970d43416b96ac191d69c26f657ed64ca23616116819dcacdf4778a056a"
+        },
+        "readiness": "disabled",
+        "blockers": [
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.knowledge-query",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.eval-contract",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.evidence-bundle",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.impact-preview",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.task-brief",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.saved-exploration",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.task-runtime",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "performance.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "strategy.plan",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "installation",
+            "dependencyId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+            "state": "unknown",
+            "reasonCode": "INSTALLED_ASSET_READONLY",
+            "recoverable": true,
+            "requiredAction": "已安装页面可只读查看；业务执行仍须完成正式运行准入。",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "CustomerLite",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "GrowthPlan",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Metric",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Observation",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Order",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "OrderLine",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Payment",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Product",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "ProductReview",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Shop",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          }
+        ],
+        "dependencyRefs": [
+          {
+            "resourceType": "DataScopeGrant",
+            "resourceId": "ecommerce.workshop.read",
+            "revision": "installation:5/lock:1",
+            "contentHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+            "authority": "postgres:bundle_composition_lock"
+          }
+        ],
+        "permissions": {
+          "roles": [],
+          "markings": [],
+          "dataScopes": [
+            "ecommerce.workshop.read"
+          ],
+          "actionTypes": []
+        },
+        "requiredObjects": [
+          "CustomerLite",
+          "GrowthPlan",
+          "Metric",
+          "Observation",
+          "Order",
+          "OrderLine",
+          "Payment",
+          "Product",
+          "ProductReview",
+          "Shop"
+        ],
+        "requiredCapabilities": [
+          "performance.review",
+          "strategy.plan"
+        ],
+        "requiredAipFeatures": [
+          "aip.knowledge-query",
+          "aip.production.eval-contract",
+          "aip.production.evidence-bundle",
+          "aip.production.impact-preview",
+          "aip.production.task-brief",
+          "aip.saved-exploration",
+          "aip.task-runtime"
+        ],
+        "viewRefs": [],
+        "evalPackRefs": [
+          "content/production-profiles/ecommerce.analyst.json"
+        ],
+        "productionContractRefs": [
+          "content/production-profiles/ecommerce.analyst.json"
+        ],
+        "responsibilityTemplateRefs": [
+          "content/production-profiles/ecommerce.analyst.json"
+        ],
+        "impactCalculatorRefs": [],
+        "legacyAssetRefs": [],
+        "legacyRoutes": [
+          "/s2/analyst",
+          "/s2/data-analyst"
+        ],
+        "minimumRuntimeVersion": "1.7.0",
+        "lastReceiptRef": null
+      },
+      {
+        "moduleId": "ecommerce.price-governance",
+        "displayName": "价格治理驾驶舱",
+        "menuLabel": "价格治理驾驶舱",
+        "route": "/workshop/price-governance",
+        "slot": "workshop.primary.ecommerce",
+        "order": 70,
+        "installationRef": {
+          "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+          "revision": 5,
+          "compositionId": "cf1e45cf-6255-420d-83c7-998751438053",
+          "lockRevision": 1,
+          "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+          "overlayRevision": "qyh-ecommerce-restoration-20261012"
+        },
+        "moduleRef": {
+          "publisher": "aos",
+          "bundleId": "solution.ecommerce.growth",
+          "version": "1.13.0",
+          "bundleContentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+          "moduleArtifactRef": "bundle://a0v-qyh-current/solution.ecommerce.growth/1.13.0/content/workshops/ecommerce.price-governance.json",
+          "moduleArtifactHash": "sha256:c3fc9b4d16c6d613045ecb87fe9213f62db6725af9fee04d08846d2024dc1396"
+        },
+        "readiness": "disabled",
+        "blockers": [
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.eval-contract",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.evidence-bundle",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.impact-preview",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.task-brief",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.research-job",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.task-runtime",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "content.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "copy.generate",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "material.collect",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "performance.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "strategy.plan",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "installation",
+            "dependencyId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+            "state": "unknown",
+            "reasonCode": "INSTALLED_ASSET_READONLY",
+            "recoverable": true,
+            "requiredAction": "已安装页面可只读查看；业务执行仍须完成正式运行准入。",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Order",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "PriceCase",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "PriceObservation",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Product",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "ProductMatchDecision",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "ProductSku",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          }
+        ],
+        "dependencyRefs": [
+          {
+            "resourceType": "DataScopeGrant",
+            "resourceId": "ecommerce.workshop.read",
+            "revision": "installation:5/lock:1",
+            "contentHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+            "authority": "postgres:bundle_composition_lock"
+          }
+        ],
+        "permissions": {
+          "roles": [],
+          "markings": [],
+          "dataScopes": [
+            "ecommerce.workshop.read"
+          ],
+          "actionTypes": []
+        },
+        "requiredObjects": [
+          "Order",
+          "PriceCase",
+          "PriceObservation",
+          "Product",
+          "ProductMatchDecision",
+          "ProductSku"
+        ],
+        "requiredCapabilities": [
+          "content.review",
+          "copy.generate",
+          "material.collect",
+          "performance.review",
+          "strategy.plan"
+        ],
+        "requiredAipFeatures": [
+          "aip.production.eval-contract",
+          "aip.production.evidence-bundle",
+          "aip.production.impact-preview",
+          "aip.production.task-brief",
+          "aip.research-job",
+          "aip.task-runtime"
+        ],
+        "viewRefs": [],
+        "evalPackRefs": [
+          "content/production-profiles/ecommerce.price-governance.json"
+        ],
+        "productionContractRefs": [
+          "content/production-profiles/ecommerce.price-governance.json"
+        ],
+        "responsibilityTemplateRefs": [
+          "content/production-profiles/ecommerce.price-governance.json"
+        ],
+        "impactCalculatorRefs": [],
+        "legacyAssetRefs": [],
+        "legacyRoutes": [
+          "/s2/price-governance"
+        ],
+        "minimumRuntimeVersion": "1.7.0",
+        "lastReceiptRef": null
+      },
+      {
+        "moduleId": "ecommerce.customer",
+        "displayName": "客户关系工作台",
+        "menuLabel": "客户关系工作台",
+        "route": "/workshop/customer",
+        "slot": "workshop.primary.ecommerce",
+        "order": 80,
+        "installationRef": {
+          "installationId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+          "revision": 5,
+          "compositionId": "cf1e45cf-6255-420d-83c7-998751438053",
+          "lockRevision": 1,
+          "lockHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+          "overlayRevision": "qyh-ecommerce-restoration-20261012"
+        },
+        "moduleRef": {
+          "publisher": "aos",
+          "bundleId": "solution.ecommerce.growth",
+          "version": "1.13.0",
+          "bundleContentHash": "sha256:24249a21939b3a6c68c493b5f3bc958cbd0a1ba28b4c8f57a2f2da6b68308669",
+          "moduleArtifactRef": "bundle://a0v-qyh-current/solution.ecommerce.growth/1.13.0/content/workshops/ecommerce.customer.json",
+          "moduleArtifactHash": "sha256:a3a79128a23eeff277f79eabe0419cd7695c934b418109f797b4f430410b1a3a"
+        },
+        "readiness": "disabled",
+        "blockers": [
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.action-runtime",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.agent-handoff",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.eval-contract",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.evidence-bundle",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.impact-preview",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.production.task-brief",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "aip_feature",
+            "dependencyId": "aip.task-runtime",
+            "state": "unknown",
+            "reasonCode": "AIP_FEATURE_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "content.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "copy.generate",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "performance.review",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "platform.adapt",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "capability",
+            "dependencyId": "strategy.plan",
+            "state": "unknown",
+            "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+            "ref": null
+          },
+          {
+            "dependencyType": "installation",
+            "dependencyId": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+            "state": "unknown",
+            "reasonCode": "INSTALLED_ASSET_READONLY",
+            "recoverable": true,
+            "requiredAction": "已安装页面可只读查看；业务执行仍须完成正式运行准入。",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "CustomerLite",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "JourneyRevision",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Order",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "Product",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "SegmentRevision",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          },
+          {
+            "dependencyType": "object",
+            "dependencyId": "TouchpointObservation",
+            "state": "unknown",
+            "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+            "recoverable": true,
+            "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+            "ref": null
+          }
+        ],
+        "dependencyRefs": [
+          {
+            "resourceType": "DataScopeGrant",
+            "resourceId": "ecommerce.workshop.read",
+            "revision": "installation:5/lock:1",
+            "contentHash": "sha256:24ed18e393ea67515b40c3511125d4e677f92a1436811cb7a4b9e47c8ced944f",
+            "authority": "postgres:bundle_composition_lock"
+          }
+        ],
+        "permissions": {
+          "roles": [],
+          "markings": [],
+          "dataScopes": [
+            "ecommerce.workshop.read"
+          ],
+          "actionTypes": []
+        },
+        "requiredObjects": [
+          "CustomerLite",
+          "JourneyRevision",
+          "Order",
+          "Product",
+          "SegmentRevision",
+          "TouchpointObservation"
+        ],
+        "requiredCapabilities": [
+          "content.review",
+          "copy.generate",
+          "performance.review",
+          "platform.adapt",
+          "strategy.plan"
+        ],
+        "requiredAipFeatures": [
+          "aip.action-runtime",
+          "aip.agent-handoff",
+          "aip.production.eval-contract",
+          "aip.production.evidence-bundle",
+          "aip.production.impact-preview",
+          "aip.production.task-brief",
+          "aip.task-runtime"
+        ],
+        "viewRefs": [],
+        "evalPackRefs": [
+          "content/production-profiles/ecommerce.customer.json"
+        ],
+        "productionContractRefs": [
+          "content/production-profiles/ecommerce.customer.json"
+        ],
+        "responsibilityTemplateRefs": [
+          "content/production-profiles/ecommerce.customer.json"
+        ],
+        "impactCalculatorRefs": [],
+        "legacyAssetRefs": [
+          "content/workshops/w03-customer-private-domain.json"
+        ],
+        "legacyRoutes": [
+          "/s2/customer-relations",
+          "/workshop/customer-relations",
+          "/workshop/customers"
+        ],
+        "minimumRuntimeVersion": "1.7.0",
+        "lastReceiptRef": null
+      }
+    ],
+    "count": 8
+  },
+  "canaryCount": 0,
+  "writes": false,
+  "runtimeGranted": false,
+  "browserAccepted": false,
+  "principalInjectedForDirectoryInquiry": true,
+  "moduleSha256": "c3dc2a9661a8a4184d08bfd005b141729add24a111641cdead8280e137048751"
+}

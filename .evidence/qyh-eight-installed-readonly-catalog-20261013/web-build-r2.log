@@ -1,0 +1,128 @@
+vite v5.4.21 building for production...
+
+(!) outDir /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build is not inside project root and will not be emptied.
+Use --emptyOutDir to override.
+
+transforming...
+✓ 415 modules transformed.
+rendering chunks...
+computing gzip size...
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/index.html                                          0.54 kB │ gzip:   0.33 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/SnapshotSchedulesPanel-Bv1tcOY0.css          2.10 kB │ gzip:   0.75 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/CanonicalTaskRunPanel-D7IOvora.css           3.40 kB │ gzip:   0.91 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/OntologyGraphCanvas-Bl1aZxoy.css             3.80 kB │ gzip:   1.13 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/LogicCanvasPage-CzHXzPaQ.css                 7.27 kB │ gzip:   1.64 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/index-BpvI16u5.css                         502.71 kB │ gzip:  68.36 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/vendor-react-BV4usX2D.js                     0.04 kB │ gzip:   0.06 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/AgentImportPage-HVjhgFPV.js                  0.23 kB │ gzip:   0.19 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/CapabilityImportPage-H6-22pCx.js             0.24 kB │ gzip:   0.19 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/BpBadge-CWhtiSv7.js                          0.64 kB │ gzip:   0.34 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ontologyHooks-BfaICmjn.js                    0.76 kB │ gzip:   0.41 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/BpToolbar-NQBAS9P8.js                        1.08 kB │ gzip:   0.52 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/aipExactContext-D8zGLBku.js                  1.38 kB │ gzip:   0.69 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ontologyRecent-C-TEahtA.js                   1.56 kB │ gzip:   0.77 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/shared-B8KsUjwt.js                           1.60 kB │ gzip:   0.92 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ConfigSecretsPage-DxeQ1MLT.js                1.69 kB │ gzip:   1.16 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/InviteAcceptPage-BySjvShp.js                 1.80 kB │ gzip:   1.05 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/SpokeDetailPage-CJcTp5JT.js                  1.82 kB │ gzip:   1.23 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/BpArchitectureBar-BwlUu2Mr.js                1.87 kB │ gzip:   1.02 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/AipReadinessActionCard-C24j2eIp.js           2.16 kB │ gzip:   1.09 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ontologyClient-CDSmvV1Y.js                   2.25 kB │ gzip:   1.08 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/pipelineMeta-UdDmf7y9.js                     2.27 kB │ gzip:   1.35 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/MyProfilePage-BG6SAfmx.js                    2.27 kB │ gzip:   1.16 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/FerryPage-BK6q68st.js                        2.35 kB │ gzip:   1.41 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/HubFleetPage-DVDcDvTV.js                     2.59 kB │ gzip:   1.28 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/dataConnectionUi-t8oOHB_D.js                 2.69 kB │ gzip:   1.37 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ChangeOrdersPage-C4iidR_Z.js                 2.70 kB │ gzip:   1.52 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/SaasProvisioningPage-u4IuPycy.js             3.16 kB │ gzip:   1.64 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ReleasesPage-cbZatB5L.js                     3.16 kB │ gzip:   1.44 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ObjectTypeDetailPage-DCCejZjH.js             3.30 kB │ gzip:   1.60 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ontologyExplorationAssets-C0O7QNJh.js        4.22 kB │ gzip:   1.68 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/AnalystMethodPage-BlawtAsE.js                4.49 kB │ gzip:   2.61 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/LocalPlatformPage-DlUWtgeO.js                4.54 kB │ gzip:   1.99 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/WikiIndexPage-B9ixoP1l.js                    4.67 kB │ gzip:   2.23 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/CodeRepositoriesPage-CmA8hVja.js             4.74 kB │ gzip:   2.31 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/AipOperationalProjectionStrip-BfIwh5dl.js    4.76 kB │ gzip:   2.27 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/DataConnectionPage-C1qeyz0O.js               4.78 kB │ gzip:   2.41 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/BuddyPage-BgMaCWxV.js                        5.10 kB │ gzip:   2.32 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/OpsStartGuidePage-BP5Z2_eG.js                5.12 kB │ gzip:   3.50 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/WorkspaceMembersPage-FBXsJL1-.js             5.32 kB │ gzip:   2.40 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/WorkshopModulePage-B0DJpqlU.js               5.70 kB │ gzip:   2.17 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/PermissionManagerPage-CL23O5gh.js            5.78 kB │ gzip:   2.25 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/AuditLogPage-Be7vS_YV.js                     5.91 kB │ gzip:   2.26 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/AgentMarketplacePage-Bf1nTlO-.js             6.03 kB │ gzip:   2.95 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/CanonicalTaskRunPanel-Dpwk9iVR.js            6.18 kB │ gzip:   2.81 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/aipChineseLabels-D6gVNThn.js                 6.89 kB │ gzip:   4.57 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/UserSettingsPage-vNPoJHed.js                 7.38 kB │ gzip:   2.18 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ProviderDetailPage-Dz7YHDjq.js               7.68 kB │ gzip:   3.34 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/DataHealthPage-BFgSqYaQ.js                   7.73 kB │ gzip:   3.32 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/CanonicalCapabilityPage-AUmvXK5f.js          7.79 kB │ gzip:   3.61 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/WorkshopListPage-Bm1_HaTx.js                 7.94 kB │ gzip:   3.26 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/MediaSetsPage-NSAfMEuU.js                    7.94 kB │ gzip:   3.65 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/OrgMembershipPage-BbusEfyN.js                8.21 kB │ gzip:   2.97 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/SyncRoutesPage-Ceqr8IDR.js                   8.23 kB │ gzip:   3.47 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/index-DZ5dye5D.js                            9.00 kB │ gzip:   2.93 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/CanonicalAgentsPage-D-pEMYgr.js              9.49 kB │ gzip:   3.93 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/WidgetRegistryPage-BwCdMJ8e.js               9.50 kB │ gzip:   3.77 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/BuildModalPage-dDc5PY97.js                   9.51 kB │ gzip:   4.12 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/SyncConfigPage-Bpwb3kfW.js                   9.66 kB │ gzip:   3.54 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/DataLineagePage-CV6WYLdL.js                  9.90 kB │ gzip:   3.87 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/PublishPage-BigSrtdh.js                     10.38 kB │ gzip:   4.21 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/SkillPublishPage-1VGbyvK3.js                10.42 kB │ gzip:   4.65 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/RiskAlertPage-dmRDS_Z0.js                   10.62 kB │ gzip:   4.22 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/GovernedImportPreview-CSzlb_VB.js           10.99 kB │ gzip:   4.28 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/client-BKKyGr1X.js                          11.23 kB │ gzip:   3.30 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/OntologyGraphCanvas--Kitt7DS.js             12.08 kB │ gzip:   5.20 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/DatasetPreviewPage-qWex8FfG.js              12.54 kB │ gzip:   5.62 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/VariablesPage-GmrWGXJ4.js                   12.64 kB │ gzip:   4.73 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/InboxPage-Bnmfjkq4.js                       13.11 kB │ gzip:   4.50 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/client-Dv-Eod3H.js                          13.35 kB │ gzip:   4.48 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ObservabilityPage-DiFOfJIr.js               14.04 kB │ gzip:   5.47 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/WorkshopCreatePage-CJKSNr4g.js              16.33 kB │ gzip:   5.78 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/FunctionEditorPage-DEUQI_TP.js              16.47 kB │ gzip:   5.83 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/analytics-DI1vPDS6.js                       16.89 kB │ gzip:   5.49 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/WikiDiffPage-SrugOXmU.js                    17.14 kB │ gzip:   5.41 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/OntologyPage-BVjJyedi.js                    17.54 kB │ gzip:   5.81 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/sourceDetailPage-BIzzqJ6I.js                17.79 kB │ gzip:   6.61 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/AipAssistPage-DU-f-oGW.js                   18.49 kB │ gzip:   7.47 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/LinkTypeEditorPage-B5fQWrah.js              18.68 kB │ gzip:   6.12 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/objectTypeDetail-DlzT67ay.js                19.43 kB │ gzip:   6.78 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/PropertyEditorPage-QDvZWlLT.js              20.08 kB │ gzip:   6.54 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/StylesPage-BKxGv2Do.js                      20.62 kB │ gzip:   6.81 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/index-C6ei__MQ.js                           20.87 kB │ gzip:   5.86 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/WikiDetailPage-Ba0m-oED.js                  22.76 kB │ gzip:   7.39 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ActionTypeEditorPage-Bn-XZxa0.js            22.81 kB │ gzip:   7.08 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/extras-tqO2rtov.js                          22.97 kB │ gzip:   8.21 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/EventsPage-DBKavF2R.js                      24.09 kB │ gzip:   8.10 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/workshop-CDXwLvPD.js                        25.60 kB │ gzip:   9.98 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/DataPage-D7PDBMlw.js                        26.23 kB │ gzip:   9.13 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/AipAnalystPage-BCG9ZLNq.js                  27.75 kB │ gzip:  10.71 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ontology-Cltp2Avx.js                        28.24 kB │ gzip:  10.87 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/SnapshotSchedulesPanel-BT3U9Lqt.js          28.33 kB │ gzip:   9.70 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ModelCatalogPage-kWXnPDil.js                30.46 kB │ gzip:  10.76 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/StudioPage-CtGuETPU.js                      32.05 kB │ gzip:  10.94 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/remainder-CUmiERY9.js                       33.69 kB │ gzip:  11.28 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ModelRuntimePage-BBs6JVDR.js                34.74 kB │ gzip:  11.80 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/MemoryGovernancePage-CyeCQ3tq.js            39.50 kB │ gzip:  13.43 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/CanonicalAgentRegistryPage-rXNZUJ97.js      40.69 kB │ gzip:  13.07 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/pipelineCanvas-BRWVq4L_.js                  40.71 kB │ gzip:  13.53 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/DocumentIntelligencePage-B-qkHP2a.js        40.75 kB │ gzip:  13.67 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/index-CKqxAAGD.js                           42.16 kB │ gzip:   9.63 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/core.esm-aYy9KMBc.js                        43.70 kB │ gzip:  14.51 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/IntegrationCasesPage-Bp_9T9Sy.js            46.67 kB │ gzip:  14.21 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/data-DemfPSfI.js                            47.03 kB │ gzip:  15.91 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/ProductionContractsPage-QbSV9tsj.js         54.65 kB │ gzip:  18.27 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/DraftInboxPage-C2etHFnm.js                  58.57 kB │ gzip:  18.74 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/CapacityPage-uMPGmuD0.js                    63.56 kB │ gzip:  19.05 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/AssetBundlesPage-CstzDFKs.js                88.21 kB │ gzip:  25.61 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/LogicCanvasPage-CH_mtyVr.js                102.83 kB │ gzip:  33.02 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/aip-C_tIF2Tx.js                            112.74 kB │ gzip:  35.55 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/CanvasPage-bdnKBT3w.js                     157.71 kB │ gzip:  42.67 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/vendor-router-BH4iFUci.js                  164.65 kB │ gzip:  53.74 kB
+../../.evidence/qyh-eight-installed-readonly-catalog-20261013/web-build/assets/index-Brr_tLTR.js                          934.17 kB │ gzip: 249.12 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.85s

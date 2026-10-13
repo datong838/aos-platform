@@ -1,0 +1,1 @@
+先方案后修改：新只读GET导致原精确OpenAPI集合RED。只修改services/aos-api/tests/test_ecommerce_workshop_api.py原冻结集合，追加ecommerceWorkshopInstalledReadonlyModulesList GET，原全部操作保留。由当前同一写者串行执行，依赖qyh-eight-installed-readonly-catalog-20261013；不改生产或真库。RED日志位于主Task green-r5-http-cumulative.log，完成后专项与相邻回归。

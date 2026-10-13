@@ -1,0 +1,10 @@
+
+ RUN  v2.1.9 /Users/ddt/work/projects/ai_agent/aos-platform
+
+ ✓ .evidence/qyh-eight-installed-readonly-catalog-20261013/client-fallback.test.ts (3 tests) 5ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  13:58:38
+   Duration  576ms (transform 135ms, setup 0ms, collect 156ms, tests 5ms, environment 221ms, prepare 33ms)
+

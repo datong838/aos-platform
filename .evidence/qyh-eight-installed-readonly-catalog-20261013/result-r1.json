@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-eight-installed-readonly-catalog-20261013-r1",
+    "task_id": "qyh-eight-installed-readonly-catalog-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "5c99d59011722909b98405a2fbc5c021c92e35ff",
+      "authority_revision": "AOS-002008",
+      "files": {
+        ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-0.txt": "c3dc2a9661a8a4184d08bfd005b141729add24a111641cdead8280e137048751",
+        ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-1.txt": "d888a9e9ca4f2024b6057fce285ed536ee2282aa54c9e1f526791ed94d5ba9b6",
+        ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-2.txt": "bf98b97a20d7e71b0b605be12b502f85221baf64d844211d9f06e72ec6711a28",
+        ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-3.txt": "f843ceca5756ce633465875de8c29d358af610fa942880f5d3d82b0d90061412",
+        ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-4.txt": "aa26a2bb84f22a8e91429e25751581491226a4e67ff75024dde56ffed247b1fb",
+        ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-5.txt": "78fa568c582a0ceda077c9179bb4fa76a6b2f19f28cb42d597cba5b67110bf00",
+        ".evidence/qyh-eight-installed-readonly-catalog-20261013/review-material-6.txt": "11102495e8addfa3af01d415f8b26635ac3ef450e05b77576adfdabae90373d1"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The added installed readonly directory is separate from original business CatalogDependency and runtime-ready admission. It filters exact server-selected installation/tenant and reuses original full lock/hash/signature/artifact/roles/markings projection; every returned module is disabled with an explicit readonly blocker. No business/runtime admission is granted, and absent configuration returns empty without database access. Original operation routes and predicates are preserved.",
+        "evidence": "services/aos-api/aos_api/ecommerce_installed_readonly_catalog.py: InstalledReadonlyWorkshopCatalog.__init__ delegates to _SelectedInstalledSource, which only exposes read_runtime_candidate_bundles and rejects cross-tenant requests. _project_modules overrides super() to set WorkshopReadiness.DISABLED and append WorkshopReadinessBlocker with reasonCode='INSTALLED_ASSET_READONLY'. build_installed_readonly_catalog() returns empty catalog when env AOS_INSTALLED_READONLY_CATALOG is absent, and requires AOS_LOCAL_MANAGEMENT_OIDC_CONFIG/AOS_BUNDLE_ROOT before constructing. services/aos-api/aos_api/routers/ecommerce_workshop.py adds new GET /installed-readonly-modules without modifying existing /modules route. services/aos-api/tests/asset_registry/test_ecommerce_installed_readonly_catalog.py: test_cross_tenant_has_no_source_access verifies tenant isolation, test_unselected_installation_is_not_visible verifies installation selection, test_content_drift_is_rejected verifies signature/hash enforcement, test_original_permissions_remain_required preserves roles/markings checks, test_revoked_installation_is_re_read_instead_of_cached verifies cache behavior.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "73 backend cumulative tests, 17 original frontend and3 new fallback tests plus typecheck passed. A normal protected current PostgreSQL readonly inquiry using configured original signed root returns eight modules and canary zero; Principal roles are injected only for the directory inquiry. Real authenticated browser, live cutover, full restoration/business first-chain remain unverified. Review this bounded implementation, including risk of fallback affecting existing behavior; PASS is not deployment or runtime authority.",
+        "evidence": "review-material-3.txt: pythonCumulative=73, frontendOriginal=17, frontendNew=3, typecheck=exit0 empty log, canaryZero=true, runtimeGranted=false, browserAccepted=false, liveApiWebCutover=false. review-material-5.txt: three frontend tests verify empty-original-calls-fallback, nonempty-preserved-no-second-request, cross-tenant-rejected. review-material-6.txt: actual PostgreSQL readonly query returns count=8 with all modules disabled, canaryCount=0, principalInjectedForDirectoryInquiry=true. Limitations documented: native inquiry injects roles, real authenticated browser acceptance pending, business catalog unchanged, new route/configuration awaits live bounded launcher wiring.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前冻结态评审结论；如需推进，优先验证原业务catalog非空时fallback不触发（review-material-5已有测试），并确认生产部署不依赖此只读路径。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

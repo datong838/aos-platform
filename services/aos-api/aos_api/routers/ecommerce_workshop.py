@@ -1089,6 +1089,24 @@ def _require_visible_workshop_installation(
 
 
 @router.get(
+    "/installed-readonly-modules",
+    response_model=EcommerceWorkshopModuleListResponse,
+    operation_id="ecommerceWorkshopInstalledReadonlyModulesList",
+    responses=_ERRORS,
+)
+def list_installed_readonly_modules(
+    request: Request,
+    principal: PrincipalDependency,
+) -> EcommerceWorkshopModuleListResponse:
+    from aos_api.ecommerce_installed_readonly_catalog import build_installed_readonly_catalog
+
+    _reject_query_parameters(request)
+    return _invoke(lambda: build_installed_readonly_catalog().list_modules(
+        org_id=principal.org_id, project_id=principal.project_id,
+        roles=principal.roles, markings=principal.markings))
+
+
+@router.get(
     "/modules",
     response_model=EcommerceWorkshopModuleListResponse,
     operation_id="ecommerceWorkshopModulesList",

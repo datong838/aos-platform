@@ -1,0 +1,427 @@
+...................................................F.................... [ 98%]
+.                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_openapi_freezes_workshop_reads_and_governed_internal_commands ______
+
+    def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None:
+        app = FastAPI()
+        app.include_router(ecommerce_workshop.router)
+        schema = app.openapi()
+        operations = {
+            operation["operationId"]: (path, method)
+            for path, item in schema["paths"].items()
+            for method, operation in item.items()
+            if method in {"get", "post", "put", "patch", "delete"}
+        }
+>       assert operations == {
+            "ecommerceWorkshopModulesList": (
+                "/v1/ecommerce-workshop/modules",
+                "get",
+            ),
+            "ecommerceWorkshopModuleReadinessGet": (
+                "/v1/ecommerce-workshop/modules/{module_id}/readiness",
+                "get",
+            ),
+            "ecommerceWorkshopAipFeaturesList": (
+                "/v1/ecommerce-workshop/aip-features",
+                "get",
+            ),
+            "ecommerceWorkshopAipFeatureActivate": (
+                "/v1/ecommerce-workshop/aip-features/{feature_id}/activate",
+                "post",
+            ),
+            "ecommerceWorkshopAipFeatureRevoke": (
+                "/v1/ecommerce-workshop/aip-features/{feature_id}/revoke",
+                "post",
+            ),
+            "ecommerceWorkshopPrepare": (
+                "/v1/ecommerce-workshop/modules/{module_id}/commands/prepare",
+                "post",
+            ),
+            "ecommerceWorkshopBuildEvidence": (
+                "/v1/ecommerce-workshop/modules/{module_id}/commands/build-evidence",
+                "post",
+            ),
+            "ecommerceWorkshopFreeze": (
+                "/v1/ecommerce-workshop/modules/{module_id}/commands/freeze",
+                "post",
+            ),
+            "ecommerceWorkshopSourceReadinessGet": (
+                "/v1/ecommerce-workshop/source-readiness",
+                "get",
+            ),
+            "ecommerceWorkshopOperationsViewGet": (
+                "/v1/ecommerce-workshop/views/operations",
+                "get",
+            ),
+            "ecommerceWorkshopOperationCaseWorkspaceGet": (
+                "/v1/ecommerce-workshop/views/operations/cases",
+                "get",
+            ),
+            "ecommerceWorkshopContentCampaignViewGet": (
+                "/v1/ecommerce-workshop/views/content-campaign",
+                "get",
+            ),
+            "ecommerceWorkshopContentCampaignRealInputsGet": (
+                "/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+                "get",
+            ),
+            "ecommerceWorkshopContentCampaignWorkflowCommand": (
+                "/v1/ecommerce-workshop/views/content-campaign/workflow/commands",
+                "post",
+            ),
+            "ecommerceWorkshopContentCampaignApprovalPreview": (
+                "/v1/ecommerce-workshop/views/content-campaign/workflow/approval-preview",
+                "post",
+            ),
+            "ecommerceWorkshopCreatorInternalWorkflowCommand": (
+                "/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+                "post",
+            ),
+            "ecommerceWorkshopCreatorInternalWorkflowList": (
+                "/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+                "get",
+            ),
+            "ecommerceWorkshopCreatorInternalWorkflowHistoryGet": (
+                "/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/{brief_id}/history",
+                "get",
+            ),
+                "ecommerceWorkshopCreatorGrowthViewGet": (
+                    "/v1/ecommerce-workshop/views/creator-growth",
+                    "get",
+                ),
+                "ecommerceWorkshopCreatorDiscoveryProfileCreate": (
+                    "/v1/ecommerce-workshop/creator-growth/discovery-profiles",
+                    "post",
+                ),
+                "ecommerceWorkshopCreatorArtifactNormalize": (
+                    "/v1/ecommerce-workshop/creator-growth/normalize",
+                    "post",
+                ),
+                "ecommerceWorkshopCreatorMatchObservationCreate": (
+                    "/v1/ecommerce-workshop/creator-growth/match-observations",
+                    "post",
+                ),
+                "ecommerceWorkshopCreatorMatchDecisionCreate": (
+                    "/v1/ecommerce-workshop/creator-growth/match-decisions",
+                    "post",
+                ),
+                "ecommerceWorkshopCreatorBatchPrepare": (
+                    "/v1/ecommerce-workshop/creator-growth/batches/prepare",
+                    "post",
+                ),
+                "ecommerceWorkshopCreatorBatchFreeze": (
+                    "/v1/ecommerce-workshop/creator-growth/batches/{batch_id}/freeze",
+                    "post",
+                ),
+                "ecommerceWorkshopCreatorContributionViewGet": (
+                    "/v1/ecommerce-workshop/views/creator-growth/contributions",
+                    "get",
+                ),
+                "ecommerceWorkshopCreatorBatchStart": (
+                    "/v1/ecommerce-workshop/creator-growth/batches/{batch_id}/start",
+                    "post",
+                ),
+                "ecommerceWorkshopCreatorLifecycleViewGet": (
+                    "/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+                    "get",
+                ),
+                "ecommerceWorkshopMediaStudioViewGet": (
+                    "/v1/ecommerce-workshop/views/media-studio",
+                    "get",
+                ),
+                "ecommerceWorkshopMediaInternalWorkflowCommand": (
+                    "/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+                    "post",
+                ),
+                "ecommerceWorkshopMediaInternalWorkflowList": (
+                    "/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+                    "get",
+                ),
+                "ecommerceWorkshopMediaInternalWorkflowHistoryGet": (
+                    "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/history",
+                    "get",
+                ),
+                "ecommerceWorkshopMediaDeliveryWorkspaceGet": (
+                    "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/delivery",
+                    "get",
+                ),
+                "ecommerceWorkshopMediaDeliveryExport": (
+                    "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/exports",
+                    "post",
+                ),
+                "ecommerceWorkshopMediaDeliveryPublishProposalCreate": (
+                    "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/publish-proposals",
+                    "post",
+                ),
+                "ecommerceWorkshopMediaStudioFullProductionScenarioGet": (
+                "/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+                "get",
+            ),
+            "ecommerceWorkshopAnalystViewGet": (
+                "/v1/ecommerce-workshop/views/analyst",
+                "get",
+            ),
+            "ecommerceWorkshopAnalystLearningScenarioGet": (
+                "/v1/ecommerce-workshop/views/analyst/learning-scenario",
+                "get",
+            ),
+            "ecommerceWorkshopPriceGovernanceViewGet": (
+                "/v1/ecommerce-workshop/views/price-governance",
+                "get",
+            ),
+            "ecommerceWorkshopPriceResearchProfileCreate": (
+                "/v1/ecommerce-workshop/price-governance/research-profiles",
+                "post",
+            ),
+            "ecommerceWorkshopPriceObservationNormalize": (
+                "/v1/ecommerce-workshop/price-governance/observations/normalize",
+                "post",
+            ),
+            "ecommerceWorkshopPriceMatchObservationCreate": (
+                "/v1/ecommerce-workshop/price-governance/match-observations",
+                "post",
+            ),
+            "ecommerceWorkshopPriceMatchDecisionCreate": (
+                "/v1/ecommerce-workshop/price-governance/match-decisions",
+                "post",
+            ),
+            "ecommerceWorkshopPriceMonitoringPolicyCreate": (
+                "/v1/ecommerce-workshop/price-governance/monitoring-policies",
+                "post",
+            ),
+            "ecommerceWorkshopPriceResearchBatchPrepare": (
+                "/v1/ecommerce-workshop/price-governance/batches/prepare",
+                "post",
+            ),
+            "ecommerceWorkshopPriceResearchBatchFreeze": (
+                "/v1/ecommerce-workshop/price-governance/batches/{batch_id}/freeze",
+                "post",
+            ),
+            "ecommerceWorkshopPriceResearchContributionViewGet": (
+                "/v1/ecommerce-workshop/views/price-governance/contributions",
+                "get",
+            ),
+            "ecommerceWorkshopPriceCaseCreate": (
+                "/v1/ecommerce-workshop/price-governance/cases",
+                "post",
+            ),
+            "ecommerceWorkshopPriceDispositionContractCreate": (
+                "/v1/ecommerce-workshop/price-governance/disposition-contracts",
+                "post",
+            ),
+            "ecommerceWorkshopPriceDispositionPrepare": (
+                "/v1/ecommerce-workshop/price-governance/dispositions/prepare",
+                "post",
+            ),
+            "ecommerceWorkshopPriceDispositionFreeze": (
+                "/v1/ecommerce-workshop/price-governance/dispositions/{disposition_id}/freeze",
+                "post",
+            ),
+            "ecommerceWorkshopPriceDispositionObservationRecord": (
+                "/v1/ecommerce-workshop/price-governance/disposition-observations",
+                "post",
+            ),
+            "ecommerceWorkshopPriceDispositionContributionViewGet": (
+                "/v1/ecommerce-workshop/views/price-governance/dispositions",
+                "get",
+            ),
+            "ecommerceWorkshopCustomerViewGet": (
+                "/v1/ecommerce-workshop/views/customer",
+                "get",
+            ),
+            "ecommerceWorkshopCustomerConsentPolicyCreate": (
+                "/v1/ecommerce-workshop/customer/consent-policies",
+                "post",
+            ),
+            "ecommerceWorkshopCustomerSegmentCreate": (
+                "/v1/ecommerce-workshop/customer/segments",
+                "post",
+            ),
+            "ecommerceWorkshopCustomerJourneyCreate": (
+                "/v1/ecommerce-workshop/customer/journeys",
+                "post",
+            ),
+            "ecommerceWorkshopCustomerDialogueCreate": (
+                "/v1/ecommerce-workshop/customer/dialogues",
+                "post",
+            ),
+            "ecommerceWorkshopCustomerDialogueBatchPrepare": (
+                "/v1/ecommerce-workshop/customer/dialogue-batches/prepare",
+                "post",
+            ),
+            "ecommerceWorkshopCustomerDialogueBatchFreeze": (
+                "/v1/ecommerce-workshop/customer/dialogue-batches/{batch_id}/freeze",
+                "post",
+            ),
+            "ecommerceWorkshopCustomerLifecycleContributionViewGet": (
+                "/v1/ecommerce-workshop/views/customer/contributions",
+                "get",
+            ),
+            "ecommerceWorkshopCustomerFrequencyPolicyCreate": (
+                "/v1/ecommerce-workshop/customer/frequency-policies",
+                "post",
+            ),
+            "ecommerceWorkshopCustomerConsentWithdrawalRecord": (
+                "/v1/ecommerce-workshop/customer/consent-withdrawals",
+                "post",
+            ),
+            "ecommerceWorkshopCustomerDialogueBatchStartGovernance": (
+                "/v1/ecommerce-workshop/customer/dialogue-batches/{batch_id}/start-governance",
+                "post",
+            ),
+            "ecommerceWorkshopCustomerDispatchObservationRecord": (
+                "/v1/ecommerce-workshop/customer/dispatch-observations",
+                "post",
+            ),
+            "ecommerceWorkshopCustomerContactContributionViewGet": (
+                "/v1/ecommerce-workshop/views/customer/contact-contributions",
+                "get",
+            ),
+            "ecommerceWorkshopThreeModuleClosureCompile": (
+                "/v1/ecommerce-workshop/three-module-closures",
+                "post",
+            ),
+            "ecommerceWorkshopThreeModuleUsageBind": (
+                "/v1/ecommerce-workshop/three-module-closures/usage-bindings",
+                "post",
+            ),
+            "ecommerceWorkshopThreeModuleEffectBind": (
+                "/v1/ecommerce-workshop/three-module-closures/effect-bindings",
+                "post",
+            ),
+            "ecommerceWorkshopThreeModuleHandoffBind": (
+                "/v1/ecommerce-workshop/three-module-closures/handoff-bindings",
+                "post",
+            ),
+            "ecommerceWorkshopThreeModuleClosureContributionViewGet": (
+                "/v1/ecommerce-workshop/views/{module}/closure-contributions",
+                "get",
+            ),
+            "ecommerceWorkshopSharedContextGet": (
+                "/v1/ecommerce-workshop/contexts/{context_id}",
+                "get",
+            ),
+            "ecommerceWorkshopOperationCommandReadinessGet": (
+                "/v1/ecommerce-workshop/commands/operations/readiness",
+                "get",
+            ),
+            "ecommerceWorkshopOperationCommandObservationGet": (
+                "/v1/ecommerce-workshop/commands/operations/observations/{proposal_id}/leases/{lease_id}",
+                "get",
+            ),
+            "ecommerceWorkshopOperationCommandPreviewPost": (
+                "/v1/ecommerce-workshop/commands/operations/previews",
+                "post",
+            ),
+            "ecommerceWorkshopOperationClassifyPost": (
+                "/v1/ecommerce-workshop/commands/operations/classify",
+                "post",
+            ),
+            "ecommerceWorkshopOperationCreateCasePost": (
+                "/v1/ecommerce-workshop/commands/operations/create-case",
+                "post",
+            ),
+            "ecommerceWorkshopOperationChangeMembershipPost": (
+                "/v1/ecommerce-workshop/commands/operations/change-membership",
+                "post",
+            ),
+            "ecommerceWorkshopOperationManageSlaPost": (
+                "/v1/ecommerce-workshop/commands/operations/manage-sla",
+                "post",
+            ),
+            "ecommerceWorkshopOperationAutomationKillPost": (
+                "/v1/ecommerce-workshop/commands/operations/automation-kill",
+                "post",
+            ),
+            "ecommerceWorkshopTaskCockpitCoreGet": (
+                "/v1/ecommerce-workshop/views/task-cockpit",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitFeedbackGet": (
+                "/v1/ecommerce-workshop/views/task-cockpit/feedback",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitDispatchScenarioGet": (
+                "/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitBatchScenarioGet": (
+                "/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitRunStepsList": (
+                "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/steps",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitRunCheckpointsList": (
+                "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/checkpoints",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitRunProductionContextGet": (
+                "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/production-context",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitRunSkillContributionsGet": (
+                "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/skill-contributions",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitRunResponsibilityHandoffsGet": (
+                "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/responsibility-handoffs",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitRunApprovalReviewIssuesGet": (
+                "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/approval-review-issues",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitRunActionReceiptsGet": (
+                "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/action-receipts",
+                "get",
+            ),
+            "ecommerceWorkshopTaskCockpitRunHandoffCompile": (
+                "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/handoffs/compile",
+                "post",
+            ),
+        }
+E       AssertionError: assert {'ecommerceWo..., 'get'), ...} == {'ecommerceWo... 'post'), ...}
+E         
+E         Omitting 92 identical items, use -vv to show
+E         Left contains 1 more item:
+E         {'ecommerceWorkshopInstalledReadonlyModulesList': ('/v1/ecommerce-workshop/installed-readonly-modules',
+E                                                            'get')}
+E         Use -v to get more diff
+
+services/aos-api/tests/test_ecommerce_workshop_api.py:457: AssertionError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_api.py::test_openapi_freezes_workshop_reads_and_governed_internal_commands
+1 failed, 72 passed, 7 warnings in 11.54s

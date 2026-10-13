@@ -98,7 +98,12 @@ export class EcommerceWorkshopClient {
     const auth = this.authHeaders(); const expectedTenant = requestTenant(auth); let response: Response; try { response = await this.fetchImpl(`${this.baseUrl().replace(/\/$/, "")}${path}`, { method: "POST", headers: { ...auth, Accept: "application/json", "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) }); } catch (cause) { const message = cause instanceof Error ? cause.message : String(cause); throw new EcommerceWorkshopClientError(message, { status: 0, body: { code: "NETWORK", message, details: null, traceId: "" }, operationId }); }
     const payload: unknown = await response.json().catch(() => undefined); if (!response.ok) { const parsed = parseEcommerceWorkshopApiError(payload, response.statusText || `HTTP ${response.status}`); throw new EcommerceWorkshopClientError(parsed.message, { status: response.status, body: parsed, operationId }); } if (payload === undefined) throw new EcommerceWorkshopClientError("canonical API returned non-JSON success", { status: 0, body: { code: "INVALID_SUCCESS_RESPONSE", message: "canonical API returned non-JSON success", details: null, traceId: "" }, operationId }); assertResponseTenant(payload, expectedTenant); return payload;
   }
-  async listModules(): Promise<EcommerceWorkshopModuleListResponse> { return parseEcommerceWorkshopModuleList(await this.get("ecommerceWorkshopModulesList", "/v1/ecommerce-workshop/modules")); }
+  async listModules(): Promise<EcommerceWorkshopModuleListResponse> {
+    const legacy = parseEcommerceWorkshopModuleList(await this.get("ecommerceWorkshopModulesList", "/v1/ecommerce-workshop/modules"));
+    if (legacy.count > 0) return legacy;
+    // Viewing signed installed assets grants no runtime or business admission.
+    return parseEcommerceWorkshopModuleList(await this.get("ecommerceWorkshopInstalledReadonlyModulesList", "/v1/ecommerce-workshop/installed-readonly-modules"));
+  }
   async getModuleReadiness(moduleId: string): Promise<EcommerceWorkshopModuleReadinessResponse> { if (!MODULE_ID.test(moduleId)) throw new TypeError("moduleId 无效"); return parseEcommerceWorkshopModuleReadiness(await this.get("ecommerceWorkshopModuleReadinessGet", `/v1/ecommerce-workshop/modules/${encodeURIComponent(moduleId)}/readiness`)); }
   async getSourceReadiness(): Promise<SourceReadinessEnvelope> { return parseSourceReadinessEnvelope(await this.get("ecommerceWorkshopSourceReadinessGet", "/v1/ecommerce-workshop/source-readiness")); }
   async getOperationsView(): Promise<OperationsViewResponse> { return parseOperationsView(await this.get("ecommerceWorkshopOperationsViewGet", "/v1/ecommerce-workshop/views/operations")); }
