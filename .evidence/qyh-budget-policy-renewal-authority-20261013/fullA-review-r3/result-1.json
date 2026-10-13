@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-authority-20261013-fullA-quality-r3-p1",
+    "task_id": "qyh-budget-policy-renewal-authority-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "b46142f453b066cc43c0c77226d3bf797948ef03",
+      "authority_revision": "AOS-002025",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-authority-20261013/fullA-review-r3/part-1.txt": "5dc2de857826e09f49756518ee5bf8c9fcfeb0dc25fb43de0c3f14a38dec7d0c"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The complete candidate public interfaces require and verify fixed tenant, an actual dedicated PG session and the original signed OIDC checker pinned to the sole human; genuine original OIDC authentication was accepted in a READ ONLY native fixture with zero financial writes, while production protected loader and credential provisioning remain pending B/C. Actor-free strict commands and independent native catalog checks reject client identity/role/schema drift.",
+        "evidence": "`services/aos-api/aos_api/aip_budget_policy_renewal_contracts.py`: `org_id: Literal['org-org']`, `project_id: Literal['dev-project']`; tests reject injected `makerSubject`/`checkerSubject`/`approvalVerified`. `services/aos-api/aos_api/aip_budget_policy_renewal_identity.py`: `_HUMAN = '6f31cfdc-a26c-4f1f-ad6b-95a8559cc657'`, environment binding validated, `CheckerBinding` rejects drift. `services/aos-api/tests/aip/test_budget_policy_renewal_identity.py`: `test_environment_drift_denied_before_token_or_database`. Evidence JSON: `actualOriginalSignedOidcVerifierAccepted=true`, `readOnlyNativeIssuerSession=true`, `originalBudgetConsent=false`, `productionLoaderProvisioningPending=true`. `test_budget_policy_renewal_pg.py` native catalog observation confirms `defaultRoles` NOLOGIN/no-membership, `guardBeforeAfter` body changed.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The Store owns an idle real connection and outer transaction, validates original typed canonical DTOs before commit, reports observed only after commit, separates confirmed rollback from unknown commit, and offers only exact read-only history reconciliation without automatic resend.",
+        "evidence": "`services/aos-api/aos_api/aip_budget_policy_renewal_store.py`: `_idle()` enforces `c.autocommit`/`transaction_status != IDLE`; outer `with self._conn.transaction():` wraps operations; `try / except psycopg.Error` distinguishes `known_rollback` → `RenewalStoreBlocked` vs unknown → `RenewalStoreUnknown`. `_validate_proposal` re-parses via `BudgetPolicyRenewalProposal.model_validate(p['contract'])` and compares hashes before returning. `_validate_published_policy` parses `BudgetPolicyRevision.model_validate(result['policy'])`. `reconcile` uses `aip_renewal_reconcile_a0v_162`. Test `test_native_three_role_consumer_publishes_canonical_policy_and_reconciles_history` in `test_budget_policy_renewal_pg.py` confirms CAS fault injection yields `RenewalStoreBlocked('23514')` and preserves `(13,13)` head.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The complete migration preserves original seven FORCE-RLS baselines and original role-pair guard owner/ACL, installs six default NOLOGIN roles with no memberships and only bounded function execution for callers, immutable scoped journals, native seals and deferred publication completeness.",
+        "evidence": "`services/aos-api/alembic/versions/a0v_162_budget_policy_renewal.py`: loops `ORIGINAL` asserting `relrowsecurity AND relforcerowsecurity`; `CREATE ROLE ... NOLOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOREPLICATION` for 6 CALLER+OWNER roles; `JOURNALS` get `ENABLE ROW LEVEL SECURITY` + `FORCE` + `guard_aip4_append_only` triggers; seal computed over `FUNCTIONS` + `SEALED_ORIGINAL_FUNCTIONS` and `ORIGINAL + JOURNALS` relations. Evidence JSON: `defaultRoles=[[...6 entries...],false,false,...]`, `memberships=0`, `originalRls` lists all 7 tables with `true,true`, `receiptTriggers` includes `renewal_consume_complete` deferred. `test_budget_policy_renewal_pg.py` fixture `r19` post-test shows `activePolicy14Counts` only after `consume` succeeds, proving deferred trigger.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Continue with B/C production wiring scope (protected gateway, real credential provisioning, endpoint/UI) and separate original-volume restart plus full business acceptance; do not promote this A-wave candidate beyond the reviewed authoring boundary."
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

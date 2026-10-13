@@ -1,0 +1,30 @@
+{
+  "cid": "fb880ce170352cc93f82be4ea88368a4e0cc62d7081c23625c0c49a13acb1975",
+  "casesPassed": 14,
+  "rolesAfter": [
+    [
+      "aos_budget_renewal_issuer_call",
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_maker_call",
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  ],
+  "membershipsAfter": 0,
+  "fixtureTrustAuthNotRealCredential": true,
+  "knownStopped": true,
+  "originalChanged": false
+}

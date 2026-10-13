@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-authority-20261013-fullA-composite-r1",
+    "task_id": "qyh-budget-policy-renewal-authority-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "b46142f453b066cc43c0c77226d3bf797948ef03",
+      "authority_revision": "AOS-002025",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-authority-20261013/fullA-composite-r1/coverage-and-consumed-reviews.json": "4027d9d404c57e954fe94d924348820796ea63804bb79276ccf00319a060d4d3"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "All eight fixed candidate A files and all A contract/identity/Store/SQL/migration/native-race/unknown/legacy-compatibility requirements are covered by four current independent PASS reviews with validated legal consumption and matching same-source hashes; no scoped partial verdict is being used alone as fullA closure.",
+        "evidence": "material file `.evidence/qyh-budget-policy-renewal-authority-20261013/fullA-composite-r1/coverage-and-consumed-reviews.json` lists `sourceHashes` for exactly eight candidate A files; contains `reviews` array of four envelopes with schema `aos-material-review-result/v1`, all `verdict: PASS` and `consumption.status: CONSUMED_MATERIAL_REVIEW`; four distinct baseline input files (part-1.txt/part-2.txt/part-3.txt/part-4.txt) reviewed independently. Composite claim is about coverage, not execution authority, consistent with the scope note.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Current native evidence establishes original canonical source-head CAS and immutable atomic Receipt, rollback/expired COMMIT/receipt-halfstate refusal, both revocation orderings and shared-source competition, genuine dedicated roles, exact read-only lost-ack reconciliation, original cost/generic compatibility and unchanged original guard OID/Owner/ACL after candidate migration.",
+        "evidence": "Composite material `race-native-terminal-r19.json` (fixture r19, cid `193b...`) shows `originalDatabaseTouched: false`; `activePolicy14Counts` contains only four fixture cases (expired-policy, race-cas-first, race-lost-ack, race-order-consume) with revision 14, while `fixture-race-receipt-only` and `fixture-race-order-revoke` remain at revision 13, establishing CAS rejection, receipt-halfstate refusal, and both revocation/consume order serialization. `identity-native-terminal-r25.json` confirms zero memberships and fixture trust auth. `legacy-fullschema-terminal-r23.json` confirms six renewal roles all `NOLOGIN/nonprivileged`, seven original FORCE-RLS relations `true,true`, `originalVolumeChanged: false`, `oldCostReceipts: [[budget_cost.configure, 7]]`, and 43 old-cost tests passing. `readonly-checker-r26-result.json` confirms `actualOriginalSignedOidcVerifierAccepted: true`, `readOnlyNativeIssuerSession: true`, `originalBudgetConsent: false`. `originalGuardNativeBeforeAfter` confirms guard OID 30136 and owner `aos_app` unchanged before/after migration; hash change reflects function body replacement, not ownership shift.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Closure is for an inert complete A code candidate only. Protected production loader/provisioning/B IPC and C actual sole-human budget approval/deployment, price/model dependencies, original customer policy renewal and all natural business/lifecycle/eight-workbench/visual/observation requirements remain explicit pending; no original DB write, role enablement, Provider/Source/runtime activation or budget consent is inferred.",
+        "evidence": "`readonly-checker-r26-result.json` records `originalBudgetConsent: false`, `originalDbWrites: false`, `secretCopiedOrRecorded: false`, `productionLoaderProvisioningPending: true`, and `currentMemberOrigin: 'isolated fixture setup, not real budget approval'`. `native-race-auth-original-boundary-readback-r26.json` records `originalRestarted: false`, `businessComplete: false`. Composite scope note explicitly states `No real budget approval, original policy13 not renewed; originalDBreadOnly, HostworkerProviderOFF`. `remaining` section enumerates B/C/business/visual gaps. No finding in the four consumed reviews claims production promotion or budget consent.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Accept fullA-composite-r1 PASS for the inert code candidate boundary only; proceed to a separate B-phase review targeting protected real deployment provenance/role credentials/service/process/AttemptReceipt, and a separate C-phase review targeting real sole-human OIDC budget consent/UI gates, with price/model/current-reference validation deferred until those gate reviews are completed."
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

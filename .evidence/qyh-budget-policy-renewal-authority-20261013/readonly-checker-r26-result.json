@@ -1,0 +1,21 @@
+{
+  "actualOriginalSignedOidcVerifierAccepted": true,
+  "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+  "scope": [
+    "org-org",
+    "dev-project"
+  ],
+  "readOnlyNativeIssuerSession": true,
+  "privateConfigurationSha256": "e68a943d912d84da8aedd14ed94d6436e6120b816c25349c6408704ff21ae84a",
+  "currentMemberOrigin": "isolated fixture setup, not real budget approval",
+  "policyProposalDecisionReceiptCounts": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "originalBudgetConsent": false,
+  "secretCopiedOrRecorded": false,
+  "originalDbWrites": false,
+  "productionLoaderProvisioningPending": true
+}

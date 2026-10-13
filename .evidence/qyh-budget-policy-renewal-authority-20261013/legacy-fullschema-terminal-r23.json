@@ -1,0 +1,94 @@
+{
+  "fixture": "r23",
+  "cid": "02cac3527d516e7cdd6f0a99bd9772dc19013e0826f9b456d9a99b38825f7e80",
+  "database": "aos_test_05b73131261e_ti4_test",
+  "alembic": [
+    [
+      "a0v_162"
+    ]
+  ],
+  "publicTables": 611,
+  "renewalRoles": [
+    [
+      "aos_budget_renewal_consumer_call",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_issuer_call",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_issuer_owner",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_maker_call",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_proposal_owner",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_publish_owner",
+      false,
+      false,
+      false
+    ]
+  ],
+  "originalVolumeChanged": false,
+  "originalDataCopied": false,
+  "oldCostReceipts": [
+    [
+      "budget_cost.configure",
+      7
+    ]
+  ],
+  "originalForceRls": [
+    [
+      "aip_budget_head",
+      true,
+      true
+    ],
+    [
+      "aip_budget_revision",
+      true,
+      true
+    ],
+    [
+      "aip_model_governance_policy_head",
+      true,
+      true
+    ],
+    [
+      "aip_model_governance_policy_revision",
+      true,
+      true
+    ],
+    [
+      "aip_provider_instance_head",
+      true,
+      true
+    ],
+    [
+      "aip_provider_instance_revision",
+      true,
+      true
+    ],
+    [
+      "meta_membership",
+      true,
+      true
+    ]
+  ]
+}

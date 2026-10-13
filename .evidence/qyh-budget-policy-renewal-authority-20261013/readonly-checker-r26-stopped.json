@@ -1,0 +1,50 @@
+{
+  "cid": "fa110d8d516c50f9ceaaebb650ebabb061225666618bb98dbb4edfc36a484adf",
+  "knownStopped": true,
+  "rolesAfter": [
+    [
+      "aos_budget_renewal_consumer_call",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_issuer_call",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_issuer_owner",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_maker_call",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_proposal_owner",
+      false,
+      false,
+      false
+    ],
+    [
+      "aos_budget_renewal_publish_owner",
+      false,
+      false,
+      false
+    ]
+  ],
+  "realAuthenticationOnly": true,
+  "policyProposalDecisionReceiptCounts": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "originalChanged": false
+}

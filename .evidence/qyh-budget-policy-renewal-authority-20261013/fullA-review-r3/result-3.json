@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-authority-20261013-fullA-quality-r3-p3",
+    "task_id": "qyh-budget-policy-renewal-authority-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "b46142f453b066cc43c0c77226d3bf797948ef03",
+      "authority_revision": "AOS-002025",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-authority-20261013/fullA-review-r3/part-3.txt": "98be800405a90cf0c9fbc0ca10e4b08967499f033abc1b9ae7e83dd0717d094e"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The complete native test file and current evidence cover authentic low-privilege sessions, input/schema/ACL/tenant drift, proposal and issuer operations, canonical consumer publication, confirmed rollback, expiry before COMMIT and historical reconciliation; fixture approvals and trust authentication are not real customer consent.",
+        "evidence": "In .evidence/qyh-budget-policy-renewal-authority-20261013/fullA-review-r3/part-3.txt, source `services/aos-api/tests/aip/test_budget_policy_renewal_pg.py`: tests `test_real_low_privilege_session_derives_machine_subject`, `test_native_wrong_session_or_tenant_is_denied`, `test_set_role_cannot_impersonate_authenticated_login`, `test_native_role_profile_drift_is_denied`, `test_native_membership_is_denied_even_without_inheritance`, `test_native_temporary_schema_is_denied` cover low-privilege/ACL/tenant/membership drift; `test_native_machine_proposal_uses_original_facts_without_financial_publication` and `test_native_new_proposal_rechecks_current_dependencies_and_rolls_back` cover proposal and rollback; `test_native_issuer_fixture_decision_and_revocation_are_atomic_without_publication` covers issuer operations; `test_native_three_role_consumer_publishes_canonical_policy_and_reconciles_history` covers canonical publish, expiry before COMMIT (short 2s window), and history reconcile; `test_native_commit_ack_discarded_is_resolved_only_by_readonly_history` covers confirmed rollback/ack discard. Evidence header explicitly states: 'Native fixture issuers use the pinned subject as explicit test TCB, not real human consent; trust auth is test-only.' Identity terminal `r25` records `fixtureTrustAuthNotRealCredential: true`.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Actual concurrent revocation/consume in both orders, two approved proposals sharing one source head, and receipt-only fault injection prove serialized outcome, one canonical publication and no half-state committed through normal consumer calls with the original guard enabled.",
+        "evidence": "In `test_budget_policy_renewal_pg.py`: `test_native_revocation_consumer_order_is_serialized_by_actual_lock` uses `wait_native_lock` against `pg_stat_activity` with `Lock` wait_event and advisory locks for both `first='revoke'` and `first='consume'`, asserting serialized outcomes (revision remains 13 or becomes 14 accordingly). `test_native_same_source_two_approved_proposals_allow_one_publication` creates two proposals from the same source via `race_proposal(..., source_policy=source)` and asserts only the first consumes (CAS failure on second, `counts==[(first.proposal_id,1)]`). `test_native_receipt_only_fault_cannot_commit_half_publication` injects `fixture_drop_policy_r19` and `fixture_keep_head_r19` triggers and asserts `NoDataFound` raised and head/revision/receipt remain at pre-consume state. Terminal `r19` shows `activePolicy14Counts` contains exactly those proposals whose consume succeeded, with `fixture-race-receipt-only` at revision 13.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "COMMIT acknowledgement is deliberately discarded through libpq after sending COMMIT; independent visibility and fresh read-only reconcile recover exactly one committed receipt without consume resend. Database-clock expiry is observed without changing the original two-second test window.",
+        "evidence": "In `test_native_commit_ack_discarded_is_resolved_only_by_readonly_history`: after observing status `'observed'`, the test executes `c.pgconn.send_query(b'COMMIT')` followed by `c.pgconn.flush()==0`, explicitly not reading the COMMIT response. It then polls `aip_budget_policy_renewal_receipt` via `admin.execute` until count==1, proving independent visibility. A fresh `psycopg.connect` reader calls `RenewalAuthorityStore(reader).reconcile(command)` and asserts `result['status']=='observed' and result['ref']['revision']==14`. In `test_native_three_role_consumer_publishes_canonical_policy_and_reconciles_history`, the short expiry uses `clock=admin.execute('SELECT clock_timestamp()').fetchone()[0]` and sets `effective_until=clock+timedelta(seconds=2)`, with a loop `while admin.execute('SELECT clock_timestamp()') < short.effective_until` asserting the DB clock drives expiration without modifying the 2s window.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Keep current PASS for part-3 under baseline b46142; preserve the boundary that B/C protected file provenance, real credential provisioning, endpoint/UI wiring and actual sole-human OIDC budget consent remain pending. Do not treat this part-3 PASS as authorization for production customer consent or original-volume business acceptance; await separate full-suite business acceptance before closing the overall renewal authority goal."
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

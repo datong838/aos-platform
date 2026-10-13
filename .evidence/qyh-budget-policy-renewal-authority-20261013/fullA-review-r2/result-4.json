@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-authority-20261013-fullA-quality-r2-p4",
+    "task_id": "qyh-budget-policy-renewal-authority-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "b46142f453b066cc43c0c77226d3bf797948ef03",
+      "authority_revision": "AOS-002025",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-authority-20261013/fullA-review-r2/part-4.txt": "499a3479ee465c9e82f535e550c19387fc56bc666c1170d26e8f1418f1717e43"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The original committed cost configuration SQL and tests still execute the signed preparation/issuer/consumer/configuration chain after full candidate migration162, preserving exact paired canonical output, idempotency, rollback, drift/withdrawal denials and low-role direct-write/owner-helper/tenant boundaries.",
+        "evidence": "Material .evidence/qyh-budget-policy-renewal-authority-20261013/fullA-review-r2/part-4.txt provides the original SQL functions aip_cost_configuration_expected_a0v_128/aip_cost_configuration_fact_a0v_128/aip_configure_budget_cost_a0v_128, the a0v_128 alembic version, and test_budget_cost_configuration_pg.py. The test file shows the complete signed chain via approved(issuer_factory, https_signer) -> consume -> derive(aip_configure_budget_cost_a0v_128). Idempotency is verified by assert derive(c,saved,d)==result on duplicate calls. Drift denials are tested across revoke/member/provider/budget/actor/decision/unconsumed cases. Low-role direct-write denial is verified by the InsufficientPrivilege/CONSUMER_REQUIRED assertions on INSERT into policy revision tables. Owner/tenant boundary is tested by wrong_scope_and_owner_helper_are_not_callable asserting InsufficientPrivilege for cross-scope caller and owner-helper. Canonical output and paired structure (price.policy.receipt) are asserted in test_derived_pair_is_atomic_exact_and_idempotent.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The complete original generic Policy Store keeps its explicit BudgetPolicyApprovalRequired/QuotaPolicyApprovalRequired ACTIVE denial before publication, while draft CAS/replay/tenant and original contract tests pass; this is original Store evidence, not a renewal DTO validation substituted for generic denial.",
+        "evidence": "Material includes the full source of services/aos-api/aos_api/aip_model_governance_policy_store.py, which explicitly defines BudgetPolicyApprovalRequired(code=AIP_BUDGET_POLICY_ACTIVE_APPROVAL_REQUIRED) and QuotaPolicyApprovalRequired(code=AIP_QUOTA_ACTIVE_APPROVAL_REQUIRED), and raises them in _publish when lifecycle is ACTIVE. The hash febed109685624c872fbc68d307a81c44b90f405cd8e7d2fefa30503a63cead5 matches the original non-renewal Store. Contract tests are provided via services/aos-api/tests/aip/test_budget_policy_renewal_contracts.py and test_budget_policy_renewal_identity.py with hashes c2d7db7729e429fa8b767d2861a69375792f5f628d4527c376963cc7a3333021 and e5ae2cb0c89f008f7ca778e6800387206b1b1567d3652d7bc0edd85f096043bc respectively.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The full fresh database reached migration162 with all six renewal roles default NOLOGIN/nonprivileged and seven original FORCE-RLS relations, while old budget_cost.configure receipts were actually produced; 43 tests passed without copying customer data or enabling any real runtime.",
+        "evidence": "The fullschema terminal r23 JSON output shows fixture=r23 reached alembic [a0v_162] with 611 publicTables. renewalRoles lists exactly six roles (aos_budget_renewal_consumer_call, aos_budget_renewal_issuer_call, aos_budget_renewal_issuer_owner, aos_budget_renewal_maker_call, aos_budget_renewal_proposal_owner, aos_budget_renewal_publish_owner) all with false/false/false membership flags, confirming NOLOGIN/nonprivileged defaults. originalForceRls lists exactly seven relations (aip_budget_head, aip_budget_revision, aip_model_governance_policy_head, aip_model_governance_policy_revision, aip_provider_instance_head, aip_provider_instance_revision, meta_membership) all with true/true RLS enable flags. oldCostReceipts shows [[budget_cost.configure, 7]] confirming receipts were produced. originalVolumeChanged=false and originalDataCopied=false. The old cost test result line shows '43 passed, 7 warnings in 28.68s'.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Part 4 claims are fully supported by the provided material. Continue review of remaining parts to ensure the complete A wave quality gate is satisfied before any PASS aggregation."
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

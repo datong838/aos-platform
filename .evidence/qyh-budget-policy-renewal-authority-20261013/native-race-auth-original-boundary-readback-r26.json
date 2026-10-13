@@ -1,0 +1,18 @@
+{
+  "authority": "AOS-002025",
+  "ownTasks": [
+    [
+      "qyh-restoration-successor-latest-restart-20261013",
+      "2026-10-14T00:00:00+00:00"
+    ],
+    [
+      "qyh-budget-policy-renewal-authority-20261013",
+      "2026-10-14T00:00:00+00:00"
+    ]
+  ],
+  "originalPgCid": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "originalStartedAt": "2026-10-13T09:52:36.247449833Z",
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "originalRestarted": false,
+  "businessComplete": false
+}

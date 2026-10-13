@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-budget-policy-renewal-authority-20261013-fullA-quality-r1-p2",
+  "task_id": "qyh-budget-policy-renewal-authority-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "b46142f453b066cc43c0c77226d3bf797948ef03",
+    "authority_revision": "AOS-002025",
+    "files": {
+      ".evidence/qyh-budget-policy-renewal-authority-20261013/fullA-review-r1/part-2.txt": "cc6fd597079b7eb58c11a7f39bc84e0cf933d5c9b9cb9c6ae2e8ecd6b17e19be"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "3e715b48b5122debd4e29a92090693e7d2f99f8d7f986b5f2ee0bf2bfa654025",
+  "transport_sha256": "bd340e0b0130a4616cc327507d4c21506278df77cf28e23bf0adeaaaafe10512"
+}

@@ -1,0 +1,99 @@
+{
+  "fixture": "r19",
+  "cid": "193b1ea588b73a8f6a02d2bcb84f57a8cbe1be6c546479520835d45455b9e093",
+  "originalDatabaseTouched": false,
+  "roles": [
+    [
+      "aos_budget_renewal_consumer_call",
+      false
+    ],
+    [
+      "aos_budget_renewal_issuer_call",
+      false
+    ],
+    [
+      "aos_budget_renewal_issuer_owner",
+      false
+    ],
+    [
+      "aos_budget_renewal_maker_call",
+      false
+    ],
+    [
+      "aos_budget_renewal_proposal_owner",
+      false
+    ],
+    [
+      "aos_budget_renewal_publish_owner",
+      false
+    ]
+  ],
+  "heads": [
+    [
+      "fixture-expired-policy",
+      14,
+      14
+    ],
+    [
+      "fixture-race-cas-first",
+      14,
+      14
+    ],
+    [
+      "fixture-race-lost-ack",
+      14,
+      14
+    ],
+    [
+      "fixture-race-order-consume",
+      14,
+      14
+    ],
+    [
+      "fixture-race-order-revoke",
+      13,
+      13
+    ],
+    [
+      "fixture-race-receipt-only",
+      13,
+      13
+    ]
+  ],
+  "receiptCounts": [
+    [
+      "consume",
+      4
+    ],
+    [
+      "decide",
+      9
+    ],
+    [
+      "propose",
+      9
+    ],
+    [
+      "revoke",
+      3
+    ]
+  ],
+  "activePolicy14Counts": [
+    [
+      "fixture-expired-policy",
+      1
+    ],
+    [
+      "fixture-race-cas-first",
+      1
+    ],
+    [
+      "fixture-race-lost-ack",
+      1
+    ],
+    [
+      "fixture-race-order-consume",
+      1
+    ]
+  ]
+}

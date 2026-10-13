@@ -1,0 +1,15 @@
+{
+  "committedBase": "b46142f453b066cc43c0c77226d3bf797948ef03",
+  "exactCandidateFiles": {
+    "services/aos-api/aos_api/aip_budget_policy_renewal_contracts.py": "c2d7db7729e429fa8b767d2861a69375792f5f628d4527c376963cc7a3333021",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_identity.py": "e5ae2cb0c89f008f7ca778e6800387206b1b1567d3652d7bc0edd85f096043bc",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_store.py": "ef10917e181c7d4dcb6ac67fe28e868db8b3e4e9ef8735d25858a543ddfbd2e5",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_authority.sql": "febed109685624c872fbc68d307a81c44b90f405cd8e7d2fefa30503a63cead5",
+    "services/aos-api/alembic/versions/a0v_162_budget_policy_renewal.py": "9426ad5bc3b027e02c21f1317fec603576b541200982460e310567e11f32f761",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_contracts.py": "348e1a72ed930a65c7c1638459832d0ebd9e49370ecb94150c4c301a20454a49",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_identity.py": "7f6b02713ee060ecbfc6af505537c62d387bf894c04e22ff04f76798274e16fa",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_pg.py": "27741d5e5b832f62a92cb029cd4a33d610b0f31e6ce61e1e3071c6dae9ff07c6"
+  },
+  "protectedDirtyCopied": false,
+  "originalDatabaseTouched": false
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-authority-20261013-fullA-quality-r1-p2",
+    "task_id": "qyh-budget-policy-renewal-authority-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "b46142f453b066cc43c0c77226d3bf797948ef03",
+      "authority_revision": "AOS-002025",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-authority-20261013/fullA-review-r1/part-2.txt": "cc6fd597079b7eb58c11a7f39bc84e0cf933d5c9b9cb9c6ae2e8ecd6b17e19be"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The complete SQL implements source-derived proposal, exact pinned-issuer decision and independent withdrawal, consumer and history reconciliation using original canonical hashes, fixed tenant and current original financial/Provider/Budget/member facts; proposal does not publish financial authority.",
+        "evidence": "File: services/aos-api/aos_api/aip_budget_policy_renewal_authority.sql. Evidence spans: proposal flow (aip_renewal_source_a0v_162, aip_renewal_propose_a0v_162), issuer flow (aip_renewal_decide_a0v_162, aip_renewal_revoke_a0v_162), consumer/reconcile flow (aip_renewal_consume_a0v_162, aip_renewal_consume_history_a0v_162, aip_renewal_reconcile_a0v_162), schema seal validation (aip_renewal_profile_a0v_162). Specific references: aip_renewal_source_a0v_162 enforces org_id='org-org'/project_id='dev-project' and re-derives Budget/Provider/Policy facts via aip_budget_cost_hash_a0v_126; aip_renewal_issuer_fact_a0v_162 enforces checkerSubject='6f31cfdc-a26c-4f1f-ad6b-95a8559cc657' and makerSubject='postgres-service:aos_budget_renewal_maker_call'; aip_renewal_issuer_write_a0v_162 handles 'decide' and 'revoke' with separate paths; aip_renewal_consume_history_a0v_162 reconciles using original canonical hashes; aip_renewal_consume_a0v_162 inserts without writing any financial authority/developmentCostAuthorization into the policy payload; guard aip_cost_configuration_write_guard_a0v_128 enforces that only the consumer path may write policy revisions.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Approved consumption serializes against revocation and source-head competitors, requires exact original approval and issuer receipt/current window, inserts the original canonical policy and CAS head with a same-transaction Receipt, and deferred commit checks prevent incomplete or expired publication.",
+        "evidence": "File: services/aos-api/aos_api/aip_budget_policy_renewal_authority.sql. Evidence in: aip_renewal_consume_a0v_162, aip_renewal_complete_receipt_a0v_162, aip_renewal_consume_fact_a0v_162, aip_renewal_consume_history_a0v_162, aip_renewal_assert_insert_a0v_162. Specific references: aip_renewal_consume_a0v_162 acquires advisory_xact_lock on proposal, calls consume_fact with check_current=true, inserts receipt with transaction_id=txid_current(), performs UPDATE ... AND current_revision=... AND version=... with ROW_COUNT=1 check, raises RENEWAL_HEAD_CAS_FAILED/RENEWAL_PUBLICATION_EXPIRED; aip_renewal_complete_receipt_a0v_162 is a deferrable/constraint trigger that re-checks NOT EXISTS revoked, head version, current time windows, and matches txid_current(); aip_renewal_consume_fact_a0v_162 enforces decision='approved', d.decision_id=p.payload->>'approvalSlot', current window checks, and RENEWAL_REVOKED_OR_AMBIGUOUS_DECISION if other decisions exist.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The original protected cost role pair stays allowed; all other protected writes remain denied except the narrowly checked renewal consumer path, and historical observed/revoked events are not fresh execution permission or automatic retries.",
+        "evidence": "File: services/aos-api/aos_api/aip_budget_policy_renewal_authority.sql. Evidence in: aip_cost_configuration_write_guard_a0v_128, aip_renewal_profile_a0v_162, aip_renewal_issuer_fact_a0v_162, aip_renewal_issuer_write_a0v_162, aip_renewal_consume_a0v_162, aip_renewal_consume_history_a0v_162, aip_renewal_reconcile_a0v_162. Specific references: aip_cost_configuration_write_guard_a0v_128 allows session_user='aos_budget_renewal_consumer_call' AND current_user='aos_budget_renewal_publish_owner' for budget active policies; denies all other protected writes via COST_CONFIGURATION_CONSUMER_REQUIRED/RENEWAL_BUDGET_POLICY_ONLY; aip_renewal_profile_a0v_162 hardens roles (NOLOGIN, no memberships, no super/createdb); aip_renewal_issuer_fact_a0v_162 enforce exact checkerSubject and makerSubject; aip_renewal_consume_history_a0v_162 returns observed/conflict/unresolved without side effects; revoke path raises RENEWAL_ALREADY_REVOKED; no logic grants fresh permission based on old revoked/observed state.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前 PASS 结果；将本部分审阅结论并入 fullA 整体判定。继续等待其余 parts/part-1 等的独立复核完成后再做 final fullA 综合结论。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}
