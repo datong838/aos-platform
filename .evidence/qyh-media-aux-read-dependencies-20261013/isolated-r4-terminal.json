@@ -1,0 +1,12 @@
+{
+  "cid": "25c0a1acb0558ba253b9952e0b32cd348e138474735afc89c640d52a43cc8967",
+  "cluster": "7696123217710387241",
+  "countQueryOutput": "0",
+  "countQueryVerifiedAt": "2026-10-13T12:10:49.094143+00:00",
+  "finishedAt": "2026-10-13T12:10:49.136646478Z",
+  "running": false,
+  "fixtureOnly": true,
+  "originalPgTouched": false,
+  "casesPassed": 8,
+  "scope": "six new HTTP cases plus two original PG/HTTP integration cases;54 earlier full set remains separate"
+}

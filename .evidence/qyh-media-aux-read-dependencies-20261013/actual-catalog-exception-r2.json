@@ -1,0 +1,39 @@
+{
+  "diagnosticOnly": true,
+  "notHumanAuthentication": true,
+  "causeChain": [
+    {
+      "type": "RegistryIntegrityCorruptError",
+      "sqlstate": null,
+      "frames": [
+        {
+          "file": "actual_catalog_exception_r2.py",
+          "function": "<module>",
+          "line": 34
+        },
+        {
+          "file": "ecommerce_workshop_read_catalog.py",
+          "function": "get_readiness",
+          "line": 25
+        },
+        {
+          "file": "ecommerce_installed_readonly_catalog.py",
+          "function": "build_installed_readonly_catalog",
+          "line": 87
+        }
+      ]
+    },
+    {
+      "type": "ValueError",
+      "sqlstate": null,
+      "frames": [
+        {
+          "file": "ecommerce_installed_readonly_catalog.py",
+          "function": "build_installed_readonly_catalog",
+          "line": 78
+        }
+      ]
+    }
+  ],
+  "businessComplete": false
+}

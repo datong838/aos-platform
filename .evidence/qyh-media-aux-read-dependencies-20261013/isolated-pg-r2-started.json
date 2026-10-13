@@ -1,0 +1,8 @@
+{
+  "cid": "25c0a1acb0558ba253b9952e0b32cd348e138474735afc89c640d52a43cc8967",
+  "name": "qyh-media-read-isolated-pg-20261013-r2",
+  "port": 32769,
+  "cluster": "7696123217710387241",
+  "knownStartDiagnosticError": "psql default DB aos_app absent;actual postgres DB confirmed;no recreation",
+  "fixtureOnly": true
+}

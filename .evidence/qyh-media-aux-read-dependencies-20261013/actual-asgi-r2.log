@@ -1,0 +1,16 @@
+{"ts": "2026-10-13T12:14:43.291029+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+{"ts": "2026-10-13T12:14:43.902881+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:14:44.014666+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:14:44.022217+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect_without_scope caller=workshop_catalog_source.py:73", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:14:44.507246+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:14:44.571234+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:14:44.580877+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:14:44.593053+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=REGISTRY_INTEGRITY_CORRUPT status=500", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:14:44.593661+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/media-studio/workflow/drafts \"HTTP/1.1 500 Internal Server Error\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-media-aux-read-dependencies-20261013/actual_asgi_media_read_r2.py", line 35, in <module>
+    assert response.status_code==200,(path,response.status_code,data.get('code'))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('/v1/ecommerce-workshop/views/media-studio/workflow/drafts', 500, 'REGISTRY_INTEGRITY_CORRUPT')

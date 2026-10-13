@@ -1,0 +1,8 @@
+{
+  "status": 500,
+  "code": "REGISTRY_INTEGRITY_CORRUPT",
+  "allCustomerRequestsReadonly": true,
+  "harnessMissingApplicationTenantContext": true,
+  "notProductRegressionConclusion": true,
+  "next": "same original fixture scope bound as native diagnostic;no catalog override or business gate relaxation"
+}

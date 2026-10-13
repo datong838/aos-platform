@@ -1,0 +1,20 @@
+{
+  "sourceHead": "62e43d5323ccd5d1d4e2b21a8e03eec20303f6b6",
+  "actualManagementIdentityParametersUsed": true,
+  "rolePrivilege": {
+    "superuser": false,
+    "bypassRls": false
+  },
+  "genericStoreConnectTransactionReadOnly": true,
+  "readonlyAppliedViaSameServeManagementOptions": true,
+  "draftCount": 0,
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "writesInitiated": false,
+  "diagnosticOnly": true,
+  "notLiveCandidateHttpAcceptance": true,
+  "scriptSha256": "b74d6759b1556d07b240dfb3add332886838a89e448c610c00d33f2cec29c1be",
+  "businessComplete": false
+}

@@ -1,0 +1,40 @@
+{
+  "candidateFrozenSource": "f28ef48c48ae4cebd144f3b986635cbc2a52de04",
+  "transport": "real ASGI HTTP TestClient,not production TCP/browser acceptance",
+  "principal": "explicit fixture only,not human authentication or approval",
+  "catalogAndBusinessReader": "original actual installed catalog and Store,no mocks",
+  "actualManagementIdentityReadOnly": true,
+  "paths": [
+    {
+      "path": "/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "count": 0,
+      "blockers": [],
+      "commands": null
+    },
+    {
+      "path": "/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "status": 200,
+      "tenant": null,
+      "count": null,
+      "blockers": [
+        "FULL_VIDEO_EXACT_ROOT_REQUIRED"
+      ],
+      "commands": {
+        "prepare": false,
+        "start": false,
+        "resume": false,
+        "takeover": false,
+        "cancel": false,
+        "reconcile": false,
+        "publish": false,
+        "settle": false
+      }
+    }
+  ],
+  "businessComplete": false
+}

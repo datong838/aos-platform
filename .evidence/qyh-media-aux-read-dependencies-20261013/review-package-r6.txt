@@ -1,0 +1,581 @@
+CANDIDATE IDENTICAL TO ISOLATED54 TESTED VERSION;NOT DEPLOYED
+diff --git a/services/aos-api/aos_api/routers/ecommerce_workshop.py b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+index 185385799..ac0e8ad0f 100644
+--- a/services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+@@ -1833,7 +1833,7 @@ def execute_media_internal_workflow(
+ def list_media_internal_workflows(
+     request: Request,
+     principal: PrincipalDependency,
+-    catalog: CatalogDependency,
++    catalog: ReadCatalogDependency,
+     workflow: MediaInternalWorkflowDependency,
+ ) -> MediaInternalWorkflowListResponse:
+     _reject_query_parameters(request)
+@@ -1944,7 +1944,7 @@ def create_media_delivery_publish_proposal(
+ def get_ecommerce_workshop_media_studio_full_production_scenario(
+     request: Request,
+     principal: PrincipalDependency,
+-    catalog: CatalogDependency,
++    catalog: ReadCatalogDependency,
+     scenario: FullVideoScenarioDependency,
+ ) -> FullVideoScenarioContribution:
+     _reject_unknown_query_parameters(request, allowed=frozenset())
+diff --git a/services/aos-api/tests/test_ecommerce_media_read_dependencies.py b/services/aos-api/tests/test_ecommerce_media_read_dependencies.py
+new file mode 100644
+index 000000000..bf0c30d7f
+--- /dev/null
++++ b/services/aos-api/tests/test_ecommerce_media_read_dependencies.py
+@@ -0,0 +1,52 @@
++"""Media reads preserve missing production roots and source failures."""
++import pytest
++from aos_api.routers import ecommerce_workshop as routes
++from aos_api.tenant_scope import TenantScope
++from test_ecommerce_workshop_read_http import client_with_catalogs, ReadReached
++
++PATHS = ['/views/media-studio/full-production-scenario', '/views/media-studio/workflow/drafts']
++
++
++def admit(reader):
++    reader.get_readiness = lambda **scope: reader.calls.append(scope)
++
++
++@pytest.mark.parametrize('path', PATHS)
++def test_media_read_uses_selected_admission(path):
++    client, legacy, reader = client_with_catalogs()
++    assert client.get('/v1/ecommerce-workshop' + path).status_code == 404
++    assert not legacy.calls
++    assert reader.calls == [dict(module_id='ecommerce.media-studio', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])]
++
++
++def test_full_video_keeps_all_execution_commands_false():
++    client, legacy, reader = client_with_catalogs()
++    admit(reader)
++    response = client.get('/v1/ecommerce-workshop' + PATHS[0])
++    assert response.status_code == 200
++    data = response.json()
++    assert data['blockers'][0]['code'] == 'FULL_VIDEO_EXACT_ROOT_REQUIRED'
++    assert len(data['commands']) == 8
++    assert all(value is False for value in data['commands'].values())
++    assert all(stage['status'] == 'blocked' for stage in data['stages'])
++    assert not legacy.calls
++
++
++def test_draft_reader_receives_original_authenticated_scope():
++    client, legacy, reader = client_with_catalogs()
++    admit(reader)
++    class Probe:
++        def list(self, scope):
++            assert scope == TenantScope('org-org', 'dev-project')
++            raise ReadReached('media-draft-source')
++    client.app.dependency_overrides[routes.get_ecommerce_media_internal_workflow] = lambda: Probe()
++    with pytest.raises(ReadReached, match='media-draft-source'):
++        client.get('/v1/ecommerce-workshop' + PATHS[1])
++    assert not legacy.calls
++
++
++@pytest.mark.parametrize('path', PATHS)
++def test_media_unknown_query_cannot_override_tenant(path):
++    client, legacy, reader = client_with_catalogs()
++    assert client.get('/v1/ecommerce-workshop' + path + '?orgId=dev-org').status_code == 400
++    assert not reader.calls and not legacy.calls
+diff --git a/services/aos-api/tests/test_ecommerce_workshop_read_http.py b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+index 510df3fed..02f9d71aa 100644
+--- a/services/aos-api/tests/test_ecommerce_workshop_read_http.py
++++ b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+@@ -76,6 +76,8 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
+         '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+         '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+         '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
++        '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
++        '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+     }
+ 
+ 
+
+FILE test-count-delta.json
+{
+  "same54CollectedTests": true,
+  "initialRun": "tests-green.txt:52passed/2failed due placeholder port1 connection",
+  "isolatedR1": "54 setup errors:no aos_app role",
+  "isolatedR2": "54 setup errors:original161 requires aos_app owner;postgres migration owner refused",
+  "isolatedR3": "54passed/0skip afterfixture migration role correction;no test additions or deletion between runs",
+  "twoRecoveredTests": [
+    "test_real_postgres_stores_preserve_replay_history_and_tenant_isolation",
+    "test_real_http_routes_are_principal_scoped_receipted_and_query_closed"
+  ],
+  "notAdditionalTests": "52+2 recovered original integration cases =54;not invented positive cases",
+  "migration161Unchanged": true,
+  "customerDbUntouched": true
+}
+
+FILE isolated-r2-first-full-setup-trace.txt
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE                   [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_media_read_uses_selected_admission[/views/media-studio/full-production-scenario] _
+
+self = <sqlalchemy.engine.base.Connection object at 0x11c069450>
+dialect = <sqlalchemy.dialects.postgresql.psycopg.PGDialect_psycopg object at 0x11c469490>
+context = <sqlalchemy.dialects.postgresql.psycopg.PGExecutionContext_psycopg object at 0x11c6fb110>
+statement = <sqlalchemy.dialects.postgresql.psycopg.PGCompiler_psycopg object at 0x11c6f9950>
+parameters = [{}]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+services/aos-api/.venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py:1969: 
+
+FILE isolated-terminal-readback.json
+{
+  "cid": "579e97f1d63cb2c90b48808fcd00ac792be3ce97adf231cba905f8b0bb7d9149",
+  "finishedAt": "2026-10-13T11:54:03.128315821Z",
+  "running": false,
+  "mounts": [],
+  "tmpfs": {
+    "/var/lib/postgresql/data": "rw,size=512m"
+  },
+  "earlierDatabaseCountObservation": "prior exact query SELECT count(*) FROM pg_database WHERE datname LIKE aos_test_% returned 0;asserted before stop;terminal receipt retains observed count0;not re-queried after stop"
+}
+
+FILE isolated-pg-terminal.json
+{
+  "cid": "579e97f1d63cb2c90b48808fcd00ac792be3ce97adf231cba905f8b0bb7d9149",
+  "remainingFixtureDatabases": 0,
+  "running": false,
+  "onlyExactOwnedContainerStopped": true,
+  "customerContainerTouched": false,
+  "namedVolumesDeleted": false
+}
+
+FILE isolated-pg-started.json
+{
+  "name": "qyh-media-read-isolated-pg-20261013-r1",
+  "cid": "579e97f1d63cb2c90b48808fcd00ac792be3ce97adf231cba905f8b0bb7d9149",
+  "port": 32768,
+  "cluster": "7696118414481760296",
+  "fixtureOnly": true,
+  "pgdataTmpfs": true,
+  "customerDataCopied": false
+}
+
+FILE tests-isolated-r3.txt
+......................................................                   [100%]
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+54 passed, 7 warnings in 12.70s
+
+FILE transitive-read-audit.json
+{
+  "head": "d51a6a18fc8ec1140a5954e33ab72d38cd310627",
+  "authority": "AOS-002017",
+  "status": "ACTUAL_CALL_PATH_STATIC_AUDITED_NATIVE_PENDING",
+  "sourceHashes": {
+    "routers/ecommerce_workshop.py": "e397893d1550436f8060066dfd08f9b041af338ce25e0a17404f4895a7c1eb35",
+    "ecommerce_workshop_full_video_scenario.py": "b0aa142436483d6edf0341a2bdffc553a00b72f6c0fdeb88f702f81814d63a0e",
+    "ecommerce_media_internal_workflow.py": "92c9e9723590d703e5f945f91c002340fc6597cbe10f8500cbef6a7f87d220fe",
+    "aip_production_contract_store.py": "731e7d278dde3c19f95f08b032df77a12ff6871d050e4f24af9e4eb5425b47b8",
+    "aip_production_contracts.py": "af1720d4b40b95200e2dd6bbd1c00a98e2d8657527b2f3ac9b99d63635cb6029",
+    "aip_task_store.py": "6fd1d7f192e9e9a8e6068fd6a3b17ba7fe54552c915377166eb87c82854da6aa",
+    "aip_responsibility_template_authority.py": "0df75393572b0ce57372c34ad84897bb314ea1ad2bdaafd8097ad4851ed3895f",
+    "db.py": "a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010",
+    "aip_contracts.py": "ec870e5382bb65d45bf8968a4552392b4fb3b65eaf1fc9b3ffd7c7a11fa364d3"
+  },
+  "fullVideo": "factory constructs reader=None; read→_blocked composes DTO only; full hash/scope/root/stages/authorization gates remain; future reader needs independent audit",
+  "drafts": "factory constructs default workflow; tasks/briefs/profile-resolver constructors only store refs/factories and Path; no queries/file/network access during constructors. list→list_briefs executes one tenant scoped head/current revision JOIN SELECT; _brief/_load/DTO pure decode; workflow type filter/_require_media_brief validates exact schema/externalEffectsAllowed false/type/status/details; _draft pure DTO + sort; no execute/create/revise/receipt writes",
+  "connectionCaveat": "AipProductionContractStore default db.connect is READ WRITE, not reader-enforced read-only. Actual current restored HTTP read-only maintenance globally enforces read-only; native diagnostic explicitly enforces default_transaction_read_only=on. Do not change shared workflow write factory or claim generic read-only transaction. Current selected call has no write SQL/implicit producer",
+  "notInvoked": [
+    "InstalledProductionProfileResolver.resolve",
+    "AipTaskStore.create_task",
+    "EcommerceMediaInternalWorkflow.execute",
+    "_receipt",
+    "create_brief",
+    "revise_brief",
+    "export",
+    "publish"
+  ],
+  "businessComplete": false
+}
+
+FILE native-two-r1.json
+{
+  "sourceHead": "97c7509f395e2c976022df8db4ae6602906fb396",
+  "normalRole": "aos_a0v_runtime_20260912",
+  "superuser": false,
+  "bypassRls": false,
+  "transactionReadOnly": true,
+  "realAdminMembershipVerified": true,
+  "diagnosticOnly": true,
+  "results": {
+    "fullVideo": {
+      "status": "READ_OK",
+      "blockers": [
+        "FULL_VIDEO_EXACT_ROOT_REQUIRED"
+      ],
+      "commands": {
+        "prepare": false,
+        "start": false,
+        "resume": false,
+        "takeover": false,
+        "cancel": false,
+        "reconcile": false,
+        "publish": false,
+        "settle": false
+      }
+    },
+    "drafts": {
+      "status": "READ_OK",
+      "count": 0,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    }
+  },
+  "businessComplete": false,
+  "scriptSha256": "16424d3d6f4fe72c705a2210c402e642a685fee4be9edcaef0142e6f109a5127"
+}
+
+FILE reviewgate-correction.json
+{
+  "r5Verdict": "NEED_EVIDENCE",
+  "notPASS": true,
+  "mistake": "treated successful protocol consumption as PASS;premature API-only switch",
+  "prematureCode": "f28ef48c48ae4cebd144f3b986635cbc2a52de04",
+  "prematureApiPid": 95278,
+  "correctiveRevert": "62e43d5323ccd5d1d4e2b21a8e03eec20303f6b6",
+  "restoredApiPid": 95538,
+  "sameSourceManifestAsOriginal97": true,
+  "original650TablesUnchanged": true,
+  "pgWebChromeSignals": false,
+  "noPOSTOrProducerInitiated": true,
+  "authorityStill2017": true,
+  "scopedDeliveryNotClaimed": true
+}
+
+ACTUAL SOURCE aip_production_contract_store.py:__init__
+def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        *,
+        plan_connect_factory: ConnectFactory | None = None,
+        contract_connect_factory: ConnectFactory | None = None,
+        responsibility_template_resolver: ResponsibilityTemplateResolver | None = None,
+        stage_template_source_resolver: StageTemplateSourceResolver | None = None,
+        media_gate_source_resolver: MediaGateSourceResolver | None = None,
+        production_profile_resolver: ProductionProfileResolver | None = None,
+        schema_compatibility_resolver: SchemaCompatibilityResolver | None = None,
+        task_store: AipTaskStore | None = None,
+    ) -> None:
+        self._connect_factory = connect_factory or db_connect
+        self._plan_connect_factory = (
+            plan_connect_factory if plan_connect_factory is not None else self._connect_factory
+        )
+        self._contract_connect_factory = (
+            contract_connect_factory if contract_connect_factory is not None else self._connect_factory
+        )
+        self._responsibility_template_resolver = responsibility_template_resolver
+        self._stage_template_source_resolver = stage_template_source_resolver
+        self._media_gate_source_resolver = media_gate_source_resolver
+        self._production_profile_resolver = (
+            production_profile_resolver or InstalledProductionProfileResolver().resolve
+        )
+        self._schema_compatibility_resolver = (
+            schema_compatibility_resolver
+            or (lambda output_ref, input_ref: output_ref == input_ref)
+        )
+        self._task_store = task_store or AipTaskStore(self._connect_factory)
+
+ACTUAL SOURCE aip_production_contract_store.py:list_briefs
+def list_briefs(self, scope: TenantScope) -> TaskBriefListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT revision.*, head.version
+                FROM aip_task_brief_head head
+                JOIN aip_task_brief_revision revision
+                  ON revision.org_id=head.org_id AND revision.project_id=head.project_id
+                 AND revision.brief_id=head.brief_id AND revision.revision=head.current_revision
+                WHERE head.org_id=%s AND head.project_id=%s
+                ORDER BY revision.created_at DESC, revision.brief_id""",
+                scope.key,
+            ).fetchall()
+            items = [self._brief(scope, row, int(row["version"])) for row in rows]
+            return TaskBriefListResponse(
+                tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+                items=items,
+                count=len(items),
+            )
+
+ACTUAL SOURCE aip_production_contract_store.py:_brief
+def _brief(self,scope:TenantScope,row:Any,version:int)->TaskBriefRevision:
+        return TaskBriefRevision(tenant=TenantContext(org_id=scope.org_id,project_id=scope.project_id),brief_id=row["brief_id"],task_id=row["task_id"],revision=int(row["revision"]),version=version,brief_type=row["brief_type"],schema_ref=ResourceRef.model_validate(self._load(row["schema_ref"])),spec=self._load(row["spec"]),content_hash=row["content_hash"],lifecycle=BriefLifecycle(row["lifecycle"]),created_by=row["created_by"],created_at=row["created_at"])
+
+ACTUAL SOURCE aip_production_contract_store.py:_load
+def _load(value:Any)->Any:return json.loads(value) if isinstance(value,str) else value
+
+ACTUAL SOURCE ecommerce_media_internal_workflow.py:__init__
+def __init__(self, task_store: TaskAuthority | None = None, brief_store: BriefAuthority | None = None, receipt_reader: Callable[[TenantScope, str, str], str | None] | None = None) -> None:
+        self._tasks = task_store or AipTaskStore()
+        self._briefs = brief_store or AipProductionContractStore()
+        self._receipt_reader = receipt_reader or self._receipt
+
+ACTUAL SOURCE ecommerce_media_internal_workflow.py:list
+def list(self, scope: TenantScope) -> MediaInternalWorkflowListResponse:
+        try:
+            items = []
+            for value in self._briefs.list_briefs(scope).items:
+                if value.brief_type != "media_internal_workflow":
+                    continue
+                self._require_media_brief(value)
+                items.append(self._draft(value))
+            items.sort(key=lambda item: (item.title, item.resource_id))
+        except (ProductionContractError, ValueError, KeyError) as exc:
+            raise MediaInternalWorkflowConflict(str(exc)) from exc
+        return MediaInternalWorkflowListResponse(tenant=self._tenant(scope), items=items, count=len(items))
+
+ACTUAL SOURCE ecommerce_media_internal_workflow.py:_require_media_brief
+def _require_media_brief(cls, value) -> None:
+        if value.brief_type != "media_internal_workflow" or value.schema_ref != cls._schema_ref():
+            raise MediaInternalWorkflowConflict("task brief is not a media internal workflow")
+        spec = value.spec
+        if not isinstance(spec, dict) or spec.get("externalEffectsAllowed") is not False:
+            raise MediaInternalWorkflowConflict("media workflow safety marker is invalid")
+        if spec.get("mediaType") not in cls._MEDIA_TYPES or spec.get("status") not in cls._STATUSES:
+            raise MediaInternalWorkflowConflict("media workflow state is invalid")
+        if not isinstance(spec.get("title"), str) or not isinstance(spec.get("summary"), str) or not isinstance(spec.get("details"), dict):
+            raise MediaInternalWorkflowConflict("media workflow content is invalid")
+        if set(spec["details"]) - ALLOWED_DETAIL_KEYS or spec["details"].get("mediaType") != spec["mediaType"]:
+            raise MediaInternalWorkflowConflict("media workflow details are invalid")
+
+ACTUAL SOURCE ecommerce_media_internal_workflow.py:_draft
+def _draft(value, *, version: int | None = None) -> MediaInternalWorkflowDraft:
+        return MediaInternalWorkflowDraft(
+            resource_id=value.brief_id, revision=value.revision, version=version or value.version,
+            content_hash=value.content_hash, media_type=value.spec["mediaType"], title=value.spec["title"],
+            summary=value.spec["summary"], details=value.spec["details"], status=value.spec["status"],
+        )
+
+ACTUAL SOURCE aip_task_store.py:__init__
+def __init__(self, connect_factory: ConnectFactory | None = None, *, _analysis_resume_session=None) -> None:
+        if _analysis_resume_session is not None:
+            from aos_api.ecommerce_analysis_data_resume import _AnalysisDataResumeSession
+            from aos_api.ecommerce_analysis_snapshot_resume import _AnalysisSnapshotResumeSession
+            if type(_analysis_resume_session) not in (_AnalysisDataResumeSession, _AnalysisSnapshotResumeSession):
+                raise TypeError("exact internal analysis resume session required")
+        self._analysis_resume_session = _analysis_resume_session
+        self._connect_factory = connect_factory or db_connect
+
+ACTUAL SOURCE aip_responsibility_template_authority.py:__init__
+def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        *,
+        release_root: Path | None = None,
+    ) -> None:
+        self._connect_factory = connect_factory or db_connect
+        self._explicit_release_root = release_root is not None
+        self._release_root = release_root or (
+            Path(__file__).resolve().parents[3] / "bundles/releases/ecommerce"
+        )
+
+HTTP TEST SOURCE
+"""Media reads preserve missing production roots and source failures."""
+import pytest
+from aos_api.routers import ecommerce_workshop as routes
+from aos_api.tenant_scope import TenantScope
+from test_ecommerce_workshop_read_http import client_with_catalogs, ReadReached
+
+PATHS = ['/views/media-studio/full-production-scenario', '/views/media-studio/workflow/drafts']
+
+
+def admit(reader):
+    reader.get_readiness = lambda **scope: reader.calls.append(scope)
+
+
+@pytest.mark.parametrize('path', PATHS)
+def test_media_read_uses_selected_admission(path):
+    client, legacy, reader = client_with_catalogs()
+    assert client.get('/v1/ecommerce-workshop' + path).status_code == 404
+    assert not legacy.calls
+    assert reader.calls == [dict(module_id='ecommerce.media-studio', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])]
+
+
+def test_full_video_keeps_all_execution_commands_false():
+    client, legacy, reader = client_with_catalogs()
+    admit(reader)
+    response = client.get('/v1/ecommerce-workshop' + PATHS[0])
+    assert response.status_code == 200
+    data = response.json()
+    assert data['blockers'][0]['code'] == 'FULL_VIDEO_EXACT_ROOT_REQUIRED'
+    assert len(data['commands']) == 8
+    assert all(value is False for value in data['commands'].values())
+    assert all(stage['status'] == 'blocked' for stage in data['stages'])
+    assert not legacy.calls
+
+
+def test_draft_reader_receives_original_authenticated_scope():
+    client, legacy, reader = client_with_catalogs()
+    admit(reader)
+    class Probe:
+        def list(self, scope):
+            assert scope == TenantScope('org-org', 'dev-project')
+            raise ReadReached('media-draft-source')
+    client.app.dependency_overrides[routes.get_ecommerce_media_internal_workflow] = lambda: Probe()
+    with pytest.raises(ReadReached, match='media-draft-source'):
+        client.get('/v1/ecommerce-workshop' + PATHS[1])
+    assert not legacy.calls
+
+
+@pytest.mark.parametrize('path', PATHS)
+def test_media_unknown_query_cannot_override_tenant(path):
+    client, legacy, reader = client_with_catalogs()
+    assert client.get('/v1/ecommerce-workshop' + path + '?orgId=dev-org').status_code == 400
+    assert not reader.calls and not legacy.calls
+
+SOURCE READONLY CAUTION
+The generic Store defaults READ WRITE. Actual list path only tenant SELECT and pure decoding; no writes/resolve/execute invoked. Real normal runtime readonly diagnostic separately shows0drafts, not positive production proof. Prior52+2failed dummy connection ->same54pass isolated after required roles;not extra tests. Original161 migration untouched. r5 NEED_EVIDENCE was notPASS; premature deployment reverted and650 unchanged. This candidate is now uncommitted,undeployed pending independent PASS.

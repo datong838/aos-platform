@@ -1,0 +1,17 @@
+{
+  "diagnosticOnly": true,
+  "notHumanAuthentication": true,
+  "causeChain": [
+    {
+      "type": "RegistryIntegrityCorruptError",
+      "sqlstate": null,
+      "primary": null
+    },
+    {
+      "type": "ValueError",
+      "sqlstate": null,
+      "primary": null
+    }
+  ],
+  "businessComplete": false
+}

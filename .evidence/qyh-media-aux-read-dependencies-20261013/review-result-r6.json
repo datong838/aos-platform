@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-media-aux-read-dependencies-20261013-r6",
+    "task_id": "qyh-media-aux-read-dependencies-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "83759647905c40a20a93cd6b8d2bdc73c5063c45",
+      "authority_revision": "AOS-002017",
+      "files": {
+        ".evidence/qyh-media-aux-read-dependencies-20261013/review-package-r6.txt": "f900adf28fba810ef5a303a5eea8eb4129f877df22a291bd905b62b845d68795"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "同一已测试Media两GET候选只改目录参数及明确白名单，原函数体/其他GET/POST/写factory保留；实际源码list_briefs仅tenant SELECT，解析和构造无写/网络，Store默认readwrite局限明确。真实原runtime只读诊断草稿0及视频8命令false不计非空产物或经营闭环。",
+        "evidence": "文件 diff 显示仅两处函数签名由 CatalogDependency 改为 ReadCatalogDependency（ecommerce_workshop.py:1833、1944）；PATHS 加入 full-production-scenario 与 workflow/drafts；test_ecommerce_workshop_read_http.py 白名单扩展；source 摘录显示 list_briefs 仅执行 tenant scoped SELECT，_brief/_load 纯解码；transitive-read-audit.json status=ACTUAL_CALL_PATH_STATIC_AUDITED_NATIVE_PENDING，businessComplete=false，connectionCaveat 声明 Store 默认读写字段为读写。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "原相同54测试：52通过加2因dummy连接失败，补isolated迁移角色后54全部通过；两次setup拒绝保留且原161身份门未改。完整首个r2 traceback及测试差异、独立tmpfs实例CID/finishedAt/原先库count0观察已补证；临时实例已停，原650不变。r5 NEED_EVIDENCE未当合法PASS，提前切换已撤回，当前候选未部署。",
+        "evidence": "FILE test-count-delta.json 记录 52passed/2failed 及 isolatedR1/R2 setup 错误与 R3 54passed；isolated-r2-first-full-setup-trace.txt 提供首次 r2 E Errors 完整堆栈；isolated-terminal-readback.json 与 isolated-pg-terminal.json 确认 CID/finishedAt/前次 count0 观察与已停；reviewgate-correction.json 确认 r5 verdict=NEED_EVIDENCE、未部署状态与 650 不变；review-package-r6.txt 首行 CANDIDATE IDENTICAL TO ISOLATED54 TESTED VERSION;NOT DEPLOYED。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "保留当前未部署候选与 AOS-002017 基线；补证两件事：（1）对 aip_production_contract_store.__init__ 的 connect_factory 默认路径提供运行时只读保障依据（如 native-two-r1.json 的 transactionReadOnly 覆盖或应用层 readonly 维护强制），证明 Store 默认读写字段在当前 HTTP 路径下不触发写；（2）以独立核查重跑 isolated r3，报告新增的两条 GET 路由与其余 52 路由对比的最小回归集合与未引入新失败。两份证据齐全后再申请判定 PASS。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

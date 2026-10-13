@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-media-aux-read-dependencies-20261013-r7",
+    "task_id": "qyh-media-aux-read-dependencies-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "83759647905c40a20a93cd6b8d2bdc73c5063c45",
+      "authority_revision": "AOS-002017",
+      "files": {
+        ".evidence/qyh-media-aux-read-dependencies-20261013/review-package-r7.txt": "1007504542318082dac0cb44017f2dfbac244f4263c51fe321ad86f2829f55b7"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "同一Media两GET候选仅目录参数及白名单改动。实际Store list调用只有tenant SELECT和纯解析，默认readwrite局限不隐瞒；原管理入口强制default_transaction_read_only=on，并已用其原实际普通身份确认通用db.connect事务readonly、草稿0，原启动约束测试1PASS。视频8命令false，未计生产或业务完成。",
+        "evidence": "materials.review-package-r7.txt diff显示ecommerce_workshop.py中list_media_internal_workflows与get_ecommerce_workshop_media_studio_full_production_scenario由CatalogDependency改为ReadCatalogDependency;source aip_production_contract_store.py list_briefs仅SELECT+json.loads;source actual_http_identity_readonly-r1.json genericStoreConnectTransactionReadOnly:true,draftCount:0,writesInitiated:false,diagnosticOnly:true,businessComplete:false;readonly-launch-test.txt 1 passed;actual源notLiveCandidateHttpAcceptance:true",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原54用例全隔离PASS和52+2差异已据原日志说明，原161 owner门拒绝及临时实例终态保留；新增独立tmpfs cluster六新HTTP用例+两原真实PG集成共8PASS，count0原查询输出/核验时间/FinishedAt明确。候选源码hash未变、原迁移未改、原权威PG无写，r5/r6 NEED_EVIDENCE未视合法PASS，提前切换已撤回，当前候选未部署。",
+        "evidence": "tests-isolated-r3.txt 54 passed;isolated-pg-terminal.json remainingFixtureDatabases:0 running:false;tests-isolated-independent-r4.txt 8 passed;isolated-r4-terminal.json countQueryOutput:0 countQueryVerifiedAt:2026-10-13T12:10:49.094143+00:00 finishedAt:...Z originalPgTouched:false;reviewgate-correction.json r5Verdict:NEED_EVIDENCE correctiveRevert present;transitive-read-audit.json status含CANDIDATE_LIVE_HTTP_PENDING,businessComplete:false,FILE CANDIDATE IDENTICAL... NOT DEPLOYED",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前未部署状态，待独立审计确认ReadCatalogDependency选路在live HTTP下仍保持readonly且零写操作后，再以新基线重新发起审核。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

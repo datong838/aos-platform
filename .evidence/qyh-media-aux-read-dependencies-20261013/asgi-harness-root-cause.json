@@ -1,0 +1,9 @@
+{
+  "rootCause": "diagnostic omitted AOS_LOCAL_MANAGEMENT_OIDC_CONFIG marker required by original installed read catalog builder",
+  "source": "ecommerce_installed_readonly_catalog.py:78",
+  "actualServiceSetsMarker": "serve_management_readonly sets marker after original validated config",
+  "originalGateCorrectlyRejected": true,
+  "tenantContextHypothesisNotCause": true,
+  "repair": "load original private OIDC config via original validated entry and marker,fixturePrincipal remains explicit diagnostic-only,no auth or approval claim",
+  "noProductCodeOrDbPermissionChanges": true
+}

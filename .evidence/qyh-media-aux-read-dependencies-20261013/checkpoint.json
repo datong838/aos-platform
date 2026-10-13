@@ -6,7 +6,7 @@
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
   "authority_revision": "AOS-002017",
   "task_base_revision": "AOS-002017",
-  "step": "5/8 isolated54PASS; r5 NEED_EVIDENCE legally consumed,notPASS; prematureAPI switch corrected by ownrevert and supported restoration95538/same97code;650 unchanged; supplemental independent evidence review pending",
+  "step": "5/8 candidate54 unchanged;actual HTTP management identity readonly proof/launch1/independent8 pass;ASGI2GET realcatalog+Store200 after original OIDC marker repair,unknown400/POST405;650 unchanged; r6/r7 NEED_EVIDENCE,notPASS;next new exact review supplement ASGI before production switch",
   "candidateCodeFiles": [
     "services/aos-api/aos_api/routers/ecommerce_workshop.py",
     "services/aos-api/tests/test_ecommerce_workshop_read_http.py",
@@ -23,7 +23,7 @@
     "apiCodeContentSameAs": "97c7509f395e2c976022df8db4ae6602906fb396",
     "webPid": 81203
   },
-  "nextAction": "Supplement r5 requested two-test delta/inittrace/exact terminal facts;actual method source excerpts;new review only,assert verdict PASS before subsequent effect",
+  "nextAction": "Freeze exact new review with ASGI r3 source+result/harness failures+root cause and actual role readonly;explicit test-onlyPrincipal not真人;only verdict PASS and strict consumed status permit later supported candidate API-only update,then true OIDC/browser and live independent review/Delivery",
   "isolatedVerification": {
     "passes": 54,
     "fixtureCluster": "7696118414481760296",
@@ -36,7 +36,9 @@
     "r1": "terminal fenced JSON refused",
     "r2": "terminal baseline mismatch refused",
     "r3": "terminal fenced JSON refused",
-    "consumed": false
+    "consumed": false,
+    "r6": "NEED_EVIDENCE;PASS assertion blocked all effects",
+    "r7": "NEED_EVIDENCE;noeffects;requested actualHTTP audit now has bounded realcatalog/Store ASGI proof"
   },
-  "candidateStatus": "Own candidate retained in f28 commit and review package;working production files reverted,no candidate deployment"
+  "candidateStatus": "same f28 candidate re-applied uncommitted;current service95538 remains restored original97 content"
 }

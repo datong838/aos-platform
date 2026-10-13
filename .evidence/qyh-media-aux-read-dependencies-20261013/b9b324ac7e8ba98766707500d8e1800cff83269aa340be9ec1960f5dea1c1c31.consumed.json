@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-media-aux-read-dependencies-20261013-r5",
+  "task_id": "qyh-media-aux-read-dependencies-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "f2a99b63742dcefee8934180f0179d2028370a31",
+    "authority_revision": "AOS-002017",
+    "files": {
+      ".evidence/qyh-media-aux-read-dependencies-20261013/review-package-r4.txt": "432f9d554ed20d8d464f374dd2e4e84b5b56abb219daf8b7929c015f4ff2676f"
+    }
+  },
+  "status": "NEED_EVIDENCE",
+  "execution_authorized": false,
+  "result_sha256": "d17a6ed5c15d78e0eeaa66f5e1f9e2ba7ff8c63d5b5d07b5b4c6351bdb6e9141",
+  "transport_sha256": "27283b18e193910a70929c03dbe42bfcf7195436cc096b0aaa3e931e0b74456f"
+}

@@ -1,7 +1,7 @@
 {
   "head": "d51a6a18fc8ec1140a5954e33ab72d38cd310627",
   "authority": "AOS-002017",
-  "status": "ACTUAL_CALL_PATH_STATIC_AUDITED_NATIVE_PENDING",
+  "status": "STATIC_CALL_PATH_AND_NORMAL_RUNTIME_PLUS_ACTUAL_MANAGEMENT_IDENTITY_DIAGNOSTICS_VERIFIED_CANDIDATE_LIVE_HTTP_PENDING",
   "sourceHashes": {
     "routers/ecommerce_workshop.py": "e397893d1550436f8060066dfd08f9b041af338ce25e0a17404f4895a7c1eb35",
     "ecommerce_workshop_full_video_scenario.py": "b0aa142436483d6edf0341a2bdffc553a00b72f6c0fdeb88f702f81814d63a0e",
@@ -26,5 +26,11 @@
     "export",
     "publish"
   ],
-  "businessComplete": false
+  "businessComplete": false,
+  "newEvidence": [
+    "native-two-r1.json",
+    "actual-http-identity-readonly-r1.json",
+    "readonly-launch-test.txt",
+    "tests-isolated-independent-r4.txt"
+  ]
 }

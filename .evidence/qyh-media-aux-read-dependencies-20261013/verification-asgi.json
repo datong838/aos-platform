@@ -1,0 +1,15 @@
+{
+  "twoGetStatus200": true,
+  "realCatalogAndStore": true,
+  "actualManagementIdentityReadOnly": true,
+  "principalExplicitFixtureOnly": true,
+  "notRealHumanAuthentication": true,
+  "draftCount0": true,
+  "fullVideoAll8CommandsFalse": true,
+  "unknownQuery400": true,
+  "postBlocked405": true,
+  "all650FingerprintUnchanged": true,
+  "candidateLiveServiceUpdated": false,
+  "independentQualityStillNotPASS": true,
+  "businessComplete": false
+}
