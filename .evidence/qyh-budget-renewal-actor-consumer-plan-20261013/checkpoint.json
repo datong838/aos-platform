@@ -3,7 +3,8 @@
   "thread": "01a13484-f019-7d82-94ce-812396db9124",
   "task_id": "qyh-budget-renewal-actor-consumer-plan-20261013",
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
-  "authority_revision": "AOS-002024",
+  "authority_revision": "AOS-002025",
   "task_base_revision": "AOS-002024",
-  "step": "1/8 fullrenewal actor/consumer plan before newexactcodingTask,noeffects"
+  "step": "8/8 fullA/B/Cfileplan+independentr2PASSconsumed/planonlyDelivery;noapproval/effects",
+  "nextTask": "qyh-budget-policy-renewal-authority-20261013"
 }

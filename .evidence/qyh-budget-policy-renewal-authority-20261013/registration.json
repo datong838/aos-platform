@@ -1,0 +1,35 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-budget-policy-renewal-authority-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002025",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/aip_budget_policy_renewal_contracts.py",
+    "aos-platform/services/aos-api/aos_api/aip_budget_policy_renewal_identity.py",
+    "aos-platform/services/aos-api/aos_api/aip_budget_policy_renewal_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_budget_policy_renewal_authority.sql",
+    "aos-platform/services/aos-api/alembic/versions/a0v_162_budget_policy_renewal.py",
+    "aos-platform/services/aos-api/tests/aip/test_budget_policy_renewal_contracts.py",
+    "aos-platform/services/aos-api/tests/aip/test_budget_policy_renewal_identity.py",
+    "aos-platform/services/aos-api/tests/aip/test_budget_policy_renewal_pg.py",
+    "aos-platform/.evidence/qyh-budget-policy-renewal-authority-20261013",
+    "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md"
+  ],
+  "excluded_scope": [
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_policy.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_budget_cost_runtime.py",
+    "aos-platform/services/aos-api/aos_api/aip_budget_reservation_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_model_eval_budget_reservation.py",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume",
+    "aos-platform/.evidence/qyh-full-system-restoration-20261011"
+  ],
+  "expected_outputs": [
+    "FullA typedrenewal/realidentity/Ownerjournal+exactSQL/migration162 defaultclosed,REDthenminimumimplementation andrealisolatedPGpositiveatomicpublish/ref/CAS/Receipt +allfailclosednegative/crossTenant/no directgrants",
+    "Independentcode+readback materialPASS legalconsumption,accuratecandidateDelivery;originalPolicyACTIVEguard/PGreadonly650/Host/Provider OFF/solehumanapproval preserved,B/C/fullGoal explicitpending"
+  ],
+  "lease_expires_at": "2026-10-13T19:51:40.627178+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-13T23:51:40+08:00"
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-budget-renewal-actor-consumer-plan-20261013-plan-r2",
+  "task_id": "qyh-budget-renewal-actor-consumer-plan-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "78f3fb6f284431fdbd694fd6217d4ff69e91a549",
+    "authority_revision": "AOS-002024",
+    "files": {
+      ".evidence/qyh-budget-renewal-actor-consumer-plan-20261013/review-plan-package-r2.txt": "fbb0f412a9e7fdb6af4dd6e25fa429cb74e4533671f478fd8e1435cdbf0776f8"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "a24237d85f4a62a68a1535b56a0a30b627b9a0a60529e974f7615b92c96dd4a5",
+  "transport_sha256": "f6dc1014db47e2c16953995737fd0d70d9ae5d0a10bbfd333ab33628a91f28b9"
+}

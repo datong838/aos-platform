@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-budget-renewal-actor-consumer-plan-20261013-plan-r2",
+    "task_id": "qyh-budget-renewal-actor-consumer-plan-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "78f3fb6f284431fdbd694fd6217d4ff69e91a549",
+      "authority_revision": "AOS-002024",
+      "files": {
+        ".evidence/qyh-budget-renewal-actor-consumer-plan-20261013/review-plan-package-r2.txt": "fbb0f412a9e7fdb6af4dd6e25fa429cb74e4533671f478fd8e1435cdbf0776f8"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The full plan binds a real independent machine maker and the sole approved human checker without inventing a second human or weakening existing authentication.",
+        "evidence": "材料.4.身份与可信边界:2.1节明确maker为独立服务DB登录角色aos_budget_renewal_maker_call，NOINHERIT、无SUPER/BYPASS/CREATE/REPLICATION、无任何角色成员关系；迁移默认NOLOGIN；机器subject由可信函数根据实际session_user确定，请求中makerSubject不可用于冒充。2.2节checker为固定ProtectedCheckerBinding的真实OIDC subject，复用原JWT resolver核验issuer/audience/exp/租户与membership，配置摘要在服务启动验证；2.3节三个caller（machine/issuer/consumer）默认NOLOGIN、互相不授role。原preflight.Baseline代码require_human_oidc在方案中不被复用给机器，方案要求单独登记真实服务身份。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The full plan preserves the original policy authority and active publication guard while adding current-locked, CAS and Receipt-bound renewal consumption.",
+        "evidence": "材料第1.2节明确原AipModelGovernancePolicyStore.publish_budget对ACTIVE输入保留BudgetPolicyApprovalRequired；新有界发布为原authority的专门消费入口，不删原guard。第3.Cconsume合同规定目标draft严格再parse、activebody/hash/approval slot一一对应、target revision source+1、CAS UPDATE head version/version且rowcount必须为1否则rollback；source/budget/provider/current exact、真人decision完整重算。第3.D reconcile规定历史Receipt和canonical历史revision证明返回observed。Baseline存储代码aip_model_governance_policy_store.py:176的_require_budget_revision与:150的require_model_dependencies被保留作为依赖门，ACTIVE发布仍抛出PolicyApprovalRequired。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The plan scopes staged files and real isolated verification while retaining all missing deployment, price, source and business Goal requirements.",
+        "evidence": "材料第5节将实施按A/B/C三波分波：A（身份与持久化）、B（issuer/consumer端到端）、C（真实入口与页面），明确C需原预算页面路由审计后精确列名，gateway默认closed，真实部署/服务身份/真人未确认前不启用；且不得以UI按钮可点或tests当作预算生效。第7节列出当前缺口：source selection/control/schedulebinding/definition exact为0、65 ScheduleRun 12 running/12 disabled、canonicalBudget revision 1已active但policy窗口已过、ModelPriceSnapshot等价格/模型绑定依赖更新须另登记。第8节强调plan PASS只允许冻结codingTask，不授真实DML或批准；真实部署/TCB/真人动作/Price/Runtime更新均需独立证据，未证明项持续列账。第9节重申新receipt不替代ProviderReady或自然首链完成。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "按计划第5节A波冻结编码任务范围，在独立隔离PG上实现aip_budget_policy_renewal_identity.py、store.py与authority.sql，跑第6节真实隔离PG验证矩阵（并发CAS、撤销/吊销、role NOLOGIN默认、PUBLIC grants清理、FORCE RLS可见性、generic ACTIVE publish仍返回422）并产出独立PASS记录；不启动C波页面与gateway，不以任何测试结果声称业务完成。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}
