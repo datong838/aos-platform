@@ -1,0 +1,140 @@
+{
+  "phase": "SOURCE_AUDIT_ONLY_NO_REPAIR_YET",
+  "routerSha256": "1801e022d3037de4044aa40e89ddffa7b6878f5b8c15a27084090972cfaa30ed",
+  "originalEightGetHandlers": [
+    {
+      "function": "get_ecommerce_workshop_operations_view",
+      "line": 1362,
+      "catalogDependency": true,
+      "guardCalls": [
+        "_require_operations_installation"
+      ],
+      "source": "def get_ecommerce_workshop_operations_view(\n    request: Request,\n    principal: PrincipalDependency,\n    catalog: CatalogDependency,\n    operations: OperationsDependency,\n) -> WorkshopOperationsViewEnvelope:\n    _reject_query_parameters(request)\n    _require_operations_installation(principal=principal, catalog=catalog)\n    return operations.read(\n        org_id=principal.org_id,\n        project_id=principal.project_id,\n    )"
+    },
+    {
+      "function": "get_ecommerce_workshop_content_campaign_view",
+      "line": 1402,
+      "catalogDependency": true,
+      "guardCalls": [
+        "_require_content_campaign_installation"
+      ],
+      "source": "def get_ecommerce_workshop_content_campaign_view(\n    request: Request,\n    principal: PrincipalDependency,\n    catalog: CatalogDependency,\n    content_campaign: ContentCampaignDependency,\n) -> WorkshopContentCampaignViewEnvelope:\n    _reject_query_parameters(request)\n    _require_content_campaign_installation(principal=principal, catalog=catalog)\n    return content_campaign.read(\n        org_id=principal.org_id,\n        project_id=principal.project_id,\n    )"
+    },
+    {
+      "function": "get_ecommerce_workshop_creator_growth_view",
+      "line": 1489,
+      "catalogDependency": true,
+      "guardCalls": [
+        "_require_creator_growth_installation"
+      ],
+      "source": "def get_ecommerce_workshop_creator_growth_view(\n    request: Request,\n    principal: PrincipalDependency,\n    catalog: CatalogDependency,\n    creator_growth: CreatorGrowthDependency,\n) -> WorkshopCreatorGrowthViewEnvelope:\n    _reject_query_parameters(request)\n    _require_creator_growth_installation(principal=principal, catalog=catalog)\n    return creator_growth.read(\n        org_id=principal.org_id,\n        project_id=principal.project_id,\n    )"
+    },
+    {
+      "function": "get_ecommerce_workshop_media_studio_view",
+      "line": 1771,
+      "catalogDependency": true,
+      "guardCalls": [
+        "_require_media_studio_installation"
+      ],
+      "source": "def get_ecommerce_workshop_media_studio_view(\n    request: Request,\n    principal: PrincipalDependency,\n    catalog: CatalogDependency,\n    media_studio: MediaStudioDependency,\n) -> WorkshopMediaStudioViewEnvelope:\n    _reject_query_parameters(request)\n    _require_media_studio_installation(principal=principal, catalog=catalog)\n    return media_studio.read(\n        org_id=principal.org_id,\n        project_id=principal.project_id,\n    )"
+    },
+    {
+      "function": "get_ecommerce_workshop_analyst_view",
+      "line": 1949,
+      "catalogDependency": true,
+      "guardCalls": [
+        "_require_analyst_installation"
+      ],
+      "source": "def get_ecommerce_workshop_analyst_view(\n    request: Request,\n    principal: PrincipalDependency,\n    catalog: CatalogDependency,\n    analyst: AnalystDependency,\n) -> WorkshopAnalystViewEnvelope:\n    _reject_query_parameters(request)\n    _require_analyst_installation(principal=principal, catalog=catalog)\n    return analyst.read(org_id=principal.org_id, project_id=principal.project_id)"
+    },
+    {
+      "function": "get_ecommerce_workshop_price_governance_view",
+      "line": 1986,
+      "catalogDependency": true,
+      "guardCalls": [
+        "_require_price_governance_installation"
+      ],
+      "source": "def get_ecommerce_workshop_price_governance_view(\n    request: Request,\n    principal: PrincipalDependency,\n    catalog: CatalogDependency,\n    price_governance: PriceGovernanceDependency,\n) -> WorkshopPriceGovernanceViewEnvelope:\n    _reject_query_parameters(request)\n    _require_price_governance_installation(principal=principal, catalog=catalog)\n    return price_governance.read(org_id=principal.org_id, project_id=principal.project_id)"
+    },
+    {
+      "function": "get_ecommerce_workshop_customer_view",
+      "line": 2301,
+      "catalogDependency": true,
+      "guardCalls": [
+        "_require_customer_installation"
+      ],
+      "source": "def get_ecommerce_workshop_customer_view(\n    request: Request,\n    principal: PrincipalDependency,\n    catalog: CatalogDependency,\n    customer: CustomerDependency,\n) -> WorkshopCustomerViewEnvelope:\n    _reject_query_parameters(request)\n    _require_customer_installation(principal=principal, catalog=catalog)\n    return customer.read(org_id=principal.org_id, project_id=principal.project_id)"
+    },
+    {
+      "function": "get_ecommerce_workshop_task_cockpit_core",
+      "line": 2888,
+      "catalogDependency": true,
+      "guardCalls": [
+        "_require_task_cockpit_installation"
+      ],
+      "source": "def get_ecommerce_workshop_task_cockpit_core(\n    request: Request,\n    principal: PrincipalDependency,\n    catalog: CatalogDependency,\n    cockpit: TaskCockpitDependency,\n    status: Annotated[TaskStatus | None, Query()] = None,\n    limit: Annotated[int, Query(ge=1, le=100)] = 50,\n    cursor: Annotated[str | None, Query(min_length=1, max_length=4096)] = None,\n) -> TaskCockpitCoreEnvelope:\n    _reject_unknown_query_parameters(\n        request, allowed=frozenset({\"status\", \"limit\", \"cursor\"})\n    )\n    _require_task_cockpit_installation(\n        principal=principal,\n        catalog=catalog,\n    )\n    try:\n        return cockpit.read_core(\n            org_id=principal.org_id,\n            project_id=principal.project_id,\n            status=status,\n            limit=limit,\n            cursor=cursor,\n        )\n    except TaskCockpitPersistenceError as exc:\n        raise ApiError(\n            code=\"TASK_COCKPIT_DEPENDENCY_UNAVAILABLE\",\n            message=\"Task Cockpit read dependency is unavailable\",\n            status_code=503,\n        ) from exc"
+    }
+  ],
+  "signedModuleScopeProjection": [
+    {
+      "moduleId": "ecommerce.task-cockpit",
+      "declaredDataScopes": [
+        "ecommerce.workshop.read"
+      ],
+      "dataScopeNotGrantedBlockerPresent": false
+    },
+    {
+      "moduleId": "ecommerce.content-campaign",
+      "declaredDataScopes": [
+        "ecommerce.workshop.read"
+      ],
+      "dataScopeNotGrantedBlockerPresent": false
+    },
+    {
+      "moduleId": "ecommerce.operations",
+      "declaredDataScopes": [
+        "ecommerce.workshop.read"
+      ],
+      "dataScopeNotGrantedBlockerPresent": false
+    },
+    {
+      "moduleId": "ecommerce.creator-growth",
+      "declaredDataScopes": [
+        "ecommerce.workshop.read"
+      ],
+      "dataScopeNotGrantedBlockerPresent": false
+    },
+    {
+      "moduleId": "ecommerce.media-studio",
+      "declaredDataScopes": [
+        "ecommerce.workshop.read"
+      ],
+      "dataScopeNotGrantedBlockerPresent": false
+    },
+    {
+      "moduleId": "ecommerce.analyst",
+      "declaredDataScopes": [
+        "ecommerce.workshop.read"
+      ],
+      "dataScopeNotGrantedBlockerPresent": false
+    },
+    {
+      "moduleId": "ecommerce.price-governance",
+      "declaredDataScopes": [
+        "ecommerce.workshop.read"
+      ],
+      "dataScopeNotGrantedBlockerPresent": false
+    },
+    {
+      "moduleId": "ecommerce.customer",
+      "declaredDataScopes": [
+        "ecommerce.workshop.read"
+      ],
+      "dataScopeNotGrantedBlockerPresent": false
+    }
+  ],
+  "finding": "Every original root GET calls legacy-only CatalogDependency installation guard before its actual reader. Current signed runtime-only ACTIVE5 is filtered out despite granted ecommerce.workshop.read. Therefore installation guard creates404 before business readiness or budget is evaluated. Reader side effects/transitive calls still need audit; no GET source/Provider execution performed.",
+  "writes": false,
+  "externalRead": false,
+  "budgetActivation": false
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-native-readmodel-installed-gate-20261013-adapter-r1",
+  "task_id": "qyh-native-readmodel-installed-gate-20261013",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "baseline": {
+    "head": "98642f8bdde5f837310f281efed8fce2b0a8d1aa",
+    "authority_revision": "AOS-002011",
+    "files": {
+      ".evidence/qyh-native-readmodel-installed-gate-20261013/review-material-0.txt": "4270152eb6365fe1d2b81df972b26252fcd3f741e45fb928b34904dc16b178fb",
+      ".evidence/qyh-native-readmodel-installed-gate-20261013/review-material-1.txt": "eeb97b4ee29bbe200596ec589038b6cf1bf85b66a28aab208f38892ac33b159a",
+      ".evidence/qyh-native-readmodel-installed-gate-20261013/review-material-2.txt": "698cd181755cb4fc45f26e1ed367d4af9074eb20a41f980dc15163e23be69a0f",
+      ".evidence/qyh-native-readmodel-installed-gate-20261013/review-material-3.txt": "ece044e8bb090fabebcef075b58e7a2da0d89828846037186efbdb53d6072f7b",
+      ".evidence/qyh-native-readmodel-installed-gate-20261013/review-material-4.txt": "c3dc2a9661a8a4184d08bfd005b141729add24a111641cdead8280e137048751"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "da85118cfeb1cfa7df7341f9614fa84719ac3e6059c9c2f90b6d733b576f9094",
+  "transport_sha256": "0072fababb67d45364d509424ea387a059e08dd1baf61e6d8d0558f20b9efd74"
+}

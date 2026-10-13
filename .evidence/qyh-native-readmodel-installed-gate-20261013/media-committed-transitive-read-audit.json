@@ -1,0 +1,220 @@
+{
+  "head": "98642f8bdde5f837310f281efed8fce2b0a8d1aa",
+  "status": "CALL_EXTRACTION_FOR_CONTENT_REVIEW_NOT_EFFECT_PROOF",
+  "entries": [
+    {
+      "file": "services/aos-api/aos_api/aip_action_execution.py",
+      "method": "get_execution_view_for_scope",
+      "line": 929,
+      "endLine": 940,
+      "methodSha256": "51c65d0f4b5da4705fc7aff2402956c318385a2f61c732340d3a05b44072adea",
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_action_execution_lease\\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\\n                   ORDER BY attempt DESC, created_at DESC LIMIT 1', (*scope.key, proposal_id)).fetchone",
+        "connect",
+        "self._view"
+      ],
+      "source": "def get_execution_view_for_scope(\n        self, scope: TenantScope, proposal_id: str\n    ) -> ActionExecutionView:\n        \"\"\"Read the same projection for an already authenticated tenant-bound caller.\"\"\"\n        with connect(scope) as conn:\n            lease = conn.execute(\n                \"\"\"SELECT * FROM aip_action_execution_lease\n                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s\n                   ORDER BY attempt DESC, created_at DESC LIMIT 1\"\"\",\n                (*scope.key, proposal_id),\n            ).fetchone()\n        return self._view(scope, proposal_id, lease)",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_action_store.py",
+      "method": "list_proposals",
+      "line": 1181,
+      "endLine": 1187,
+      "methodSha256": "0515b3e4fbbfecfd1a48a5066488652f0772e9159d8c4cb906389061826cca9c",
+      "calls": [
+        "conn.execute",
+        "conn.execute('SELECT proposal_id FROM aip_action_proposal WHERE org_id=%s AND project_id=%s ORDER BY updated_at DESC,proposal_id DESC LIMIT %s', (*scope.key, limit)).fetchall",
+        "self._bundle",
+        "self._connect"
+      ],
+      "source": "def list_proposals(self, scope: TenantScope, limit: int = 100) -> list[ActionDraftBundle]:\n        with self._connect(scope) as conn:\n            rows = conn.execute(\n                \"SELECT proposal_id FROM aip_action_proposal WHERE org_id=%s AND project_id=%s ORDER BY updated_at DESC,proposal_id DESC LIMIT %s\",\n                (*scope.key, limit),\n            ).fetchall()\n            return [self._bundle(conn, scope, row[\"proposal_id\"]) for row in rows]",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_start_service.py",
+      "method": "list",
+      "line": 156,
+      "endLine": 169,
+      "methodSha256": "fcfbd2733b2bb0687208679931e18fb0a2680d27ed5ff682e183738da236ba87",
+      "calls": [
+        "ProductionStartDecisionListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_production_start_decision\\n                   WHERE org_id=%s AND project_id=%s\\n                   ORDER BY created_at DESC,decision_id', scope.key).fetchall",
+        "len",
+        "self._connect_factory",
+        "self._decision"
+      ],
+      "source": "def list(self, scope: TenantScope) -> ProductionStartDecisionListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT * FROM aip_production_start_decision\n                   WHERE org_id=%s AND project_id=%s\n                   ORDER BY created_at DESC,decision_id\"\"\",\n                scope.key,\n            ).fetchall()\n        items = [self._decision(scope, row) for row in rows]\n        return ProductionStartDecisionListResponse(\n            tenant={\"orgId\": scope.org_id, \"projectId\": scope.project_id},\n            items=items,\n            count=len(items),\n        )",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_provider_job_store.py",
+      "method": "list_jobs",
+      "line": 389,
+      "endLine": 409,
+      "methodSha256": "7c4bb023751cd492a734500ab13d456fb2ea5c2e0305c7d8f244926e5e8c737a",
+      "calls": [
+        "MediaProviderJobConflict",
+        "MediaProviderJobListResponse",
+        "conn.execute",
+        "conn.execute('SELECT j.*,e.sequence,e.status,e.blocker_codes,e.created_at AS updated_at\\n                   FROM aip_media_provider_job j\\n                   JOIN LATERAL (\\n                     SELECT sequence,status,blocker_codes,created_at\\n                     FROM aip_media_provider_job_event\\n                     WHERE org_id=j.org_id AND project_id=j.project_id AND job_id=j.job_id\\n                     ORDER BY sequence DESC LIMIT 1\\n                   ) e ON TRUE\\n                   WHERE j.org_id=%s AND j.project_id=%s\\n                   ORDER BY j.created_at DESC,j.job_id LIMIT %s', (*scope.key, limit)).fetchall",
+        "len",
+        "self._connect",
+        "self._job",
+        "self._tenant"
+      ],
+      "source": "def list_jobs(self, scope: TenantScope, *, limit: int = 100) -> MediaProviderJobListResponse:\n        if not 1 <= limit <= 100:\n            raise MediaProviderJobConflict(\"MEDIA_JOB_LIMIT_INVALID\")\n        with self._connect(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT j.*,e.sequence,e.status,e.blocker_codes,e.created_at AS updated_at\n                   FROM aip_media_provider_job j\n                   JOIN LATERAL (\n                     SELECT sequence,status,blocker_codes,created_at\n                     FROM aip_media_provider_job_event\n                     WHERE org_id=j.org_id AND project_id=j.project_id AND job_id=j.job_id\n                     ORDER BY sequence DESC LIMIT 1\n                   ) e ON TRUE\n                   WHERE j.org_id=%s AND j.project_id=%s\n                   ORDER BY j.created_at DESC,j.job_id LIMIT %s\"\"\",\n                (*scope.key, limit),\n            ).fetchall()\n            items = [self._job(scope, row) for row in rows]\n            return MediaProviderJobListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_media_finance_store.py",
+      "method": "list",
+      "line": 213,
+      "endLine": 223,
+      "methodSha256": "e23ab7704f99aeb48baf8a15aa9b17a47adfe99b983a29bb46e308f44771d6cd",
+      "calls": [
+        "MediaFinanceConflict",
+        "MediaFinanceListResponse",
+        "conn.execute",
+        "conn.execute('SELECT finance_id FROM aip_media_attempt_finance\\n                   WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,finance_id LIMIT %s', (*scope.key, limit)).fetchall",
+        "len",
+        "self._connect",
+        "self._tenant",
+        "self.get"
+      ],
+      "source": "def list(self, scope: TenantScope, *, limit: int = 100) -> MediaFinanceListResponse:\n        if not 1 <= limit <= 100:\n            raise MediaFinanceConflict(\"MEDIA_FINANCE_LIMIT_INVALID\")\n        with self._connect(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT finance_id FROM aip_media_attempt_finance\n                   WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,finance_id LIMIT %s\"\"\",\n                (*scope.key, limit),\n            ).fetchall()\n            items = [self.get(scope, row[\"finance_id\"], conn=conn) for row in rows]\n            return MediaFinanceListResponse(tenant=self._tenant(scope), items=items, count=len(items))",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "get_responsibility_plan",
+      "line": 794,
+      "endLine": 808,
+      "methodSha256": "a54d25b030564095678d9ce1e31f1a8e79a7d66d332149dfc3c695dd529b5b43",
+      "calls": [
+        "ProductionContractNotFound",
+        "c.execute",
+        "c.execute('SELECT * FROM public.aip_responsibility_plan_head WHERE org_id=%s AND project_id=%s AND plan_id=%s', (*scope.key, plan_id)).fetchone",
+        "c.execute('SELECT * FROM public.aip_responsibility_plan_revision WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s', (*scope.key, plan_id, selected)).fetchone",
+        "int",
+        "read",
+        "self._connect_factory",
+        "self._responsibility_plan"
+      ],
+      "source": "def get_responsibility_plan(self, scope: TenantScope, plan_id: str, revision: int | None = None,\n                                *, conn: Any | None = None) -> ResponsibilityPlanRevision:\n        def read(c: Any) -> ResponsibilityPlanRevision:\n            head = c.execute(\"SELECT * FROM public.aip_responsibility_plan_head WHERE org_id=%s AND project_id=%s AND plan_id=%s\", (*scope.key, plan_id)).fetchone()\n            if not head:\n                raise ProductionContractNotFound(\"responsibility plan not found\")\n            selected = revision or int(head[\"current_revision\"])\n            row = c.execute(\"SELECT * FROM public.aip_responsibility_plan_revision WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s\", (*scope.key, plan_id, selected)).fetchone()\n            if not row:\n                raise ProductionContractNotFound(\"responsibility plan revision not found\")\n            return self._responsibility_plan(scope, row, int(head[\"version\"]), c)\n        if conn is not None:\n            return read(conn)\n        with self._connect_factory(scope) as c:\n            return read(c)",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_impact_previews",
+      "line": 1068,
+      "endLine": 1083,
+      "methodSha256": "b312044bd0dcd4a675aafbe2062cc14d14f1816296601d4ac7a75ade8b3735e7",
+      "calls": [
+        "ImpactPreviewListResponse",
+        "conn.execute",
+        "conn.execute('SELECT revision.*,head.version FROM aip_impact_preview_head head\\n                JOIN aip_impact_preview_revision revision ON revision.org_id=head.org_id\\n                  AND revision.project_id=head.project_id\\n                  AND revision.preview_id=head.preview_id\\n                  AND revision.revision=head.current_revision\\n                WHERE head.org_id=%s AND head.project_id=%s\\n                ORDER BY revision.created_at DESC,revision.preview_id', scope.key).fetchall",
+        "int",
+        "len",
+        "self._connect_factory",
+        "self._impact_preview",
+        "self._tenant"
+      ],
+      "source": "def list_impact_previews(self, scope: TenantScope) -> ImpactPreviewListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT revision.*,head.version FROM aip_impact_preview_head head\n                JOIN aip_impact_preview_revision revision ON revision.org_id=head.org_id\n                  AND revision.project_id=head.project_id\n                  AND revision.preview_id=head.preview_id\n                  AND revision.revision=head.current_revision\n                WHERE head.org_id=%s AND head.project_id=%s\n                ORDER BY revision.created_at DESC,revision.preview_id\"\"\",\n                scope.key,\n            ).fetchall()\n        items = [self._impact_preview(scope, row, int(row[\"version\"])) for row in rows]\n        return ImpactPreviewListResponse(\n            tenant=self._tenant(scope), items=items, count=len(items)\n        )",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_artifact_families",
+      "line": 2215,
+      "endLine": 2226,
+      "methodSha256": "d0bd68d1b55155e4b4c1b52e5b3193c60cf4ee62947599b8209e7fd67d1d2c17",
+      "calls": [
+        "ArtifactFamilyListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_artifact_family_head\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY updated_at DESC,family_id', scope.key).fetchall",
+        "len",
+        "self._artifact_family_view",
+        "self._connect_factory",
+        "self._tenant"
+      ],
+      "source": "def list_artifact_families(self, scope: TenantScope) -> ArtifactFamilyListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT * FROM aip_artifact_family_head\n                WHERE org_id=%s AND project_id=%s\n                ORDER BY updated_at DESC,family_id\"\"\",\n                scope.key,\n            ).fetchall()\n            items = [self._artifact_family_view(conn, scope, row) for row in rows]\n            return ArtifactFamilyListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_media_gate_sets",
+      "line": 2647,
+      "endLine": 2657,
+      "methodSha256": "64b76528baa0e278c0269045c79264d6261019f2c4c39481aa5a03cb02e7a8e4",
+      "calls": [
+        "MediaGateSetListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_media_gate_set_decision\\n                WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,gate_set_id', scope.key).fetchall",
+        "len",
+        "self._connect_factory",
+        "self._media_gate_set",
+        "self._tenant"
+      ],
+      "source": "def list_media_gate_sets(self, scope: TenantScope) -> MediaGateSetListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT * FROM aip_media_gate_set_decision\n                WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,gate_set_id\"\"\",\n                scope.key,\n            ).fetchall()\n            items = [self._media_gate_set(scope, row) for row in rows]\n            return MediaGateSetListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_review_issues",
+      "line": 2836,
+      "endLine": 2847,
+      "methodSha256": "4eb88ff8ed553c880366221cf139c835a610ea58cdbddfcdd9c34e024827be7a",
+      "calls": [
+        "ReviewIssueListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_review_issue\\n                WHERE org_id=%s AND project_id=%s\\n                ORDER BY updated_at DESC,issue_id', scope.key).fetchall",
+        "len",
+        "self._connect_factory",
+        "self._review_issue",
+        "self._tenant"
+      ],
+      "source": "def list_review_issues(self, scope: TenantScope) -> ReviewIssueListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT * FROM aip_review_issue\n                WHERE org_id=%s AND project_id=%s\n                ORDER BY updated_at DESC,issue_id\"\"\",\n                scope.key,\n            ).fetchall()\n            items = [self._review_issue(scope, row) for row in rows]\n            return ReviewIssueListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_return_decisions",
+      "line": 3107,
+      "endLine": 3128,
+      "methodSha256": "0431dcecb44d983e41a5585c56a0bde1cf940a8fd74d47f6afefa2bc11419d95",
+      "calls": [
+        "ReturnDecisionListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_return_decision\\n                       WHERE org_id=%s AND project_id=%s AND issue_id=%s\\n                       ORDER BY created_at DESC, decision_id DESC', (*scope.key, issue_id)).fetchall",
+        "conn.execute('SELECT * FROM aip_return_decision\\n                       WHERE org_id=%s AND project_id=%s\\n                       ORDER BY created_at DESC, decision_id DESC', scope.key).fetchall",
+        "len",
+        "self._connect_factory",
+        "self._return_decision",
+        "self._tenant"
+      ],
+      "source": "def list_return_decisions(\n        self, scope: TenantScope, *, issue_id: str | None = None\n    ) -> ReturnDecisionListResponse:\n        with self._connect_factory(scope) as conn:\n            if issue_id:\n                rows = conn.execute(\n                    \"\"\"SELECT * FROM aip_return_decision\n                       WHERE org_id=%s AND project_id=%s AND issue_id=%s\n                       ORDER BY created_at DESC, decision_id DESC\"\"\",\n                    (*scope.key, issue_id),\n                ).fetchall()\n            else:\n                rows = conn.execute(\n                    \"\"\"SELECT * FROM aip_return_decision\n                       WHERE org_id=%s AND project_id=%s\n                       ORDER BY created_at DESC, decision_id DESC\"\"\",\n                    scope.key,\n                ).fetchall()\n            items = [self._return_decision(scope, row) for row in rows]\n            return ReturnDecisionListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )",
+      "basis": "committed HEAD; user working tree changes excluded"
+    },
+    {
+      "file": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "method": "list_production_contexts",
+      "line": 3981,
+      "endLine": 3994,
+      "methodSha256": "718a2c359fdcaf2ae2cfbc9b1891765c3250a1d9343171db71da116d7dca9237",
+      "calls": [
+        "ProductionContextListResponse",
+        "conn.execute",
+        "conn.execute('SELECT * FROM aip_production_context_revision\\n                   WHERE org_id=%s AND project_id=%s\\n                   ORDER BY created_at DESC, context_id, revision DESC', scope.key).fetchall",
+        "len",
+        "self._connect_factory",
+        "self._production_context",
+        "self._tenant"
+      ],
+      "source": "def list_production_contexts(\n        self, scope: TenantScope\n    ) -> ProductionContextListResponse:\n        with self._connect_factory(scope) as conn:\n            rows = conn.execute(\n                \"\"\"SELECT * FROM aip_production_context_revision\n                   WHERE org_id=%s AND project_id=%s\n                   ORDER BY created_at DESC, context_id, revision DESC\"\"\",\n                scope.key,\n            ).fetchall()\n            items = [self._production_context(scope, row) for row in rows]\n            return ProductionContextListResponse(\n                tenant=self._tenant(scope), items=items, count=len(items)\n            )",
+      "basis": "committed HEAD; user working tree changes excluded"
+    }
+  ]
+}

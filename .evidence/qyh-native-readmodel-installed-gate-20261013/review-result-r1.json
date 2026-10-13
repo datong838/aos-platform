@@ -1,0 +1,37 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-native-readmodel-installed-gate-20261013-adapter-r1",
+    "task_id": "qyh-native-readmodel-installed-gate-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "98642f8bdde5f837310f281efed8fce2b0a8d1aa",
+      "authority_revision": "AOS-002011",
+      "files": {
+        ".evidence/qyh-native-readmodel-installed-gate-20261013/review-material-0.txt": "4270152eb6365fe1d2b81df972b26252fcd3f741e45fb928b34904dc16b178fb",
+        ".evidence/qyh-native-readmodel-installed-gate-20261013/review-material-1.txt": "eeb97b4ee29bbe200596ec589038b6cf1bf85b66a28aab208f38892ac33b159a",
+        ".evidence/qyh-native-readmodel-installed-gate-20261013/review-material-2.txt": "698cd181755cb4fc45f26e1ed367d4af9074eb20a41f980dc15163e23be69a0f",
+        ".evidence/qyh-native-readmodel-installed-gate-20261013/review-material-3.txt": "ece044e8bb090fabebcef075b58e7a2da0d89828846037186efbdb53d6072f7b",
+        ".evidence/qyh-native-readmodel-installed-gate-20261013/review-material-4.txt": "c3dc2a9661a8a4184d08bfd005b141729add24a111641cdead8280e137048751"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "C1: The candidate preserves successful legacy admission and rejects fallback after a legacy integrity error. Its installed fallback requires every declared data scope to have a matching current lock grant; it preserves disabled readiness.",
+        "evidence": "material-0 (EcommerceWorkshopReadCatalog.get_readiness): preserves legacy result on success; catches only AssetNotFoundError, lets Integrity error pass; granted subset is computed from DataScopeGrant refs requiring exact installation:revision/lock:lock_revision and authority=postgres:bundle_composition_lock; disallowed blockers reject non-permitted types unless INSTALLED_ASSET_READONLY on the installation; raises AssetNotFoundError when required<=granted fails. material-1: test_legacy_success_is_preserved_without_reading_candidate passes legacy result unchanged. test_legacy_integrity_error_never_falls_back asserts RegistryIntegrityCorruptError is re-raised. test_declared_scope_without_current_lock_grant_is_rejected asserts rejection when scopes empty. test_exact_granted_installed_asset_can_pass_read_gate_without_runtime_promotion asserts result.item.readiness.value=='disabled' and presence of INSTALLED_ASSET_READONLY blocker. test_grant_reference_must_match_current_exact_lock, test_grant_from_another_revision_or_authority_is_rejected, test_candidate_bundle_content_drift_is_not_hidden_by_fallback confirm lock/hash/authority precision.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "C2: The isolated candidate and adjacent catalog/HTTP regression run passed 66 tests. No router was changed and no HTTP activation, real database write, runtime admission or business completion is claimed.",
+        "evidence": "material-3 shows '66 passed, 7 warnings in 4.49s' with no failures. material-2 explicitly states '本轮先实现独立适配器，尚不接任何HTTP route' and '未激活GET、未重启、未改真库、未运行Provider'; next steps (第3/8 through 第8/8) including route wiring are listed as pending. material-0 and material-4 contain only the adapter/catalog implementation and _EmptySource placeholder; no router diff or activation claim is present.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前基线并继续第3/8起的路由审计与接线；在接入HTTP前逐项核查Media/Operations等尚未闭合的reader递归路径（如material-2所述），并等待安全审计与单独RED后再激活GET。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

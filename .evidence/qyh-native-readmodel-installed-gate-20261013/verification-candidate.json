@@ -1,0 +1,39 @@
+{
+  "head": "98642f8bdde5f837310f281efed8fce2b0a8d1aa",
+  "task": "qyh-native-readmodel-installed-gate-20261013",
+  "authority": "AOS-002011",
+  "phase": "Candidate implementation and independent scoped review delivered; HTTP wiring pending",
+  "rules": [
+    "aos-engineering-delivery",
+    "231",
+    "QYH growth product",
+    "single m1 writer",
+    "aos-2 no restart",
+    "current DB read only"
+  ],
+  "routerUnchanged": true,
+  "httpActivated": false,
+  "currentDbWrites": false,
+  "externalRequests": false,
+  "providerEnabled": false,
+  "independentReviewComplete": true,
+  "deliveryComplete": false,
+  "files": {
+    "services/aos-api/aos_api/ecommerce_workshop_read_catalog.py": "4270152eb6365fe1d2b81df972b26252fcd3f741e45fb928b34904dc16b178fb",
+    "services/aos-api/tests/test_ecommerce_workshop_read_catalog.py": "eeb97b4ee29bbe200596ec589038b6cf1bf85b66a28aab208f38892ac33b159a"
+  },
+  "verification": [
+    "red.log: 8 missing-module failures before implementation",
+    "green.log: 8 initial focused pass",
+    "adjacent.log: 58 candidate/catalog passes before final registry test",
+    "adjacent-http.log: 66 passed, 7 warnings in 4.49s"
+  ],
+  "pending": [
+    "Finish transitive read helper audit from committed HEAD, excluding dirty dependencies",
+    "HTTP GET-specific RED; only audited root routes can attach",
+    "Adjacent regressions, native readonly check, browser evidence after supported aos launch",
+    "Exact frozen independent review, Delivery/authority/commit/context; then bounded renewal consumer"
+  ],
+  "reviewConsumption": "review-consumption-r1.json",
+  "scopeNote": "User requested handoff after this step. This freezes a reviewed candidate; it does not close HTTP or browser acceptance."
+}
