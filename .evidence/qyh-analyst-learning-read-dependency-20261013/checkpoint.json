@@ -4,7 +4,12 @@
   "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
   "task_id": "qyh-analyst-learning-read-dependency-20261013",
   "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
-  "authority_revision": "AOS-002018",
+  "authority_revision": "AOS-002019",
   "task_base_revision": "AOS-002018",
-  "step": "1/8 plan/Lease registered;next actual learning scenario full transitive audit before code"
+  "step": "8/8 onelearningGET accurately delivered;root/helper200,5commandsfalse,33tests/code r5/live r7 PASS consumed,650 unchanged;wholeAnalyst CaseList failure pending",
+  "currentApi": {
+    "pid": 1234,
+    "codeHead": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711"
+  },
+  "nextTask": "qyh-investigation-case-list-read-diagnostic-20261013"
 }

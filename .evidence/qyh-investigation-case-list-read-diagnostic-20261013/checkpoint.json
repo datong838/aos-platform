@@ -1,0 +1,10 @@
+{
+  "schema": "aos-engineering-checkpoint/v1",
+  "thread": "01a13484-f019-7d82-94ce-812396db9124",
+  "repo": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "task_id": "qyh-investigation-case-list-read-diagnostic-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "authority_revision": "AOS-002019",
+  "task_base_revision": "AOS-002019",
+  "step": "1/8 registered evidence-only readonly diagnostic;next full list call audit before action/code"
+}

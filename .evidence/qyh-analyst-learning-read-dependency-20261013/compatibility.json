@@ -1,0 +1,9 @@
+{
+  "head": "372a450248bf0e9bb355ded0a7ccd8330b2aede3",
+  "onlyOriginalFunctionAnnotationChange": [
+    "get_ecommerce_workshop_analyst_learning_scenario"
+  ],
+  "allOtherOriginalASTEqual": true,
+  "currentApiNotUpdated": true,
+  "businessComplete": false
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-analyst-learning-read-dependency-20261013-live-r7",
+  "task_id": "qyh-analyst-learning-read-dependency-20261013",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+    "authority_revision": "AOS-002018",
+    "files": {
+      ".evidence/qyh-analyst-learning-read-dependency-20261013/review-live-package-r6.txt": "53e030a697e71aaf7e10bb32ad08f2edc7cf350efa22f74bb3217624053be86c"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "74ad9369039fa01a97fbc1cc0f58bbfe9e1c25e6e7aad5097c5c59255df1922c",
+  "transport_sha256": "778e98946e54a33d475a4fde272c6572e95855d951b8f6cce8cae3e16330c826"
+}

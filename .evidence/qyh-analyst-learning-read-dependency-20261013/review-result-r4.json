@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-analyst-learning-read-dependency-20261013-r4",
+    "task_id": "qyh-analyst-learning-read-dependency-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "372a450248bf0e9bb355ded0a7ccd8330b2aede3",
+      "authority_revision": "AOS-002018",
+      "files": {
+        ".evidence/qyh-analyst-learning-read-dependency-20261013/review-package-r3.txt": "6ce39617a12ec1f81e720c92222925ecb0190c04c6714323f2e37d9ada840472"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "候选仅Analyst learning-scenario GET目录参数换ReadCatalogDependency及明确白名单，全部原函数体/工厂/其他GET/POST保持。当前原工厂reader=None，read只组合EffectReview exact根缺失的blocked DTO，无数据库、网络、知识或引用写入；未来reader必须独立审计。",
+        "evidence": "ACTUAL ROUTER SOURCE get_ecommerce_workshop_analyst_learning_scenario LINE 1981: catalog: ReadCatalogDependency; CANDIDATE DIFF diff 同; ACTUAL ROUTER SOURCE get_ecommerce_workshop_learning_scenario LINE 580: return EcommerceWorkshopLearningScenario() reader=None; services/aos-api/aos_api/ecommerce_workshop_learning_scenario.py EcommerceWorkshopLearningScenario.read: observation is None -> _blocked with EFFECT_REVIEW_EXACT_ROOT_REQUIRED; no DB/network/write",
+        "assessment": "supported"
+      },
+      {
+        "claim": "专项RED3fail/1pass后专项及原learning/读取相邻通过，原tenant/aware cutoff/未知参数拒绝及原commands全false保持。当前API未更新；代码PASS仅质量门，真实OIDC页、运行读取和整体经营首链仍待。",
+        "evidence": "red.txt: 3 failed (test_learning_get_uses_selected_read_admission/assert not legacy.calls; test_default_learning_keeps_missing_review_and_false_commands/status_code==200; test_learning_reader_receives_original_tenant_and_aware_cutoff/DID NOT RAISE); green.txt: 33 passed; compatibility.json currentApiNotUpdated=true; plan.md '当前API未更新'; read-audit.json businessComplete=false",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "以基线372a450248bf0e9bb355ded0a7ccd8330b2aede3/AOS-002018继续r5审阅，但需先确认：(1) RED 3失败的实际根因是路由未被include或未挂到router还是测试依赖覆盖问题，(2) 提供当前生产API响应与真实OIDC页访问日志作为业务完成证据；在未解决RED前不得将质量PASS等同于交付完成。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

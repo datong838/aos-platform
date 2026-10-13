@@ -1,0 +1,526 @@
+
+FILE plan.md
+# 经营参谋learning场景读取及真实生产前置接续
+Rules：AGENTS/AOS工程交付/231完整Goal/双侧增长；唯一m1writer、先实际审计/方案/RED再最小编码，原650表READ ONLY、Host worker Provider OFF，未知操作/旧Runs不重放。Authority2018；Media只读恢复已精确Delivery，当前API98070/code4e、原Web81203，原最后full2324与API-only分开，不称生产闭环。
+本波审计原GET /views/analyst/learning-scenario 的真实factory/read/传递helper，无副作用才能仅改get_ecommerce_workshop_analyst_learning_scenario目录参数。factory未来reader变更需重新审计；不得补伪learning/source/positive经验或放宽门。文件：routers/ecommerce_workshop.py、test_ecommerce_workshop_read_http.py、新test_ecommerce_analyst_read_dependency.py、本证据目录/D-wave。若reader需改动先补精确scope方案。
+步骤：当前租约/上位方案复习→实际调用审计→RED/最小注入→原专项相邻→normal-role及actualreadonly HTTP/真实OIDC页→代码/实际两阶段独立review，只PASS合法消费后才局部维护切换→准确Delivery/Authority+AOS/Prime同步→下一登记privateGET或独立budget formal consumer。原始review格式/基线失败及NEED_EVIDENCE不算PASS，controller必须assert verdict/消费状态/canonicalSHA。实际登录过期原clearAccessToken/login，未知submit先对账不重发。
+保留所有上位缺口：Source/currentProducer/TaskGraph/Batch/fullVideo/owner/scenario/budget真正生效、自然CaseRun→建议→exactreview→内容任务→能力→产物→人审续跑→Wiki及八场景/观察/发布。只读恢复不是首链。Media create draft enabled仅观察未点、HTTP405保留，后继UI禁入提示改进单独登记，不在此GET偷改。
+
+FILE read-audit.json
+{
+  "head": "372a450248bf0e9bb355ded0a7ccd8330b2aede3",
+  "authority": "AOS-002018",
+  "factory": "get_ecommerce_workshop_learning_scenario returns EcommerceWorkshopLearningScenario() with reader=None",
+  "actualDefaultCall": "read timezone check -> observation None -> _blocked -> only DTO constructors;noDB/noNetwork/noCandidate/Knowledge/Citation/Exposure/revocation writes",
+  "allReaderPathsReviewed": "scope/cutoff/rootstage/maturity stage/hash and operational authorization gates;future real read_scenario must be independently audited",
+  "commands": "original LearningScenarioCommands defaults allfalse",
+  "sourceSha256": "08e2941252a72ca3cd284a50f09834d6c86290e33258979db4939b938105d88f",
+  "businessComplete": false
+}
+
+FILE red.txt
+FFF.                                                                     [100%]
+=================================== FAILURES ===================================
+________________ test_learning_get_uses_selected_read_admission ________________
+
+    def test_learning_get_uses_selected_read_admission():
+        client, legacy, reader = client_with_catalogs()
+        assert client.get(PATH).status_code == 404
+>       assert not legacy.calls
+E       AssertionError: assert not [{'module_id': 'ecommerce.analyst', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}]
+E        +  where [{'module_id': 'ecommerce.analyst', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x1184d7b10>.calls
+
+services/aos-api/tests/test_ecommerce_analyst_read_dependency.py:13: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T12:36:31.404603+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:36:31.530340+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:36:31.530971+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst/learning-scenario \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst/learning-scenario "HTTP/1.1 404 Not Found"
+________ test_default_learning_keeps_missing_review_and_false_commands _________
+
+    def test_default_learning_keeps_missing_review_and_false_commands():
+        client, legacy, reader = client_with_catalogs()
+        reader.get_readiness = lambda **scope: reader.calls.append(scope)
+        response = client.get(PATH)
+>       assert response.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_analyst_read_dependency.py:21: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T12:36:31.583204+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:36:31.701522+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:36:31.702064+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst/learning-scenario \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst/learning-scenario "HTTP/1.1 404 Not Found"
+________ test_learning_reader_receives_original_tenant_and_aware_cutoff ________
+
+    def test_learning_reader_receives_original_tenant_and_aware_cutoff():
+        client, legacy, reader = client_with_catalogs()
+        reader.get_readiness = lambda **scope: reader.calls.append(scope)
+        class Probe:
+            def read(self, *, scope, cutoff):
+                assert scope == TenantScope('org-org', 'dev-project')
+                assert cutoff.utcoffset() is not None
+                raise ReadReached('learning-only')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_learning_scenario] = lambda: Probe()
+>       with pytest.raises(ReadReached, match='learning-only'):
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_analyst_read_dependency.py:38: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-13T12:36:31.704040+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:36:31.821507+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-13T12:36:31.822050+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst/learning-scenario \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/analyst/learning-scenario "HTTP/1.1 404 Not Found"
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_analyst_read_dependency.py::test_learning_get_uses_selected_read_admission
+FAILED services/aos-api/tests/test_ecommerce_analyst_read_dependency.py::test_default_learning_keeps_missing_review_and_false_commands
+FAILED services/aos-api/tests/test_ecommerce_analyst_read_dependency.py::test_learning_reader_receives_original_tenant_and_aware_cutoff
+3 failed, 1 passed, 7 warnings in 0.83s
+
+FILE green.txt
+.................................                                        [100%]
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+33 passed, 7 warnings in 3.60s
+
+FILE compatibility.json
+{
+  "head": "372a450248bf0e9bb355ded0a7ccd8330b2aede3",
+  "onlyOriginalFunctionAnnotationChange": [
+    "get_ecommerce_workshop_analyst_learning_scenario"
+  ],
+  "allOtherOriginalASTEqual": true,
+  "currentApiNotUpdated": true,
+  "businessComplete": false
+}
+
+ACTUAL SOURCE services/aos-api/aos_api/ecommerce_workshop_learning_scenario.py
+"""Compose W8-04 learning-governance contribution without changing knowledge."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime
+from hashlib import sha256
+from typing import Protocol
+
+from aos_api.ecommerce_workshop_learning_scenario_contracts import (
+    LearningScenarioBlocker,
+    LearningScenarioCommands,
+    LearningScenarioComposition,
+    LearningScenarioContribution,
+    LearningScenarioExactRef,
+    LearningScenarioLedger,
+    LearningScenarioOutcomeAxis,
+    LearningScenarioOutcomeAxisId,
+    LearningScenarioStage,
+    LearningScenarioStageId,
+)
+from aos_api.tenant_scope import TenantScope
+
+
+@dataclass(frozen=True, slots=True)
+class LearningScenarioObservation:
+    scope: TenantScope
+    cutoff: datetime
+    root_effect_review_ref: LearningScenarioExactRef
+    maturity_policy_ref: LearningScenarioExactRef
+    learning_binding_hash: str
+    composition: LearningScenarioComposition
+    stages: tuple[LearningScenarioStage, ...]
+    ledger: LearningScenarioLedger
+    outcome_axes: tuple[LearningScenarioOutcomeAxis, ...]
+
+
+class LearningScenarioCanonicalReader(Protocol):
+    def read_scenario(self, scope: TenantScope, *, cutoff: datetime) -> LearningScenarioObservation | None: ...
+
+
+def learning_binding_hash(
+    review: LearningScenarioExactRef,
+    maturity_policy: LearningScenarioExactRef,
+    composition: LearningScenarioComposition,
+    stages: tuple[LearningScenarioStage, ...],
+) -> str:
+    identities = [
+        f"{review.resource_type}:{review.resource_id}:{review.revision}:{review.content_hash}",
+        f"{maturity_policy.resource_type}:{maturity_policy.resource_id}:{maturity_policy.revision}:{maturity_policy.content_hash}",
+        f"logic:{composition.logic_revision_ref.resource_id}:{composition.logic_revision_ref.revision}:{composition.logic_revision_ref.content_hash}",
+    ]
+    identities.extend(f"skill:{ref.resource_id}:{ref.revision}:{ref.content_hash}" for ref in composition.atomic_skill_refs)
+    identities.extend(
+        f"role:{item.role_ref.resource_id}:{item.assignee_ref.resource_id}:{item.skill_binding_ref.resource_id}:{item.skill_binding_ref.revision}:{item.skill_binding_ref.content_hash}"
+        for item in composition.role_bindings
+    )
+    for stage in stages:
+        identities.extend(
+            f"{stage.stage_id}:{ref.resource_type}:{ref.resource_id}:{ref.revision}:{ref.content_hash}"
+            for ref in stage.exact_refs
+        )
+    return sha256("|".join(identities).encode()).hexdigest()
+
+
+class EcommerceWorkshopLearningScenario:
+    def __init__(self, *, reader: LearningScenarioCanonicalReader | None = None) -> None:
+        self._reader = reader
+
+    def read(self, *, scope: TenantScope, cutoff: datetime) -> LearningScenarioContribution:
+        if cutoff.utcoffset() is None:
+            raise ValueError("learning scenario cutoff requires timezone")
+        observation = self._reader.read_scenario(scope, cutoff=cutoff) if self._reader is not None else None
+        if observation is None:
+            return self._blocked(cutoff, "EFFECT_REVIEW_EXACT_ROOT_REQUIRED", "aip.effect-review-authority")
+        if observation.scope != scope or observation.cutoff != cutoff:
+            return self._blocked(cutoff, "LEARNING_SCENARIO_SCOPE_OR_CUTOFF_DRIFT", "workshop.learning-scenario-reader")
+        expected_hash = learning_binding_hash(
+            observation.root_effect_review_ref,
+            observation.maturity_policy_ref,
+            observation.composition,
+            observation.stages,
+        )
+        if observation.learning_binding_hash != expected_hash:
+            return self._blocked(cutoff, "LEARNING_SCENARIO_BINDING_DRIFT", "workshop.learning-scenario-binding")
+        root_stage = observation.stages[0]
+        if (
+            root_stage.stage_id != LearningScenarioStageId.EFFECT_REVIEW
+            or root_stage.status != "ready"
+            or observation.root_effect_review_ref not in root_stage.exact_refs
+        ):
+            return self._blocked(cutoff, "EFFECT_REVIEW_ROOT_STAGE_DRIFT", "aip.effect-review-authority")
+        maturity_stage = observation.stages[1]
+        if maturity_stage.status == "ready" and observation.maturity_policy_ref not in maturity_stage.exact_refs:
+            return self._blocked(cutoff, "EFFECT_MATURITY_POLICY_STAGE_DRIFT", "aip.effect-maturity-authority")
+        blockers = [stage.blockers[0] for stage in observation.stages if stage.status != "ready"]
+        blockers.extend(axis.blocker for axis in observation.outcome_axes if axis.status != "ready" and axis.blocker is not None)
+        if not blockers:
+            return self._blocked(cutoff, "LEARNING_SCENARIO_OPERATIONAL_AUTHORIZATION_REQUIRED", "workshop.learning-scenario-operational-gate")
+        return LearningScenarioContribution(
+            rootEffectReviewRef=observation.root_effect_review_ref,
+            maturityPolicyRef=observation.maturity_policy_ref,
+            learningBindingHash=observation.learning_binding_hash,
+            composition=observation.composition,
+            evaluatedAt=cutoff,
+            stages=list(observation.stages),
+            ledger=observation.ledger,
+            outcomeAxes=list(observation.outcome_axes),
+            blockers=blockers,
+            commands=LearningScenarioCommands(),
+        )
+
+    @staticmethod
+    def _blocked(cutoff: datetime, code: str, dependency: str) -> LearningScenarioContribution:
+        blocker = LearningScenarioBlocker(
+            code=code,
+            dependency=dependency,
+            requiredAction="provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff",
+        )
+        stages = [
+            LearningScenarioStage(
+                stageId=stage,
+                status="blocked",
+                contribution="等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+                blockers=[blocker],
+            )
+            for stage in LearningScenarioStageId
+        ]
+        axes = [LearningScenarioOutcomeAxis(axisId=axis, status="blocked", blocker=blocker) for axis in LearningScenarioOutcomeAxisId]
+        return LearningScenarioContribution(
+            evaluatedAt=cutoff,
+            stages=stages,
+            ledger=LearningScenarioLedger(
+                reviewsExpected=0,
+                reviewsObserved=0,
+                candidatesExpected=0,
+                candidatesObserved=0,
+                promotionsExpected=0,
+                promotionsObserved=0,
+                citationsExpected=0,
+                citationsObserved=0,
+                historicalExposures=0,
+                retainedExposures=0,
+                impactRefsExpected=0,
+                impactRefsObserved=0,
+            ),
+            outcomeAxes=axes,
+            blockers=[blocker],
+        )
+
+
+__all__ = [
+    "EcommerceWorkshopLearningScenario",
+    "LearningScenarioCanonicalReader",
+    "LearningScenarioObservation",
+    "learning_binding_hash",
+]
+
+ACTUAL SOURCE services/aos-api/tests/test_ecommerce_analyst_read_dependency.py
+"""Analyst learning read admission never grants knowledge governance."""
+import pytest
+from aos_api.routers import ecommerce_workshop as routes
+from aos_api.tenant_scope import TenantScope
+from test_ecommerce_workshop_read_http import client_with_catalogs, ReadReached
+
+PATH = '/v1/ecommerce-workshop/views/analyst/learning-scenario'
+
+
+def test_learning_get_uses_selected_read_admission():
+    client, legacy, reader = client_with_catalogs()
+    assert client.get(PATH).status_code == 404
+    assert not legacy.calls
+    assert reader.calls == [dict(module_id='ecommerce.analyst', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])]
+
+
+def test_default_learning_keeps_missing_review_and_false_commands():
+    client, legacy, reader = client_with_catalogs()
+    reader.get_readiness = lambda **scope: reader.calls.append(scope)
+    response = client.get(PATH)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['blockers'][0]['code'] == 'EFFECT_REVIEW_EXACT_ROOT_REQUIRED'
+    assert data['commands'] and all(value is False for value in data['commands'].values())
+    assert all(stage['status'] == 'blocked' for stage in data['stages'])
+    assert not legacy.calls
+
+
+def test_learning_reader_receives_original_tenant_and_aware_cutoff():
+    client, legacy, reader = client_with_catalogs()
+    reader.get_readiness = lambda **scope: reader.calls.append(scope)
+    class Probe:
+        def read(self, *, scope, cutoff):
+            assert scope == TenantScope('org-org', 'dev-project')
+            assert cutoff.utcoffset() is not None
+            raise ReadReached('learning-only')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_learning_scenario] = lambda: Probe()
+    with pytest.raises(ReadReached, match='learning-only'):
+        client.get(PATH)
+    assert not legacy.calls
+
+
+def test_unknown_query_cannot_override_learning_tenant():
+    client, legacy, reader = client_with_catalogs()
+    assert client.get(PATH + '?orgId=dev-org').status_code == 400
+    assert not legacy.calls and not reader.calls
+
+ACTUAL SOURCE services/aos-api/tests/test_ecommerce_workshop_read_http.py
+"""HTTP scope fence: only explicitly audited GETs use installed read admission."""
+from __future__ import annotations
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from aos_api.asset_registry.errors import AssetNotFoundError
+from aos_api.auth import Principal, require_principal
+from aos_api.errors import register_exception_handlers
+from aos_api.routers import ecommerce_workshop as routes
+
+ROOTS = {
+    'task-cockpit', 'operations', 'content-campaign', 'creator-growth',
+    'media-studio', 'analyst', 'price-governance', 'customer',
+}
+
+
+class RejectingCatalog:
+    def __init__(self):
+        self.calls = []
+
+    def get_readiness(self, **scope):
+        self.calls.append(scope)
+        raise AssetNotFoundError('not installed in current scoped catalog')
+
+
+def client_with_catalogs():
+    app = FastAPI()
+    register_exception_handlers(app)
+    app.include_router(routes.router)
+    legacy, reader = RejectingCatalog(), RejectingCatalog()
+    app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+    app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+    app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='scope-test', org_id='org-org', project_id='dev-project',
+        roles=['admin'], markings=[],
+    )
+    return TestClient(app), legacy, reader
+
+
+@pytest.mark.parametrize('module', sorted(ROOTS))
+def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+    client, legacy, reader = client_with_catalogs()
+    response = client.get(f'/v1/ecommerce-workshop/views/{module}')
+    assert response.status_code == 404
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+    assert reader.calls[0] == dict(module_id=f'ecommerce.{module}',
+        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+
+
+@pytest.mark.parametrize('path', [
+    '/views/customer/contributions', '/views/creator-growth/contributions',
+    '/modules/ecommerce.operations/readiness',
+])
+def test_unreviewed_get_still_uses_legacy_admission(path):
+    client, legacy, reader = client_with_catalogs()
+    response = client.get('/v1/ecommerce-workshop' + path)
+    assert response.status_code == 404
+    assert legacy.calls
+    assert not reader.calls
+
+
+def test_read_dependency_only_reaches_explicit_audited_get_routes():
+    actual = set()
+    for route in routes.router.routes:
+        uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                        for d in route.dependant.dependencies)
+        if uses_read:
+            assert route.methods == {'GET'}
+            actual.add(route.path)
+    assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+        '/v1/ecommerce-workshop/views/operations/cases',
+        '/v1/ecommerce-workshop/commands/operations/readiness',
+        '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+        '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+        '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+        '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+    }
+
+
+def test_unknown_query_rejected_before_catalog_call():
+    client, legacy, reader = client_with_catalogs()
+    assert client.get('/v1/ecommerce-workshop/views/operations?orgId=dev-org').status_code == 400
+    assert not legacy.calls and not reader.calls
+
+
+class ReadReached(RuntimeError):
+    pass
+
+
+@pytest.mark.parametrize('module', sorted(ROOTS))
+def test_admitted_root_reaches_reader_with_authenticated_tenant(module):
+    client, legacy, reader = client_with_catalogs()
+    def admit(**scope):
+        reader.calls.append(scope)
+    reader.get_readiness = admit
+    factory = getattr(routes, 'get_ecommerce_workshop_' + module.replace('-', '_'))
+    class ProbeReader:
+        def read(self, **scope):
+            assert scope['org_id'] == 'org-org'
+            assert scope['project_id'] == 'dev-project'
+            raise ReadReached(module)
+        read_core = read
+    client.app.dependency_overrides[factory] = lambda: ProbeReader()
+    with pytest.raises(ReadReached, match=module):
+        client.get('/v1/ecommerce-workshop/views/' + module)
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+
+
+def test_legacy_success_does_not_build_installed_configuration(monkeypatch):
+    from aos_api import ecommerce_installed_readonly_catalog as installed
+    sentinel = object()
+    class Legacy:
+        def get_readiness(self, **scope):
+            return sentinel
+    def forbidden():
+        pytest.fail('successful legacy must not inspect selected configuration')
+    monkeypatch.setattr(installed, 'build_installed_readonly_catalog', forbidden)
+    catalog = routes.get_ecommerce_workshop_read_catalog(Legacy())
+    assert catalog.get_readiness(module_id='ecommerce.operations') is sentinel
+
+
+def test_installed_factory_is_deferred_until_legacy_not_found(monkeypatch):
+    from aos_api import ecommerce_installed_readonly_catalog as installed
+    calls = []
+    def selected():
+        calls.append('selected')
+        raise ValueError('configuration sentinel')
+    monkeypatch.setattr(installed, 'build_installed_readonly_catalog', selected)
+    catalog = routes.get_ecommerce_workshop_read_catalog(RejectingCatalog())
+    assert not calls
+    with pytest.raises(ValueError, match='configuration sentinel'):
+        catalog.get_readiness(module_id='ecommerce.operations')
+    assert calls == ['selected']
+
+CANDIDATE DIFF
+diff --git a/services/aos-api/aos_api/routers/ecommerce_workshop.py b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+index ac0e8ad0f..166999dc6 100644
+--- a/services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+@@ -1981,7 +1981,7 @@ def get_ecommerce_workshop_analyst_view(
+ def get_ecommerce_workshop_analyst_learning_scenario(
+     request: Request,
+     principal: PrincipalDependency,
+-    catalog: CatalogDependency,
++    catalog: ReadCatalogDependency,
+     scenario: LearningScenarioDependency,
+ ) -> LearningScenarioContribution:
+     _reject_unknown_query_parameters(request, allowed=frozenset())

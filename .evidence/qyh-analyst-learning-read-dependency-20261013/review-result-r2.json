@@ -1,0 +1,33 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-analyst-learning-read-dependency-20261013-r2",
+    "task_id": "qyh-analyst-learning-read-dependency-20261013",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "372a450248bf0e9bb355ded0a7ccd8330b2aede3",
+      "authority_revision": "AOS-002018",
+      "files": {
+        ".evidence/qyh-analyst-learning-read-dependency-20261013/review-package-r1.txt": "b3590692e7a31d1b454baf2e621d9c40df6b126612914f745a7792f4a0febac8"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "候选仅Analyst learning-scenario GET目录参数换ReadCatalogDependency及明确白名单，全部原函数体/工厂/其他GET/POST保持。当前原工厂reader=None，read只组合EffectReview exact根缺失的blocked DTO，无数据库、网络、知识或引用写入；未来reader必须独立审计。",
+        "evidence": "DIFF中仅第1981行附近catalog: CatalogDependency改为ReadCatalogDependency，其余函数体未出现；ecommerce_workshop_learning_scenario.py工厂init(reader=None)默认且read路径仅在reader!=None时调用read_scenario否则返回_blocked DTO（EFFECT_REVIEW_EXACT_ROOT_REQUIRED），无DB/网络/Citation/知识写入；read-audit.json显式记录factory/actualDefaultCall/allReaderPathsReviewed/commands。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "专项RED3fail/1pass后专项及原learning/读取相邻通过，原tenant/aware cutoff/未知参数拒绝及原commands全false保持。当前API未更新；代码PASS仅质量门，真实OIDC页、运行读取和整体经营首链仍待。",
+        "evidence": "red.txt明确3 fail（test_learning_get_uses_selected_read_admission/test_default_learning_keeps_missing_review_and_false_commands/test_learning_reader_receives_original_tenant_and_aware_cutoff）与1 pass；compatibility.json声明allOtherOriginalASTEqual=true、currentApiNotUpdated=true、businessComplete=false；green.txt显示33 passed。但claims断言的“原learning/读取相邻通过、原commands全false保持、原tenant/aware cutoff/未知参数拒绝”未被任何材料中的测试断言逐字覆盖，特别是“相邻通过”及“commands全false保持”在RED3 fail期间状态与GREEN结果间缺乏对应断言证据。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "补充并明确定位对应测试断言与源码行：逐条核对test_ecommerce_analyst_read_dependency.py与test_ecommerce_workshop_read_http.py中对‘原learning/读取相邻’、‘commands全false’、‘tenant/aware cutoff拒绝’的具体assert；如未覆盖则登记为缺口；并在material内追加当前HEAD下get_ecommerce_workshop_analyst_learning_scenario工厂实例化与路由依赖清单，确认currentApiNotUpdated与businessComplete=false不被覆盖后重新审阅。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

@@ -1,0 +1,43 @@
+{
+  "sourceHead": "6afbf5684fba9a7e9fb88c3df804c5ed7e10e711",
+  "authority": "AOS-002018",
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "url": "http://127.0.0.1:18434/workshop/analyst",
+  "sameOriginalRealOIDCSessionVerified": true,
+  "normalReadonlyToolbarClick": true,
+  "reads": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "evaluatedAt": "2026-10-13T12:52:15.322821Z",
+      "blockers": [],
+      "commands": null
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "status": 200,
+      "tenant": null,
+      "evaluatedAt": "2026-10-13T12:52:15.322231Z",
+      "blockers": [
+        "EFFECT_REVIEW_EXACT_ROOT_REQUIRED"
+      ],
+      "commands": {
+        "submitCandidate": false,
+        "approveCandidate": false,
+        "promoteCandidate": false,
+        "publishWiki": false,
+        "revokeKnowledge": false
+      }
+    }
+  ],
+  "settled": true,
+  "partialReadiness": true,
+  "analysisRecordReadFailureStillPresent": true,
+  "asyncTasksTrustedEmpty": true,
+  "notWholeAnalystRecovery": true,
+  "businessComplete": false
+}

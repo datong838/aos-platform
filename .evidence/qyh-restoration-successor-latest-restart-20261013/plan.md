@@ -27,3 +27,5 @@ Media辅助GET候选54原完整隔离PG通过；独立r5原始JSON/exactbaseline
 纠错：Media r5消费状态NEED_EVIDENCE，误将合法消费当PASS导致提前API-only切换95278/f28ef48c4，禁止声称复审通过/交付。仅撤回本次3文件own提交，新Git revert保留历史。新successor-media-reviewgate-restored-api-20261013冻结当前回退代码，通过原one-intent精确95278 cwd/port/Lease控制恢复上一版读取内容；PG/Web/Chrome不发信号。补r5所需隔离日志/52→54两个原集成差异/exact terminal原始核验输出再独立复审，不得手补PASS。
 
 Media r8独立PASS已合法消费。新增media_reviewed_r8_api_reload.py在信号前assert verdict=PASS/CONSUMED_MATERIAL_REVIEW/原消费合同canonical envelope SHA，再TaskLease/cwd/18080/sourceguard/onceintent；第一次保护性检查误用原始filebytes SHA已在无效果前拒绝，现严格按原consumer json.dumps(sort_keys=True)合同核对。仅本机readonly API-only95538→新source，不授生产发布/业务执行，不作为新full重启；后续真实OIDC/原owned页/650/live独立复审。
+
+Analyst唯一learning辅助GET33验证/独立code r5 PASS合法消费，原当前普通OIDC root200/learning404已证更新前缺口。新controller沿用verdict/消费status/canonicalSHA/TaskLease/sourceguard/oldPIDcwd/port/onceintent，全量scope不扩大；仅API-only98070→新source，原PG/Web/Chrome不重启，不是生产/知识写入授权。之后真实页及原650/live独立复审。

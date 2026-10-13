@@ -1,0 +1,31 @@
+{
+  "apiSource": "4eaf5e1b6e77f40e54f6ab7618feccfbc8084403",
+  "authority": "AOS-002018",
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "url": "http://127.0.0.1:18434/workshop/analyst",
+  "reads": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "status": 401,
+      "code": "AUTH_INVALID"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 401,
+      "code": "AUTH_INVALID"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "status": 401,
+      "code": "AUTH_INVALID"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 401,
+      "code": "AUTH_INVALID"
+    }
+  ],
+  "existingRealOIDCSession": true,
+  "businessComplete": false,
+  "candidateNotDeployed": true
+}

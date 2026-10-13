@@ -1,0 +1,9 @@
+{
+  "phase": "RED before implementation;GREEN after minimal injection",
+  "red1": "test_learning_get_uses_selected_read_admission first404 succeeds;assert not legacy.calls fails with actual legacy module/tenant call. Route exists and included,old annotation directs legacy;not missing route",
+  "red2": "default learning expects200 only reader admission stub allowed;old legacy remainsrejecting so404. New injection -> original scenario root-required/commandsfalse200",
+  "red3": "Probe expects originalTenant/aware cutoff invocation;old legacy404 prevents Probe,with pytest.raises fails;new injected read reaches original Probe",
+  "unknownQueryTest": "already passes before/after400;not a codechange",
+  "green": "33passed after change;original3RED expectations solved. Does not mean33routes or business completion",
+  "realBefore": "originalAPI98070/code4e,normalOIDC auth+me200;analystroot200 and learning404NOT_FOUND before candidate;live after-update still future"
+}

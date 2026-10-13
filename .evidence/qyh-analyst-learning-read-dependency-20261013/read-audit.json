@@ -1,0 +1,10 @@
+{
+  "head": "372a450248bf0e9bb355ded0a7ccd8330b2aede3",
+  "authority": "AOS-002018",
+  "factory": "get_ecommerce_workshop_learning_scenario returns EcommerceWorkshopLearningScenario() with reader=None",
+  "actualDefaultCall": "read timezone check -> observation None -> _blocked -> only DTO constructors;noDB/noNetwork/noCandidate/Knowledge/Citation/Exposure/revocation writes",
+  "allReaderPathsReviewed": "scope/cutoff/rootstage/maturity stage/hash and operational authorization gates;future real read_scenario must be independently audited",
+  "commands": "original LearningScenarioCommands defaults allfalse",
+  "sourceSha256": "08e2941252a72ca3cd284a50f09834d6c86290e33258979db4939b938105d88f",
+  "businessComplete": false
+}
