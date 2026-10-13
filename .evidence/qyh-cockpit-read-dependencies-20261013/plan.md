@@ -13,3 +13,8 @@ Rules：用户/仓库AGENTS、aos-engineering-delivery、231完整Goal与D-wave�
 Dispatch/Batch原factory未指定reader时只组合blocked/no exact roots DTO，不做派发或批量准备。仍须核原factory实际构造、完整read/helper；若日后绑定真实reader，必须重新审计它，不能将当前None reader纯DTO证明泛化为所有未来producer安全。
 
 审计完成后HTTP-specific RED→仅已审核GET注入→原read/场景相邻与租户/unknown/门保留→正常runtime原生readonly与真实OIDC当前API/page→当前冻结独立复审→准确scope Delivery/Authority/Prime→自动下一已登记privateGET或预算有界consumer；源/运行/人工评审/首链/观察/发布不因DTO/页面成立而计完成。
+
+## 传递审计补记
+已完整核对默认构造及实际读取分支。纠正连接来源：FeedbackReadModel导入的是通用 aos_api.db.connect_read_only，不是 ecommerce_growth_runtime_connection；前者在首条SQL前开启repeatable-read/read-only并应用租户scope，实际权限仍须验证。构造MemoryCandidateTarget会创建AipMemoryStore，但构造仅保存factory，不连接/写表；read_receipt只经scoped SELECT/纯hash校验，不调用put/worker/claim/ack。Dispatch/Batch当前factory reader=None只返回missing exact roots blocked DTO；不泛化未来reader。静态审计不替代当前正常角色原生读取、HTTP租户/门验证或真实页面。详见transitive-read-audit.json。
+
+原生读取r1：当前972冻结源码、原普通runtime身份、noSUPER/noBYPASS且READ ONLY、原真人admin membership通过。feedback实际0条/hasMore=false，不能视为非空Receipt分支验证或经营反馈已完成；dispatch TASK_GRAPH_EXACT_ROOT_REQUIRED、batch BATCH_EXACT_ROOTS_REQUIRED，全部命令false。诊断仅在此独立进程绑定原runtime DSN，不能代替实际API默认连接证明。下一步三条HTTP RED，保留原503、租户隔离和unknown，再按完整Loop验证交付。

@@ -1,0 +1,49 @@
+{
+  "frozenSourceHead": "972c16c5e955b82db242a6bcbf19ffe77a11dec7",
+  "normalRole": "aos_a0v_runtime_20260912",
+  "superuser": false,
+  "bypassRls": false,
+  "transactionReadOnly": true,
+  "realAdminMembershipVerified": true,
+  "diagnosticConnection": "original runtime DSN injected into db.get_dsn in diagnostic only; not proof of live API default",
+  "results": {
+    "feedback": {
+      "status": "READ_OK",
+      "itemCount": 0,
+      "hasMore": false,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      }
+    },
+    "dispatch": {
+      "status": "READ_OK",
+      "blockers": [
+        "TASK_GRAPH_EXACT_ROOT_REQUIRED"
+      ],
+      "commands": {
+        "dispatch": false,
+        "decideHandoff": false,
+        "requestTakeover": false,
+        "approveTakeover": false,
+        "mutateOwner": false
+      },
+      "readerBound": false
+    },
+    "batch": {
+      "status": "READ_OK",
+      "blockers": [
+        "BATCH_EXACT_ROOTS_REQUIRED"
+      ],
+      "commands": {
+        "prepare": false,
+        "start": false,
+        "cancel": false,
+        "reconcile": false
+      },
+      "readerBound": false
+    }
+  },
+  "businessComplete": false,
+  "scriptSha256": "06a8cbba3ded24b90c8a34ff421e350e217fd3287a0da183550fdd0b34e069cb"
+}
