@@ -1,0 +1,124 @@
+{
+  "event": "2026-10-13T03:23:43.813Z",
+  "checkedAt": "2026-10-13T03:45:31.014223+00:00",
+  "result": "LATEST_M1_READONLY_STACK_RESTART_DATA_RETENTION_GREEN_EIGHT_WORKBENCHES_PENDING",
+  "head": "40434df16065bace2d44c8f25ab94549045bcef0",
+  "pg": {
+    "cid": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "startedAt": "2026-10-13T03:36:19.314142909Z",
+    "cluster": "7695302940039200809",
+    "migration": "a0v_161",
+    "codeMigrationHead": "a0v_161",
+    "migrationRequired": false,
+    "all650TableFingerprintsUnchanged": true
+  },
+  "api": {
+    "port": 18080,
+    "pid": 38314,
+    "started": "Tue Oct 13 11:36:49 2026",
+    "head": "40434df16065bace2d44c8f25ab94549045bcef0",
+    "manifestSha256": "00d1da1e7fc0b991ec92a59804cac5095d7bd24ba80eb82511b2266d1ac5dc7f",
+    "sourceCwdVerified": true,
+    "hostWorkerProviderOff": true,
+    "readonly": true
+  },
+  "web": {
+    "port": 18434,
+    "pid": 38385,
+    "started": "Tue Oct 13 11:37:35 2026",
+    "head": "40434df16065bace2d44c8f25ab94549045bcef0",
+    "files": 764,
+    "manifestSha256": "debd00b2dc4673211dc9e743fbd0b22fbf6be945cf37bfc575615a645d470865"
+  },
+  "browser": {
+    "gates": {
+      "negative": {
+        "crossOrg": 403,
+        "crossProject": 403,
+        "devToken": 401
+      },
+      "catalogCount": 0
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "orgName": "栖月汇商贸有限公司",
+      "projectId": "dev-project"
+    },
+    "displayName": "datong838",
+    "rows": [
+      {
+        "route": "cockpit",
+        "documentStatus": 200,
+        "navigation": "application-history",
+        "state": "UNAVAILABLE",
+        "businessAccepted": false
+      },
+      {
+        "route": "content-campaign",
+        "documentStatus": 200,
+        "navigation": "application-history",
+        "state": "UNAVAILABLE",
+        "businessAccepted": false
+      },
+      {
+        "route": "operations",
+        "documentStatus": 200,
+        "navigation": "application-history",
+        "state": "UNAVAILABLE",
+        "businessAccepted": false
+      },
+      {
+        "route": "creator-growth",
+        "documentStatus": 200,
+        "navigation": "application-history",
+        "state": "UNAVAILABLE",
+        "businessAccepted": false
+      },
+      {
+        "route": "media-studio",
+        "documentStatus": 200,
+        "navigation": "application-history",
+        "state": "UNAVAILABLE",
+        "businessAccepted": false
+      },
+      {
+        "route": "analyst",
+        "documentStatus": 200,
+        "navigation": "application-history",
+        "state": "UNAVAILABLE",
+        "businessAccepted": false
+      },
+      {
+        "route": "price-governance",
+        "documentStatus": 200,
+        "navigation": "application-history",
+        "state": "UNAVAILABLE",
+        "businessAccepted": false
+      },
+      {
+        "route": "customer",
+        "documentStatus": 200,
+        "navigation": "application-history",
+        "state": "UNAVAILABLE",
+        "businessAccepted": false
+      }
+    ],
+    "errors": [],
+    "actualPasswordLoginPassed": true,
+    "passwordOrTokensRecorded": false,
+    "eightWorkbenchesAccepted": false,
+    "tabRetained": true
+  },
+  "knownTestFailures": [
+    "Full document navigation loses memory-only access token; corrected to original SPA navigation without changing production behavior",
+    "First negative probe omitted original /api base; corrected probe retained original failures"
+  ],
+  "firstChainAccepted": false,
+  "currentInstallation": "ACTIVE5",
+  "remaining": [
+    "Current enabled/ready binding and effective eight configuration approval not established",
+    "BudgetPolicy13 and cost authorization expired; original initial-budget chain cannot renew existing active head"
+  ],
+  "nextInvestigationStarted": true
+}

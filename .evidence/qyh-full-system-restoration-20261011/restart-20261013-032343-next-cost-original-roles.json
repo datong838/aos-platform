@@ -1,0 +1,23 @@
+{
+  "originalRoleNamesVerifiedInSql": true,
+  "roles": [
+    {
+      "role": "aos_budget_consumer_call",
+      "canLogin": false,
+      "inherit": false,
+      "hasScram": null
+    },
+    {
+      "role": "aos_budget_consumer_owner",
+      "canLogin": false,
+      "inherit": false,
+      "hasScram": null
+    },
+    {
+      "role": "aos_budget_cost_issuer",
+      "canLogin": false,
+      "inherit": false,
+      "hasScram": null
+    }
+  ]
+}

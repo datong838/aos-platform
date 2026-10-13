@@ -1,0 +1,79 @@
+{
+  "gates": {
+    "negative": {
+      "crossOrg": 403,
+      "crossProject": 403,
+      "devToken": 401
+    },
+    "catalogCount": 0
+  },
+  "tenant": {
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project"
+  },
+  "displayName": "datong838",
+  "rows": [
+    {
+      "route": "cockpit",
+      "documentStatus": 200,
+      "navigation": "application-history",
+      "state": "UNAVAILABLE",
+      "businessAccepted": false
+    },
+    {
+      "route": "content-campaign",
+      "documentStatus": 200,
+      "navigation": "application-history",
+      "state": "UNAVAILABLE",
+      "businessAccepted": false
+    },
+    {
+      "route": "operations",
+      "documentStatus": 200,
+      "navigation": "application-history",
+      "state": "UNAVAILABLE",
+      "businessAccepted": false
+    },
+    {
+      "route": "creator-growth",
+      "documentStatus": 200,
+      "navigation": "application-history",
+      "state": "UNAVAILABLE",
+      "businessAccepted": false
+    },
+    {
+      "route": "media-studio",
+      "documentStatus": 200,
+      "navigation": "application-history",
+      "state": "UNAVAILABLE",
+      "businessAccepted": false
+    },
+    {
+      "route": "analyst",
+      "documentStatus": 200,
+      "navigation": "application-history",
+      "state": "UNAVAILABLE",
+      "businessAccepted": false
+    },
+    {
+      "route": "price-governance",
+      "documentStatus": 200,
+      "navigation": "application-history",
+      "state": "UNAVAILABLE",
+      "businessAccepted": false
+    },
+    {
+      "route": "customer",
+      "documentStatus": 200,
+      "navigation": "application-history",
+      "state": "UNAVAILABLE",
+      "businessAccepted": false
+    }
+  ],
+  "errors": [],
+  "actualPasswordLoginPassed": true,
+  "passwordOrTokensRecorded": false,
+  "eightWorkbenchesAccepted": false,
+  "tabRetained": true
+}
