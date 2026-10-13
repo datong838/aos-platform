@@ -1,0 +1,8 @@
+{
+  "transportVerdict": "PASS",
+  "originalStrictValidation": "rejected; fourth claim added a space before HTTP status and no longer exactly matched request",
+  "consumed": false,
+  "noParserRelaxation": true,
+  "newRequest": "request-r7.json",
+  "productionCodeChanged": false
+}

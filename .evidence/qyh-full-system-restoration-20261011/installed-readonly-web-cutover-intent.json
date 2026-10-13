@@ -1,0 +1,11 @@
+{
+  "oldPid": 38385,
+  "oldCommand": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node .evidence/qyh-full-system-restoration-20261011/restart-20261013-032343-web.mjs",
+  "newSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/installed-readonly-web-ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08",
+  "head": "ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08",
+  "exactFiles": 764,
+  "port": 18434,
+  "apiPort": 18080,
+  "databaseServiceRestart": false,
+  "oldSourceRetained": true
+}

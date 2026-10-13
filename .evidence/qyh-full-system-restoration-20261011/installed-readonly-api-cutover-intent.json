@@ -1,0 +1,12 @@
+{
+  "oldPid": 38314,
+  "oldCommand": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python -m uvicorn a0v_qyh_restored_http:management_app --factory --host 127.0.0.1 --port 18080 --workers 1 --no-access-log --log-level warning",
+  "newSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08",
+  "newHead": "ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08",
+  "port": 18080,
+  "selectedInstallation": "ab2fd72f-d81c-400d-bbbc-e1589a159d6b",
+  "databaseServiceRestart": false,
+  "databaseWrites": false,
+  "oldSourceRetained": true,
+  "authority": "AOS-002009"
+}

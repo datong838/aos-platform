@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py", line 465, in <module>
+    main()
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py", line 456, in main
+    report = select_current_installation(identity_file=args.api_identity_file,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py", line 216, in select_current_installation
+    trust = FileTrustRootProvider(trust_roots_file).snapshot()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/asset_registry/signature.py", line 104, in __init__
+    raise TrustRootConfigurationError("trust-root file path must be absolute")
+aos_api.asset_registry.signature.TrustRootConfigurationError: trust-root file path must be absolute

@@ -1,0 +1,13 @@
+{
+  "apiPid": 58363,
+  "apiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08",
+  "apiHead": "ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08",
+  "webPid": 58523,
+  "webCommand": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node .evidence/qyh-full-system-restoration-20261011/installed-readonly-web-20261013.mjs",
+  "webHead": "ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08",
+  "webFileCount": 764,
+  "webExactManifestRevalidated": true,
+  "apiSourceGate": "original require_api_source_candidate validated before startup",
+  "apiPort": 18080,
+  "webPort": 18434
+}

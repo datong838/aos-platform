@@ -1,0 +1,6 @@
+{
+  "originalStrictValidation": "unscoped or unsupported finding",
+  "consumed": false,
+  "cause": "model split claims into unregistered sentences; process/CWD and original OIDC proof missing from previous material selection",
+  "repair": "add exact process/source and original OIDC result; four concise exact claims; no production modification or business authority"
+}

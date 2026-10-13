@@ -1,0 +1,36 @@
+{
+  "codeFiles": {
+    "services/aos-api/aos_api/ecommerce_installed_readonly_catalog.py": "c3dc2a9661a8a4184d08bfd005b141729add24a111641cdead8280e137048751",
+    "services/aos-api/tests/asset_registry/test_ecommerce_installed_readonly_catalog.py": "d888a9e9ca4f2024b6057fce285ed536ee2282aa54c9e1f526791ed94d5ba9b6",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "1801e022d3037de4044aa40e89ddffa7b6878f5b8c15a27084090972cfaa30ed",
+    "apps/web/src/api/ecommerceWorkshop/client.ts": "e479a2bc2ffade26db66cb7c7c3deb3fa8e9a8bf97523b887c90d7ca231098aa",
+    "services/aos-api/tests/test_ecommerce_workshop_api.py": "10e350594afecedd8129976e3451dfb0262a9ab6a87204dc16072ec6ddeb033e"
+  },
+  "pythonCumulative": 73,
+  "frontendOriginal": 17,
+  "frontendNew": 3,
+  "typecheck": "exit0 empty log",
+  "currentSignedInstallationEightReadonly": true,
+  "canaryZero": true,
+  "runtimeGranted": false,
+  "browserAccepted": false,
+  "liveApiWebCutover": true,
+  "limitations": [
+    "native inquiry injects roles; real authenticated browser acceptance pending",
+    "all returned modules disabled, business catalog and runtime admission unchanged",
+    "new route/configuration awaits live bounded launcher wiring"
+  ],
+  "red": "new module missing before implementation; original exact OpenAPI additive route initially RED; repaired only explicit new GET expectation",
+  "fixtureCorrection": "permission fixture originally declares empty roles; corrected isolated test permission requirement, original verification unchanged",
+  "frontendProductionBuild": "passed; initial CLI --root unsupported invocation retained, corrected positional root build passed",
+  "independentReview": "r1 PASS 2/2 supported, consumed; tools-disabled, execution_authorized false",
+  "actualOidcLogin": true,
+  "settledEightOriginalComponentAndMenuViewing": true,
+  "initialLoadingScreenshotsSuperseded": true,
+  "businessReadModelsReady": false,
+  "businessReadModelHttp404": true,
+  "naturalBusinessFirstChainAccepted": false,
+  "all650TableFingerprintsUnchanged": true,
+  "independentLiveEvidenceReview": "r7 PASS4/4 consumed; no operational authority",
+  "dailyLatestFullStackRestartAccepted": false
+}

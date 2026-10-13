@@ -1,0 +1,16 @@
+{
+  "outcome": "READONLY_API_WEB_CUTOVER_DATA_PRESERVED_AND_MUTATION_AUTH_FENCES_VERIFIED",
+  "tables": 650,
+  "allTableFingerprintsUnchanged": true,
+  "pgIdUnchanged": true,
+  "pgStartedAtUnchanged": true,
+  "pgRestarted": false,
+  "apiPid": 58363,
+  "webPid": 58523,
+  "apiSourceHead": "ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08",
+  "unauthenticatedAndMutationProbes": {
+    "GET /v1/ecommerce-workshop/installed-readonly-modules": 401,
+    "POST /v1/bundle-installations/ab2fd72f-d81c-400d-bbbc-e1589a159d6b/approve": 405
+  },
+  "naturalBusinessFirstChain": false
+}

@@ -1,0 +1,328 @@
+{
+  "outcome": "ORIGINAL_EIGHT_INSTALLED_READONLY_MENUS_AND_SETTLED_COMPONENTS_ACCEPTED",
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "credentialReplay": false,
+  "initialScreenshotsWereLoading": true,
+  "initialResultSupersededForSettledAcceptance": true,
+  "modules": [
+    {
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/cockpit",
+      "originalComponent": "task-cockpit-page",
+      "menuCount": 1,
+      "settled": true,
+      "contentCharacterCount": 701,
+      "businessReadModelUnverified": true,
+      "visibleStateText": "待核对\n今日经营任务\n已排除系统验收记录\n0\n执行中\n活跃状态\n0\n已绑定执行记录\n不补造缺失记录\n未知\n待补条件\n影响任务执行\n未知\n待规划\n尚未进入执行\n未知\n待接入\n需要补充数据\n尚未验证\n评估截止\n截止时间待核对\nϟ\n下达\n暂无可验证推荐任务\n任务状态\n全部状态\n待规划\n规划中\n待审批\n已批准\n执行中\n已暂停\n已完成\n失败\n已取消\n已回滚\n重新读取\n执行组\n客服专员\n状态待核对\n私域管家\n状态待核对\n导购顾问\n状态待核对\n当日经营任务流 · 执行进度\n待验证\n当前没有可验证的经营任务\n\n当前没有正式业务任务，页面不会用演示任务填充。\n\n策划组\n数据参谋\n状态待核对\n内容官\n状态待核对\n活动策划师\n状态待核对\n复盘 · 经验沉淀\n待验证\n今日复盘\n\n今日没有可回读的终结任务\n不使用静态复盘结果或伪成功状态。\n\nAI 改进建议\n\n今日没有可回读的改进观察\n不复制视觉稿示例建议。\n\n经验"
+    },
+    {
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "originalComponent": "content-campaign-page",
+      "menuCount": 1,
+      "settled": true,
+      "contentCharacterCount": 83,
+      "businessReadModelUnverified": true,
+      "visibleStateText": "活动策划\n内容日历\n日常模板\n栖月汇微商城\n＋ 新建活动\n商品、库存与活动来源读取未完整，已保留其他可用业务视图。\n×\n读取失败\n正式服务未返回可验证结果。\n重新读取"
+    },
+    {
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "originalComponent": "operations-page",
+      "menuCount": 1,
+      "settled": true,
+      "contentCharacterCount": 44,
+      "businessReadModelUnverified": true,
+      "visibleStateText": "统一运营 · 正式业务处理视图\n重新读取\n读取失败\n正式服务未返回可验证结果。\n重新读取"
+    },
+    {
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-growth",
+      "originalComponent": "creator-growth-page",
+      "menuCount": 1,
+      "settled": true,
+      "contentCharacterCount": 23,
+      "businessReadModelUnverified": true,
+      "visibleStateText": "读取失败\n正式服务未返回可验证结果。\n重新读取"
+    },
+    {
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "originalComponent": "media-studio-page",
+      "menuCount": 1,
+      "settled": true,
+      "contentCharacterCount": 71,
+      "businessReadModelUnverified": true,
+      "visibleStateText": "重新读取\n栖月汇微商城\n内容官（负责人未绑定）\n场景：未绑定\n数据截止未验证\n今日计划：待核对\n读取失败\n正式服务未返回可验证结果。\n重新读取"
+    },
+    {
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "originalComponent": "analyst-page",
+      "menuCount": 1,
+      "settled": true,
+      "contentCharacterCount": 141,
+      "businessReadModelUnverified": true,
+      "visibleStateText": "经营计划 · 正式业务数据只读视图\n重新读取\n读取失败\n正式服务未返回可验证结果。\n重新读取\n经营研究 · 只读\n研究任务与业务进度\n重新读取\n\n研究、查询与知识整理任务分别展示；阶段结果、待核对状态和正式回读结果均以当前租户数据为准。\n\n可信空集合\n当前租户没有可读取的异步任务。"
+    },
+    {
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/price-governance",
+      "originalComponent": "price-governance-page",
+      "menuCount": 1,
+      "settled": true,
+      "contentCharacterCount": 96,
+      "businessReadModelUnverified": true,
+      "visibleStateText": "栖月汇 · 品牌待核对 · 核心商品待核对\n数据参谋（负责人未绑定）+ 活动策划师 + 导购顾问\n价格治理视图未验证\n待复核数量待核对\n刷新数据\n读取失败\n正式服务未返回可验证结果。\n重新读取"
+    },
+    {
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "originalComponent": "customer-page",
+      "menuCount": 1,
+      "settled": true,
+      "contentCharacterCount": 594,
+      "businessReadModelUnverified": true,
+      "visibleStateText": "重新读取\n栖月汇 · 客户状态待核对\n私域管家（负责人未绑定）\n任务驱动 · 只读计划 · 客户产物\n高价值待核对 · 潜力待核对 · 活跃待核对\n沉睡待核对 · 流失预警待核对\n今日任务与客户分群\n数据读取失败 · 可信空\n客户最小投影\n待读取\n客户分群\n待读取\n生命周期旅程\n待读取\n对话与批次\n待读取\n客户分群\n高价值待核对\n潜力待核对\n活跃待核对\n沉睡待核对\n当前没有可验证的分群依据，因此不显示人数。\n客户关系视图\n客户最小投影\n读取失败\n只读计划\n客户关系处理计划\n等待数据\n\n正式服务未返回可验证客户投影；不以演示客户、联系方式或 0 值补齐。\n\n1\n客户最小集\n待核对 · 暂无可验证来源\n2\n同意依据\n待核对 · 暂无可验证来源\n3\n分群投影\n待核对 · 暂无可验证来源\n4\n旅程投影\n待核对 · 暂无可验证来源\n5\n对话摘要\n待核对 · 暂无可验证来源\n6\n触达批次\n待核对 · "
+    }
+  ],
+  "httpReads": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations/cases",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations/cases",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "status": 404
+    }
+  ],
+  "pageErrors": [],
+  "businessDataReady": false,
+  "businessFirstChainAccepted": false,
+  "externalSourceRead": false,
+  "tabRetained": true
+}

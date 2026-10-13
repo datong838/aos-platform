@@ -1,0 +1,18 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "current_immutable_source_revalidated",
+  "exit_code": 0,
+  "input_files": {
+    "scripts/a0v_qyh_restored_http.py": "b9d95378493d5ad412b4b8110613467594dc66ab9cd2093f6a230207dc3e1910",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py": "0c24f2d842ec025aff11c4591ef382a49c13eaa666b2fee7a522694a73dbd174"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/installed-readonly-current-api-20261013.json": "33c9d6d478a53f5fffc5509452122952f87575b022d8eef68e3eabd1842428e8",
+    ".evidence/qyh-full-system-restoration-20261011/installed-readonly-process-source-revalidation.json": "7436e0de4548e9b57923a755d5fb7725c6a8fd9f7392418f2a215ce02fb19e28"
+  },
+  "limitations": [
+    "Readonly current code/source and exact scoped evidence only; business read models404, budget/runtime/natural chain and latest FULL PG/API/Web restart not accepted"
+  ]
+}

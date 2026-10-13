@@ -1,0 +1,48 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "qyh-installed-readonly-launch-review-20261013-r7-exact-spaced-status",
+    "task_id": "qyh-installed-readonly-launch-review-20261013",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "quality",
+    "baseline": {
+      "head": "ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08",
+      "authority_revision": "AOS-002009",
+      "files": {
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r6-material-0.txt": "9e6041a4bcbf44bf73e542a100477888c7495b38a3ebcdeacc09e98ac3b01a15",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r6-material-1.txt": "d78a95d207ba92ed83448459a8e489191edfba2e66686a37e0562e4e7505c2a0",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r6-material-2.txt": "0b6d76ab0c8e88a4f5e4b6a65e801da2814458c21303adbc385ae018a179e545",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r6-material-3.txt": "eb0f4a0f03f74c9331f85629c4a4b212c66a1be1a85bbd5ef2b6c74cd8fffe39",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r6-material-4.txt": "ef8834cc794cd710162f1b38bf43be2d6f8f849b1e0568257586d92f55e197fa",
+        ".evidence/qyh-installed-readonly-launch-review-20261013/r6-material-5.txt": "33c9d6d478a53f5fffc5509452122952f87575b022d8eef68e3eabd1842428e8"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "C1: Current readonly API/Web source is ceba8ba4, verified by exact process/source evidence.",
+        "evidence": "Baseline head: ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08. r6-material-3.txt (apiHead/webHead): ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08. r6-material-5.txt M1 outcome M1_API_SOURCE_CANDIDATE_FROZEN_NO_START head: ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08, apiSourceGate: original require_api_source_candidate validated before startup, exactGitArchiveFilesVerified: true. r6-material-2.txt apiSourceHead: ceba8ba4c63bcfa8c3690d6f05d24cb1ed6a5f08. r6-material-4.txt script references .evidence/qyh-full-system-restoration-20261011/...",
+        "assessment": "supported"
+      },
+      {
+        "claim": "C2: Original OIDC login and eight settled original readonly component/menu routes were observed; initial loading screenshots were superseded.",
+        "evidence": "r6-material-0.txt: actualLoginOidc: true, modules 8 items with originalShellVisible: true. r6-material-1.txt: outcome ORIGINAL_EIGHT_INSTALLED_READONLY_MENUS_AND_SETTLED_COMPONENTS_ACCEPTED, ownedTargetId present, initialScreenshotsWereLoading: true, initialResultSupersededForSettledAcceptance: true, 8 modules each settled: true menuCount: 1 with originalComponent names. r6-material-4.txt code waitFor settled and screenshots taken after supersession.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "C3: PG/container/start-time/650 table data remained unchanged during API/Web-only cutover; auth401 and mutation405 were observed.",
+        "evidence": "r6-material-2.txt: tables: 650, allTableFingerprintsUnchanged: true, pgIdUnchanged: true, pgStartedAtUnchanged: true, pgRestarted: false, apiPid: 58363, webPid: 58523. unauthenticatedAndMutationProbes: GET /v1/ecommerce-workshop/installed-readonly-modules => 401, POST /v1/bundle-installations/.../approve => 405.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "C4: Business read models returned 404 and remain unverified; full latest-code PG/API/Web restart and natural business first-chain are not accepted.",
+        "evidence": "r6-material-1.txt: all httpReads are 404, every module businessReadModelUnverified: true, businessDataReady: false, businessFirstChainAccepted: false, externalSourceRead: false. r6-material-2.txt: naturalBusinessFirstChain: false. r6-material-5.txt: apiStarted: false, runtimeAuthorized: false, eightPagesAccepted: false, remaining includes formal OIDC/settings/approval and guarded restart + acceptance.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前 PASS 结论与基线；若需推进，下一步在现有冻结源 cebe8ba4 上补齐 M1 remaining 项中的正式 OIDC 配置、Owner 确认与配置审批，再执行受控 PG/API/Web 重启与八页面浏览器验收，不要回退 Lease 或修改归属。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

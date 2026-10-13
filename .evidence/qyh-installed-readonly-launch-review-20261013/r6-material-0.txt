@@ -1,0 +1,68 @@
+{
+  "outcome": "ACTUAL_CURRENT_SIGNED_EIGHT_ORIGINAL_MENUS_AND_READONLY_PAGES_ACCEPTED",
+  "tenant": {
+    "orgId": "org-org",
+    "orgName": "栖月汇商贸有限公司",
+    "projectId": "dev-project"
+  },
+  "actualLoginOidc": true,
+  "agentAuthorizedCredentialTest": true,
+  "interactiveHumanLoginObserved": false,
+  "modules": [
+    {
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/cockpit",
+      "menuCount": 1,
+      "originalShellVisible": true
+    },
+    {
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "menuCount": 1,
+      "originalShellVisible": true
+    },
+    {
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "menuCount": 1,
+      "originalShellVisible": true
+    },
+    {
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-growth",
+      "menuCount": 1,
+      "originalShellVisible": true
+    },
+    {
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "menuCount": 1,
+      "originalShellVisible": true
+    },
+    {
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "menuCount": 1,
+      "originalShellVisible": true
+    },
+    {
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/price-governance",
+      "menuCount": 1,
+      "originalShellVisible": true
+    },
+    {
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "menuCount": 1,
+      "originalShellVisible": true
+    }
+  ],
+  "pageErrors": [],
+  "requestInterception": false,
+  "mockedResponses": false,
+  "credentialsRecorded": false,
+  "businessFirstChainAccepted": false,
+  "runtimeAuthorized": false,
+  "tabRetained": true
+}

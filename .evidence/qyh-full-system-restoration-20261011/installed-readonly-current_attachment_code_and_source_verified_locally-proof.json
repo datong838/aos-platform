@@ -1,0 +1,19 @@
+{
+  "schema": "aos-step-evidence/v1",
+  "task_id": "qyh-full-system-restoration-20261011",
+  "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+  "step": "current_attachment_code_and_source_verified_locally",
+  "exit_code": 0,
+  "input_files": {
+    "scripts/a0v_qyh_restored_http.py": "b9d95378493d5ad412b4b8110613467594dc66ab9cd2093f6a230207dc3e1910",
+    "services/aos-api/tests/extension_runtime/test_qyh_restored_http.py": "0c24f2d842ec025aff11c4591ef382a49c13eaa666b2fee7a522694a73dbd174"
+  },
+  "output_files": {
+    ".evidence/qyh-full-system-restoration-20261011/installed-readonly-launch-green-r3.log": "ba8148814484e3f69366192ed9b391985b3243121bd5018d631f340f7218c87f",
+    ".evidence/qyh-full-system-restoration-20261011/installed-readonly-process-source-revalidation.json": "7436e0de4548e9b57923a755d5fb7725c6a8fd9f7392418f2a215ce02fb19e28",
+    ".evidence/qyh-full-system-restoration-20261011/installed-readonly-cutover-verification.json": "0b6d76ab0c8e88a4f5e4b6a65e801da2814458c21303adbc385ae018a179e545"
+  },
+  "limitations": [
+    "Readonly current code/source and exact scoped evidence only; business read models404, budget/runtime/natural chain and latest FULL PG/API/Web restart not accepted"
+  ]
+}
