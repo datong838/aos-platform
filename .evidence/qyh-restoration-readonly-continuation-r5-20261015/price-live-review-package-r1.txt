@@ -1,0 +1,441 @@
+INDEPENDENT POST-EFFECT LIVE READONLY SLICE REVIEW. Scope ONLY real price saved contribution GET and actual original SDK/session and source/data invariants. Not fullGoal, business, visual acceptance or operating approval. Remaining P1/aux404/fullC/install/natural business explicit.
+
+
+FILE price-live-report-r1.md SHA c880b8c821a7f8fe7bc865a36abf585cb3daa6424b65b83ff1b556672f761ede
+# 价格保存批次贡献读取现场（非经营完成）
+
+完整231Goal、原用户安装/全恢复/本机真人admin授权及唯一writer保留。代码246d830仅四施工文件与本波证据；reader代码r1 PASS合法消费，root r1 NEED_EVIDENCE原样合法记录、补165原函数AST不变和完整GET后r2 PASS合法消费。冻结归档四owned overlays、224累计PASS及原w6_005隔离tmpfs PG原producer非空prepared/frozen及继承、snapshot batch1→batch2、RLS/FORCE无WHERE外租户隐藏、写25006、SQLCASE超限/隐私拒绝；准确CID已停止。隔离事实不是原客户批次或审批。
+
+API最新246d830冻源8691文件完整校验，无dirty/凭据；fresh控制器预检及独立PASS合法消费后单次API72678→80779。实际18080 listener80779/cwd私有api-source-246d830已读，PG原CID/volume/Started20:36:36、Web76677/source1627和Chrome保持。Web产品树与246完全相等。本API读波不替代每日/每次aos最新同卷完整PG→API→Web，aos2不重启。
+
+正常登录会话先实际/v1/me401 expired；最初错误身份路径/v1/auth/me404不作价格读取失败证明。按钮点击未激活表单：输入仍nonempty/valid、未busy无alert、resource token记录仅旧start45741ms而now2073956ms、API无outgoing连接；未发出本次POST，不把观察timeout当成功。回读后用原form.requestSubmit正常入口，观察到唯一token POST/login200，me真subject6f31cfdc-a26c-4f1f-ad6b-95a8559cc657、org-org/dev-project、OIDC；凭据仅内存、无输出或持久化。
+
+原正式EcommerceWorkshopClient.getPriceResearchContributionView实际成功解析schema v1、latestBatch null、PRICE_RESEARCH_BATCH_NOT_AVAILABLE、allowedCommands[]、externalEffectsAllowed false。原菜单anchor SPA激活后确实进入/workshop/price-governance且h1正确；实际/api代理root200/price贡献200。初始点击未导航和错误18080-only请求筛选未当证据；后改为观察真实/api/v1代理路径，已保存完整只读请求序列、businessNonGet[]。query orgId=foreign400、全新无凭据request context401；价格dispositions404/priceclosure404/customercontributions404保留，未借本波放行。未prepare/freeze、无来源采集/Provider/通知/调价或真人预算批准。
+
+## 本轮视觉比对
+
+原稿foundry/html/workshop-price-governance.html在独立IAB打开，1280×720、1440×900、1920×1080各捕获原稿和当前实际图并逐组检视，截图不修改。实际保持三列、原价治理职责/待条件/内部策略骨架，真实来源未挂接与已停用可见；原稿47SKU/价格/异常/通知草稿均演示，不复制成经营事实。
+
+P1：四筛选按钮随父布局拉伸，1280高89px且已排除换行，1440高255px，1920高345px，明显偏离原稿紧凑筛选/状态区；页面root无横溢出不表示布局合格。其余Page辅助失败catch→null/假0、达人1280裁切、参谋首屏说明、八台全页签/真实场景/a11y仍待；本后端Task未隐改Web。后续另注册最小CSS/组件范围，先方案再RED与三视口复拍/Prime。
+
+650表API更新前/后指纹已相等，原schema161/绑定0；最终原真人和页面验收后已取得client-final指纹，before/after/final三份650表逐项完全相等；原卷/CID/StartedAt/schema161/绑定0保持。独立现场Prime后才准确双sliceDelivery/完整maintenance剩余接续/AuthorityPrime，并立即下一登记helper。fullC唯一真人最后真预算/原部署、自然有来源CaseRun→建议exact评审→内容与受约束能力产物→真人评审续跑→总控Wiki、安装全生命周期/八场景/连续观察发布全部未完成，Goal ACTIVE。
+
+
+FILE price-runtime-proof-r1.json SHA 912fda799d21783e1fc4fea2b6f1416c10f38d54b9bc996c043df8c37db4c35b
+{
+  "head": "246d8305332c143bd281cc6aedb013649b81f7d6",
+  "apiPid": 80779,
+  "apiSourceHead": "246d8305332c143bd281cc6aedb013649b81f7d6",
+  "apiManifestVerified": true,
+  "webPid": 76677,
+  "webSourceHead": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+  "webProductTreesEqualCurrent": true,
+  "webManifestVerifiedFiles": 764,
+  "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "originalContainerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "schema": "a0v_161",
+  "bindings": 0,
+  "tables650BeforeAfterFinalEqual": true,
+  "originalGenuineOidcAndActualSDK200": true,
+  "commandsRemainEmptyInActualSDK": true,
+  "realSavedBatchAbsent": true,
+  "businessWrites": false,
+  "PGWebChromeNotSignaledThisReadWave": true,
+  "apiRefreshNotDailyReplacement": true,
+  "wholeGoalComplete": false,
+  "visualP1Remaining": [
+    89,
+    255,
+    345
+  ]
+}
+
+FILE price-native-sdk-r1.json SHA b6a8f32b992d56b91448adfbbb859572d37230e1fa9a29b720f06b9ed1f8ba91
+{
+  "who": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "dto": {
+    "schemaVersion": "aos.ecommerce-workshop.price-research/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "evaluatedAt": "2026-10-14T23:27:28.043061Z",
+    "atomicSkillRefs": [],
+    "logicRef": null,
+    "primaryColleague": "数据参谋",
+    "collaboratorColleagues": [
+      "活动策划师",
+      "导购顾问"
+    ],
+    "latestBatch": null,
+    "blockers": [
+      "PRICE_RESEARCH_BATCH_NOT_AVAILABLE"
+    ],
+    "allowedCommands": [],
+    "externalEffectsAllowed": false
+  },
+  "loginStatus": 200,
+  "authRequestsObserved": 1
+}
+
+FILE price-menu-deny-visual-r1.json SHA 3380a356a7c58bf052d72d2cbf6769a8f03e47733263f414b152fb2315b2165f
+{
+  "url": "http://127.0.0.1:18434/workshop/price-governance",
+  "heading": [
+    "价格治理驾驶舱"
+  ],
+  "deny": {
+    "/v1/ecommerce-workshop/views/price-governance/contributions?orgId=foreign": 400,
+    "/v1/ecommerce-workshop/views/price-governance/dispositions": 404,
+    "/v1/ecommerce-workshop/views/price/closure-contributions": 404,
+    "/v1/ecommerce-workshop/views/customer/contributions": 404
+  },
+  "anonymousStatus": 401,
+  "proxyRequests": [
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "businessNonGet": [],
+  "visual": [
+    {
+      "width": 1280,
+      "height": 720,
+      "documentWidth": 1280,
+      "filters": [
+        {
+          "text": "全部",
+          "height": 89,
+          "right": 370,
+          "y": 275.25
+        },
+        {
+          "text": "可比",
+          "height": 89,
+          "right": 424,
+          "y": 275.25
+        },
+        {
+          "text": "待复核",
+          "height": 89,
+          "right": 491,
+          "y": 275.25
+        },
+        {
+          "text": "已排除",
+          "height": 89,
+          "right": 383,
+          "y": 370.25
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "filters": [
+        {
+          "text": "全部",
+          "height": 255,
+          "right": 370,
+          "y": 275.25
+        },
+        {
+          "text": "可比",
+          "height": 255,
+          "right": 424,
+          "y": 275.25
+        },
+        {
+          "text": "待复核",
+          "height": 255,
+          "right": 491,
+          "y": 275.25
+        },
+        {
+          "text": "已排除",
+          "height": 255,
+          "right": 558,
+          "y": 275.25
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "documentWidth": 1920,
+      "filters": [
+        {
+          "text": "全部",
+          "height": 345,
+          "right": 370,
+          "y": 275.25
+        },
+        {
+          "text": "可比",
+          "height": 345,
+          "right": 424,
+          "y": 275.25
+        },
+        {
+          "text": "待复核",
+          "height": 345,
+          "right": 491,
+          "y": 275.25
+        },
+        {
+          "text": "已排除",
+          "height": 345,
+          "right": 558,
+          "y": 275.25
+        }
+      ]
+    }
+  ],
+  "menuNavigation": "original SPA anchor activation",
+  "wholeVisualComplete": false
+}
+
+FILE price-visual-shas-r1.json SHA 34c99f8db9896c4ef0cccab8b7174a19728c3b3206cfd0b7291d80848556806c
+{
+  "sha256": {
+    "price-actual-1280-r1.png": "af04a6368f8b444d55ab824952da1514af0b097a7a4745feb77a2d85abb8b1af",
+    "price-actual-1440-r1.png": "ab9305285ddba43bb0a787b13d79a2499b98b25cf08d87e4ccdc3d462cf56db1",
+    "price-actual-1920-r1.png": "b1bb88c54b1c5e0d0ea73da9d60d4d799e3d6086e462beb1b04c80f929e80ad5",
+    "price-reference-1280-r1.png": "02bd68dd590a089554453b814ede8b7ab75c10ef3f5449e507cf73ba7797cb57",
+    "price-reference-1440-r1.png": "99a22b9de61a69f2ccaa3575b3e79b873c1f1cc283ebb993ae5920e4a88e0081",
+    "price-reference-1920-r1.png": "8b1d1394db2fef796d9cdee9a113c1bcfa567ad22c9b348336069c968de34df5"
+  },
+  "allSixInspected": true,
+  "allViewportsComplete": false,
+  "priceFilterHeightP1": [
+    89,
+    255,
+    345
+  ],
+  "sourceReference": "docs/palantier/foundry/html/workshop-price-governance.html",
+  "sourceReferenceSha256": "cb1cc38b995b937965cd60e62b770a2281b7788195d198fdc6327e2b86ae0355"
+}
+
+FILE api-preflight-r1.json SHA 7c2577371f31537ad7732617a8fcf04072cb22031c547fd8f693a5979a6a32d9
+{
+  "head": "246d8305332c143bd281cc6aedb013649b81f7d6",
+  "apiPid": 72678,
+  "apiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-53d572ba3265d77835a49ee92441c7ce26ea7faa",
+  "webPid": 76677,
+  "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+  "sourceGuard": true,
+  "ownedCodeHashesVerified": true,
+  "serviceEffects": false
+}
+
+FILE api-switch-intent-r1.json SHA bc9dddd2c70a76f0f76d36ae123ffcf183ea2cb9bf8149b5d320d9a0e1bf66e9
+{
+  "head": "246d8305332c143bd281cc6aedb013649b81f7d6",
+  "oldPid": 72678,
+  "oldCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-53d572ba3265d77835a49ee92441c7ce26ea7faa",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-246d8305332c143bd281cc6aedb013649b81f7d6",
+  "pgWebChromeTouched": false
+}
+
+FILE api-old-stop-r1.json SHA 7b5fa5dccf7463afe198debf7fb3171d379c07fc60571b67f7bf1e8939858cef
+{
+  "oldPid": 72678,
+  "portFree": true
+}
+
+FILE api-started-r1.json SHA 9de7040594b6d6dc22f7bccf42931061adc5de691d053139c49447497789e519
+{
+  "pid": 80779,
+  "head": "246d8305332c143bd281cc6aedb013649b81f7d6",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-246d8305332c143bd281cc6aedb013649b81f7d6",
+  "spawnedOnly": true
+}
+
+FILE api-controller-review-consumption-r1.json SHA ccf35158edac7efd9c9532967d00309f1b52a696baf67b058bd9e32f7be96783
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-api-controller-r1-20261015",
+  "task_id": "qyh-restoration-readonly-continuation-r5-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "246d8305332c143bd281cc6aedb013649b81f7d6",
+    "authority_revision": "AOS-002032",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r5-20261015/api-controller-review-package-r1.txt": "3d78e77c5519f2c72a0f37777e55c4b41f096f9ec40aaf8a7e1c7e9963430fdc"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "9a199ecbe9e2fb725969fa022a30725a437eb37e83026d93d90b2de715837890",
+  "transport_sha256": "15886386c23731fee903a4743e752f33f46fe36202f88e059b8558c2eb275a66"
+}
+
+FILE .evidence/qyh-price-contribution-read-admission-20261015/code-review-consumption-r2.json SHA 5e313664f081a07f07e2768267f20802caf7fbdea1f73d7139c32ef9134662ef
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-root-code-r2-20261015",
+  "task_id": "qyh-price-contribution-read-admission-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "8374113ae12b615980198f98416611a5e10fc377",
+    "authority_revision": "AOS-002032",
+    "files": {
+      ".evidence/qyh-price-contribution-read-admission-20261015/code-review-package-r2.txt": "7439ffd5347b300e291bb0bae5f7dc1686cb2e1c4540abce5a276075da0faba5"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "338dd90c0e0ea5428de52bd83b5f4858e9e431d2eb0d7c5ea4cf8f7df16b51ca",
+  "transport_sha256": "a199b15ee7422f4d24f1a0e85c672bf304505635158606162d4612ff7818ad70"
+}
+
+FILE .evidence/qyh-price-contribution-bounded-reader-20261015/code-review-consumption-r1.json SHA 89d16a8e80d486ad668b57d7fd1c5dc565c75bb50252c670d41765e493e78d5a
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-reader-code-r1-20261015",
+  "task_id": "qyh-price-contribution-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "8374113ae12b615980198f98416611a5e10fc377",
+    "authority_revision": "AOS-002032",
+    "files": {
+      ".evidence/qyh-price-contribution-bounded-reader-20261015/code-review-package-r1.txt": "35de4e28c934bc4bb7ffc12a885f5edf4fe21733eac0e570c11d2719998708d8"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "36381248e252aa2d4e18d0bb398e65b1cb615ceadbf8397f64a522170b360d09",
+  "transport_sha256": "b40ba575affe6d8c6c7f56a59772b15c1fa578ea56e8a4f7f901b5e19653def9"
+}
+
+FILE .evidence/qyh-price-contribution-bounded-reader-20261015/native-r1-result.json SHA d20391e3b411be5d5f8588f2846251c71d1adedad8deea8279c2b2f97da42220
+{
+  "containerId": "70a6f5af5ed51190a39b5d1e3184eda05c28c95abe416f322234b10891e87bf0",
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "6bc813fc9fe8835cbad28fcae5e426c1b0c3d4b54b55380c2fec6c955179de8f",
+  "sourceSha": "cde963845f4c66ff9bd199fea1be4b1130a8af18c28632e8ca9d9aa9b0a0bb26",
+  "originalProducerUsed": true,
+  "originalVolumeTouched": false,
+  "realUserApproval": false,
+  "snapshotBatchIds": [
+    "price-batch-1",
+    "price-batch-2"
+  ],
+  "nonemptyFrozenWithPreparedAncestor": true,
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "foreignRowsHiddenWithoutWhere": true,
+  "writeDeniedSqlstate": "25006",
+  "oversizeSqlCaseError": "PRICE_RESEARCH_READ_LIMIT_EXCEEDED",
+  "privacyError": "PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE",
+  "commandsEmpty": true
+}

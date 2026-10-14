@@ -1,0 +1,198 @@
+{
+  "url": "http://127.0.0.1:18434/workshop/price-governance",
+  "heading": [
+    "价格治理驾驶舱"
+  ],
+  "deny": {
+    "/v1/ecommerce-workshop/views/price-governance/contributions?orgId=foreign": 400,
+    "/v1/ecommerce-workshop/views/price-governance/dispositions": 404,
+    "/v1/ecommerce-workshop/views/price/closure-contributions": 404,
+    "/v1/ecommerce-workshop/views/customer/contributions": 404
+  },
+  "anonymousStatus": 401,
+  "proxyRequests": [
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "businessNonGet": [],
+  "visual": [
+    {
+      "width": 1280,
+      "height": 720,
+      "documentWidth": 1280,
+      "filters": [
+        {
+          "text": "全部",
+          "height": 89,
+          "right": 370,
+          "y": 275.25
+        },
+        {
+          "text": "可比",
+          "height": 89,
+          "right": 424,
+          "y": 275.25
+        },
+        {
+          "text": "待复核",
+          "height": 89,
+          "right": 491,
+          "y": 275.25
+        },
+        {
+          "text": "已排除",
+          "height": 89,
+          "right": 383,
+          "y": 370.25
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "filters": [
+        {
+          "text": "全部",
+          "height": 255,
+          "right": 370,
+          "y": 275.25
+        },
+        {
+          "text": "可比",
+          "height": 255,
+          "right": 424,
+          "y": 275.25
+        },
+        {
+          "text": "待复核",
+          "height": 255,
+          "right": 491,
+          "y": 275.25
+        },
+        {
+          "text": "已排除",
+          "height": 255,
+          "right": 558,
+          "y": 275.25
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "documentWidth": 1920,
+      "filters": [
+        {
+          "text": "全部",
+          "height": 345,
+          "right": 370,
+          "y": 275.25
+        },
+        {
+          "text": "可比",
+          "height": 345,
+          "right": 424,
+          "y": 275.25
+        },
+        {
+          "text": "待复核",
+          "height": 345,
+          "right": 491,
+          "y": 275.25
+        },
+        {
+          "text": "已排除",
+          "height": 345,
+          "right": 558,
+          "y": 275.25
+        }
+      ]
+    }
+  ],
+  "menuNavigation": "original SPA anchor activation",
+  "wholeVisualComplete": false
+}

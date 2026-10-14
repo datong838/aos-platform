@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-live-r1-20261015",
+  "task_id": "qyh-restoration-readonly-continuation-r5-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "246d8305332c143bd281cc6aedb013649b81f7d6",
+    "authority_revision": "AOS-002032",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r5-20261015/price-live-review-package-r1.txt": "73e3714e24e63bc57efc26ebe553f5a49d963c61eaf3bf67670ce5b79b38d2c2"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "fad546e58538e24ef477058696214a4969b18af10059861e9d632ae55a1a14ba",
+  "transport_sha256": "0f7044d7d75d4110761a59c3a0a1fc9a923e919995c3cfb60bf0e0de625ed802"
+}

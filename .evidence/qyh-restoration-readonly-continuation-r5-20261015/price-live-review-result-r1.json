@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a0e8429c53da2ddd31b7330fdb181883b15366a31956d43f9f351de644d27a7b",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-live-r1-20261015",
+    "task_id": "qyh-restoration-readonly-continuation-r5-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "246d8305332c143bd281cc6aedb013649b81f7d6",
+      "authority_revision": "AOS-002032",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r5-20261015/price-live-review-package-r1.txt": "73e3714e24e63bc57efc26ebe553f5a49d963c61eaf3bf67670ce5b79b38d2c2"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "原真人价格贡献 GET 与正式 SDK 已读且命令保持为空",
+        "evidence": "price-native-sdk-r1.json 证实 dto.allowedCommands=[]、blockers=[PRICE_RESEARCH_BATCH_NOT_AVAILABLE]、loginStatus=200、主体 org-org/dev-project；price-runtime-proof-r1.json 记录 commandsRemainEmptyInActualSDK=true、originalGenuineOidcAndActualSDK200=true、realSavedBatchAbsent=true",
+        "assessment": "supported"
+      },
+      {
+        "claim": "最新只读运行版本和原库不变已核验并保留未完成目标",
+        "evidence": "price-runtime-proof-r1.json 记录 head/apiSourceHead=246d830...、apiManifestVerified/webProductTreesEqualCurrent/pgStartedAt/schema/bindings；wholeGoalComplete=false 且 visualP1Remaining=[89,255,345]；price-menu-deny-visual-r1.json 与 price-visual-shas-r1.json 分别记录 wholeVisualComplete=false/allViewportsComplete=false",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前 246d830 只读运行，等待 P1 视觉修复与 fullC/真人预算批准后再注册下轮验收 Task。"
+  }
+}

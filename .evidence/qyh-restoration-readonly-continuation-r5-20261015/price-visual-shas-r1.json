@@ -1,0 +1,19 @@
+{
+  "sha256": {
+    "price-actual-1280-r1.png": "af04a6368f8b444d55ab824952da1514af0b097a7a4745feb77a2d85abb8b1af",
+    "price-actual-1440-r1.png": "ab9305285ddba43bb0a787b13d79a2499b98b25cf08d87e4ccdc3d462cf56db1",
+    "price-actual-1920-r1.png": "b1bb88c54b1c5e0d0ea73da9d60d4d799e3d6086e462beb1b04c80f929e80ad5",
+    "price-reference-1280-r1.png": "02bd68dd590a089554453b814ede8b7ab75c10ef3f5449e507cf73ba7797cb57",
+    "price-reference-1440-r1.png": "99a22b9de61a69f2ccaa3575b3e79b873c1f1cc283ebb993ae5920e4a88e0081",
+    "price-reference-1920-r1.png": "8b1d1394db2fef796d9cdee9a113c1bcfa567ad22c9b348336069c968de34df5"
+  },
+  "allSixInspected": true,
+  "allViewportsComplete": false,
+  "priceFilterHeightP1": [
+    89,
+    255,
+    345
+  ],
+  "sourceReference": "docs/palantier/foundry/html/workshop-price-governance.html",
+  "sourceReferenceSha256": "cb1cc38b995b937965cd60e62b770a2281b7788195d198fdc6327e2b86ae0355"
+}

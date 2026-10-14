@@ -1,0 +1,28 @@
+{
+  "head": "246d8305332c143bd281cc6aedb013649b81f7d6",
+  "apiPid": 80779,
+  "apiSourceHead": "246d8305332c143bd281cc6aedb013649b81f7d6",
+  "apiManifestVerified": true,
+  "webPid": 76677,
+  "webSourceHead": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+  "webProductTreesEqualCurrent": true,
+  "webManifestVerifiedFiles": 764,
+  "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "originalContainerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "schema": "a0v_161",
+  "bindings": 0,
+  "tables650BeforeAfterFinalEqual": true,
+  "originalGenuineOidcAndActualSDK200": true,
+  "commandsRemainEmptyInActualSDK": true,
+  "realSavedBatchAbsent": true,
+  "businessWrites": false,
+  "PGWebChromeNotSignaledThisReadWave": true,
+  "apiRefreshNotDailyReplacement": true,
+  "wholeGoalComplete": false,
+  "visualP1Remaining": [
+    89,
+    255,
+    345
+  ]
+}
