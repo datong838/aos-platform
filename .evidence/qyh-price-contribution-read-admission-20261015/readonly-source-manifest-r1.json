@@ -1,0 +1,51 @@
+{
+  "head": "f1a1f51f06e0931ad8026a13b6260d4029edc48a",
+  "authority": "AOS-002032",
+  "task": "qyh-price-contribution-read-admission-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "capturedAt": "2026-10-14T23:07:43.126626+00:00",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "sha256": "1e5d93baa530d5e9dc33721158a775c5d6a7829b7be21763ddd087e2b648d45c",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_price_research.py",
+      "sha256": "b92a34c0f242c858f3e8e70c2e7e76d687ed36e517f509f5c25588717f398902",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_price_research_store.py",
+      "sha256": "c6346f5e09a450fab597a48bac007cb97084102abecc06c6a25780de0340b23e",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/alembic/versions/w6_005_price_research.py",
+      "sha256": "6bc813fc9fe8835cbad28fcae5e426c1b0c3d4b54b55380c2fec6c955179de8f",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/db.py",
+      "sha256": "a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "apps/web/src/api/ecommerceWorkshop/parser.ts",
+      "sha256": "2cdd8d9bf4dde1e320eea0fd9b675a2a4da50948aaa52d7c78462dfa3ca60d5d",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "apps/web/src/api/ecommerceWorkshop/contracts.ts",
+      "sha256": "56ada41d5a542938a80f57923f87e650a38523e97246c8c36bd6e7c214d34338",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "apps/web/src/components/workshop/PriceGovernancePage.tsx",
+      "sha256": "49f622ca5660deb70560a3d195642de5b3a7b4567cd4cc33e198283f71d02916",
+      "workingEqualsCommitted": true
+    }
+  ],
+  "productChanges": false,
+  "wholeGoalComplete": false
+}

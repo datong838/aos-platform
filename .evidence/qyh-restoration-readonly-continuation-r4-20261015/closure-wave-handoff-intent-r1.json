@@ -1,0 +1,15 @@
+{
+  "authorityBefore": "AOS-002031",
+  "authorityExpected": "AOS-002032",
+  "head": "f1a1f51f06e0931ad8026a13b6260d4029edc48a",
+  "tasks": [
+    "qyh-creator-closure-read-admission-20261015",
+    "qyh-creator-closure-bounded-reader-20261015",
+    "qyh-creator-closure-readonly-client-20261015",
+    "qyh-creator-closure-readonly-contract-20261015",
+    "qyh-restoration-readonly-continuation-r4-20261015"
+  ],
+  "otherLeasesPreserved": 38,
+  "wholeGoalComplete": false,
+  "personalMemoryWrites": false
+}
