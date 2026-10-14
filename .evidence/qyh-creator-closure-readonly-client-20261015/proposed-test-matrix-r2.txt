@@ -1,0 +1,5 @@
+设计测试（尚未应用/运行）：
+readonly [] -> result.allowedCommands=[]且falseflags保持；legacy原四逐元素 ->原四；
+invalid arrays: 前三项、倒序、UNKNOWN、一个pipe-joined四名称字符串、重复第一项 ->拒绝；
+readonly [] + 任一 consume/promotion/external true ->拒绝；跨tenant和PII仍拒绝。
+每例通过正常EcommerceWorkshopClient.getThreeModuleClosureContributionView("creator")，payload为现test的原合同；仅GET，测试不授权业务。

@@ -1,0 +1,35 @@
+PRE-CODE route plan only. Existing parser implementation is uncommitted, tsc blocks actualdeploy; accompanying public type change proposed below is not yet applied. Assess proposed exact twoforms against old declaration, not claim alreadypassed TypeScript.
+Type-level companion to registered parser/client plan. Change ONLY ThreeModuleClosureContributionViewResponse.allowedCommands from originalfixed4tuple to originalfixed4tuple|emptytuple. No broadstring/any cast, no schema/othercontract/behavior changes. Existing readonly[] RED and fulltuple tests plus407frozenPASS; current tsc TS2322 proves missing type. PlanPrime first, same exact test/cumulative/typecheck/quality/native gate afterward. WholeGoal/realhumanbudget/business/install/visual remain pending.
+Proposed exact declaration (not applied):
+export type ThreeModuleClosureContributionViewResponse = { schemaVersion: typeof THREE_MODULE_CLOSURE_SCHEMA_VERSION; tenant: WorkshopTenant; module: ThreeModuleId; evaluatedAt: string; atomicSkillIds: string[]; logicId: string; primaryColleague: string; collaboratorColleagues: string[]; latestClosure: ThreeModuleClosureSummary | null; latestUsage: ThreeModuleUsageSummary | null; latestEffect: ThreeModuleEffectSummary | null; latestHandoff: ThreeModuleHandoffSummary | null; blockers: string[]; allowedCommands: [] | ["COMPILE_THREE_MODULE_CLOSURE", "BIND_CANONICAL_USAGE", "BIND_CANONICAL_EFFECT_REVIEW", "BIND_CANONICAL_HANDOFF"]; handoffConsumeAllowed: false; memoryPromotionAllowed: false; externalEffectsAllowed: false };
+
+OLD EXACT TYPE
+export type ThreeModuleClosureContributionViewResponse = { schemaVersion: typeof THREE_MODULE_CLOSURE_SCHEMA_VERSION; tenant: WorkshopTenant; module: ThreeModuleId; evaluatedAt: string; atomicSkillIds: string[]; logicId: string; primaryColleague: string; collaboratorColleagues: string[]; latestClosure: ThreeModuleClosureSummary | null; latestUsage: ThreeModuleUsageSummary | null; latestEffect: ThreeModuleEffectSummary | null; latestHandoff: ThreeModuleHandoffSummary | null; blockers: string[]; allowedCommands: ["COMPILE_THREE_MODULE_CLOSURE", "BIND_CANONICAL_USAGE", "BIND_CANONICAL_EFFECT_REVIEW", "BIND_CANONICAL_HANDOFF"]; handoffConsumeAllowed: false; memoryPromotionAllowed: false; externalEffectsAllowed: false };
+ACTUAL TSC COUNTEREVIDENCE
+src/api/ecommerceWorkshop/parser.ts(1605,2688): error TS2322: Type '[] | ["COMPILE_THREE_MODULE_CLOSURE", "BIND_CANONICAL_USAGE", "BIND_CANONICAL_EFFECT_REVIEW", "BIND_CANONICAL_HANDOFF"]' is not assignable to type '["COMPILE_THREE_MODULE_CLOSURE", "BIND_CANONICAL_USAGE", "BIND_CANONICAL_EFFECT_REVIEW", "BIND_CANONICAL_HANDOFF"]'.
+  Type '[]' is not assignable to type '["COMPILE_THREE_MODULE_CLOSURE", "BIND_CANONICAL_USAGE", "BIND_CANONICAL_EFFECT_REVIEW", "BIND_CANONICAL_HANDOFF"]'.
+    Source has 0 element(s) but target requires 4.
+
+REGISTEREDSCOPE
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-closure-readonly-contract-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002031",
+  "scope": [
+    "aos-platform/apps/web/src/api/ecommerceWorkshop/contracts.ts",
+    "aos-platform/.evidence/qyh-creator-closure-readonly-contract-20261015"
+  ],
+  "excluded_scope": [
+    "aos-platform/apps/web/src/api/ecommerceWorkshop/parser.ts",
+    "aos-platform/apps/web/src/components",
+    "aos-platform/services/aos-api"
+  ],
+  "expected_outputs": [
+    "FullGoal retained; changeONLY ThreeModuleClosureContributionViewResponse.allowedCommands fixed4tuple to union originalfixed4tuple|emptytuple matching registeredreadonly parser. No any/string-array cast or othercontract changes",
+    "PlanPrime and cumulativefrozenWeb/typecheck+independentquality/nativeSDK/saveDTO exactslice; no business/approval/visualrelease assertion"
+  ],
+  "lease_expires_at": "2026-10-15T00:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-15T06:34:58+08:00"
+}

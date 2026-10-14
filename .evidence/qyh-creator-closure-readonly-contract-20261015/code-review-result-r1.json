@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a5bf81e0d4fe28fa0329812997b84f8c9de6c12ffa3e3c028676162d95044c9f",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-closure-contract-code-r1",
+    "task_id": "qyh-creator-closure-readonly-contract-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+      "authority_revision": "AOS-002031",
+      "files": {
+        ".evidence/qyh-creator-closure-readonly-contract-20261015/code-review-package-r1.txt": "0ca2d44fd0d44d6a8697b04a7bf0e7b19b53ee7471d5d38b662f22bd9633bfde"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "公开类型仅精确增加空元组与原四元组的联合，不改其他字段或使用any宽泛类型，类型和严格运行解析一致。",
+        "evidence": "文件contracts.ts Delta: 原allowedCommands为四元组固定tuple，现为[] | [\"COMPILE_THREE_MODULE_CLOSURE\", \"BIND_CANONICAL_USAGE\", \"BIND_CANONICAL_EFFECT_REVIEW\", \"BIND_CANONICAL_HANDOFF\"]联合；无any/宽泛字符串；parser.ts返回表达式allowedCommands: raw.allowedCommands.length === 0 ? [] : [...THREE_MODULE_COMMANDS]与联合类型一致。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "同一三文件冻结候选407回归/类型检查0已验证，原正常四命令及隐私禁入保留，原真人业务授权与全Goal未被测试替代。",
+        "evidence": "Frozen verification显示web-cumulative-r3 returncode=0、407 tests passed；web-typecheck-r3 returncode=0、TSC outputbytes 0。测试覆盖：保留四命令、拒绝部分/重排/未知/pipeline命令、拒绝空列表绕过handoffConsumeAllowed等标志、跨租户与PII仍拒；代码材料声明No UIdeployment/completeGoal claim。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "将contracts.ts类型联合与实际parser实现按当前Delta提交；继续待办的真人业务授权与全Goal，不做UI部署扩展本次范围。"
+  }
+}

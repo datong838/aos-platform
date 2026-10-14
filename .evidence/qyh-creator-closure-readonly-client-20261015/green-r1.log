@@ -1,0 +1,15 @@
+
+ RUN  v2.1.9 /Users/ddt/work/projects/ai_agent/aos-platform/apps/web
+
+stderr | src/components/workshop/ThreeModuleClosureCard.test.tsx > ThreeModuleClosureCard > 分开展示五轴并保持零副作用
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+ ✓ src/components/workshop/ThreeModuleClosureCard.test.tsx (1 test) 13ms
+ ✓ src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts (15 tests) 6ms
+
+ Test Files  2 passed (2)
+      Tests  16 passed (16)
+   Start at  06:30:30
+   Duration  683ms (transform 157ms, setup 0ms, collect 220ms, tests 20ms, environment 640ms, prepare 73ms)
+

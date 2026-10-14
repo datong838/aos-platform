@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-closure-client-code-r1",
+  "task_id": "qyh-creator-closure-readonly-client-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+    "authority_revision": "AOS-002031",
+    "files": {
+      ".evidence/qyh-creator-closure-readonly-client-20261015/code-review-package-r1.txt": "eb7a1cab5bfcd67b04cf50de7f0b234cf8edce90e5b96909753e636754668a38"
+    }
+  },
+  "status": "NEED_EVIDENCE",
+  "execution_authorized": false,
+  "result_sha256": "dfa5c879f3f7d2e4a09235952dc2b46a41a8d6a1275991a139a06ad67ab357f1",
+  "transport_sha256": "77a60c42ce7171e0e64504a2271ba5b1cf81c0c281754030ab2c49e6f78f8d5a"
+}

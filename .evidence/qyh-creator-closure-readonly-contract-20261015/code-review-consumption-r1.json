@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-closure-contract-code-r1",
+  "task_id": "qyh-creator-closure-readonly-contract-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+    "authority_revision": "AOS-002031",
+    "files": {
+      ".evidence/qyh-creator-closure-readonly-contract-20261015/code-review-package-r1.txt": "0ca2d44fd0d44d6a8697b04a7bf0e7b19b53ee7471d5d38b662f22bd9633bfde"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "b0bbff36916787e903e9e53a0c4e32c27f5714a44bf3c9b97c1809e84e1dfd9c",
+  "transport_sha256": "a456df8692e8ef917d9a18638133eac3db833169c8d6e3c9c2490fec8852a829"
+}

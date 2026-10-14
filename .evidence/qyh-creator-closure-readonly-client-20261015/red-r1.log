@@ -1,0 +1,39 @@
+
+ RUN  v2.1.9 /Users/ddt/work/projects/ai_agent/aos-platform/apps/web
+
+ ❯ src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts (15 tests | 2 failed) 20ms
+   × three-module closure client > 保留只读空命令列表，不补成四个命令 12ms
+     → threeModule contract 漂移
+   × three-module closure client > 只读列表仍拒绝跨租户及隐私内容 3ms
+     → expected [Function] to throw error matching /PII/ but got 'threeModule contract 漂移'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts > three-module closure client > 保留只读空命令列表，不补成四个命令
+TypeError: threeModule contract 漂移
+ ❯ Module.parseThreeModuleClosureContributionView src/api/ecommerceWorkshop/parser.ts:1605:1276
+
+ ❯ EcommerceWorkshopClient.getThreeModuleClosureContributionView src/api/ecommerceWorkshop/client.ts:137:234
+ ❯ src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts:9:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts > three-module closure client > 只读列表仍拒绝跨租户及隐私内容
+AssertionError: expected [Function] to throw error matching /PII/ but got 'threeModule contract 漂移'
+
+- Expected: 
+/PII/
+
++ Received: 
+"threeModule contract 漂移"
+
+ ❯ src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts:28:5
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 13 passed (15)
+   Start at  06:29:20
+   Duration  636ms (transform 133ms, setup 0ms, collect 155ms, tests 20ms, environment 265ms, prepare 36ms)
+

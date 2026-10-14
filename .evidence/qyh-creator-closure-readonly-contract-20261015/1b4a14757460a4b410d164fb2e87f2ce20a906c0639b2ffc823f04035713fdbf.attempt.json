@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-closure-contract-plan-r1",
+  "baseline": {
+    "head": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+    "authority_revision": "AOS-002031",
+    "files": {
+      ".evidence/qyh-creator-closure-readonly-contract-20261015/plan-review-package-r1.txt": "054faa9e25d147edb513cb4a8ed62e857a67ac5ddeea21fcfd123e42c75f5fd5"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "a5bf81e0d4fe28fa0329812997b84f8c9de6c12ffa3e3c028676162d95044c9f",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

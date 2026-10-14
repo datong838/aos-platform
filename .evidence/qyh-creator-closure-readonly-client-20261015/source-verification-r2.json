@@ -1,0 +1,38 @@
+{
+  "baseHead": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+  "sourceBefore": {
+    "apps/web/src/api/ecommerceWorkshop/parser.ts": "2cdd8d9bf4dde1e320eea0fd9b675a2a4da50948aaa52d7c78462dfa3ca60d5d",
+    "apps/web/src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts": "5059667fd830b3252f8e2b43bd6f70cd7c03f79f870ad0f99e1b276bb0f98b54"
+  },
+  "sourceAfter": {
+    "apps/web/src/api/ecommerceWorkshop/parser.ts": "2cdd8d9bf4dde1e320eea0fd9b675a2a4da50948aaa52d7c78462dfa3ca60d5d",
+    "apps/web/src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts": "5059667fd830b3252f8e2b43bd6f70cd7c03f79f870ad0f99e1b276bb0f98b54"
+  },
+  "onlyTwoOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "results": {
+    "web-cumulative-r2": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/components/workshop",
+        "src/api/ecommerceWorkshop"
+      ],
+      "logSha": "610bceae5891e73903119b4833fb3ed0879c23fc7864a0d92d1120a1e1ad2661"
+    },
+    "web-typecheck-r2": {
+      "returncode": 2,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "logSha": "12fd8e1c53a80b9f7aec442d5ae6aa7e3612f6309d3110d186a23963a9769240"
+    }
+  },
+  "at": "2026-10-14T22:32:02.886901+00:00",
+  "finishedAt": "2026-10-14T22:32:19.092213+00:00",
+  "serviceEffects": false
+}

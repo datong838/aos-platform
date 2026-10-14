@@ -1,0 +1,62 @@
+BEFORE-PRODUCT-CODING route design review. Proposed function below is a frozen design artifact ONLY in .evidence/*.txt, not applied parser/test, no testpass claim. This supplies the algorithm missing in r1; inspect compatibility and missing design obligations, not demand post-code proof before plan. All subsequent realRED/implementation/code/native gates remain mandatory.
+Before-code DESIGN/ROUTE review only, not claimedimplementation/realUIcompletion. Backend53 realOIDC GET200 commands[] is frozen, oldparse rejects it. NewTask scope2client files/nonoverlap. Code/native/fullbusiness gates remain afterplan.
+# Creator closure只读命令列表前端合同
+
+Rules/AGENTS/231/fullGoal/base2031，同owner独立Task精确parser.ts与threeModuleClosureClient.test.ts。原code53 API72678、Web64614仍6bf；后台真人list200/四null+四blocker/commands[]/falseflags已证明，不能当旧client成功。已查实际parseThreeModuleClosureContributionView硬要求four.join且输出固定四命令，故readonly[]被拒绝。旧测试只有四命令，无空readonly反例。
+
+只改该函数两个判断/输出点，不动其他parser/client请求/组件/CSS/锁文件或后台。命令合同仅两种：空数组（readonly）或原四命令逐元素、同长度、同顺序完全一致；partial/unknown/reorder/single pipe-joined拒绝，避免join字符串等价被扩成四权限。返回commands为相应已验证列表空或四，不伪造/补全。schemaVersion/tenant/module/全字段/隐私/禁止consume/promotion/external flags所有现有校验保留。empty不能绕过flags false要求。正常四命令客户端及原服务保持不变，未来其他模块readonly[]同合同可解析但本波后台不放行price/customer。
+
+先独立route方案，RED新增readonly[]保留、legacy4、partial/reorder/unknown/pipejoined与emptyflags true/tenant/PII拒绝，再最小修复。针对threeModule client及相邻全Workshop/TypeScript，用已装依赖，源码前后SHA和精确冻结避免userdirty，独立code质量、精确提交后Web-only fresh维护控制器门，原API产品树不变和原PG/Chrome不signal；不是daily/aos fullPG/API/Web替代。原真人SDK方法及正式menu接口解析实读成功且commands[]，原三视口/canonical650只读不造闭环。现场Prime/精确各sliceDelivery/完整维护handoff/Authority七强/下一已登记helper。fullC真人预算/自然经营首链/安装全生命周期/八场景/视觉P1/连续观察发布Goal继续。
+
+EXACT EXISTING FUNC
+export function parseThreeModuleClosureContributionView(value: unknown, expectedModule?: ThreeModuleId, expectedTenant?: WorkshopTenant): ThreeModuleClosureContributionViewResponse { const raw = record(value, "threeModule"); exact(raw, ["schemaVersion", "tenant", "module", "evaluatedAt", "atomicSkillIds", "logicId", "primaryColleague", "collaboratorColleagues", "latestClosure", "latestUsage", "latestEffect", "latestHandoff", "blockers", "allowedCommands", "handoffConsumeAllowed", "memoryPromotionAllowed", "externalEffectsAllowed"], "threeModule"); const tenant = parseTenant(raw.tenant); const module = enumValue(raw.module, THREE_MODULE_IDS, "threeModule.module"); if (raw.schemaVersion !== THREE_MODULE_CLOSURE_SCHEMA_VERSION || (expectedModule && module !== expectedModule) || (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) || !Array.isArray(raw.atomicSkillIds) || !raw.atomicSkillIds.length || !Array.isArray(raw.collaboratorColleagues) || !Array.isArray(raw.blockers) || !Array.isArray(raw.allowedCommands) || raw.allowedCommands.join("|") !== THREE_MODULE_COMMANDS.join("|") || raw.handoffConsumeAllowed !== false || raw.memoryPromotionAllowed !== false || raw.externalEffectsAllowed !== false) throw new TypeError("threeModule contract 漂移"); const serialized = JSON.stringify(raw).toLowerCase(); for (const forbidden of ["mobile", "openid", "email", "address", "contactvalue", "providerpayload"]) if (serialized.includes(forbidden)) throw new TypeError("threeModule 泄露 PII/provider payload"); return { schemaVersion: THREE_MODULE_CLOSURE_SCHEMA_VERSION, tenant, module, evaluatedAt: timestamp(raw.evaluatedAt, "threeModule.evaluatedAt"), atomicSkillIds: raw.atomicSkillIds.map((item) => boundedText(item, "threeModule.skill", 200)), logicId: boundedText(raw.logicId, "threeModule.logicId", 200), primaryColleague: boundedText(raw.primaryColleague, "threeModule.primary", 80), collaboratorColleagues: raw.collaboratorColleagues.map((item) => boundedText(item, "threeModule.collaborator", 80)), latestClosure: raw.latestClosure === null ? null : parseThreeModuleClosure(raw.latestClosure, tenant, module), latestUsage: raw.latestUsage === null ? null : parseThreeModuleUsage(raw.latestUsage, tenant), latestEffect: raw.latestEffect === null ? null : parseThreeModuleEffect(raw.latestEffect, tenant), latestHandoff: raw.latestHandoff === null ? null : parseThreeModuleHandoff(raw.latestHandoff, tenant), blockers: raw.blockers.map((item) => boundedText(item, "threeModule.blocker", 200)), allowedCommands: [...THREE_MODULE_COMMANDS], handoffConsumeAllowed: false, memoryPromotionAllowed: false, externalEffectsAllowed: false }; }
+EXACT EXISTING TEST
+import { describe, expect, it } from "vitest";
+import { EcommerceWorkshopClient } from "./client";
+
+const payload = { schemaVersion: "aos.ecommerce-workshop.three-module-closure/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, module: "creator", evaluatedAt: "2026-08-25T09:00:00Z", atomicSkillIds: ["creator-batch-prepare", "creator-lane-reconcile"], logicId: "ecommerce-creator-growth", primaryColleague: "达人运营官", collaboratorColleagues: ["内容官", "数据参谋"], latestClosure: null, latestUsage: null, latestEffect: null, latestHandoff: null, blockers: ["THREE_MODULE_CLOSURE_NOT_COMPILED", "THREE_MODULE_USAGE_NOT_BOUND", "THREE_MODULE_EFFECT_NOT_BOUND", "THREE_MODULE_HANDOFF_NOT_BOUND"], allowedCommands: ["COMPILE_THREE_MODULE_CLOSURE", "BIND_CANONICAL_USAGE", "BIND_CANONICAL_EFFECT_REVIEW", "BIND_CANONICAL_HANDOFF"], handoffConsumeAllowed: false, memoryPromotionAllowed: false, externalEffectsAllowed: false };
+function client(body: unknown, calls: string[] = []) { return new EcommerceWorkshopClient({ getBaseUrl: () => "http://127.0.0.1:8000", getAuthHeaders: () => ({ "X-Org-Id": "org-org", "X-Project-Id": "dev-project" }), fetch: async (input) => { calls.push(String(input)); return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } }); } }); }
+
+describe("three-module closure client", () => {
+  it("按 Module 读取五轴贡献且无动作权限", async () => { const calls: string[] = []; const result = await client(payload, calls).getThreeModuleClosureContributionView("creator"); expect(result.module).toBe("creator"); expect(result.handoffConsumeAllowed).toBe(false); expect(result.memoryPromotionAllowed).toBe(false); expect(calls[0]).toContain("/views/creator/closure-contributions"); });
+  it("拒绝 Module 与路径期望漂移", async () => { await expect(client({ ...payload, module: "price" }).getThreeModuleClosureContributionView("creator")).rejects.toThrow(/module|漂移/); });
+  it("拒绝 unknown usage 伪造 0", async () => { const exact = { resourceType: "ThreeModuleClosureRevision", resourceId: "closure-1", revision: 1, contentHash: `sha256:${"a".repeat(64)}`, receiptId: "receipt-closure-1" }; const latestUsage = { tenant: payload.tenant, bindingId: "usage-binding-1", revision: 1, closureRef: exact, usageReceiptRef: { ...exact, resourceType: "UsageReceipt", resourceId: "usage-1", receiptId: "usage-1" }, lineageId: "server-lineage", quality: "unknown", quantity: 0, unit: "tokens", adjustmentTotal: 0, settlement: "unknown", contentHash: "b".repeat(64), boundAt: payload.evaluatedAt }; await expect(client({ ...payload, latestUsage }).getThreeModuleClosureContributionView("creator")).rejects.toThrow(/伪 0/); });
+  it("拒绝 PII 或 provider payload 泄漏", async () => { await expect(client({ ...payload, blockers: ["mobile"] }).getThreeModuleClosureContributionView("creator")).rejects.toThrow(/PII/); });
+});
+
+PROPOSED EXACT FUNCTION DESIGN
+export function parseThreeModuleClosureContributionView(value: unknown, expectedModule?: ThreeModuleId, expectedTenant?: WorkshopTenant): ThreeModuleClosureContributionViewResponse { const raw = record(value, "threeModule"); exact(raw, ["schemaVersion", "tenant", "module", "evaluatedAt", "atomicSkillIds", "logicId", "primaryColleague", "collaboratorColleagues", "latestClosure", "latestUsage", "latestEffect", "latestHandoff", "blockers", "allowedCommands", "handoffConsumeAllowed", "memoryPromotionAllowed", "externalEffectsAllowed"], "threeModule"); const tenant = parseTenant(raw.tenant); const module = enumValue(raw.module, THREE_MODULE_IDS, "threeModule.module"); if (raw.schemaVersion !== THREE_MODULE_CLOSURE_SCHEMA_VERSION || (expectedModule && module !== expectedModule) || (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) || !Array.isArray(raw.atomicSkillIds) || !raw.atomicSkillIds.length || !Array.isArray(raw.collaboratorColleagues) || !Array.isArray(raw.blockers) || !Array.isArray(raw.allowedCommands) || (raw.allowedCommands.length !== 0 && (raw.allowedCommands.length !== THREE_MODULE_COMMANDS.length || !raw.allowedCommands.every((command, index) => command === THREE_MODULE_COMMANDS[index]))) || raw.handoffConsumeAllowed !== false || raw.memoryPromotionAllowed !== false || raw.externalEffectsAllowed !== false) throw new TypeError("threeModule contract 漂移"); const serialized = JSON.stringify(raw).toLowerCase(); for (const forbidden of ["mobile", "openid", "email", "address", "contactvalue", "providerpayload"]) if (serialized.includes(forbidden)) throw new TypeError("threeModule 泄露 PII/provider payload"); return { schemaVersion: THREE_MODULE_CLOSURE_SCHEMA_VERSION, tenant, module, evaluatedAt: timestamp(raw.evaluatedAt, "threeModule.evaluatedAt"), atomicSkillIds: raw.atomicSkillIds.map((item) => boundedText(item, "threeModule.skill", 200)), logicId: boundedText(raw.logicId, "threeModule.logicId", 200), primaryColleague: boundedText(raw.primaryColleague, "threeModule.primary", 80), collaboratorColleagues: raw.collaboratorColleagues.map((item) => boundedText(item, "threeModule.collaborator", 80)), latestClosure: raw.latestClosure === null ? null : parseThreeModuleClosure(raw.latestClosure, tenant, module), latestUsage: raw.latestUsage === null ? null : parseThreeModuleUsage(raw.latestUsage, tenant), latestEffect: raw.latestEffect === null ? null : parseThreeModuleEffect(raw.latestEffect, tenant), latestHandoff: raw.latestHandoff === null ? null : parseThreeModuleHandoff(raw.latestHandoff, tenant), blockers: raw.blockers.map((item) => boundedText(item, "threeModule.blocker", 200)), allowedCommands: raw.allowedCommands.length === 0 ? [] : [...THREE_MODULE_COMMANDS], handoffConsumeAllowed: false, memoryPromotionAllowed: false, externalEffectsAllowed: false }; }
+DESIGN TEST MATRIX
+设计测试（尚未应用/运行）：
+readonly [] -> result.allowedCommands=[]且falseflags保持；legacy原四逐元素 ->原四；
+invalid arrays: 前三项、倒序、UNKNOWN、一个pipe-joined四名称字符串、重复第一项 ->拒绝；
+readonly [] + 任一 consume/promotion/external true ->拒绝；跨tenant和PII仍拒绝。
+每例通过正常EcommerceWorkshopClient.getThreeModuleClosureContributionView("creator")，payload为现test的原合同；仅GET，测试不授权业务。
+
+REAL OLDCLIENT COUNTEREVIDENCE
+{"accepted":false,"errorType":"TypeError","message":"threeModule contract 漂移"}
+EXACT REGISTERED FILES
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-closure-readonly-client-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002031",
+  "scope": [
+    "aos-platform/apps/web/src/api/ecommerceWorkshop/parser.ts",
+    "aos-platform/apps/web/src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts",
+    "aos-platform/.evidence/qyh-creator-closure-readonly-client-20261015"
+  ],
+  "excluded_scope": [
+    "aos-platform/apps/web/src/components",
+    "aos-platform/apps/web/src/styles",
+    "aos-platform/services/aos-api",
+    "aos-platform/pnpm-lock.yaml"
+  ],
+  "expected_outputs": [
+    "FullGoal retained; exactthreeModule parser accepts verifiedreadonly emptycommands unchangedflags and preserves legacyfour exactorderedcommands; never inventcommands, unknown/partial/pipejoined/tenant/privacy/flags drift failsclosed",
+    "PlanPrime thenRED/minimal/frozenrelatedWorkshop tests/typecheck/independentquality/preciselatestWebfixture and realnormalclient/nativeGET/visual; no business orbudgetauthorization/normalfeatureloss"
+  ],
+  "lease_expires_at": "2026-10-15T00:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-15T06:24:26+08:00"
+}

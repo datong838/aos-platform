@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "dccf0a6bcbe4b2819be64e94a15df43d8304c3c0cb622c12d88a7b2b8fee5c50",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-closure-client-code-r1",
+    "task_id": "qyh-creator-closure-readonly-client-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+      "authority_revision": "AOS-002031",
+      "files": {
+        ".evidence/qyh-creator-closure-readonly-client-20261015/code-review-package-r1.txt": "eb7a1cab5bfcd67b04cf50de7f0b234cf8edce90e5b96909753e636754668a38"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "解析器只接受已验证只读空列表或逐元素精确原四命令，不通过拼接、部分或未知列表伪造权限；原tenant/privacy/falseflags与正常路径保留。",
+        "evidence": "材料中提供了apps/web/src/api/ecommerceWorkshop/parser.ts函数parseThreeModuleClosureContributionView的完整源码与合约测试。源码逻辑：(raw.allowedCommands.length !== 0 && (raw.allowedCommands.length !== THREE_MODULE_COMMANDS.length || !raw.allowedCommands.every((command, index) => command === THREE_MODULE_COMMANDS[index])))，返回allowedCommands: raw.allowedCommands.length === 0 ? [] : [...THREE_MODULE_COMMANDS]，falseflags硬编码为false，且检查了tenant及PII字符串。测试覆盖empty、exact、partial、reverse、unknown、pipe-joined、flag绕过、cross-tenant、PII等场景。但材料未包含实际执行日志或测试通过报告，仅包含源码和测试用例描述文本。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "本候选精确源码冻结的专项和相邻407回归及类型检查支持最小客户端兼容修改，尚未部署或代替真实经营验收。",
+        "evidence": "材料包含一个JSON对象显示web-cumulative-r3和web-typecheck-r3的returncode均为0，以及Test Files 62 passed, Tests 407 passed的汇总文本。这表明在材料提供的上下文中测试和类型检查执行通过。然而，材料未提供该执行结果与当前工作目录或HEAD的实际绑定证据（如日志文件、时间戳验证），也未提供部署状态或经营验收的否定证据，仅基于文本断言。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "要求提供实际生成的测试报告文件（如.tap或.junit.xml）或控制台输出日志，以验证407个测试确实在当前基线下执行通过；同时提供确认未部署到生产环境的日志或记录。"
+  }
+}

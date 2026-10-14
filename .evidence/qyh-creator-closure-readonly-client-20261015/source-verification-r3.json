@@ -1,0 +1,40 @@
+{
+  "baseHead": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+  "sourceBefore": {
+    "apps/web/src/api/ecommerceWorkshop/parser.ts": "2cdd8d9bf4dde1e320eea0fd9b675a2a4da50948aaa52d7c78462dfa3ca60d5d",
+    "apps/web/src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts": "5059667fd830b3252f8e2b43bd6f70cd7c03f79f870ad0f99e1b276bb0f98b54",
+    "apps/web/src/api/ecommerceWorkshop/contracts.ts": "56ada41d5a542938a80f57923f87e650a38523e97246c8c36bd6e7c214d34338"
+  },
+  "sourceAfter": {
+    "apps/web/src/api/ecommerceWorkshop/parser.ts": "2cdd8d9bf4dde1e320eea0fd9b675a2a4da50948aaa52d7c78462dfa3ca60d5d",
+    "apps/web/src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts": "5059667fd830b3252f8e2b43bd6f70cd7c03f79f870ad0f99e1b276bb0f98b54",
+    "apps/web/src/api/ecommerceWorkshop/contracts.ts": "56ada41d5a542938a80f57923f87e650a38523e97246c8c36bd6e7c214d34338"
+  },
+  "onlyThreeOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "results": {
+    "web-cumulative-r3": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/components/workshop",
+        "src/api/ecommerceWorkshop"
+      ],
+      "logSha": "c09eaa5b83c3bfefaab1c5eebce3bbda832bacc13055569fda9a9da2a3817ad9"
+    },
+    "web-typecheck-r3": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "logSha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "at": "2026-10-14T22:37:28.628202+00:00",
+  "finishedAt": "2026-10-14T22:37:44.803928+00:00",
+  "serviceEffects": false
+}

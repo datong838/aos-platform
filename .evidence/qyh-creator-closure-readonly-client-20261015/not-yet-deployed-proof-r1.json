@@ -1,0 +1,12 @@
+{
+  "webPid": 64614,
+  "webCommand": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/web-server.mjs",
+  "port": "64614",
+  "frozenWebHead": "6bf70940572ccde238eb98eb398a4c49a884253a",
+  "actualFrozenParserSha": "b4d4044fc1ccf6ff8f083ce4ac67666ba45ae403afc631ab0b3affd2382698f8",
+  "actualFrozenParserMatchesManifest": true,
+  "candidateWorkingParserSha": "2cdd8d9bf4dde1e320eea0fd9b675a2a4da50948aaa52d7c78462dfa3ca60d5d",
+  "candidateDifferentFromServedArtifact": true,
+  "sourceManifest": ".evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/web-source.json",
+  "role": "readonly verification; no signals"
+}
