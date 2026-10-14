@@ -1,0 +1,13 @@
+{
+  "before": "AOS-002032",
+  "expected": "AOS-002033",
+  "head": "c1860a9a1455a68b99c9579101c1f05e51a649e7",
+  "tasks": [
+    "qyh-price-contribution-read-admission-20261015",
+    "qyh-price-contribution-bounded-reader-20261015",
+    "qyh-restoration-readonly-continuation-r5-20261015"
+  ],
+  "otherLeasesPreserved": 38,
+  "wholeGoalComplete": false,
+  "personalMemoryWrites": false
+}

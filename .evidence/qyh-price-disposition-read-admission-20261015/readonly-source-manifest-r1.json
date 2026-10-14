@@ -1,0 +1,58 @@
+{
+  "head": "c1860a9a1455a68b99c9579101c1f05e51a649e7",
+  "authority": "AOS-002033",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "sha256": "b46d7a8134867bf28efb60cd4e90c1895d4ae3634bb74807e3c9a382cef8a562",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py",
+      "sha256": "700026c33160b896ea28e69a6a86fc7d40af958db664f9b9a6a10aca02a0dcb1",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_price_disposition_store.py",
+      "sha256": "11a502923c82b87bc39fae55987d837c7c728096fcd43d8a5ca40069fc5a5297",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/alembic/versions/w6_006_price_disposition.py",
+      "sha256": "12261eb327b42d5d39572731f0b788c2288ca134c1186d79cac7dfce150c5d94",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_price_research.py",
+      "sha256": "b92a34c0f242c858f3e8e70c2e7e76d687ed36e517f509f5c25588717f398902",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_price_research_store.py",
+      "sha256": "c6346f5e09a450fab597a48bac007cb97084102abecc06c6a25780de0340b23e",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/db.py",
+      "sha256": "a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "apps/web/src/api/ecommerceWorkshop/parser.ts",
+      "sha256": "2cdd8d9bf4dde1e320eea0fd9b675a2a4da50948aaa52d7c78462dfa3ca60d5d",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "apps/web/src/api/ecommerceWorkshop/contracts.ts",
+      "sha256": "56ada41d5a542938a80f57923f87e650a38523e97246c8c36bd6e7c214d34338",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "apps/web/src/components/workshop/PriceGovernancePage.tsx",
+      "sha256": "49f622ca5660deb70560a3d195642de5b3a7b4567cd4cc33e198283f71d02916",
+      "workingEqualsCommitted": true
+    }
+  ],
+  "productChanges": false,
+  "wholeGoalComplete": false
+}

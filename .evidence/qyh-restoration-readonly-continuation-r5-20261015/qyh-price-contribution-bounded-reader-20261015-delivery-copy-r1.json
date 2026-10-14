@@ -1,0 +1,55 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "qyh-price-contribution-bounded-reader-20261015",
+  "base_revision": "AOS-002032",
+  "completed_revision": "AOS-002032",
+  "result": "ONLY bounded same-snapshot saved price research reader delivered; original prepared hash and frozen exact ancestor/inheritance, tenant/refs/ledger/time/privacy/SQLCASE checked; frozen224PASS and isolated originalDDL nonempty producer/RLS25006/snapshot/bytes/privacy. Not real budget approval or business completion.",
+  "changed_files": [
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/4abc65d0c1161c55b51e864bb737c0a155b79a927df0c342dc9a520ce15fea78.attempt.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/4abc65d0c1161c55b51e864bb737c0a155b79a927df0c342dc9a520ce15fea78.consumed.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/candidate-freeze-r1-intent.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/candidate-freeze-r2-intent.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/code-review-consumption-r1.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/code-review-package-r1.txt",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/code-review-request-r1.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/code-review-result-r1.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/code-review-result-r1.transport.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/green-cumulative-r2.log",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/green-frozen-cumulative-r1.log",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/green-frozen-cumulative-r2.log",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/green-reader-r1.log",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/native-r1-created.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/native-r1-intent.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/native-r1-result.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/native-r1-stopped.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/native-r1.log",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/native_fixture_r1.py",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/original-producer-probe-r1.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/red-reader-r1.log",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/review_controller.py",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/source-verification-r1.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/source-verification-r2.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/task-lease-readback.json",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/verify_frozen_candidate_r1.py",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015/verify_frozen_candidate_r2.py",
+    "aos-platform/services/aos-api/aos_api/ecommerce_price_research_readonly.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_price_research_readonly.py"
+  ],
+  "commits": [
+    "246d8305332c143bd281cc6aedb013649b81f7d6",
+    "c1860a9a1455a68b99c9579101c1f05e51a649e7"
+  ],
+  "verification": [
+    "Exact plan/code/controller/live Prime PASS legally consumed; earlier rejected/NEED results preserved.",
+    "Frozen224PASS; original w6_005 isolated PG producer snapshot/RLS/write25006/SQLCASE/privacy; exact CID stopped.",
+    "Original genuine OIDC actual SDK/null batch/empty commands; query400/anonymous401; actual API80779/source246 and Web76677/source1627; original650 before/after/final equal.",
+    "Fresh original and actual price screenshots at1280/1440/1920 inspected; visualP1 remains; no business acceptance."
+  ],
+  "risks": [
+    "Original schema161/650 DB READONLY and Host/worker/Provider OFF; budget162 not deployed; original unknown12Run/disabledSchedule/source/noPush boundaries retained.",
+    "FullC genuine-user final budget/original deployment/natural business/install lifecycle/eight real scenarios/visualP1/observation release remain incomplete.",
+    "Current saved batch absent; isolated producer fixture not genuine customer batch or approval; price filter heights89/255/345 and helper failure fake0 remain known UI defects."
+  ],
+  "blockers": [],
+  "completed_at": "2026-10-15T07:36:20+08:00"
+}

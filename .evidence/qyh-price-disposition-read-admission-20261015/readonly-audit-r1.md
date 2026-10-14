@@ -1,0 +1,33 @@
+# 价格处置贡献辅助 GET 初始只读审计
+
+当前HEAD c1860a9、Authority AOS-002033；同owner已登记price-disposition-read-admission与完整maintenance-r6，其他38历史Lease保留。完整231Goal、原唯一真人安装/全恢复授权、每日及每次aos最新同权威卷完整PG→API→Web/aos2不重启保留。本文只有只读审计，尚未修改产品代码或准入。
+
+## 已读方案与默认链
+
+产品v2/08价格治理，技术54-W6-06（包括2026-08-25实施封存）、原service/models/Store、w6_006四表DDL及原价格research引用。GET /views/price-governance/dispositions仍CatalogDependency；默认factory创建EcommerceWorkshopPriceDispositionService(DispositionStore(), ResearchStore())，构造不连库。贡献读取只调用list_cases/list_dispositions/list_observations，不进入research_store，不调用prepare/freeze/record_observation或gate/outcome resolver，不读商城源或Provider。
+
+Store每个_list各自connect_read_only；单个连接READ ONLY REPEATABLE_READ，但三次是不同截止面。SELECT authority_data按created_at,revision升序，无LIMIT、无payload字节门；外层identity/tenant/hash/time未读回核对，只有model_validate+payload tenant检查。service取各list最后一条作为latest并按所有保存disposition行计算四类数量。当前保存修订计数包含prepared和frozen两行，不能偷偷改为distinct执行/业务完成数。
+
+## 风险与必要设计证据
+
+1. 任一_list SQL异常被service转成三个空list、AUTHORITY_UNAVAILABLE与case/disposition缺口，但DTO同时生成零计数及五默认命令。installed读取必须固定稳定失败；只有同一可信snapshot真正无记录才返回合法空/0。不能简单换Catalog后沿用此默认失败路径。
+2. 必须同scoped snapshot读取全部原计数所需三list，不裁成最新一条、不截断后称数量完整。先在SQL有限候选内验证行数及总字节预算，超限整体失败。仅fetchall后做客户端总字节检查不够：网络载荷已经可能很大，必须在payload返回前有SQL门。最新顺序需在原created_at/revision基础上加确定性identity tie-break，未来选中坏行不得WHERE隐藏为无记录。
+3. Case hash来自CreatePriceCaseRequest JSON；contract hash来自原request加canonical REQUIRED_GATE_TYPES与externalEffectCapable；prepared disposition hash来自原request JSON+kind+bindingHash+operationalBlockers。bindingHash单独使用原typed PriceExactRef对象/列表，经原canonical_hash(default=str)计算，不能擅改为model_dump JSON的另一签名。
+4. frozen disposition原hash与价格research短hash不同：对current model_dump(mode=json,by_alias=True,exclude七个state/actor/time字段)的完整payload，再加revision/version/lifecycle/priorContentHash签名。必须证明exact前版和继承关系，不能套用前波research的短hash算法。模型允许stale但当前producer只有prepared/frozen写入分支，需要合法来源证据；不能猜新签名或隐藏历史。
+5. Observation hash与派生observationId来自原RecordPriceDispositionObservationRequest JSON，outer.created_at对应observed_at，不存在payload createdAt。需验证exact referenced frozen disposition（可能不同于全局latest）、kind对应receipt类型/outcome、unknown不自resolve、manualCaseRef类型与引用；纯读取不调用原record命令或Receipt consumer。原kind/outcome和operational blocker规则应复用可用纯合同，若必须抽取共享纯规则，先明确额外文件Scope/最小无行为变化方案，不能隐性复制或改writer。
+6. case→disposition→observation关系及contract canonical gate种类/target集合/bindingHash/零副作用/executionAllowed false须验证。contract原externalEffectCapable可能true仅描述类型，不提升DTO外部效果或调价门。保存budget/approval/account/capability refs是历史保存事实，不作当前授权、用户决定或自然经营完成证明。
+7. 每种行outer org/project/id/revision/hash/time与完整typed payload匹配；raw bool/int/完整字段避免默认或coercion掩盖坏记录。refs/内容/actor/purpose/reason与时间同截止/privacy门保留，不脱敏后声称旧hash有效。各请求精确refs和目标数约束复用原合同，不能靠前端parser代替后端完整性。
+
+## 原生产禁界已查证
+
+生产Store.require_gate_authorities恒定抛PRICE_DISPOSITION_GATE_AUTHORITY_RESOLVER_UNAVAILABLE；因此本读取波不能制造或声称生产prepare链已可用。require_outcome_receipt只对ActionReceipt查原aip_action_receipt并绑定hash，其他receipt类型尚有明确resolver禁界。原已保存记录与隔离fixture可用于读取验证，但隔离模拟resolver绝不作原真人审批/生产gate/外部效果证据。
+
+## 前端传递及视觉
+
+parsePriceDispositionContributionView和公开类型允许合法空allowedCommands；需要后续实际正常角色SDK验证，不能只rawGET。Page辅助catch→null和unavailableDisposition会补caseCount/四counts零及五命令；这是源代码层面的失败语义缺口，不声称当前空主页面已显示全部这些卡片。前端/样式需另Task才能修复，本rootTask不隐改Web。既有三尺寸筛选按钮89/255/345px P1、达人1280裁切、八台全页签/真实场景/a11y仍待。
+
+## 下一步
+
+补原producer非空四类、freeze/observation合法hash与pure-rule复用探针，明确有界完整数量与exact关系的文件方案；另登记专用reader/test及任何共享纯规则文件后，独立Prime方案合法消费，再RED/最小实现/专项相邻冻结/原w6_006隔离PG snapshot/RLS/25006/SQLCASE、独立代码review及精确提交。fresh维护gate后才原真人GET+正式SDK、原650不变、适用原稿三视口及livePrime/Delivery/AuthorityPrime。
+
+价格closure、customer辅助GET、fullC唯一真人最终真预算/原部署、自然有来源CaseRun建议exact评审内容受约束能力产物人审续跑总控Wiki、安装全生命周期/八场景/视觉/连续观察发布均继续。原库READONLY/HostworkerProviderOFF/oldunknown12不重放/disabledSchedule不启用/source不读/noPush不变。

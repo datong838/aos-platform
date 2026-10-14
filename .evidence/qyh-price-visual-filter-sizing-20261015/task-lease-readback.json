@@ -1,0 +1,24 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-price-visual-filter-sizing-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002033",
+  "scope": [
+    "aos-platform/apps/web/src/styles/45-ecommerce-workshop.css",
+    "aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015"
+  ],
+  "excluded_scope": [
+    "aos-platform/apps/web/src/components",
+    "aos-platform/apps/web/src/api",
+    "aos-platform/services/aos-api",
+    "aos-platform/pnpm-lock.yaml",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Full231Goal retained; only price-primary visual selector prevents stretched filter track. Original true empty/unknown/blocked and all actions/permissions unchanged; never copy visual demo business data.",
+    "PlanPrime before minimalCSS; meaningful actual browser layout RED and isolated originalCSS three-viewport reproduction then candidate geometry/screens on empty/nonempty original component, cumulative/build and independentquality; latest reviewed Web and original genuine reads/three widths + original650/no business writes/live review before precise Delivery. Other eight-workbench differences remain tracked."
+  ],
+  "lease_expires_at": "2026-10-15T02:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-15T07:41:38+08:00"
+}
