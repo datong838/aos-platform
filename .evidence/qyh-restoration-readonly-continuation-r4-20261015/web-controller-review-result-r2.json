@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "2dafca2f3e25f0020126bc8521e4783de753e7ac2d3a9f3797b6cf6f144e5779",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-closure-web-control-r2",
+    "task_id": "qyh-restoration-readonly-continuation-r4-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+      "authority_revision": "AOS-002031",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r4-20261015/web-controller-review-package-r2.txt": "d2101ee49401799a8f76113848c77dcba0b799a7a06896a032342e1b701292f0"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "控制器源码在持久化唯一意图和Web信号之前核对精确head/Lease/source/复审与旧进程现状，并拒绝重复意图；实际切换后结果没有被提前声称。",
+        "evidence": "creator_closure_web_switch_r2.py:1) base()校验HEAD='1627a39...1dd9'、Lease=OWNER、authority_revision='AOS-002031'；API监听18080/CWD=53d572ba树相等；旧Web 18434/CWD=R/command含daily-20261015/web-server.mjs；PG状态Running/CID=849896...；两次legal(review request/result/consumption)。2) phase=preflight仅写入web-preflight-r2.json(已SHA:0f4f3c...)，此时不signal旧Web。3) phase=web时先校验web-controller-review-request-r2合法，再断言closure-web-switch-intent-r1.json与closure-web-started-r1.json不存在(拒绝重复)；随后save(closure-web-switch-intent-r1,...)后才os.kill(OLD, SIGTERM)。4) 写入的intent里source=web['source']、head=HEAD，且web-actual-before-effect-r2.json显式effectExecuted=false、sdkAfterEffectUnproven=true——未提前声称切换结果。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "实际切换前物证显示旧Web64614/API72678，控制代码只signal旧Web并保持原API/PG/Chrome，后续新SDK及视觉/数据验收门保留。",
+        "evidence": "creator_closure_web_switch_r2.py:base()断言listeners(18080)==[API=72678]且cwd(API)==53d572ba+且git diff无services/aos-api/scripts/bundles改动；listeners(18434)==[OLD=64614]且command=含NODE+daily-20261015/web-server.mjs；PG CID=849896... Running、StartedAt=2026-10-14T20:36:36.408087963Z。controller仅os.kill(OLD, SIGTERM)+等待端口空闲+spawn新server，env显式剔除AOS_/PG/VITE_前缀；intent里pgApiChromeTouched=False。前置web-actual-before-effect-r2.json(SHA 2dd190...)确认effectExecuted=false、sdkAfterEffectUnproven=true。plan.md亦写明'非daily/aos全面重启替代'、'效果后源/pid/监听/真实SDK...'保留为后续验收。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "按plan完成switch后的live断言:确认新PID仍在18434监听、GET creator closure解析成功且commands[]与false flags与原650只读指纹一致；再执行视觉三宽截图与禁入保留检查。未通过不可升级authority或开启SDK写入。"
+  }
+}

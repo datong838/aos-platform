@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "2dafca2f3e25f0020126bc8521e4783de753e7ac2d3a9f3797b6cf6f144e5779",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-closure-web-control-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r4-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+      "authority_revision": "AOS-002031",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r4-20261015/web-controller-review-package-r1.txt": "e5724f4166f4ecaa01d1cdeaa78951bb9e1ac34d70374a6a34e685c750fd72c0"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "控制器在唯一Web信号前核对当前head/Lease、精确源码和合法复审、旧PID/cwd/command及原API/PG状态，持久化单次意图且不重放。",
+        "evidence": "creator_closure_web_switch.py中base()核验HEAD/1627a39050.../m分支、Lease owner/AOS-002031/过期、API 72678 on 18080 cwd source53且tree相等、OLD 64614 on 18434 command=node web-server.mjs、PG CID 8498... StartedAt 20:36、两份legal review; web phase先check preflight head、assert no intent/started、写入intent再SIGTERM旧进程。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "本次仅刷新最新冻结Web和原18080代理，API/原PG/Chrome不signal；真实SDK联动与视觉数据验收仍明确在后续门。",
+        "evidence": "switch.py只kill(OLD,SIGTERM)并Popen新web-server.mjs，env过滤AOS_/PG/VITE_;freeze脚本processEffects=False且只archive apps/web/packages/ontology-sdk/packages/ui-kit。plan.md称\"PG/API/Chrome不signal\"及\"真实SDK GET...待\"。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "补充web-preflight到intent间的实际监听与SDK响应证据;运行lsof/ss确认18434 LISTEN与18080保持;GET /creator/closure验证commands[]解析后提交后续验收门。"
+  }
+}

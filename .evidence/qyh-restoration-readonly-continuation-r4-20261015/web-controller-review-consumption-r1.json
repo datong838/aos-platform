@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-closure-web-control-r1",
+  "task_id": "qyh-restoration-readonly-continuation-r4-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+    "authority_revision": "AOS-002031",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r4-20261015/web-controller-review-package-r1.txt": "e5724f4166f4ecaa01d1cdeaa78951bb9e1ac34d70374a6a34e685c750fd72c0"
+    }
+  },
+  "status": "NEED_EVIDENCE",
+  "execution_authorized": false,
+  "result_sha256": "fcbfb4727263baf569a77a4adf22da9f8945e7942484e98ac3580c2071f5ec9e",
+  "transport_sha256": "1e9190d9add20f533057dfc6b3c55c0b1bf302146fe2a325b300c77ee144d5d9"
+}

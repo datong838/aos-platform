@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-closure-web-control-r1",
+  "baseline": {
+    "head": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+    "authority_revision": "AOS-002031",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r4-20261015/web-controller-review-package-r1.txt": "e5724f4166f4ecaa01d1cdeaa78951bb9e1ac34d70374a6a34e685c750fd72c0"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "2dafca2f3e25f0020126bc8521e4783de753e7ac2d3a9f3797b6cf6f144e5779",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

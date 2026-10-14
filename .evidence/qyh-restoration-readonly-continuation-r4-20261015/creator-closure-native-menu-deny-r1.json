@@ -1,0 +1,98 @@
+{
+  "menuGetStatus": 200,
+  "denials": {
+    "query": 400,
+    "price": 404,
+    "customer": 404,
+    "anonymous": 401
+  },
+  "network": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/health",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 400,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "status": 404,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "status": 404,
+      "method": "GET"
+    }
+  ],
+  "nonGet": [],
+  "businessComplete": false
+}

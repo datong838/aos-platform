@@ -1,0 +1,36 @@
+{
+  "widths": [
+    {
+      "width": 1280,
+      "height": 720,
+      "buttons": [
+        {
+          "right": 1376,
+          "height": 32
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "buttons": [
+        {
+          "right": 1414,
+          "height": 32
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "buttons": [
+        {
+          "right": 1894,
+          "height": 32
+        }
+      ]
+    }
+  ],
+  "allVisualPassed": false,
+  "realClosureCreated": false
+}

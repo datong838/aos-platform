@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-closure-api-control-r1",
+  "task_id": "qyh-restoration-readonly-continuation-r4-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+    "authority_revision": "AOS-002031",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r4-20261015/api-controller-review-package-r1.txt": "6d407f923715352ab0962b9cc33efa01afe41e0b785870d2830ec553474f7f0b"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "3b5fe836c1fd765f503a98cf1b17b5510a827cfbb13ab1a7a32ca9b16951a382",
+  "transport_sha256": "4ba0688bc4eed73bea433cc30040c640c756228a8145483c72eec56d15e0bec0"
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "2dafca2f3e25f0020126bc8521e4783de753e7ac2d3a9f3797b6cf6f144e5779",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-closure-live-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r4-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+      "authority_revision": "AOS-002031",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r4-20261015/closure-live-review-package-r1.txt": "4284d0e254e5430ab6a87a148b0a2a4e4643d92b87b3f770c0f4a5b03ea8f854"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "原真人同租户闭环保存视图与正式SDK当前均读取成功，空轴/blockers与空命令如实保留，参数匿名及其他模块边界未被放行。",
+        "evidence": "creator-closure-native-r1.json与after-r1.json均为200，subject/org/project匹配，blockers四值全在，commands[]空，falseflags齐全；menu-deny-r1.json记录query 400/price 404/customer 404/anon 401，且nonGet为空。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "最新API和Web精确产品源码已运行，原卷650指纹与启动批次保持且写者关闭；API/Web读波不替代每日全面重启、原真人预算、真实经营及全视觉门。",
+        "evidence": "final-runtime-proof-r2.json: head=1627, apiSourceHead=53, webManifestVerified=true, tables650Equal=true, pgSameStartedAt=20:36:36, writeDeniedSqlstate=25006, businessWrites=false, apiWebRefreshNotDailyReplacement=true, wholeGoalComplete=false。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前只读观察窗口并继续下一次精确price/closure贡献GET审计；不得把本次读波当作每日fullrestart或经营完成。"
+  }
+}

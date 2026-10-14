@@ -1,0 +1,7 @@
+# Creator closure最新API只读维护
+
+Rules/231/原授权/唯一writer/base2031/current maintenance-r4至00UTC。已提交53d572ba3265d77835a49ee92441c7ce26ea7faa，两个新reader/test与root两文件，精确方案/code双PASS合法消费、冻结244PASS/native-r2独立tmpfs已停止；原API64550/source6bf、Web64614/source6bf、PGStarted20:36:36/原CID卷161650绑定0保持。仅本次读波API刷新，不冒充新daily或aos完整重启；今日先前full6bf重启证据保留，Web产品树与新53相等无需信号，PG/Chrome不signal。
+
+使用支持freeze_current_api冻结53，排除dirty/凭据；新readonly650 before snapshot。新控制器 exactHEAD/m1/Authority2031/maintenanceLease、root+reader合法code消费对应sourceSHA、sourceguard/flagsDisabled，preflight核旧API64550/cwd/command、Web64614/当前PG CID卷Started/650。独立controller质量与合法消费后唯一fsync intent才signal旧API一次；端口free原OIDC管理readonlywrapper/原installation/bundles/trust新source启动，spawn不当监听证明，随后实际pid/cwd/listener/日志与genuineClient list closureGET/400401及未放行pricecustomer404、原650after一致。任何已有intent/未知句柄只读对账，不重放或迁移。
+
+真用户原closure若空，保留四blockers、commands[]/consume/promotion/externalfalse；不编译/绑定或造非空闭环/真人预算。原源不读/业务DBreadonly/HostworkerProviderOFF/旧unknown12不重放/Schedule不启用/noPush。三视口及原稿视觉P1仍待；实际GET只读物证不是自然经营链/完整安装恢复或发布。现场独立Prime/精确双sliceDelivery/完整maintenancehandoff/AuthorityPrime后下一登记辅助读，全Goal不缩小。

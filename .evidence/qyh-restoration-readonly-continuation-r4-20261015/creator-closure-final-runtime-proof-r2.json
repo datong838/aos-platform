@@ -1,0 +1,21 @@
+{
+  "head": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+  "apiPid": 72678,
+  "apiSourceHead": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+  "apiTreesEqualCurrent": true,
+  "webPid": 76677,
+  "webSourceHead": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+  "webManifestVerified": true,
+  "pgSameStartedAt": "2026-10-14T20:36:36.408087963Z",
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "tables650Equal": true,
+  "schema": "a0v_161",
+  "bindings": 0,
+  "originalGenuineOidcNativeAndSDK200": true,
+  "commandsRemainEmptyInActualSDK": true,
+  "fourAxesUncompleted": true,
+  "businessWrites": false,
+  "PGChromeNotSignaledThisReadWave": true,
+  "apiWebRefreshNotDailyReplacement": true,
+  "wholeGoalComplete": false
+}

@@ -1,0 +1,20 @@
+{
+  "head": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+  "apiPid": 72678,
+  "apiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-53d572ba3265d77835a49ee92441c7ce26ea7faa",
+  "webPid": 64614,
+  "samePgStartedAt": "2026-10-14T20:36:36.408087963Z",
+  "sameVolume": "aos-qyh-history159-prepared-data-20261011",
+  "sameContainerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "same650Fingerprints": true,
+  "schema": "a0v_161",
+  "enabledBindings": 0,
+  "originalOidcLoginAndReadVerified": true,
+  "fourSavedAxesAbsent": true,
+  "commandsEmpty": true,
+  "denyQuery400Anonymous401OtherModules404": true,
+  "businessWriteRequests": 0,
+  "allVisualPassed": false,
+  "wholeGoalComplete": false,
+  "apiOnlyNotDailyReplacement": true
+}

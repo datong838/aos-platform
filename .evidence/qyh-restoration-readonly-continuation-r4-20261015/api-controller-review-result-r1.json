@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "2dafca2f3e25f0020126bc8521e4783de753e7ac2d3a9f3797b6cf6f144e5779",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-closure-api-control-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r4-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+      "authority_revision": "AOS-002031",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r4-20261015/api-controller-review-package-r1.txt": "6d407f923715352ab0962b9cc33efa01afe41e0b785870d2830ec553474f7f0b"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "控制器在旧API信号前核对当前HEAD/Lease、精确source与合法代码复审、旧PID/cwd/command，持久化唯一意图且拒绝未知重放。",
+        "evidence": "FILE creator_closure_api_switch.py SHA 6f15bdc0; function base() asserts HEAD=='53d572ba...' and branch 'm1', reads task lease with owner/revision 'AOS-002031', require_api_source_candidate(REPORT), validates both reader code reviews via legal(), asserts source SHA hashes. function old() asserts listeners(18080)==[64550], cwd matches api-source-6bf7..., and command == venv/bin/python -m uvicorn a0v_qyh_restored_http:management_app --factory --host 127.0.0.1 --port 18080. Mainline checks not (E/'api-switch-intent-r1.json').exists() for no-replay, then save('api-switch-intent-r1.json',...).",
+        "assessment": "supported"
+      },
+      {
+        "claim": "本次仅更新原只读管理API，PG/Web/Chrome保持且运行写者与迁移关闭；后续真人GET及650指纹验收仍明确待完成。",
+        "evidence": "creator-closure-api-plan.md states '本读波API刷新...PG/Chrome不signal'. creator-closure-api-20261015.json (SHA decc52f2) shows startupFlags AOS_DB_MIGRATION_MODE='disabled', AOS_QYH_CRON_ENABLED='false', all workers disabled, apiStarted=false. fileplan.md and plan text note remaining blockers including 'real independent publisher' and explicitly '650 fingerprints', 'genuineClient GET closure'.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "等待人工真人GET验证closure接口响应，并核对完整650项指纹一致性，确认是否满足下一阶段业务审批条件。"
+  }
+}

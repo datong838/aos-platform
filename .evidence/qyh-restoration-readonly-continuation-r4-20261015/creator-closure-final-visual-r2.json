@@ -1,0 +1,30 @@
+{
+  "widths": [
+    {
+      "width": 1280,
+      "height": 720,
+      "right": [
+        1376
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "right": [
+        1414
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "right": [
+        1894
+      ]
+    }
+  ],
+  "webHead": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+  "apiCode": "53d572ba3265d77835a49ee92441c7ce26ea7faa",
+  "apiTreesEqualCurrent": true,
+  "allVisualPassed": false,
+  "commandsActuallyParsedEmpty": true
+}

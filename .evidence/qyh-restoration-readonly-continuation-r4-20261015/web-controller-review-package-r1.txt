@@ -1,0 +1,82 @@
+PRE-EFFECT Web-only controller CODE, not postrun/liveproof. API72678 source53 unchangedtrees=current1627, originalPG same20:36/volume650 readOnly. No oldWebsignal yet.
+CONTROLLER_SHA 9996c8bf603fcb679ee9a8cb1945c15b3df1c700cc5e3cbc22c3d905c5ca9046
+
+FILE .evidence/qyh-restoration-readonly-continuation-r4-20261015/creator_closure_web_switch.py SHA 9996c8bf603fcb679ee9a8cb1945c15b3df1c700cc5e3cbc22c3d905c5ca9046
+from pathlib import Path
+import argparse,datetime,hashlib,json,os,signal,subprocess,sys,time
+E=Path(__file__).resolve().parent;R=E.parents[1];HEAD='1627a39050cc5e8c88f223c56eb870f085091dd9';OWNER='codex-01a13484-f019-7d82-94ce-812396db9124';OLD=64614;API=72678;NODE='/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node'
+sys.path.insert(0,str(R/'scripts/long-task-watchdog'));import aos_review as gate
+def read(p):return json.loads(p.read_text())
+def cmd(*a):return subprocess.check_output(a,cwd=R,text=True,timeout=30).strip()
+def save(n,v):
+ with (E/n).open('x') as f:json.dump(v,f,indent=2);f.flush();os.fsync(f.fileno())
+def listeners(port):return sorted({int(x) for x in cmd('lsof','-t','-nP',f'-iTCP:{port}','-sTCP:LISTEN').split()})
+def cwd(pid):return next(x[1:] for x in cmd('lsof','-a','-p',str(pid),'-d','cwd','-Fn').splitlines() if x.startswith('n'))
+def legal(folder,req,res,con):
+ q=read(folder/req);v=read(folder/res);t=read((folder/res).with_suffix('.transport.json'));assert gate.consumption_record(q,v,t,v['runner_sha256'])==read(folder/con) and v['result']['verdict']=='PASS'
+def base():
+ assert cmd('git','rev-parse','HEAD')==HEAD and cmd('git','branch','--show-current')=='m1'
+ m=R.parent/'docs/palantier/AOS项目开发上下文/memory';l=read(m/'receipts/tasks'/(E.name+'.json'));assert l in read(m/'leases.json')['leases'] and l['owner']==OWNER and l['base_revision']==read(m/'authority.json')['project_revision']=='AOS-002031' and datetime.datetime.fromisoformat(l['lease_expires_at'])>datetime.datetime.now(datetime.timezone.utc)
+ assert listeners(18080)==[API] and cwd(API)==str(R/'.evidence/qyh-full-system-restoration-20261011/private/api-source-53d572ba3265d77835a49ee92441c7ce26ea7faa') and not cmd('git','diff','53d572ba3265d77835a49ee92441c7ce26ea7faa','HEAD','--','services/aos-api','scripts','bundles')
+ assert listeners(18434)==[OLD] and cwd(OLD)==str(R) and cmd('ps','-p',str(OLD),'-o','command=')==NODE+' '+str(R/'.evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/web-server.mjs')
+ pg=json.loads(cmd('docker','--context','colima-aos-extension','inspect','qyh-restored-pg-20261011'))[0];assert pg['Id']=='84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c' and pg['State']['Running'] and pg['State']['StartedAt']=='2026-10-14T20:36:36.408087963Z' and len(pg['Mounts'])==1 and pg['Mounts'][0]['Name']=='aos-qyh-history159-prepared-data-20261011'
+ legal(R/'.evidence/qyh-creator-closure-readonly-client-20261015','code-review-request-r3.json','code-review-result-r3.json','code-review-consumption-r3.json');legal(R/'.evidence/qyh-creator-closure-readonly-contract-20261015','code-review-request-r1.json','code-review-result-r1.json','code-review-consumption-r1.json')
+ w=read(E/'creator-closure-web-source.json');s=Path(w['source']);assert w['head']==HEAD and w['port']==18434 and w['apiTarget']=='http://127.0.0.1:18080';assert {str(p.relative_to(s)):hashlib.sha256(p.read_bytes()).hexdigest() for p in s.rglob('*') if p.is_file()}==w['manifest'];assert all(hashlib.sha256((s/f).read_bytes()).hexdigest()==h for f,h in w['sourceHashes'].items())
+ return w
+p=argparse.ArgumentParser();p.add_argument('--phase',choices=['preflight','web'],required=True);a=p.parse_args();web=base()
+if a.phase=='preflight':save('web-preflight-r1.json',dict(head=HEAD,oldWebPid=OLD,apiPid=API,manifestVerified=True,sourceHashesVerified=True,otherServicesTouched=False));sys.exit(0)
+req=read(E/'web-controller-review-request-r1.json');assert req['task_id']==E.name and req['owner']==OWNER;gate.validate_request(R,req);legal(E,'web-controller-review-request-r1.json','web-controller-review-result-r1.json','web-controller-review-consumption-r1.json');assert 'CONTROLLER_SHA '+hashlib.sha256(Path(__file__).read_bytes()).hexdigest() in (E/'web-controller-review-package-r1.txt').read_text()
+assert not (E/'closure-web-switch-intent-r1.json').exists() and not (E/'closure-web-started-r1.json').exists();assert read(E/'web-preflight-r1.json')['head']==HEAD
+entry=(R/'.evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/web-server.mjs').read_text().replace("'web-source.json'","'creator-closure-web-source.json'").replace('private/daily-vite-cache','private/creator-closure-vite-cache');server=E/'creator-closure-web-server.mjs';assert not server.exists();server.write_text(entry)
+save('closure-web-switch-intent-r1.json',dict(head=HEAD,oldPid=OLD,source=web['source'],pgApiChromeTouched=False));os.kill(OLD,signal.SIGTERM)
+for _ in range(100):
+ r=subprocess.run(['lsof','-t','-nP','-iTCP:18434','-sTCP:LISTEN'],capture_output=True,text=True)
+ if not r.stdout.strip():break
+ time.sleep(.2)
+else:raise RuntimeError('stop unknown: reconcile only')
+save('closure-web-old-stop-r1.json',dict(oldPid=OLD,portFree=True))
+env={k:v for k,v in os.environ.items() if not k.startswith(('AOS_','PG','VITE_'))}
+with (E/'creator-closure-live-web-r1.log').open('x') as log:proc=subprocess.Popen([NODE,str(server)],cwd=R,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+save('closure-web-started-r1.json',dict(head=HEAD,pid=proc.pid,source=web['source'],spawnedOnly=True));print(dict(webPid=proc.pid,spawnedOnly=True))
+
+FILE .evidence/qyh-restoration-readonly-continuation-r4-20261015/creator-closure-web-plan.md SHA 373c4acfe628bab31ded4b06c539219e7cd1447937d16efb4ddf3e3b7b1088ea
+# 只读closure客户端精确Web更新
+
+维护r4/base2031，同owner至00UTC，全Goal/原数据/用户dirty保护。当前HEAD1627a39050cc5e8c88f223c56eb870f085091dd9；后端API72678/source53，最新services/scripts/bundles树与53完全相等，原650/161/绑定0/PGStarted20:36:36保持。Web64614仍6bf。3个登记Web文件仅parser/test/返回类型，READONLY空或原四元组与flags不变，RED2fail、原SDKTypeError、TS2322保留，407冻结PASS/tsc0及client-r3/type-r1独立PASS合法消费。
+
+先Git archive最新Web/ontology-sdk/ui-kit，排除全部.env/dirty/凭据，校3源码hash，fullmanifest私有0700；复用已装依赖，不改锁/安装。Web-only fresh控制器当前head/m1/Lease2031、真实API72678cwd53/树相等、原PG同CID卷Started、旧Web64614cwd/准确command、manifest和3sourceHashes、合法review同transport。独立controller冻结质量门/消费，唯一fsync intent后仅一次旧Websignal/端口free，原proxy18080/Vite当前source新启动；spawn不能当监听证明。PG/API/Chrome不signal；不是daily/aos全面重启替代。已有intent/未知句柄只读对账不重放。
+
+效果后源/pid/监听/真实SDK GETcreator closure解析成功且commands[]与falseflags，原真人身份/菜单读/原650只读指纹与先前对账/三宽截图/真实禁入保留。没有编译/绑定/POST/预算批准或源读，价格客户仍404。现场独立Prime/精确各sliceDelivery/完整maintenancehandoff/AuthorityPrime/下一登记helper；自然经营/安装全生命周期/八真实场景/视觉P1/观察发布仍待。
+
+FILE .evidence/qyh-restoration-readonly-continuation-r4-20261015/web-preflight-r1.json SHA 0f4f3c598faedaaf4d780c280608bf7ed34871a12152de01146c0f3dbc18ec3d
+{
+  "head": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+  "oldWebPid": 64614,
+  "apiPid": 72678,
+  "manifestVerified": true,
+  "sourceHashesVerified": true,
+  "otherServicesTouched": false
+}
+FILE .evidence/qyh-restoration-readonly-continuation-r4-20261015/freeze_creator_closure_web.py SHA fd9b1294e2c350b52cbf1f4c086d94b6675f786282edca48a24414820a7f360f
+from pathlib import Path,PurePosixPath
+import io,json,hashlib,os,subprocess,tarfile
+E=Path(__file__).resolve().parent;R=E.parents[1];HEAD='1627a39050cc5e8c88f223c56eb870f085091dd9'
+assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()==HEAD
+source=E/'private'/('creator-closure-web-'+HEAD);out=E/'creator-closure-web-source.json';assert not source.exists() and not out.exists()
+proof=json.loads((R/'.evidence/qyh-creator-closure-readonly-client-20261015/source-verification-r3.json').read_text());hashes=proof['sourceAfter'];assert all(x['returncode']==0 for x in proof['results'].values())
+raw=subprocess.check_output(['git','archive',HEAD,'apps/web','packages/ontology-sdk','packages/ui-kit'],cwd=R);members={}
+with tarfile.open(fileobj=io.BytesIO(raw)) as archive:
+ for item in archive.getmembers():
+  p=PurePosixPath(item.name);assert not p.is_absolute() and '..' not in p.parts and (item.isfile() or item.isdir())
+  if item.isfile() and not any(x.startswith('.env') for x in p.parts):members[item.name]=archive.extractfile(item).read()
+assert all(hashlib.sha256(members[f]).hexdigest()==h for f,h in hashes.items())
+with (E/'creator-closure-web-freeze-intent.json').open('x') as f:json.dump({'head':HEAD,'source':str(source),'fileCount':len(members),'dirtyCopied':False,'credentialsCopied':False},f,indent=2);f.flush();os.fsync(f.fileno())
+source.mkdir(parents=True,mode=0o700)
+for name,body in members.items():
+ p=source/name;p.parent.mkdir(parents=True,exist_ok=True,mode=0o700);p.write_bytes(body);p.chmod(0o600)
+manifest={name:hashlib.sha256(body).hexdigest() for name,body in members.items()};assert {str(p.relative_to(source)):hashlib.sha256(p.read_bytes()).hexdigest() for p in source.rglob('*') if p.is_file()}==manifest
+(source/'apps/web/node_modules').symlink_to(R/'apps/web/node_modules',target_is_directory=True)
+with out.open('x') as f:json.dump({'head':HEAD,'source':str(source),'manifest':manifest,'sourceHashes':hashes,'port':18434,'apiTarget':'http://127.0.0.1:18080','processEffects':False},f,indent=2)
+print({'head':HEAD,'fileCount':len(manifest),'processEffects':False})
+
+Webreport head1627/sourceHashes fromsource-verification-r3/full764manifest actualpreflight verified, not allmanifest printed. Newsource safearchive/actual3 hashes, no dirty/env/credentials. SpawnOnly explicitlynotactualListener. User authorized localmaintenance, PrimePASS is onlyquality.

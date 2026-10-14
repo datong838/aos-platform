@@ -1,0 +1,14 @@
+{
+  "apiListener": "72678",
+  "oldWebListener": "64614",
+  "oldWebCommand": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/web-server.mjs",
+  "newSourceHead": "1627a39050cc5e8c88f223c56eb870f085091dd9",
+  "newSourceHashes": {
+    "apps/web/src/api/ecommerceWorkshop/parser.ts": "2cdd8d9bf4dde1e320eea0fd9b675a2a4da50948aaa52d7c78462dfa3ca60d5d",
+    "apps/web/src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts": "5059667fd830b3252f8e2b43bd6f70cd7c03f79f870ad0f99e1b276bb0f98b54",
+    "apps/web/src/api/ecommerceWorkshop/contracts.ts": "56ada41d5a542938a80f57923f87e650a38523e97246c8c36bd6e7c214d34338"
+  },
+  "newSourceManifestSha": "944b15fbb78df403f98665cdfbd846e1d5c0b45d71a2ee19667e76e55c45bf98",
+  "effectExecuted": false,
+  "sdkAfterEffectUnproven": true
+}

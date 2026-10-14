@@ -1,0 +1,14 @@
+{
+  "old": "AOS-002030",
+  "newExpected": "AOS-002031",
+  "head": "2f9362bb8fcf71eb167d8d18630a7d82cdeef824",
+  "tasks": [
+    "qyh-creator-workflow-read-admission-20261014",
+    "qyh-creator-workflow-bounded-reader-20261014",
+    "qyh-creator-workflow-read-failure-ui-20261014",
+    "qyh-restoration-readonly-continuation-r3-20261014"
+  ],
+  "onlySlicesAndMaintenanceHandoff": true,
+  "wholeGoalComplete": false,
+  "personalMemoryWrites": false
+}
