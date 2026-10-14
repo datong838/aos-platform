@@ -1,0 +1,62 @@
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "path": "/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+  "status": 200,
+  "apiHead": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "dtoKeys": [
+    "schemaVersion",
+    "tenant",
+    "evaluatedAt",
+    "dataCutoff",
+    "status",
+    "products",
+    "inventory",
+    "plans",
+    "ledger",
+    "unavailableGroups"
+  ],
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "readStatus": "ready",
+  "cutoff": "2026-10-14T04:45:13.241659Z",
+  "ledger": {
+    "products": 57,
+    "inventory": 62,
+    "plans": 0,
+    "unmatchedInventory": 0
+  },
+  "unavailableGroups": [],
+  "sampleProductRefs": [
+    {
+      "resourceType": "Product",
+      "resourceId": "niushop:1:9",
+      "revision": null,
+      "contentHash": "sha256:d7c8c1aeb52650318f06d2aec2491671e91ed837cad329ae58e62d026e29ba36",
+      "authority": "ecom_object"
+    },
+    {
+      "resourceType": "Product",
+      "resourceId": "niushop:1:8",
+      "revision": null,
+      "contentHash": "sha256:ec625baab50a011b6975974f27eeff09ecb53588c2aa7342c60236ccc304a513",
+      "authority": "ecom_object"
+    },
+    {
+      "resourceType": "Product",
+      "resourceId": "niushop:1:7",
+      "revision": null,
+      "contentHash": "sha256:619b220e42cc6a5d59e19092d1e4c065cec6023d2b361e1c7aa8d1db0f6fe8af",
+      "authority": "ecom_object"
+    }
+  ],
+  "readOnly": true,
+  "at": "2026-10-14T04:45:13.287Z",
+  "noSourceConnectorOrBusinessCommand": true
+}

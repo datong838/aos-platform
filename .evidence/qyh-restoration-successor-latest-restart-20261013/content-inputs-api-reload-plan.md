@@ -1,0 +1,5 @@
+# 当前已审阅内容输入GET的只读API切换
+
+原维护Task qyh-daily-readonly-schema-compat-20261014/sameowner/base2027/06:00UTC范围继续。仅换原18080 API78287（cwd冻结6c）到最新已提交11037bd4b91f654effb467cc987fc1e83929753e私有gitarchive；PG/Web/Chrome不操作，无DDL/预算/source/worker/Provider/oldRun。复用已有analyst_learning_r5_api_reload.py精确模式，仅实际旧PID/source/Task/证据/receipt名称更新；加当前Authority=Leasebase检查及最新freeze全部7个审阅/未变sourceSHA与已提交候选hash一致。原normalOIDC/已安装ID/只读wrapper全部沿用，sourceguard和codePASS canonical消费hash在任何信号之前验证。
+
+源版本、PID/port/cwd、当前Lease与唯一写者、原vol/schema/bindings已读回；一次intent fsync后一次SIGTERM，不settle则保留intent对账不得再次signal。新Popen仅spawn，不凭此成功；独立pid/cwd/listener/native前后fingerprint和原normalOIDC真GET/真实DTO/原稿/禁入+Prime后收口，切片Task仍无Delivery。每天全面PG/API/Web已在今日原卷6c实际完成，当前是经审阅新代码读取切片API-only刷新，不拿此替代每天全重启。未知任何原API结果不重放旧phase/guardstart。

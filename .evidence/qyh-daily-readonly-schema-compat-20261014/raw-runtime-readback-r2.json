@@ -1,0 +1,155 @@
+[
+  {
+    "command": [
+      "ps",
+      "-p",
+      "78287,78346",
+      "-o",
+      "pid=,comm="
+    ],
+    "returncode": 0,
+    "stdout": "78287 /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python\n78346 /Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "lsof",
+      "-a",
+      "-p",
+      "78287,78346",
+      "-d",
+      "cwd",
+      "-Fn"
+    ],
+    "returncode": 0,
+    "stdout": "p78287\nfcwd\nn/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-6c9b65777eec4ab0688fa50a318e40b0a9b05d9b\np78346\nfcwd\nn/Users/ddt/work/projects/ai_agent/aos-platform\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "lsof",
+      "-nP",
+      "-iTCP:18080",
+      "-iTCP:18434",
+      "-sTCP:LISTEN"
+    ],
+    "returncode": 0,
+    "stdout": "COMMAND     PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\npython3.1 78287  ddt   10u  IPv4 0xc8847c194d7c73de      0t0  TCP 127.0.0.1:18080 (LISTEN)\nnode      78346  ddt   20u  IPv4 0x5fb2e72b51689ab8      0t0  TCP 127.0.0.1:18434 (LISTEN)\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "ps",
+      "-p",
+      "78346",
+      "-o",
+      "args="
+    ],
+    "returncode": 0,
+    "stdout": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2/web-server.mjs\n",
+    "stderr": ""
+  },
+  {
+    "procedure": "ps API argv flags/entrypoint compare; private paths not printed",
+    "managementReadonlyFlag": false,
+    "originalGuardScript": false,
+    "currentSourceCandidateReport": false
+  },
+  {
+    "procedure": "docker inspect exact original container; Config.Env excluded",
+    "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "startedAt": "2026-10-14T02:56:36.001669303Z",
+    "mounts": [
+      {
+        "Type": "volume",
+        "Name": "aos-qyh-history159-prepared-data-20261011",
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-qyh-history159-prepared-data-20261011/_data",
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "RW": true,
+        "Propagation": ""
+      }
+    ],
+    "ports": {
+      "5432/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "18446"
+        }
+      ]
+    }
+  },
+  {
+    "checkedAt": "2026-10-14T04:04:33.887081+00:00",
+    "activeLeases": [
+      {
+        "task": "qyh-daily-readonly-schema-compat-20261014",
+        "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+        "base": "AOS-002027",
+        "expires": "2026-10-14T06:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "procedure": "actual Python json parse all650 full fingerprints equality, union key comparison, no DB rerun",
+    "snapshots": [
+      {
+        "sourceFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2-before.json",
+        "sourceSha256": "c60fa6820dc73424020c2a4e424a77474cdfe349c8a894b427c2efc4fcc89a9b",
+        "fullDictionaryCanonicalSha256": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+        "tables": 650,
+        "mismatches": [],
+        "native": {
+          "cluster": "7695302940039200809",
+          "schema": "a0v_161",
+          "enabledBindings": 0,
+          "otherActiveClients": 0
+        },
+        "pgStartedAt": "2026-10-14T02:21:20.479431743Z"
+      },
+      {
+        "sourceFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2-after-pg.json",
+        "sourceSha256": "3360be26f4f1262e72411989c169f6512e219ec1083c40ebb24900f1705d977d",
+        "fullDictionaryCanonicalSha256": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+        "tables": 650,
+        "mismatches": [],
+        "native": {
+          "cluster": "7695302940039200809",
+          "schema": "a0v_161",
+          "enabledBindings": 0,
+          "otherActiveClients": 0
+        },
+        "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+      },
+      {
+        "sourceFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2-after-browser.json",
+        "sourceSha256": "caaeccd018a88a23df025d0632cde9109b5b2d4e600312ceae53fcaf5657b3ad",
+        "fullDictionaryCanonicalSha256": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+        "tables": 650,
+        "mismatches": [],
+        "native": {
+          "cluster": "7695302940039200809",
+          "schema": "a0v_161",
+          "enabledBindings": 0,
+          "otherActiveClients": 0
+        },
+        "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+      },
+      {
+        "sourceFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-final-readonly.json",
+        "sourceSha256": "7cc9118ee373edae579fca7d3b61fe0ee7014557998cdc34dec4238ffae53311",
+        "fullDictionaryCanonicalSha256": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+        "tables": 650,
+        "mismatches": [],
+        "native": {
+          "cluster": "7695302940039200809",
+          "schema": "a0v_161",
+          "enabledBindings": 0,
+          "otherActiveClients": 0
+        },
+        "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+      }
+    ]
+  }
+]

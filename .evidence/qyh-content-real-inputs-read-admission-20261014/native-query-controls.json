@@ -1,0 +1,32 @@
+{
+  "queryScopeOverrideStatus": 400,
+  "controls": [
+    {
+      "label": "保存草稿",
+      "disabled": true
+    },
+    {
+      "label": "批准并发布",
+      "disabled": true
+    },
+    {
+      "label": "生成方案",
+      "disabled": false
+    },
+    {
+      "label": "保存为草稿",
+      "disabled": false
+    },
+    {
+      "label": "重新生成",
+      "disabled": false
+    },
+    {
+      "label": "批准并发布",
+      "disabled": false
+    }
+  ],
+  "onlyDOMInspection": true,
+  "noBusinessActionClicked": true,
+  "at": "2026-10-14T04:48:00.865Z"
+}

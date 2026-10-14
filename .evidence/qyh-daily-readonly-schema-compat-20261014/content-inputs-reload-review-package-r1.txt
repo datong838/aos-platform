@@ -1,0 +1,279 @@
+PROSPECTIVE ORIGINAL API ONLY RELOAD QUALITY. Current same-owner two disjoint TaskLeases base2027; original maintenance task owns API effects, newcode task owns product slice. This is original maintenance coded controller review before any effect. No operational budget or wholeGoal permission. Scope is exact oldAPI78287/cwd6c/18080 to committed reviewed110 freeze, noPG/Web/Chrome. Readonly originalguard remains; controller follows existing reviewed reload pattern but added currentAuthority/source7hash fencing. Actual oldAPI baseline404 via ordinaryuserOIDC saved. Before effect assertions are authoritative, sourcefreeze notPopenproof; later native/browser/fingerprint/Prime stillpending.
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/content-inputs-api-reload-plan.md SHA 9b0f843c8aef2b27ddac6a83f6b76d450b0604d68b862bfe4ccfef5aea174829
+# 当前已审阅内容输入GET的只读API切换
+
+原维护Task qyh-daily-readonly-schema-compat-20261014/sameowner/base2027/06:00UTC范围继续。仅换原18080 API78287（cwd冻结6c）到最新已提交11037bd4b91f654effb467cc987fc1e83929753e私有gitarchive；PG/Web/Chrome不操作，无DDL/预算/source/worker/Provider/oldRun。复用已有analyst_learning_r5_api_reload.py精确模式，仅实际旧PID/source/Task/证据/receipt名称更新；加当前Authority=Leasebase检查及最新freeze全部7个审阅/未变sourceSHA与已提交候选hash一致。原normalOIDC/已安装ID/只读wrapper全部沿用，sourceguard和codePASS canonical消费hash在任何信号之前验证。
+
+源版本、PID/port/cwd、当前Lease与唯一写者、原vol/schema/bindings已读回；一次intent fsync后一次SIGTERM，不settle则保留intent对账不得再次signal。新Popen仅spawn，不凭此成功；独立pid/cwd/listener/native前后fingerprint和原normalOIDC真GET/真实DTO/原稿/禁入+Prime后收口，切片Task仍无Delivery。每天全面PG/API/Web已在今日原卷6c实际完成，当前是经审阅新代码读取切片API-only刷新，不拿此替代每天全重启。未知任何原API结果不重放旧phase/guardstart。
+
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/content_inputs_api_reload.py SHA 6267e15a5a2574ef2efc52851c6696f2264fa918eeae3c6db9967acbfc9ca569
+"""Fresh one-attempt reload of exact current readonly API; no PG/Web/Chrome action."""
+from pathlib import Path
+import datetime,json,os,signal,subprocess,sys,time
+sys.dont_write_bytecode=True
+R=Path(__file__).resolve().parents[2];P=Path(__file__).resolve().parent;F=R/'.evidence/qyh-full-system-restoration-20261011';PY=R/'services/aos-api/.venv/bin/python'
+Q=R/'.evidence/qyh-content-real-inputs-read-admission-20261014'
+import hashlib
+_review=json.loads((Q/'code-review-result-r5.json').read_text());_consume=json.loads((Q/'code-review-consumption-r5.json').read_text())
+assert _review['result']['verdict']=='PASS' and _consume['status']=='CONSUMED_MATERIAL_REVIEW','No effects before exact consumed PASS'
+assert _consume['result_sha256']==hashlib.sha256(json.dumps(_review,sort_keys=True).encode()).hexdigest()
+OWNER='codex-01a13484-f019-7d82-94ce-812396db9124';OLD=78287;OLD_SOURCE=F/'private/api-source-6c9b65777eec4ab0688fa50a318e40b0a9b05d9b';REPORT=F/'content-inputs-api-20261014.json'
+assert not (P/'content-inputs-api-reload-intent.json').exists() and not (P/'content-inputs-api-started.json').exists(),'Existing operation: readonly reconcile,never resend'
+m=R.parent/'docs/palantier/AOS项目开发上下文/memory';lease=[x for x in json.loads((m/'leases.json').read_text())['leases'] if x['task_id']=='qyh-daily-readonly-schema-compat-20261014'];assert len(lease)==1 and lease[0]['owner']==OWNER and datetime.datetime.fromisoformat(lease[0]['lease_expires_at'])>datetime.datetime.now(datetime.timezone.utc)
+sys.path.insert(0,str(R/'scripts'));import a0v_qyh_restored_http as guard
+source=guard.require_api_source_candidate(REPORT.resolve());report=json.loads(REPORT.read_text());assert report['head']==subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()
+assert lease[0]['base_revision']==json.loads((m/'authority.json').read_text())['project_revision']=='AOS-002027'
+_h=json.loads((Q/'code-candidate-source-hashes.json').read_text())['candidateFileHashes']
+assert all(hashlib.sha256((source/f).read_bytes()).hexdigest()==h for f,h in _h.items()),'source candidate differs from reviewed slice'
+assert 'n'+str(OLD_SOURCE)+'\n' in subprocess.check_output(['lsof','-a','-p',str(OLD),'-d','cwd','-Fn'],text=True)
+def listeners():
+ x=subprocess.run(['lsof','-t','-nP','-iTCP:18080','-sTCP:LISTEN'],capture_output=True,text=True);return sorted({int(i) for i in x.stdout.split()})
+assert listeners()==[OLD]
+def record(name,value):
+ with (P/name).open('x') as f:json.dump(value,f,ensure_ascii=False,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
+record('content-inputs-api-reload-intent.json',{'oldPid':OLD,'oldCwd':str(OLD_SOURCE),'newHead':report['head'],'source':str(source),'port':18080,'sourceGuardPassed':True,'pgWebChromeTouched':False,'normalReadonlyFlagsRetained':True})
+os.kill(OLD,signal.SIGTERM)
+for _ in range(100):
+ if not listeners():break
+ time.sleep(.2)
+assert not listeners(),'old stop not settled;reconcile-only'
+record('content-inputs-api-old-stop.json',{'oldPid':OLD,'portFree':True})
+args=[str(PY),str(R/'scripts/a0v_qyh_restored_http.py'),'--api-identity-file',str(F/'private/restored-identity.json'),'--serve-management-readonly','--bundle-root',str(F/'selected-public-bundles'),'--trust-roots-file',str(F/'restoration-public-trust-roots.json'),'--source-candidate',str(REPORT),'--management-oidc-config','/Users/ddt/.aos-local-identities/qyh-20261013/aos-management-oidc.json','--installed-readonly-installation','ab2fd72f-d81c-400d-bbbc-e1589a159d6b']
+with (P/'live-api-content-inputs.log').open('x') as log:proc=subprocess.Popen(args,cwd=R,env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'},stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+record('content-inputs-api-started.json',{'pid':proc.pid,'head':report['head'],'source':str(source),'port':18080,'terminalVerified':False,'pgWebChromeTouched':False});print(json.dumps({'newPid':proc.pid,'spawnedOnly':True,'pgWebChromeTouched':False}))
+
+FILE .evidence/qyh-daily-readonly-schema-compat-20261014/registration.json SHA 8709cb95b390673020894500e069dcab21703cdf8463847c7ef0a7cb729a4153
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-daily-readonly-schema-compat-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002027",
+  "scope": [
+    "aos-platform/.evidence/qyh-full-system-restoration-20261011",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume",
+    "aos-platform/maintenance/qiyuehui-restored-api",
+    "aos-platform/maintenance/qiyuehui-restored-web",
+    "aos-platform/scripts/a0v_qyh_restored_http.py",
+    "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py",
+    "aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013",
+    "aos-platform/.evidence/qyh-daily-readonly-schema-compat-20261014"
+  ],
+  "excluded_scope": [
+    "aos-platform/maintenance/current-preview-database",
+    "aos-platform/maintenance/current-preview-api",
+    "aos-platform/maintenance/current-preview-web",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py"
+  ],
+  "expected_outputs": [
+    "Carry all incomplete original restoration requirements and same original data/approval/identity into new-owner maintenance;no whole completion claim",
+    "Latest committed freeze excludes dirty; original role readonly native root8;fresh same-volume PG/API/Web restart, same-cutoff full fingerprint/no-effect/owned real OIDC SPA/browser reads then continue business Loop",
+    "Unknown effects read-only reconcile; keep Host/worker/Provider OFF,no old Run/mall source/manual execution/duplicate scripts or credentials disclosure",
+    "Recover latest management READONLY API for exact161db/162closedcandidate without migration or runtime override;strict runtime/unknownschema deny,fullreview;then latestPG/API/Web real8page/visual/deny-entry"
+  ],
+  "lease_expires_at": "2026-10-14T06:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-14T10:31:30+08:00"
+}
+FILE .evidence/qyh-full-system-restoration-20261011/content-inputs-api-20261014.json SHA 8d56db6c827d61a2482d943848e278b48f185c0016d696c62aa108fa2f0f7108
+{
+  "outcome": "CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START",
+  "head": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-11037bd4b91f654effb467cc987fc1e83929753e",
+  "fileCount": 8682,
+  "manifestSha256": "0e5e04b8c4ab5432a6237b270b1614336410f48ca07f11a1e07a5f7f0e14183c",
+  "repositoryBundleFileCount": 1827,
+  "repositoryBundleManifestSha256": "1e857c0dc55fc06c77888c021ad990babbd2b2f6dc194134981125b11b678735",
+  "mainSha256": "2d97ff3dbb84d8d948110b38bb7b8ae3c3462b5d7661d2cf1c1c830c85e32b4f",
+  "originalPreviewEntrySha256": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+  "explicitStartupEnabledSwitches": [
+    "AOS_AIP_LOGIC_AUTOMATION_ENABLED",
+    "AOS_ECOM_CONTENT_AGENTRUN_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_CAPACITY_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_STEP_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_TASKRUN_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_WORKER_ENABLED",
+    "AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED",
+    "AOS_ECOM_FEEDBACK_WORKER_ENABLED",
+    "AOS_ECOM_IMPROVEMENT_WORKER_ENABLED",
+    "AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED",
+    "AOS_JDBC_SSH_PREBUILD_ENABLED",
+    "AOS_QYH_CRON_ENABLED",
+    "AOS_SNAPSHOT_GROUP_WORKER_ENABLED"
+  ],
+  "startupFlags": {
+    "AOS_DOTENV_DISABLED": "1",
+    "AOS_DB_MIGRATION_MODE": "disabled",
+    "AOS_AIP_BINDING_REQUIRE_PRIVATE": "1",
+    "AOS_QYH_CRON_ENABLED": "false",
+    "AOS_AIP_LOGIC_AUTOMATION_ENABLED": "false",
+    "AOS_SNAPSHOT_GROUP_WORKER_ENABLED": "false",
+    "AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED": "false",
+    "AOS_EXTENSION_RUNTIME_HOST_ENABLED": "0",
+    "AOS_JDBC_SSH_PREBUILD_ENABLED": "false",
+    "AOS_ECOM_CONTENT_TASKRUN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_AGENTRUN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_CAPACITY_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED": "false",
+    "AOS_ECOM_FEEDBACK_WORKER_ENABLED": "false",
+    "AOS_ECOM_IMPROVEMENT_WORKER_ENABLED": "false",
+    "AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED": "false",
+    "AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_STEP_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED": "false",
+    "AOS_AUTH_ALLOW_DEV": "0",
+    "AOS_AUTH_EXTERNAL_ONLY": "1",
+    "AOS_REST_CONNECTOR_MOCK": "0"
+  },
+  "exactGitArchiveFilesVerified": true,
+  "sourcePrivate0700Files0600": true,
+  "uncommittedWorktreeChangesCopied": false,
+  "credentialsCopied": false,
+  "apiStarted": false,
+  "runtimeAuthorized": false,
+  "eightPagesAccepted": false,
+  "remaining": [
+    "real independent publisher",
+    "current four-package installation",
+    "formal OIDC settings and current Owner",
+    "current configuration approval",
+    "guarded PG/API/Web restart and actual eight-page browser acceptance"
+  ]
+}
+
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/code-candidate-source-hashes.json SHA e98751996d99db14ceb7f19493f9f3122cd10d8c7e500ba2696f78c134b4bfa9
+{
+  "headBeforeCommit": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "candidateFileHashes": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "a4fc2ed254e12f01b0efd0a4268739255943288c5320dfb459e939b685d7a6d7",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "93fe0d418f6e11cd09ad620fb008b99ebd13a7e50d0a0872e4058072e1624bbe",
+    "services/aos-api/aos_api/ecommerce_workshop_content_campaign_inputs.py": "8fa43a446715b1fc4f939e91343fcf53c2e52da8b87e89684f199d167d550b46",
+    "services/aos-api/aos_api/ecommerce_content_campaign_authority_store.py": "67362f4692cd1738f89dade9d9d8989893bb112f35a9a913df92f1acdedfe07d",
+    "services/aos-api/aos_api/ecommerce_workshop_read_catalog.py": "041b25f128c8c458890a54a7631751038d8bb9ee238134c35b590d5a59b9d77d",
+    "services/aos-api/aos_api/db.py": "a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010",
+    "services/aos-api/aos_api/tenant_scope.py": "4c727d12810e6e2e9f1bba218d5fed6277afcaf4ddb7eb2ae4f67c73fc532fa6"
+  },
+  "changedProductFiles": [
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py"
+  ],
+  "otherSourcesUnchanged": true,
+  "nativeBaselineGET": 404,
+  "actualAfterReloadGET": "PENDING"
+}
+
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/code-review-result-r5.json SHA f448b3e848f4bff8bd7412b5d21e41c329d166222c59034b6739bad2db717683
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "00234d6a1064f477c2137bceea90675a59ee28b1ac20c5ed3884865910bebe37",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-content-real-inputs-read-admission-20261014-code-r5",
+    "task_id": "qyh-content-real-inputs-read-admission-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+      "authority_revision": "AOS-002027",
+      "files": {
+        ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-package-r3.txt": "f4958ff036d2aac8d0911455a777d1f6c47cf1b96cf1232553a830b54dddb929"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The current exact product diff changes only real-inputs GET admission and preserves tenant/query/install fences and every other GET/POST.",
+        "evidence": "diff shows one line in services/aos-api/aos_api/routers/ecommerce_workshop.py changing `catalog: CatalogDependency` to `catalog: ReadCatalogDependency` solely in `get_ecommerce_workshop_content_campaign_real_inputs`. Test file diff adds only `real-inputs` to explicit route whitelist and three new tests. Existing fence handlers `_reject_query_parameters` and `_require_content_campaign_installation` remain. Unreviewed GETs still use legacy catalog per `test_unreviewed_get_still_uses_legacy_admission`.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Current68 adjacent tests and explicit current3 PASSED nodes support a code-candidate commit; historical pre-change RED failures are not current failures.",
+        "evidence": "Source green-adjacent.log shows 68 passed for adjacent tests (full suite). Source red.log is labeled 'pre-change expected failure historical evidence'. Current exact diff shows 3 PASSED nodes for previously failing tests: `test_read_dependency_only_reaches_explicit_audited_get_routes`, `test_real_inputs_read_denied_before_business_data_access`, `test_admitted_real_inputs_receives_only_authenticated_tenant`.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "In the supplied implemented handler and complete subordinate read methods, the authenticated tenant and bounded readonly SELECT path are unchanged, and this one annotation change adds no lifecycle, budget, source or Provider command call.",
+        "evidence": "Handler body unchanged: calls `_reject_query_parameters`, `_require_content_campaign_installation`, then `inputs.read(org_id=principal.org_id, project_id=principal.project_id)`. Input reader uses `connect_read_only(inherit_scope=False)` with `apply_transaction_scope(conn, scope)`. Subordinate selects: `ecom_object` bounded by org/project/cutoff/limit 200; `read_snapshot` uses separate `read_connect_factory` with limit 100 on `ecommerce_campaign_head`, calendar, and variant relations. All reads verified as readonly without write/lifecycle/provider commands.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Proceed with committing only the verified one-line annotation change and the three new test cases in this scope. Ensure no other files are staged. Run final verification of adjacent 68 tests before release."
+  }
+}
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/code-review-consumption-r5.json SHA c2b31096cca48370716ed13a1d7715cc8c6142b9e079ba611f1a264c4a4fd543
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-content-real-inputs-read-admission-20261014-code-r5",
+  "task_id": "qyh-content-real-inputs-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+    "authority_revision": "AOS-002027",
+    "files": {
+      ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-package-r3.txt": "f4958ff036d2aac8d0911455a777d1f6c47cf1b96cf1232553a830b54dddb929"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "03790aa217ee98a8f03372ac2deee3ebbd7acf3d7094db62a2223fcff900a0c6",
+  "transport_sha256": "657bf3cc0a3957b46fbb6954c70e13a625db3ca0829836d2f3c4bb66e853b7a5"
+}
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/code-commit-readback.json SHA 5fcb2c6c20cead86ea5b133ac6fe5357aa050334774292f455dcc4691f4b936b
+{
+  "head": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "reviewedCandidateHashes": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "a4fc2ed254e12f01b0efd0a4268739255943288c5320dfb459e939b685d7a6d7",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "93fe0d418f6e11cd09ad620fb008b99ebd13a7e50d0a0872e4058072e1624bbe",
+    "services/aos-api/aos_api/ecommerce_workshop_content_campaign_inputs.py": "8fa43a446715b1fc4f939e91343fcf53c2e52da8b87e89684f199d167d550b46",
+    "services/aos-api/aos_api/ecommerce_content_campaign_authority_store.py": "67362f4692cd1738f89dade9d9d8989893bb112f35a9a913df92f1acdedfe07d",
+    "services/aos-api/aos_api/ecommerce_workshop_read_catalog.py": "041b25f128c8c458890a54a7631751038d8bb9ee238134c35b590d5a59b9d77d",
+    "services/aos-api/aos_api/db.py": "a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010",
+    "services/aos-api/aos_api/tenant_scope.py": "4c727d12810e6e2e9f1bba218d5fed6277afcaf4ddb7eb2ae4f67c73fc532fa6"
+  },
+  "stagedFiles": [
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/implementation-plan.md",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/registration.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/review_controller.py",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/plan-review-package-r2.txt",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/plan-review-request-r2.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/plan-review-result-r2.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/plan-review-consumption-r2.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-package-r3.txt",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-request-r5.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-result-r5.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-consumption-r5.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/red.log",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/green-adjacent.log",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/current-three-nodes-green.log",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/code-candidate-source-hashes.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/native-baseline-get.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/checkpoint.md"
+  ],
+  "officialDelivery": false,
+  "nativeAfterReload": "PENDING"
+}
+
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/native-baseline-get.json SHA 8895a0f3f6ec4f52449b3432ba8cb2bd62e348e08f61e294957a58a28cbe20ec
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "status": 404,
+  "path": "/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+  "apiHead": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "readOnly": true,
+  "at": "2026-10-14T04:34:54.716Z",
+  "secretsSaved": false
+}

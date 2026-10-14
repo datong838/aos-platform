@@ -1,0 +1,10 @@
+{
+  "oldPid": 78287,
+  "oldCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "newHead": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-11037bd4b91f654effb467cc987fc1e83929753e",
+  "port": 18080,
+  "sourceGuardPassed": true,
+  "pgWebChromeTouched": false,
+  "normalReadonlyFlagsRetained": true
+}

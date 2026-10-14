@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "00234d6a1064f477c2137bceea90675a59ee28b1ac20c5ed3884865910bebe37",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-content-real-inputs-read-admission-20261014-live-r1",
+    "task_id": "qyh-content-real-inputs-read-admission-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "11037bd4b91f654effb467cc987fc1e83929753e",
+      "authority_revision": "AOS-002027",
+      "files": {
+        ".evidence/qyh-content-real-inputs-read-admission-20261014/live-review-package-r1.txt": "4b7b57f21a756807865b51012c0e6234787d4c1dd7d2320e193ffee64c2d3bf4"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The current actual API/cwd/source and normal original-user GET evidence show the scoped real-inputs endpoint changed from404 to200 with genuine tenant-exact persisted57products/62inventory/zero plans, while scope-override query is rejected400.",
+        "evidence": "File .evidence/qyh-content-real-inputs-read-admission-20261014/native-baseline-get.json records status 404 at apiHead 6c9b65. File .evidence/qyh-content-real-inputs-read-admission-20261014/native-current-get.json records status 200 at apiHead 11037bd4, ledger products:57, inventory:62, plans:0, tenant org-org/dev-project. File .evidence/qyh-content-real-inputs-read-admission-20261014/runtime-after-readback.json confirms cwd at source-11037bd4 and listener on 18080 by pid 87013. File .evidence/qyh-content-real-inputs-read-admission-20261014/native-query-controls.json records queryScopeOverrideStatus 400.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Recorded same-original-volume/schema161/cluster/zero-enabled-bindings full650 equality and bounded readonly API-only reload evidence preserve original data and separate code/source/listening/browser proof from operational budget or wholeGoal authority.",
+        "evidence": "File .evidence/qyh-content-real-inputs-read-admission-20261014/runtime-after-readback.json shows native schema a0v_161, cluster 7695302940039200809, enabledBindings 0, full650FingerprintEqualBefore true, and wholeGoalComplete false. Code diff in .evidence/qyh-content-real-inputs-read-admission-20261014/code-candidate-source-hashes.json only changes catalog dependency to ReadCatalogDependency. Code review r5 in .evidence/qyh-content-real-inputs-read-admission-20261014/code-review-result-r5.json verdict PASS supports bounded readonly path.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The supplied report accurately leaves full visual and internal-action permission behavior, other auxiliary GETs and the natural business Goal incomplete; this slice is solely the audited readonly content-input GET and can receive only a scope-accurate Delivery.",
+        "evidence": "The live review package .evidence/qyh-content-real-inputs-read-admission-20261014/live-review-package-r1.txt header states readiness is readonlyDTO not freshmall/operationapproval. Browser text in .evidence/qyh-content-real-inputs-read-admission-20261014/browser-settled-content.json shows '已停用' and only shows read-only status. Report in .evidence/qyh-content-real-inputs-read-admission-20261014/live-and-visual-report.md explicitly states full visual/operationalbusiness incomplete, no business button clicked, and scope is solely the audited readonly content-input GET.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Accept the scope-accurate Delivery for the readonly real-inputs GET slice only; preserve the unchanged baseline for all remaining full visual, action-permission, and natural business Goal work."
+  }
+}

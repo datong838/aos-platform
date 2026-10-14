@@ -1,0 +1,508 @@
+CURRENT LIVE DAILY RESTART MATERIAL REVIEW. This is partial operational read-only maintenance validation, not whole business/visual/Goal completion. Current code already committed6c after72tests/code-r1 PASS consumed on dd baseline; do not consume old review against newHEAD. Source remains reviewed code; originalDB161/650,closed162 notapplied. Previous failed daily first attempt terminal and preserved; r2 is fresh intents. Missing aux11GET and two loading child screenshots explicit pending. Page now closed, no recreate/resend. All full650 native snapshots equal before/after actualPGrestart/API/Web/browser/final, no migration/DDL/roles/budget/oldRun/Provider or mall reads. Reviewed observations alone do not prove never-happened external state. Ask for scope-accurate conclusions only.
+
+FILE .evidence/qyh-daily-readonly-schema-compat-20261014/live-verification-20261014.json SHA b88309e24bda0ab6dcbddb37b1bc3d61d036dc079755d5609ecae9dfbcb7e1d4
+{
+  "checkedAt": "2026-10-14T03:59:55.175273+00:00",
+  "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "api": {
+    "pid": 78287,
+    "port": 18080,
+    "actualCwdMatchesFrozenHead": true,
+    "sourceGuardPassed": true
+  },
+  "web": {
+    "pid": 78346,
+    "port": 18434,
+    "actualEntryMatchesFrozenSource": true,
+    "allManifestFilesVerified": 764
+  },
+  "fingerprintComparisons": {
+    "daily-20261014-r2-before": {
+      "tables": 650,
+      "fullRowsAndHashesEqualBefore": true,
+      "native": {
+        "cluster": "7695302940039200809",
+        "schema": "a0v_161",
+        "enabledBindings": 0,
+        "otherActiveClients": 0
+      },
+      "volume": "aos-qyh-history159-prepared-data-20261011",
+      "pgStartedAt": "2026-10-14T02:21:20.479431743Z"
+    },
+    "daily-20261014-r2-after-pg": {
+      "tables": 650,
+      "fullRowsAndHashesEqualBefore": true,
+      "native": {
+        "cluster": "7695302940039200809",
+        "schema": "a0v_161",
+        "enabledBindings": 0,
+        "otherActiveClients": 0
+      },
+      "volume": "aos-qyh-history159-prepared-data-20261011",
+      "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+    },
+    "daily-20261014-r2-after-browser": {
+      "tables": 650,
+      "fullRowsAndHashesEqualBefore": true,
+      "native": {
+        "cluster": "7695302940039200809",
+        "schema": "a0v_161",
+        "enabledBindings": 0,
+        "otherActiveClients": 0
+      },
+      "volume": "aos-qyh-history159-prepared-data-20261011",
+      "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+    },
+    "daily-20261014-final-readonly": {
+      "tables": 650,
+      "fullRowsAndHashesEqualBefore": true,
+      "native": {
+        "cluster": "7695302940039200809",
+        "schema": "a0v_161",
+        "enabledBindings": 0,
+        "otherActiveClients": 0
+      },
+      "volume": "aos-qyh-history159-prepared-data-20261011",
+      "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+    }
+  },
+  "authenticatedBrowserRootReads": {
+    "task-cockpit": [
+      200
+    ],
+    "content-campaign": [
+      200
+    ],
+    "operations": [
+      200
+    ],
+    "creator-growth": [
+      200
+    ],
+    "media-studio": [
+      200
+    ],
+    "analyst": [
+      200
+    ],
+    "price-governance": [
+      200
+    ],
+    "customer": [
+      200
+    ]
+  },
+  "originalBrowserSubject": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "auxiliary404": [
+    "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+    "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+    "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+    "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+    "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+    "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+    "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+    "/api/v1/ecommerce-workshop/views/customer/contributions",
+    "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+    "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+    "/api/v1/ecommerce-workshop/views/price/closure-contributions"
+  ],
+  "currentDenyEntry": {
+    "unauthMe": 401,
+    "denyMutationBeforeRouting": 405
+  },
+  "dbWrites": false,
+  "noWholeGoalOrFullVisualAcceptance": true,
+  "remaining": [
+    "auxiliary404 reader wiring",
+    "current complete browser child states and visual repairs",
+    "budget C genuine user review/deployment",
+    "natural business chain and install lifecycle/release"
+  ]
+}
+
+
+FILE .evidence/qyh-daily-readonly-schema-compat-20261014/browser/visual-comparison.md SHA d34d61105d06cb14e1ee9c772dea68465a5ff02de7451e17ad9369690bfc2416
+# 八大工作台原稿与当前页面比对 · 2026-10-14
+
+Rules：用户方案先行、最小更改、保护原数据及用户改动；AOS工程交付与原单写者/逐波Loop/独立Prime机制。只读视觉观察，不是全波Delivery或经营闭环验收。
+
+原稿为 `/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html/`，不是 html_back。原稿入口 workshop.html 已提交到当前聊天文件面板（工具返回 queued，不声称浏览器已打开）。本次直接检视之前保留的八份 reference-*-1440.jpg 与本Task八份 *-settled-1440.png；同为1440×900、明亮主题、展开导航。当前仓库HEAD为6c9b65777eec4ab0688fa50a318e40b0a9b05d9b。实际平台导航比原稿多，演示记录与真实记录也不同，不作整屏逐像素或全状态一致声明。
+
+|工作台|本次观察|后续必须核对|
+|---|---|---|
+|日常任务总控|六同事、任务区与复盘区骨架接近；当前空任务且部分子区域仍显示读取提示，主区域高度与原稿不同|子请求终态、真实任务/复盘、底部共享技能内部滚动与短窗口|
+|内容与活动|三栏和顶部页签接近；右上来源缺失提示条遮住AI策划助手标题|提示不遮挡正文，保留真实缺失状态；草稿/风险/审批同状态比对|
+|统一运营|三栏和流程结构接近；当前是库存资料核对，原稿是订单退款；顶部指标下行文字接近边界|不同业务状态不能判详情一致；指标完整可见、真实订单态与内部滚动|
+|达人邀约|1440下三栏完整、右侧行动按钮可见；真实达人库为空|此前1280裁切尚未复验，不宣称已修；真实候选/履约态|
+|多媒体生产|三栏与生产页签存在；当前数字人直播，原稿种草文案；中栏三列卡片较窄且长文多行换行|同页签文案/短视频/生产评审与窄窗口；空记录不可伪装交付|
+|经营参谋|标题接近；多段提示占较多首屏；此截图仍显示分析记录读取提示|本截图不能用于已加载Case验收；另有真实Case只读文字证据，需新截图复验三阶段/工作区/运行门|
+|价格治理|四个筛选按钮明显被拉成长竖条，偏离原稿紧凑筛选；等待必要条件提示占首屏|优先调查局部布局拉伸；修复后1280/1440/1920复拍；不删除真实禁入信息|
+|客户关系|三栏轮廓接近；等待条件与缺来源卡片，原稿是执行中的客户唤醒任务|正式同意/最小客户数据、计划/产物/日志各状态；不复制演示客户或进度|
+
+经营参谋的 `analyst-core-interaction-settled.json` 已记录真实Case r14，Run PREPARING/CANCELLED、0/3波、阶段not_started、SourceReadiness/AnalysisReadiness blocked，且阶段评审读取失败。不能用它推导经营已完成。补拍时持有的浏览器页面已关闭，截图调用明确失败；未重放操作或替换未知标签页。上述八份截图保留其实际加载提示，不凭文件名 settled 宣称所有子区域终态。
+
+当前结论：**视觉验收未通过**，经营闭环未完成。本次没有修改产品代码、原稿、CSS或数据；没有运行/批准/发布/发送/调价/来源读取。内部滚动、所有页签、键盘焦点、200%缩放与对比度尚未完整验收。
+
+后续每台施工都应以原稿+实际同窗口/主题/导航/页签/业务状态比较，明确数据状态差异。视觉修复需先登记Task/Lease和文件级方案，优先评估 `apps/web/src/styles/45-ecommerce-workshop.css`；必要时再登记对应PriceGovernancePage.tsx、CreatorGrowthPage.tsx。当前Task不含这些产品文件，不能隐式施工。修复后截图、专项验证、独立Prime及准确Delivery均不能省略。
+
+完整长期Goal、每日最新m1与同一权威卷PG→API→Web、八步Loop和独立Prime全部保留。
+
+
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2/restart_controller.py SHA ac824046c05a0314627b49702ed174f351f89bba2439e3f7dd96db320ef9e2bf
+"""One-intent-per-phase exact existing-volume restart through original guarded entry."""
+from pathlib import Path
+import argparse,datetime,hashlib,io,json,os,signal,subprocess,sys,tarfile,time
+sys.dont_write_bytecode=True
+R=Path(__file__).resolve().parents[3];P=Path(__file__).resolve().parent;F=R/'.evidence/qyh-full-system-restoration-20261011'
+TASK='qyh-daily-readonly-schema-compat-20261014';OWNER='codex-01a13484-f019-7d82-94ce-812396db9124';PG='qyh-restored-pg-20261011';CID='84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c';VOL='aos-qyh-history159-prepared-data-20261011'
+PY=R/'services/aos-api/.venv/bin/python';NODE=Path('/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node')
+API_REPORT=F/'daily-compat-api-20261014.json'
+def command(*args):return subprocess.check_output(list(args),text=True,timeout=30).strip()
+def record(name,value):
+ with (P/name).open('x') as f:json.dump(value,f,ensure_ascii=False,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
+def lease():
+ m=R.parent/'docs/palantier/AOS项目开发上下文/memory';ls=json.loads((m/'leases.json').read_text())['leases'];x=[l for l in ls if l['task_id']==TASK];assert len(x)==1 and x[0]['owner']==OWNER and datetime.datetime.fromisoformat(x[0]['lease_expires_at'])>datetime.datetime.now(datetime.timezone.utc);assert not any(l['task_id']=='qyh-full-system-restoration-20261011' for l in ls)
+def pg():
+ x=json.loads(command('docker','--context','colima-aos-extension','inspect',PG))[0];assert x['Id']==CID and len(x['Mounts'])==1 and x['Mounts'][0]['Name']==VOL and x['NetworkSettings']['Ports']['5432/tcp']==[{'HostIp':'127.0.0.1','HostPort':'18446'}];return x
+def cwd(pid):
+ s=command('lsof','-a','-p',str(pid),'-d','cwd','-Fn');return next(x[1:] for x in s.splitlines() if x.startswith('n'))
+def listeners(port):
+ p=subprocess.run(['lsof','-t','-nP','-iTCP:'+str(port),'-sTCP:LISTEN'],text=True,capture_output=True);return sorted({int(x) for x in p.stdout.split()})
+def stop(pid,port,expected_cwd):
+ assert listeners(port)==[pid] and cwd(pid)==expected_cwd
+ os.kill(pid,signal.SIGTERM)
+ for _ in range(100):
+  if not listeners(port):return
+  time.sleep(.2)
+ raise RuntimeError('known stop has not settled; reconcile existing PID, do not resend')
+def original_guard():
+ sys.path.insert(0,str(R/'scripts'));import a0v_qyh_restored_http as guard
+ assert guard.require_api_source_candidate(API_REPORT.resolve())==Path(json.loads(API_REPORT.read_text())['source']);return guard
+parser=argparse.ArgumentParser();parser.add_argument('--phase',choices=['prepare','pg','api','web'],required=True);a=parser.parse_args();lease()
+assert not (P/(a.phase+'-intent.json')).exists() and not (P/(a.phase+'-terminal.json')).exists(),'existing phase: readonly reconcile,never resend'
+r=json.loads(API_REPORT.read_text());assert r['head']==command('git','rev-parse','HEAD') and r['outcome']=='CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START'
+assert r['startupFlags']['AOS_EXTENSION_RUNTIME_HOST_ENABLED']=='0' and r['startupFlags']['AOS_DB_MIGRATION_MODE']=='disabled';assert all(r['startupFlags'][k] in ['false','0'] for k in r['explicitStartupEnabledSwitches']);original_guard();x=pg();assert x['State']['Running']
+if a.phase=='prepare':
+ before=json.loads((P/'before-restart.json').read_text());assert before['native']['schema']=='a0v_161' and before['native']['enabledBindings']==0 and len(before['fingerprints'])==650
+ assert listeners(18080)==[];assert listeners(18434)==[7590] and cwd(7590)==str(R)
+ b=json.loads((P.parent/'backup-readback.json').read_text());assert b['existingTwoBackupCopiesReadbackEqual']
+ source=P/'private'/('web-source-'+r['head']);assert not source.exists();raw=subprocess.check_output(['git','archive',r['head'],'apps/web','packages/ontology-sdk','packages/ui-kit'],cwd=R,timeout=60);manifest={}
+ with tarfile.open(fileobj=io.BytesIO(raw)) as t:
+  members=t.getmembers();assert all(not Path(m.name).is_absolute() and '..' not in Path(m.name).parts and (m.isfile() or m.isdir()) for m in members)
+  record('prepare-intent.json',{'head':r['head'],'volume':VOL,'oldApiPid':None,'oldWebPid':7590,'apiCwd':None,'webCwd':cwd(7590),'newWebSource':str(source),'noServiceActions':True})
+  source.mkdir(parents=True,mode=0o700)
+  for member in members:
+   if not member.isfile() or any(part.startswith('.env') for part in Path(member.name).parts):continue
+   data=t.extractfile(member).read();p=source/member.name;p.parent.mkdir(parents=True,exist_ok=True,mode=0o700);p.write_bytes(data);p.chmod(0o600);manifest[member.name]=hashlib.sha256(data).hexdigest()
+ assert {str(p.relative_to(source)):hashlib.sha256(p.read_bytes()).hexdigest() for p in source.rglob('*') if p.is_file()}==manifest
+ (source/'apps/web/node_modules').symlink_to(R/'apps/web/node_modules',target_is_directory=True)
+ report={'head':r['head'],'source':str(source),'manifest':manifest,'port':18434,'apiTarget':'http://127.0.0.1:18080','dirtyCopied':False,'credentialsCopied':False};record('web-source.json',report)
+ entry=(F/'restart-20261013-032343-web.mjs').read_text().replace('restart-20261013-032343-web.json','web-source.json').replace('restart-20261013-032343-vite-cache','latest-vite-cache');(P/'web-server.mjs').write_text(entry)
+ record('prepare-terminal.json',{'head':r['head'],'webFiles':len(manifest),'allCurrentSourceGuardPassed':True,'noServiceActions':True})
+else:
+ prep=json.loads((P/'prepare-terminal.json').read_text());assert prep['head']==r['head']
+ if a.phase=='pg':
+  record('pg-intent.json',{'target':CID,'volume':VOL,'startedBefore':x['State']['StartedAt'],'schema':'a0v_161','noMigration':True})
+  res=subprocess.run(['docker','--context','colima-aos-extension','restart','--time','30',PG],text=True,capture_output=True,timeout=60);assert res.returncode==0
+  y=pg();assert y['State']['Running'] and y['State']['StartedAt']!=x['State']['StartedAt'];record('pg-terminal.json',{'containerId':y['Id'],'volume':VOL,'startedBefore':x['State']['StartedAt'],'startedAfter':y['State']['StartedAt'],'restartReturnCode':0,'schemaWriteOrMigration':False})
+ if a.phase=='api':
+  after=json.loads((P/'after-pg-restart.json').read_text());before=json.loads((P/'before-restart.json').read_text());assert after['fingerprints']==before['fingerprints'] and after['native']['enabledBindings']==0
+  args=[str(PY),str(R/'scripts/a0v_qyh_restored_http.py'),'--api-identity-file',str(F/'private/restored-identity.json'),'--serve-management-readonly','--bundle-root',str(F/'selected-public-bundles'),'--trust-roots-file',str(F/'restoration-public-trust-roots.json'),'--source-candidate',str(API_REPORT),'--management-oidc-config','/Users/ddt/.aos-local-identities/qyh-20261013/aos-management-oidc.json','--installed-readonly-installation','ab2fd72f-d81c-400d-bbbc-e1589a159d6b']
+  record('api-intent.json',{'head':r['head'],'oldPid':None,'oldCwd':None,'source':r['source'],'readonly':True,'port':18080,'noUnknownReplay':True});assert not listeners(18080);record('api-old-stop.json',{'oldPid':None,'previousAttemptKnownTerminal':74445,'portFree':True,'noStopSignalSent':True})
+  env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'}
+  with (P/'live-api.log').open('x') as log:proc=subprocess.Popen(args,cwd=R,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+  record('api-started.json',{'pid':proc.pid,'head':r['head'],'port':18080,'source':r['source'],'terminalVerified':False});print(json.dumps({'phase':'api','pid':proc.pid,'spawnedOnly':True}));sys.exit(0)
+ if a.phase=='web':
+  api=json.loads((P/'api-started.json').read_text());assert listeners(18080)==[api['pid']] and cwd(api['pid'])==r['source']
+  record('web-intent.json',{'oldPid':7590,'oldCwd':cwd(7590),'head':r['head'],'port':18434});stop(7590,18434,str(R));record('web-old-stop.json',{'oldPid':7590,'portFree':not listeners(18434)})
+  env={k:v for k,v in os.environ.items() if not k.startswith(('AOS_','PG','VITE_'))};env['PYTHONDONTWRITEBYTECODE']='1'
+  with (P/'live-web.log').open('x') as log:proc=subprocess.Popen([str(NODE),str(P/'web-server.mjs')],cwd=R,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+  record('web-started.json',{'pid':proc.pid,'head':r['head'],'port':18434,'terminalVerified':False});print(json.dumps({'phase':'web','pid':proc.pid,'spawnedOnly':True}));sys.exit(0)
+print(json.dumps({'phase':a.phase,'outcome':'TERMINAL_RECORDED','servicesStarted':False if a.phase=='prepare' else None}))
+
+
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/fingerprint_snapshot.py SHA 397383d7f9620f57ed5bb9cfb1e2cb5a9f685b3fdb623e6deac7d50b23d3fc31
+"""One bounded READ ONLY 650-table snapshot; never backup/restore or restart."""
+from pathlib import Path
+import importlib.util,sys,json,hashlib,subprocess,argparse,re,time
+R=Path(__file__).resolve().parents[2];P=Path(__file__).resolve().parent
+parser=argparse.ArgumentParser();parser.add_argument('--label',required=True);a=parser.parse_args();assert re.fullmatch('[a-z][a-z0-9-]{0,60}',a.label)
+output=P/(a.label+'.json');intent=P/(a.label+'-intent.json');assert not output.exists() and not intent.exists(),'existing snapshot: readonly reconcile, no replay'
+spec=importlib.util.spec_from_file_location('original_readonly_fingerprint',R/'.evidence/qyh-host-oid-durable-full-restore-20261013/rehearse.py');fp=importlib.util.module_from_spec(spec);spec.loader.exec_module(fp)
+container=json.loads(fp.docker('inspect',fp.SOURCE,capture_output=True,text=True).stdout)[0]
+assert container['Id']==fp.CID and container['State']['Running'] and len(container['Mounts'])==1 and container['Mounts'][0]['Name']=='aos-qyh-history159-prepared-data-20261011'
+assert container['NetworkSettings']['Ports']['5432/tcp']==[{'HostIp':'127.0.0.1','HostPort':'18446'}]
+native=json.loads(fp.sql(fp.SOURCE,'aos_meta_head',"BEGIN READ ONLY;SELECT json_build_object('cluster',(SELECT system_identifier::text FROM pg_control_system()),'schema',(SELECT version_num FROM alembic_version),'enabledBindings',(SELECT count(*) FROM extension_runtime_binding WHERE enabled),'otherActiveClients',(SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND backend_type='client backend' AND state='active'));ROLLBACK;"))
+assert native['cluster']=='7695302940039200809' and native['schema']=='a0v_161' and native['enabledBindings']==0
+intent.write_text(json.dumps({'label':a.label,'containerId':container['Id'],'volume':container['Mounts'][0]['Name'],'readonly':True,'serialQueries':650,'unknownOutcomeNoResend':True},indent=2)+'\n')
+t=time.monotonic();fingerprints=fp.fingerprint(fp.SOURCE,'aos_meta_head');assert len(fingerprints)==650
+report={'label':a.label,'native':native,'containerId':container['Id'],'volume':container['Mounts'][0]['Name'],'pgStartedAt':container['State']['StartedAt'],'fingerprints':fingerprints,'elapsedSeconds':round(time.monotonic()-t,3),'dbWrites':False,'scriptSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'originalFingerprintFunctionSourceSha256':hashlib.sha256((R/'.evidence/qyh-host-oid-durable-full-restore-20261013/rehearse.py').read_bytes()).hexdigest()}
+output.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:report[k] for k in ['label','native','volume','pgStartedAt','elapsedSeconds','dbWrites']}))
+
+
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2/pg-terminal.json SHA 50cb1ed9ec5e770b9e61f27b15a87d70d881b2dab2fb23ca698baecfab778680
+{
+  "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "startedBefore": "2026-10-14T02:21:20.479431743Z",
+  "startedAfter": "2026-10-14T02:56:36.001669303Z",
+  "restartReturnCode": 0,
+  "schemaWriteOrMigration": false
+}
+
+
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2/api-started.json SHA b65a68aa996a8be32c94d76002ead3b59ced7795b0707a5f051991bf8bae545b
+{
+  "pid": 78287,
+  "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "port": 18080,
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "terminalVerified": false
+}
+
+
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2/web-started.json SHA e78a6a87b728f5e826d633477cc034a581728ff1e6f3a5ebf7fabeb71f797651
+{
+  "pid": 78346,
+  "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "port": 18434,
+  "terminalVerified": false
+}
+
+
+FILE .evidence/qyh-daily-readonly-schema-compat-20261014/native-readonly-compat.json SHA e344842519036a3b5785ebc5256da2c519c096592593c11306442bab93875745
+{
+  "report": {
+    "outcome": "RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY",
+    "identity": {
+      "database": "aos_meta_head",
+      "cluster": "7695302940039200809",
+      "schema": "a0v_161",
+      "orgId": "org-org",
+      "orgName": "栖月汇商贸有限公司",
+      "projectId": "dev-project",
+      "tables": 650
+    },
+    "inventory": {
+      "installations": 136,
+      "configurations": 130,
+      "bindings": 127,
+      "enabledBindings": 0
+    },
+    "apiStartAuthorized": false,
+    "eightWorkbenchesVerified": false,
+    "runtimeHostEnabled": false,
+    "remainingGates": [
+      "current signed release and installation",
+      "current configuration and formal identity",
+      "API/Web restart and eight-page browser acceptance"
+    ],
+    "limitedLoginVerified": true,
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "databaseStartedAt": "2026-10-14T02:21:20.479431743Z",
+    "codeSchema": "a0v_162",
+    "pendingCodeCandidateNotApplied": true
+  },
+  "strictRuntimeStillDenied": true,
+  "migrationOrRoleWrite": false
+}
+
+FILE .evidence/qyh-daily-readonly-schema-compat-20261014/code-review-consumption-r1.json SHA 92933f4510bf9cf1d44d14f462b0bd0d4151ec87fbe67fbfceb13166050ba507
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-daily-readonly-schema-compat-20261014-code-r1",
+  "task_id": "qyh-daily-readonly-schema-compat-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "dd173bc396a7e86f7b10d9ecc053a77f27e4c418",
+    "authority_revision": "AOS-002027",
+    "files": {
+      ".evidence/qyh-daily-readonly-schema-compat-20261014/code-review-package-r1.txt": "f0962bebbc192d5d5eee5b4201299164bdef4e05195ddde842aa47e71ffc9f0b"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "daf130152608bd7f5b5c1db7943f89cae3e25d6f50d871914fbede582f210309",
+  "transport_sha256": "ca6962407ddad827fa4edd748ef1a314bae200d663c0a92856f91e6782ebde9d"
+}
+
+FILE .evidence/qyh-daily-readonly-schema-compat-20261014/browser/analyst-core-interaction-settled.json SHA 2ddbee6e9679e7a28a901c660e0029d64aa054932475bdb9aa40534a156d8213
+{
+  "case": "case-qyh-full-store-baseline-20260915",
+  "text": "首次全店基线分析 · 首次全店经营分析\n栖月汇全店基线与商品尖刀验证 · 首次全店经营分析\nCase revision、生命周期和运行记录均来自 canonical authority。\ninitial_store_analysis\n栖月汇全店基线与商品尖刀验证\nACTIVE\nCase\ncase-qyh-full-store-baseline-20260915 · r14\n渠道\nniushop:1\n经营实体\nniushop:1:1\n创建时间\n2026/9/17 05:51:05\nRun 记录\nanalysis-e5b19a5fe290ce1bf60d5038cb1d6cf6 · PREPARING/CANCELLED\n服务端进度\n0/3 波完成\ncancelled\n1\n经营画像\nportrait · not_started\n2\n问题与机会\ndiagnosis · not_started\n3\n方案设计\nsolution-design · not_started\n\nStage 完成仅表示 canonical StepRun 通过阶段门，不代表真实业务方案已执行。\n\nCase / Run exact 信封\n栖月汇全店基线与商品尖刀验证 · PREPARING/CANCELLED · cutoff 2026/10/14 11:31:22\n阶段评审读取失败\n\n页面失败关闭，不本地推演 Review 状态。\n\n当前阶段工作区 · portrait\n经营画像\nnot_started\n\n当前经营基本盘、覆盖、质量与未知是什么？\n\n责任槽\ninvestigation-owner · data-steward · content-research · customer-research · channel-research\n承担者\necommerce.data_advisor.default · ecommerce.customer_service.default · ecommerce.content_officer.default · ecommerce.private_domain_manager.default · ecommerce.campaign_planner.default\n输入 refs\nbusiness-investigation.portrait.input\n输出 refs\n未知/缺证据\n已知与可回链输入\n仅可回链\n\n仅确认存在可回链输入；其内容尚不能自动声称为经营事实。\n\nbusiness-investigation.portrait.input\n未知与缺口\n已声明缺口\n\n当前阶段尚未启动，经营结论仍未知。\n\n关键假设\n未知/缺证据\n\n尚无专门的假设 authority，禁止从模型输出或阶段状态推演。\n\n反证与替代解释\n未知/缺证据\n\n尚无专门的反证 authority，一般 Evidence 不自动归类为反证。\n\n可回链输入不等于已确认经营事实。\n当前阶段状态不代表方案已在真实业务系统执行。\n不展示或持久化模型私有过程。\n服务端可回链投影 · canonical-v4\nEvidence / Artifact / Timeline\ncanonical\nEvidence\n\n缺少可核验 Evidence exact ref\n\nArtifact\n\n四类领域槽位；missing 不继承旧 Run。\n\nBusinessDossierRevision · missing\nProblemMapRevision · missing\nOpportunityMapRevision · missing\nSolutionPortfolioRevision · missing\nTimeline\n\n按服务端时间与稳定键排序\n\n2026/9/16 08:10:47\nRun 建立\nBusinessInvestigationRun · analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6\n2026/9/17 04:37:09\nRun state revision\nBusinessInvestigationRunStateRevision · analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6\n2026/9/17 05:51:05\nCase revision 建立\nBusinessInvestigationCaseRevision · case-qyh-full-store-baseline-20260915\n\n下钻只展示服务端 exact refs 与 locator-only 差异；不存在本地拼接时间线、模型私有过程或业务写入口。\n\n数据与运行门 · canonical SourceReadiness\n阻断与 DataRequirement\nunknown\nSourceReadiness\nblocked\nSemanticReadiness\n未知/缺证据\nEvidenceReadiness\n未知/缺证据\nAnalysisReadiness\nblocked\nHandoffReadiness\n未知/缺证据\nActionReadiness\n未知/缺证据\n当前 DataRequirement\n未知/当前 Run 未声明待补数需求\nexact 对账\n无当前待对账 ref\n事实覆盖\n未知/缺证据\n新鲜度\n未知/缺证据\n\n当前 Run 未声明待补数 requirement；不显示 0 或伪完成。\n\n不提供“忽略阻断继续”；补数命令只创建或确认 canonical DataRequirement，不读取源数据、不 fulfill、不恢复 TaskRun。其余五轴缺专门 authority 时保持未知。\n\n租户 org-org/dev-project · 只读 · 未读取真实源系统\n租户 org-org/dev-project\n统一数据截止 2026/10/14 11:29:46\n待核对项不显示为 0\n经营研究 · 只读\n研究任务与业务进度\n重新读取\n\n研究、查询与知识整理任务分别展示；阶段结果、待核对状态和正式回读结果均以当前租户数据为准。\n\n可信空集合\n当前租户没有可读取的异步任务。"
+}
+R1 NEED_EVIDENCE strictly consumed. R2 package exceeded fixed65KiB so no request/model attempt created; retained not trimmed or consumed. New r3 independent raw commands and original browser network records below. Raw captures prove original owned exact PID/cwd/port/argv at cutoff, plus original same-volume PG. No claim screenshot fullysettled or visualpassed. Existing finalREADONLY650 is fresh; do not repeat snapshot simply for review. Original eight root 200 path evidence correct task-cockpit, not UI key cockpit.
+FILE .evidence/qyh-daily-readonly-schema-compat-20261014/raw-runtime-readback-r2.json SHA 06ba9d09ed646b5ec5ce124217d9ecd01916f8efa242b4fe5bdcdb6442940404
+[
+  {
+    "command": [
+      "ps",
+      "-p",
+      "78287,78346",
+      "-o",
+      "pid=,comm="
+    ],
+    "returncode": 0,
+    "stdout": "78287 /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python\n78346 /Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "lsof",
+      "-a",
+      "-p",
+      "78287,78346",
+      "-d",
+      "cwd",
+      "-Fn"
+    ],
+    "returncode": 0,
+    "stdout": "p78287\nfcwd\nn/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-6c9b65777eec4ab0688fa50a318e40b0a9b05d9b\np78346\nfcwd\nn/Users/ddt/work/projects/ai_agent/aos-platform\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "lsof",
+      "-nP",
+      "-iTCP:18080",
+      "-iTCP:18434",
+      "-sTCP:LISTEN"
+    ],
+    "returncode": 0,
+    "stdout": "COMMAND     PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\npython3.1 78287  ddt   10u  IPv4 0xc8847c194d7c73de      0t0  TCP 127.0.0.1:18080 (LISTEN)\nnode      78346  ddt   20u  IPv4 0x5fb2e72b51689ab8      0t0  TCP 127.0.0.1:18434 (LISTEN)\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "ps",
+      "-p",
+      "78346",
+      "-o",
+      "args="
+    ],
+    "returncode": 0,
+    "stdout": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2/web-server.mjs\n",
+    "stderr": ""
+  },
+  {
+    "procedure": "ps API argv flags/entrypoint compare; private paths not printed",
+    "managementReadonlyFlag": false,
+    "originalGuardScript": false,
+    "currentSourceCandidateReport": false
+  },
+  {
+    "procedure": "docker inspect exact original container; Config.Env excluded",
+    "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "startedAt": "2026-10-14T02:56:36.001669303Z",
+    "mounts": [
+      {
+        "Type": "volume",
+        "Name": "aos-qyh-history159-prepared-data-20261011",
+        "Source": "/var/lib/docker/100000.100000/volumes/aos-qyh-history159-prepared-data-20261011/_data",
+        "Destination": "/var/lib/postgresql/data",
+        "Driver": "local",
+        "Mode": "z",
+        "RW": true,
+        "Propagation": ""
+      }
+    ],
+    "ports": {
+      "5432/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "18446"
+        }
+      ]
+    }
+  },
+  {
+    "checkedAt": "2026-10-14T04:04:33.887081+00:00",
+    "activeLeases": [
+      {
+        "task": "qyh-daily-readonly-schema-compat-20261014",
+        "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+        "base": "AOS-002027",
+        "expires": "2026-10-14T06:00:00+00:00"
+      }
+    ]
+  },
+  {
+    "procedure": "actual Python json parse all650 full fingerprints equality, union key comparison, no DB rerun",
+    "snapshots": [
+      {
+        "sourceFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2-before.json",
+        "sourceSha256": "c60fa6820dc73424020c2a4e424a77474cdfe349c8a894b427c2efc4fcc89a9b",
+        "fullDictionaryCanonicalSha256": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+        "tables": 650,
+        "mismatches": [],
+        "native": {
+          "cluster": "7695302940039200809",
+          "schema": "a0v_161",
+          "enabledBindings": 0,
+          "otherActiveClients": 0
+        },
+        "pgStartedAt": "2026-10-14T02:21:20.479431743Z"
+      },
+      {
+        "sourceFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2-after-pg.json",
+        "sourceSha256": "3360be26f4f1262e72411989c169f6512e219ec1083c40ebb24900f1705d977d",
+        "fullDictionaryCanonicalSha256": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+        "tables": 650,
+        "mismatches": [],
+        "native": {
+          "cluster": "7695302940039200809",
+          "schema": "a0v_161",
+          "enabledBindings": 0,
+          "otherActiveClients": 0
+        },
+        "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+      },
+      {
+        "sourceFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2-after-browser.json",
+        "sourceSha256": "caaeccd018a88a23df025d0632cde9109b5b2d4e600312ceae53fcaf5657b3ad",
+        "fullDictionaryCanonicalSha256": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+        "tables": 650,
+        "mismatches": [],
+        "native": {
+          "cluster": "7695302940039200809",
+          "schema": "a0v_161",
+          "enabledBindings": 0,
+          "otherActiveClients": 0
+        },
+        "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+      },
+      {
+        "sourceFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-final-readonly.json",
+        "sourceSha256": "7cc9118ee373edae579fca7d3b61fe0ee7014557998cdc34dec4238ffae53311",
+        "fullDictionaryCanonicalSha256": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+        "tables": 650,
+        "mismatches": [],
+        "native": {
+          "cluster": "7695302940039200809",
+          "schema": "a0v_161",
+          "enabledBindings": 0,
+          "otherActiveClients": 0
+        },
+        "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+      }
+    ]
+  }
+]
+
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/daily-20261014-r2/api-old-stop.json SHA 47cd37504d81d44688626bdede461e3500671a0f4362c3f693a710678a30b67e
+{
+  "oldPid": null,
+  "previousAttemptKnownTerminal": 74445,
+  "portFree": true,
+  "noStopSignalSent": true
+}
+
+ACTUAL original browser capture .evidence/qyh-daily-readonly-schema-compat-20261014/browser/settled-first4.json SHA 6ca2f04124d19a562ef0574da21af8744153602c0fb73b83a906848e78dfcbe3
+{"me": {"subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657", "orgId": "org-org", "projectId": "dev-project", "tokenKind": "oidc"}, "pages": [{"key": "cockpit", "url": "http://127.0.0.1:18434/workshop/cockpit", "reads": [{"path": "/api/v1/aip/memory-authority/improvement-observations", "status": 200}, {"path": "/api/v1/aip/memory-authority/candidates", "status": 200}, {"path": "/api/v1/aip/memory-authority/memories", "status": 200}, {"path": "/api/v1/aip/capability-catalog", "status": 200}, {"path": "/api/v1/aip/agent-registry", "status": 200}, {"path": "/api/v1/aip/memory-authority/improvement-observations", "status": 200}, {"path": "/api/v1/aip/memory-authority/candidates", "status": 200}, {"path": "/api/v1/aip/memory-authority/memories", "status": 200}, {"path": "/api/v1/aip/capability-catalog", "status": 200}, {"path": "/api/v1/aip/agent-registry", "status": 200}, {"path": "/api/v1/health", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/task-cockpit", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/analyst", "status": 200}], "actualLoadingTextLines": ["正在读取经营建议", "正在读取当日任务", "正在读取原内容评审反馈"]}, {"key": "content-campaign", "url": "http://127.0.0.1:18434/workshop/content-campaign", "reads": [{"path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/task-cockpit", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/analyst", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/content-campaign", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/content-campaign", "status": 200}], "actualLoadingTextLines": []}, {"key": "operations", "url": "http://127.0.0.1:18434/workshop/operations", "reads": [{"path": "/api/v1/ecommerce-workshop/commands/operations/readiness", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/operations/cases", "status": 200}, {"path": "/api/v1/health", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/operations", "status": 200}, {"path": "/api/v1/runtime-workshop/modules", "status": 200}, {"path": "/api/v1/ecommerce-workshop/commands/operations/readiness", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/operations/cases", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/operations", "status": 200}], "actualLoadingTextLines": []}, {"key": "creator-growth", "url": "http://127.0.0.1:18434/workshop/creator-growth", "reads": [{"path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/creator-growth", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/creator-growth", "status": 200}], "actualLoadingTextLines": []}]}
+ACTUAL original browser capture .evidence/qyh-daily-readonly-schema-compat-20261014/browser/settled-last4.json SHA 8bae68301bb712249977fe44ca65064028b433b742b564e8b0e999611b9e7d69
+{"me": {"subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657", "orgId": "org-org", "projectId": "dev-project", "tokenKind": "oidc"}, "pages": [{"key": "media-studio", "url": "http://127.0.0.1:18434/workshop/media-studio", "reads": [{"path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts", "status": 200}, {"path": "/api/v1/health", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/media-studio", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/media-studio", "status": 200}], "actualLoadingTextLines": ["等待条件", "等待条件"]}, {"key": "analyst", "url": "http://127.0.0.1:18434/workshop/analyst", "reads": [{"path": "/api/v1/aip/async-jobs", "status": 200}, {"path": "/api/v1/aip/async-jobs", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/analyst", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/analyst", "status": 200}, {"path": "/api/v1/ecommerce/investigations/cases", "status": 200}, {"path": "/api/v1/ecommerce/investigations/cases", "status": 200}], "actualLoadingTextLines": ["等待条件", "等待条件", "等待条件", "等待条件", "等待条件", "等待条件", "正在读取当前 Case 的 Run…"]}, {"key": "price-governance", "url": "http://127.0.0.1:18434/workshop/price-governance", "reads": [{"path": "/api/v1/ecommerce-workshop/views/price-governance/contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/price/closure-contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/price-governance/contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/price/closure-contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/price-governance", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions", "status": 404}, {"path": "/api/v1/health", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/price-governance", "status": 200}], "actualLoadingTextLines": ["等待必要条件", "等待条件", "等待条件", "等待条件", "等待数据", "等待条件", "等待条件", "等待条件", "等待条件", "等待条件"]}, {"key": "customer", "url": "http://127.0.0.1:18434/workshop/customer", "reads": [{"path": "/api/v1/ecommerce-workshop/views/customer/contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/customer/contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions", "status": 404}, {"path": "/api/v1/ecommerce-workshop/views/customer", "status": 200}, {"path": "/api/v1/runtime-workshop/modules", "status": 200}, {"path": "/api/v1/ecommerce-workshop/views/customer", "status": 200}], "actualLoadingTextLines": ["等待必要条件", "等待条件 · 正式来源 0", "等待条件 · 正式来源 0", "等待条件 · 正式来源 0", "等待条件 · 正式来源 0", "等待必要条件", "等待条件", "等待条件", "等待条件", "等待条件", "等待条件", "等待条件"]}]}

@@ -1,0 +1,22 @@
+{
+  "target": "7263AE405334660557A7840F95B4446F",
+  "url": "http://127.0.0.1:18434/workshop/content-campaign",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "rootStatus": 200,
+  "inputsStatus": 200,
+  "reads": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 200
+    }
+  ],
+  "text": "栖月汇微商城\n/\n内容与活动工作台\n保存草稿\n批准并发布\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n\n已安装电商工作台\n\n内容与活动工作台\n已停用\n专注模式\n技术与数据诊断\necommerce.content-campaign · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n活动策划\n内容日历\n日常模板\n栖月汇微商城\n＋ 新建活动\n正在读取\n正在从正式服务读取当前工作区状态。",
+  "at": "2026-10-14T04:46:03.462Z"
+}

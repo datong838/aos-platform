@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "406539f41e2d4a581fc5c2519ca9f8ca2383fc82a3165e5568d8c9f1e605e701",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-daily-readonly-schema-compat-20261014-live-r3",
+    "task_id": "qyh-daily-readonly-schema-compat-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+      "authority_revision": "AOS-002027",
+      "files": {
+        ".evidence/qyh-daily-readonly-schema-compat-20261014/live-review-package-r3.txt": "8220834e53e572723cb1b93f986ac0f0d628eea3fc0f286b3d77b69613b85010"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The supplied current raw process/cwd/port/entrypoint observations, source guard and manifest readback, and full650 snapshot equality evidence support the corrected daily original-volume PG/API/Web restart validation at the recorded cutoff, keeping original schema161 and closed162 unapplied.",
+        "evidence": "raw-runtime-readback-r2.json shows PID 78287 on port 18080 with cwd as api-source-6c...9b; PID 78346 on port 18434 with cwd as repo root. restart_controller.py (SHA ac824...) enforces schema a0v_161, schemaWriteOrMigration:false, no migration, one-intent-per-phase. fingerprint_snapshot.py verifies 650 tables. All four native-a0v_161 snapshots (before-pg, after-pg, after-browser, final-readonly) share canonicalSha256 b2db143a..., confirming exact full-hash equality across restart.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The supplied normal OIDC browser GET records include genuine org-org/dev-project identity, eight root200 paths and eleven auxiliary404 paths, plus one historical Case read-only interaction; loading child captures and visual differences are explicitly unaccepted, and full business/visual completion is not claimed.",
+        "evidence": "live-verification-20261014.json records originalBrowserSubject orgId:org-org, projectId:dev-project, tokenKind:oidc, and noWholeGoalOrFullVisualAcceptance:true. settled-first4.json and settled-last4.json capture 8 root 200 paths (cockpit, content-campaign, operations, creator-growth, media-studio, analyst, price-governance, customer). auxiliary404 lists 11 distinct 404 paths. browser/visual-comparison.md concludes '视觉验收未通过，经营闭环未完成'. analyst-core-interaction-settled.json logs Case r14 PREPARING/CANCELLED with AnalysisReadiness blocked as read-only evidence, not completion.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The current sole active lease, one-intent controller and original fingerprint equality support safe read-only continuation; no authority for budget, oldRun replay, Host, worker, Provider or originalDB writes is granted by these observations or this review.",
+        "evidence": "raw-runtime-readback-r2.json shows activeLeases only for this task, expiring 2026-10-14T06:00:00Z. restart_controller.py asserts existing phase terminal files block resend and denies migration/DDL/Host/Provider writes. live-verification-20261014.json sets dbWrites:false. native-readonly-compat.json reports RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY, apiStartAuthorized:false, strictRuntimeStillDenied:true, migrationOrRoleWrite:false. Sixty-five0 snapshot union confirms unchanged data; review scope is read-only quality check only.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前只读 PG/API/Web 运行状态与 r3 复核结论；如需推进，应新开独立 Task/Lease 专项处理 CSS 布局、1280 复验及辅助路由接线，不得在此任务内扩展预算/写入/旧 Run 重放或全量视觉验收。"
+  }
+}

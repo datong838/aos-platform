@@ -1,0 +1,47 @@
+{
+  "apiHead": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "source": "private/api-source-11037bd4b91f654effb467cc987fc1e83929753e",
+  "rawProcessReadbacks": [
+    {
+      "command": [
+        "lsof",
+        "-a",
+        "-p",
+        "87013",
+        "-d",
+        "cwd",
+        "-Fn"
+      ],
+      "returncode": 0,
+      "stdout": "p87013\nfcwd\nn/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-11037bd4b91f654effb467cc987fc1e83929753e\n"
+    },
+    {
+      "command": [
+        "lsof",
+        "-nP",
+        "-iTCP:18080",
+        "-iTCP:18434",
+        "-sTCP:LISTEN"
+      ],
+      "returncode": 0,
+      "stdout": "COMMAND     PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\nnode      78346  ddt   20u  IPv4 0x5fb2e72b51689ab8      0t0  TCP 127.0.0.1:18434 (LISTEN)\npython3.1 87013  ddt   10u  IPv4 0xea12b0c4eb96ff2c      0t0  TCP 127.0.0.1:18080 (LISTEN)\n"
+    }
+  ],
+  "webPidUnchanged": 78346,
+  "webStartupHead": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "webCommittedSourceTreesEqualCurrentHEAD": true,
+  "webGitTreeDiff": "",
+  "originalPostReadFingerprintSource": ".evidence/qyh-restoration-successor-latest-restart-20261013/content-inputs-after-get-20261014.json",
+  "full650FingerprintEqualBefore": true,
+  "postReadSnapshotSha256": "d67e22510c9263ab1db621f0f594eecd9db6f28b56f1dcc8bcc7322654467e21",
+  "native": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161",
+    "enabledBindings": 0,
+    "otherActiveClients": 0
+  },
+  "pgStartedAt": "2026-10-14T02:56:36.001669303Z",
+  "dbWrites": false,
+  "providerOrSourceActions": false,
+  "wholeGoalComplete": false
+}

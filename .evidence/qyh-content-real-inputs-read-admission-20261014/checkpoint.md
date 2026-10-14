@@ -9,3 +9,7 @@ source-hashes明确两产品文件候选SHA与其余5只读传递源不变。准
 原标签目标7263AE405334660557A7840F95B4446F在9244实际仍存在；上一轮page.screenshot closed错误是连接binding失效，不能等同用户关闭目标。按原port重连持有目标，当前确为登录页；原授权本机材料经普通表单单次登录200，未输出/保存token/cookie/password/storage/authheaders，身份读回唯一原真人6f31cfdc-a26c-4f1f-ad6b-95a8559cc657/org-org/dev-project/OIDC；旧API6c实际real-inputs404基线已保存。这只是认证与读取，不是预算批准。
 
 本波尚待：真实最新GET/数据状态与原稿比对、独立现场复审、准确Delivery/Authority/Prime同步与下一辅助GET。其余十项GET、完整预算C/真正用户exact审批/部署、自然首链、安装全生命周期/八场景/观察发布均继续；每日最新m1原权威卷PG→API→Web与aos-2不重启要求保留。
+
+## 后续实际收口证据
+
+已完成后续最新API加载：87013/18080实际冻结110；Web78346仍6c启动、frontend树与110一致，未冒充Web重新启动。原真人真实GET由404到200，products57/inventory62/plans0并带canonical refs；query越tenant400、普通菜单root和inputs200。650原表全指纹不变，原schema161/卷/StartedAt/启用绑定0不变。1440原稿直接对照：成功读态toast不再遮右栏，真实空计划保留；全视觉、内部按钮权限表现仍待单独核对，没有点业务按钮。live-and-visual-report.md及livePrime r1 PASS严格合法消费，仍非运营权限。现在仅进入准确Delivery/Authority/Prime第8步；历史“尚待”段保留为前截止事实。

@@ -1,0 +1,392 @@
+Current real-inputs live/visual slice review, notwholeGoal. Actual same originaluser normalGET old404 ->latest200 and normalmenu root/input200, true recorded57/62/0 with exactrefs, invalidscopequery400. Readiness isreadonlyDTO notfreshmall/operationapproval. Underlying7sources frozen/codePASS+commit verified. Current page emptyactivity, buttons unclicked, internalactionenabled visualrisk explicitlypending; allfullvisual/operationalbusiness incomplete. Original650 hash equalityafterGET retained. Review material boundary images notinline; humanagent direct inspection report plus original PNGSHA, not fullpixelPASS.
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/live-and-visual-report.md SHA 85aac5ebbf269327be3ab2e73ed7319197b61c003d87329d9cdf41faf1f4bee0
+# real-inputs 最新正式读取与视觉回读
+
+Rules与长期Goal不变。代码候选11037bd4b91f654effb467cc987fc1e83929753e已审阅/精确提交，现场尚待独立复审与准确Delivery，不宣布整个内容工作台或经营链完成。
+
+维护Task有界API-only controller经独立PASS合法消费后一次intent/一次原78287 stop/新87013 start；新实际cwd冻结110、18080监听、源7SHA与审阅候选一致。原PG/Web78346/Chrome未操作。Web启动HEAD仍6c，但git确认apps/web/ui-kit/ontology-sdk树与最新110完全相同，不谎称重启到了110。每日同原卷全PG/API/Web已在今日此前实际完成；此次只读API刷新不能代替该规定。
+
+同一已授权原真人subject6f31cfdc-a26c-4f1f-ad6b-95a8559cc657/org-org/dev-project/OIDC。普通客户端旧API真实GET404，新API GET200，正式DTO tenant一致、status ready、products57/inventory62/plans0/unmatchedInventory0/unavailableGroups[]；sampleProductRefs为ecom_object/niushop:1/原contentHash。完整DTO仅本地private0600保存，不打Git；不保存token/密码/cookie/storage/authheader。这里ready只指读取合同，当前数据截止不证明商城源最新或任何预算/生产/发布获准。
+
+通过原菜单anchor实点内容与活动，root和real-inputs均200；第一次截图仍有通用loading已保留，之后等待精确通用读取提示hidden补拍content-settled-1440.png，真实活动计划/日历/主内容均0，未用演示活动填充。非法orgId=dev-org query返回400，不改变authenticated scope。
+
+原PG schema161/650、cluster7695302940039200809、原命名卷、StartedAt02:56:36UTC和enabledBindings0保持。content-inputs-after-get-20261014完整650行数/hash逐字典比较与原r2-before完全相等，runtime-after-readback.json保留原快照SHA和实际进程/cwd/listener。没有DDL/预算/源Connector/旧Run/业务写。
+
+## 同1440×900原稿视觉
+
+直接检视本轮content-settled-1440.png与原reference-content-campaign-1440.jpg（原稿源docs/palantier/foundry/html/workshop-content-campaign.html，非html_back）。明亮主题、展开导航、活动策划页签；平台导航集合比原稿多，真实空活动与演示七夕方案非同业务状态。
+
+三栏/页签/中央概览/右侧风险卡轮廓接近；本次成功读取状态下缺数据toast不再出现，右栏标题无遮挡。这不是CSS修复或缺来源失败态提示布局全验收。实际输入区宽度、卡片留白、按钮/文字层级与原稿仍不同；尚未1280/1920、侧栏折叠/嵌套滚动到底/全部页签/键盘和200%缩放验收。
+
+DOM只读观察：顶部保存草稿与批准并发布disabled=true；内部生成方案/保存为草稿/重新生成/批准并发布disabled=false。只读wrapper与后端执行门仍在，但不能据此宣称所有按钮权限表现合格；需要后续单独核对这些内部入口是预览还是命令，管理只读模式的可用性提示不能混同实际批准。**没有点击任何业务按钮**，本波不以试写验证禁入。真实生成/预算/审批/首链仍未完成，视觉全验收未通过。
+
+本波只交付已保存正式内容输入GET读取接线，独立现场审查后方可准确Delivery；其余10辅助GET、完整C/原真人预算批准与部署、自然业务首链/八场景/安装全生命周期/观察发布全部保留。个人Codex记忆未写。
+
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/native-baseline-get.json SHA 8895a0f3f6ec4f52449b3432ba8cb2bd62e348e08f61e294957a58a28cbe20ec
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "status": 404,
+  "path": "/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+  "apiHead": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "readOnly": true,
+  "at": "2026-10-14T04:34:54.716Z",
+  "secretsSaved": false
+}
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/native-current-get.json SHA 2494dcedb6360a5c5fdfdb59355cbd64531c9668e3e6b855fe03b5a2127a1e6b
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "path": "/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+  "status": 200,
+  "apiHead": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "dtoKeys": [
+    "schemaVersion",
+    "tenant",
+    "evaluatedAt",
+    "dataCutoff",
+    "status",
+    "products",
+    "inventory",
+    "plans",
+    "ledger",
+    "unavailableGroups"
+  ],
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "readStatus": "ready",
+  "cutoff": "2026-10-14T04:45:13.241659Z",
+  "ledger": {
+    "products": 57,
+    "inventory": 62,
+    "plans": 0,
+    "unmatchedInventory": 0
+  },
+  "unavailableGroups": [],
+  "sampleProductRefs": [
+    {
+      "resourceType": "Product",
+      "resourceId": "niushop:1:9",
+      "revision": null,
+      "contentHash": "sha256:d7c8c1aeb52650318f06d2aec2491671e91ed837cad329ae58e62d026e29ba36",
+      "authority": "ecom_object"
+    },
+    {
+      "resourceType": "Product",
+      "resourceId": "niushop:1:8",
+      "revision": null,
+      "contentHash": "sha256:ec625baab50a011b6975974f27eeff09ecb53588c2aa7342c60236ccc304a513",
+      "authority": "ecom_object"
+    },
+    {
+      "resourceType": "Product",
+      "resourceId": "niushop:1:7",
+      "revision": null,
+      "contentHash": "sha256:619b220e42cc6a5d59e19092d1e4c065cec6023d2b361e1c7aa8d1db0f6fe8af",
+      "authority": "ecom_object"
+    }
+  ],
+  "readOnly": true,
+  "at": "2026-10-14T04:45:13.287Z",
+  "noSourceConnectorOrBusinessCommand": true
+}
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/native-query-controls.json SHA 0b8c7394c3e17c04e359da0233699abf8c41fc7eedc76ee66f69f1775ac75d3b
+{
+  "queryScopeOverrideStatus": 400,
+  "controls": [
+    {
+      "label": "保存草稿",
+      "disabled": true
+    },
+    {
+      "label": "批准并发布",
+      "disabled": true
+    },
+    {
+      "label": "生成方案",
+      "disabled": false
+    },
+    {
+      "label": "保存为草稿",
+      "disabled": false
+    },
+    {
+      "label": "重新生成",
+      "disabled": false
+    },
+    {
+      "label": "批准并发布",
+      "disabled": false
+    }
+  ],
+  "onlyDOMInspection": true,
+  "noBusinessActionClicked": true,
+  "at": "2026-10-14T04:48:00.865Z"
+}
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/runtime-after-readback.json SHA 6f27954f282e857e8b1702bc0d305f2bc9ec17d7a98cd468387978bec7d94f77
+{
+  "apiHead": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "source": "private/api-source-11037bd4b91f654effb467cc987fc1e83929753e",
+  "rawProcessReadbacks": [
+    {
+      "command": [
+        "lsof",
+        "-a",
+        "-p",
+        "87013",
+        "-d",
+        "cwd",
+        "-Fn"
+      ],
+      "returncode": 0,
+      "stdout": "p87013\nfcwd\nn/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-11037bd4b91f654effb467cc987fc1e83929753e\n"
+    },
+    {
+      "command": [
+        "lsof",
+        "-nP",
+        "-iTCP:18080",
+        "-iTCP:18434",
+        "-sTCP:LISTEN"
+      ],
+      "returncode": 0,
+      "stdout": "COMMAND     PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\nnode      78346  ddt   20u  IPv4 0x5fb2e72b51689ab8      0t0  TCP 127.0.0.1:18434 (LISTEN)\npython3.1 87013  ddt   10u  IPv4 0xea12b0c4eb96ff2c      0t0  TCP 127.0.0.1:18080 (LISTEN)\n"
+    }
+  ],
+  "webPidUnchanged": 78346,
+  "webStartupHead": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "webCommittedSourceTreesEqualCurrentHEAD": true,
+  "webGitTreeDiff": "",
+  "originalPostReadFingerprintSource": ".evidence/qyh-restoration-successor-latest-restart-20261013/content-inputs-after-get-20261014.json",
+  "full650FingerprintEqualBefore": true,
+  "postReadSnapshotSha256": "d67e22510c9263ab1db621f0f594eecd9db6f28b56f1dcc8bcc7322654467e21",
+  "native": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161",
+    "enabledBindings": 0,
+    "otherActiveClients": 0
+  },
+  "pgStartedAt": "2026-10-14T02:56:36.001669303Z",
+  "dbWrites": false,
+  "providerOrSourceActions": false,
+  "wholeGoalComplete": false
+}
+
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/browser-current-content.json SHA c5f9094139545904c4423c0621242078244515a03f0c646fce18f3548738b157
+{
+  "target": "7263AE405334660557A7840F95B4446F",
+  "url": "http://127.0.0.1:18434/workshop/content-campaign",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "rootStatus": 200,
+  "inputsStatus": 200,
+  "reads": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 200
+    }
+  ],
+  "text": "栖月汇微商城\n/\n内容与活动工作台\n保存草稿\n批准并发布\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n\n已安装电商工作台\n\n内容与活动工作台\n已停用\n专注模式\n技术与数据诊断\necommerce.content-campaign · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n活动策划\n内容日历\n日常模板\n栖月汇微商城\n＋ 新建活动\n正在读取\n正在从正式服务读取当前工作区状态。",
+  "at": "2026-10-14T04:46:03.462Z"
+}
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/browser-settled-content.json SHA 8cad598d2a95f237d7dbcd203d344787503e57e3e0a4ec8729f522cea48aa7c1
+{
+  "target": "7263AE405334660557A7840F95B4446F",
+  "url": "http://127.0.0.1:18434/workshop/content-campaign",
+  "rootLoadingHidden": true,
+  "text": "栖月汇微商城\n/\n内容与活动工作台\n保存草稿\n批准并发布\n概览\n工作台\n应用列表\n风险告警管理\n态势大屏\nBuddy · 智能助手\n分析建模\n日常任务总控大屏\n内容与活动工作台\n统一运营驾驶舱\n达人邀约驾驶舱\n多媒体内容生产\n经营参谋 · 增长指挥中心\n价格治理驾驶舱\n客户关系工作台\n应用程序构建工具\n画布编辑\n组件注册表\n变量管理器\n主题与样式\n模块接口\n事件配置\n发布入口\nAIP 决策引擎\n应用层\n任务协作助手\n智能体配置\nAIP 分析师\n逻辑编排层\n业务逻辑编排\n智能体工具配置\n成熟度楼梯\n智能体\n上线执行审批\n智能体插件\n智能体目录\n智能体市场\n智能体列表\n技能发布\n智能体导入\n能力导入\n评测与治理\n评测门控\n草稿审批台\n决策谱系\n可观测性\n记忆与知识治理\n模型管理\n模型目录\n模型供应商\n模型路由\n容量管理\n运行就绪\n本体 · 数字孪生\n本体管理\n对象探索\nFunnel 管道\nOKF funnel\nOKF 概览\n图谱健康度\n活知识 Wiki\nWiki 索引\n分支与 Overlay\n管道与数据治理\n管道构建\n管道提案\n计划编辑器\n搭建\n数据集预览\n代码库\n数据沿袭\n数据健康\n数据源与同步\n数据源管理\n连接器目录\n边缘代理\n同步配置\n同步路由\n媒体集\n文档智能\n运维交付\n跳到模块主内容\n\n已安装电商工作台\n\n内容与活动工作台\n已停用\n专注模式\n技术与数据诊断\necommerce.content-campaign · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n活动策划\n内容日历\n日常模板\n栖月汇微商城\n＋ 新建活动\n暂无数据\n服务已返回空集合，没有使用示例数据填充。\n数据截止：2026-10-14T04:46:05.497987Z\n活动列表\n筛选\n当前数据范围\n3 个视图可读取\n活动计划\n活动目标与节奏\n可读取 · 0/0\n内容日历\n日期、渠道与负责人\n可读取 · 0/0\n主内容与变体\n主内容与渠道版本\n可读取 · 0/0\n没有活动记录？\n\n填写中央活动目标即可生成内部草稿；对外发布仍需独立审批。\n\nAI 策划助手\n仅消费当前正式业务数据\n生成方案\n基于当前数据：\n读取正式活动计划\n核对内容日历\n关联主内容与渠道版本\n当前正式数据可供审阅\n只读呈现正式业务事实，不代表已批准或发布。\n只读\n当前业务视图\n活动概览\n正式数据可读\n\n活动计划\n正式业务数据已挂接\n\n可评估\n0\n已挂接\n0\n未匹配\n0\n冲突\n0\n\n当前没有可展示的活动计划\n页面不会用演示活动填充；请补充正式业务数据后重新读取。\n\n可创建内部草稿\n草稿操作形成版本与业务回执；对外发布仍需独立审批。\n保存为草稿\n重新生成\n批准并发布\nAI 策划助手\n基于正式数据实时核对\n可审阅\n活动计划已读取\n\n已完成数量与来源核对；需要人工审阅后才能进入后续内部流程。\n\n风险决策\n先生成草稿\n折扣与毛利边界\n\n确认活动折扣不突破正式审批的毛利边界。\n\n经营约束\n采纳建议并重算\n保持当前方案\n暂缓决策\n尚未写入草稿；不会自动采用数值或修改业务数据。\n库存与供给边界\n\n确认选品与承诺量不超过当前正式可售库存。\n\n经营约束\n采纳建议并重算\n保持当前方案\n暂缓决策\n尚未写入草稿；不会自动采用数值或修改业务数据。\n撤销最近一次风险决策\n证据链 · 边界\n0 项待补条件\n可信空集合\n\n只证明当前数据截止面的正式读取结果，不授权内容生产、排期或发布。\n\n专业贡献与数据审计\n租户 org-org/dev-project\n评估 2026/10/14 12:46:05\n无后续页：是\n重新读取",
+  "at": "2026-10-14T04:46:36.923Z"
+}
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/code-candidate-source-hashes.json SHA e98751996d99db14ceb7f19493f9f3122cd10d8c7e500ba2696f78c134b4bfa9
+{
+  "headBeforeCommit": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "candidateFileHashes": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "a4fc2ed254e12f01b0efd0a4268739255943288c5320dfb459e939b685d7a6d7",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "93fe0d418f6e11cd09ad620fb008b99ebd13a7e50d0a0872e4058072e1624bbe",
+    "services/aos-api/aos_api/ecommerce_workshop_content_campaign_inputs.py": "8fa43a446715b1fc4f939e91343fcf53c2e52da8b87e89684f199d167d550b46",
+    "services/aos-api/aos_api/ecommerce_content_campaign_authority_store.py": "67362f4692cd1738f89dade9d9d8989893bb112f35a9a913df92f1acdedfe07d",
+    "services/aos-api/aos_api/ecommerce_workshop_read_catalog.py": "041b25f128c8c458890a54a7631751038d8bb9ee238134c35b590d5a59b9d77d",
+    "services/aos-api/aos_api/db.py": "a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010",
+    "services/aos-api/aos_api/tenant_scope.py": "4c727d12810e6e2e9f1bba218d5fed6277afcaf4ddb7eb2ae4f67c73fc532fa6"
+  },
+  "changedProductFiles": [
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py"
+  ],
+  "otherSourcesUnchanged": true,
+  "nativeBaselineGET": 404,
+  "actualAfterReloadGET": "PENDING"
+}
+
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/code-commit-readback.json SHA 5fcb2c6c20cead86ea5b133ac6fe5357aa050334774292f455dcc4691f4b936b
+{
+  "head": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "reviewedCandidateHashes": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "a4fc2ed254e12f01b0efd0a4268739255943288c5320dfb459e939b685d7a6d7",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "93fe0d418f6e11cd09ad620fb008b99ebd13a7e50d0a0872e4058072e1624bbe",
+    "services/aos-api/aos_api/ecommerce_workshop_content_campaign_inputs.py": "8fa43a446715b1fc4f939e91343fcf53c2e52da8b87e89684f199d167d550b46",
+    "services/aos-api/aos_api/ecommerce_content_campaign_authority_store.py": "67362f4692cd1738f89dade9d9d8989893bb112f35a9a913df92f1acdedfe07d",
+    "services/aos-api/aos_api/ecommerce_workshop_read_catalog.py": "041b25f128c8c458890a54a7631751038d8bb9ee238134c35b590d5a59b9d77d",
+    "services/aos-api/aos_api/db.py": "a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010",
+    "services/aos-api/aos_api/tenant_scope.py": "4c727d12810e6e2e9f1bba218d5fed6277afcaf4ddb7eb2ae4f67c73fc532fa6"
+  },
+  "stagedFiles": [
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/implementation-plan.md",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/registration.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/review_controller.py",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/plan-review-package-r2.txt",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/plan-review-request-r2.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/plan-review-result-r2.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/plan-review-consumption-r2.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-package-r3.txt",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-request-r5.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-result-r5.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-consumption-r5.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/red.log",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/green-adjacent.log",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/current-three-nodes-green.log",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/code-candidate-source-hashes.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/native-baseline-get.json",
+    ".evidence/qyh-content-real-inputs-read-admission-20261014/checkpoint.md"
+  ],
+  "officialDelivery": false,
+  "nativeAfterReload": "PENDING"
+}
+
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/code-review-result-r5.json SHA f448b3e848f4bff8bd7412b5d21e41c329d166222c59034b6739bad2db717683
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "00234d6a1064f477c2137bceea90675a59ee28b1ac20c5ed3884865910bebe37",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-content-real-inputs-read-admission-20261014-code-r5",
+    "task_id": "qyh-content-real-inputs-read-admission-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+      "authority_revision": "AOS-002027",
+      "files": {
+        ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-package-r3.txt": "f4958ff036d2aac8d0911455a777d1f6c47cf1b96cf1232553a830b54dddb929"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The current exact product diff changes only real-inputs GET admission and preserves tenant/query/install fences and every other GET/POST.",
+        "evidence": "diff shows one line in services/aos-api/aos_api/routers/ecommerce_workshop.py changing `catalog: CatalogDependency` to `catalog: ReadCatalogDependency` solely in `get_ecommerce_workshop_content_campaign_real_inputs`. Test file diff adds only `real-inputs` to explicit route whitelist and three new tests. Existing fence handlers `_reject_query_parameters` and `_require_content_campaign_installation` remain. Unreviewed GETs still use legacy catalog per `test_unreviewed_get_still_uses_legacy_admission`.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Current68 adjacent tests and explicit current3 PASSED nodes support a code-candidate commit; historical pre-change RED failures are not current failures.",
+        "evidence": "Source green-adjacent.log shows 68 passed for adjacent tests (full suite). Source red.log is labeled 'pre-change expected failure historical evidence'. Current exact diff shows 3 PASSED nodes for previously failing tests: `test_read_dependency_only_reaches_explicit_audited_get_routes`, `test_real_inputs_read_denied_before_business_data_access`, `test_admitted_real_inputs_receives_only_authenticated_tenant`.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "In the supplied implemented handler and complete subordinate read methods, the authenticated tenant and bounded readonly SELECT path are unchanged, and this one annotation change adds no lifecycle, budget, source or Provider command call.",
+        "evidence": "Handler body unchanged: calls `_reject_query_parameters`, `_require_content_campaign_installation`, then `inputs.read(org_id=principal.org_id, project_id=principal.project_id)`. Input reader uses `connect_read_only(inherit_scope=False)` with `apply_transaction_scope(conn, scope)`. Subordinate selects: `ecom_object` bounded by org/project/cutoff/limit 200; `read_snapshot` uses separate `read_connect_factory` with limit 100 on `ecommerce_campaign_head`, calendar, and variant relations. All reads verified as readonly without write/lifecycle/provider commands.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Proceed with committing only the verified one-line annotation change and the three new test cases in this scope. Ensure no other files are staged. Run final verification of adjacent 68 tests before release."
+  }
+}
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/code-review-consumption-r5.json SHA c2b31096cca48370716ed13a1d7715cc8c6142b9e079ba611f1a264c4a4fd543
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-content-real-inputs-read-admission-20261014-code-r5",
+  "task_id": "qyh-content-real-inputs-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+    "authority_revision": "AOS-002027",
+    "files": {
+      ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-package-r3.txt": "f4958ff036d2aac8d0911455a777d1f6c47cf1b96cf1232553a830b54dddb929"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "03790aa217ee98a8f03372ac2deee3ebbd7acf3d7094db62a2223fcff900a0c6",
+  "transport_sha256": "657bf3cc0a3957b46fbb6954c70e13a625db3ca0829836d2f3c4bb66e853b7a5"
+}
+FILE .evidence/qyh-daily-readonly-schema-compat-20261014/content-inputs-reload-review-consumption-r1.json SHA 30ef5e62d41571c4d92f7c769899507bd981f5f991081d205a235cf925552dca
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-daily-readonly-schema-compat-20261014-content-inputs-reload-r1",
+  "task_id": "qyh-daily-readonly-schema-compat-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "11037bd4b91f654effb467cc987fc1e83929753e",
+    "authority_revision": "AOS-002027",
+    "files": {
+      ".evidence/qyh-daily-readonly-schema-compat-20261014/content-inputs-reload-review-package-r1.txt": "f9320a2284ef9b2e019cb97df7e968cda58f656be2d9f47935674874ade219b1"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "e930c5c47cc1d995e3d67c6047760d2ae81398047c6e51380b7a27a86fd6a239",
+  "transport_sha256": "f54fb185d156ae1108dead984089f60d4ec437afbbe753be63104413569ba523"
+}
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/content-inputs-api-reload-intent.json SHA c72d05aedce5c2f69bdcdc39ce36faa23a2a6e9477f6d124a9e415b8f75dd0da
+{
+  "oldPid": 78287,
+  "oldCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "newHead": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-11037bd4b91f654effb467cc987fc1e83929753e",
+  "port": 18080,
+  "sourceGuardPassed": true,
+  "pgWebChromeTouched": false,
+  "normalReadonlyFlagsRetained": true
+}
+
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/content-inputs-api-old-stop.json SHA 750d6bc1cec22d89adfd31d8256908646bf9c11114ac2cf7878c95aed5104225
+{
+  "oldPid": 78287,
+  "portFree": true
+}
+
+FILE .evidence/qyh-restoration-successor-latest-restart-20261013/content-inputs-api-started.json SHA 5ddf50c741b11301cec9ad1c97a1d5eddb53ac3cb2ce0b7e3468333c71536e49
+{
+  "pid": 87013,
+  "head": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-11037bd4b91f654effb467cc987fc1e83929753e",
+  "port": 18080,
+  "terminalVerified": false,
+  "pgWebChromeTouched": false
+}
+
+current exact function
+def get_ecommerce_workshop_content_campaign_real_inputs(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    inputs: ContentCampaignInputsDependency,
+) -> WorkshopContentCampaignInputsEnvelope:
+    _reject_query_parameters(request)
+    _require_content_campaign_installation(principal=principal, catalog=catalog)
+    return inputs.read(org_id=principal.org_id, project_id=principal.project_id)
+
+
+
+LOCAL INSPECTED IMAGE FILE .evidence/qyh-content-real-inputs-read-admission-20261014/content-settled-1440.png SHA 9c2389a9626132a99d39a99aa273627b86ddd144a67d6ff4569a17c43d34a955
+LOCAL INSPECTED IMAGE FILE .evidence/qyh-budget-policy-renewal-authority-20261013/visual-20261014/reference-content-campaign-1440.jpg SHA d15c379ade586a162ce64783265563b2a65ec348162321fef5f422b51caef5fb

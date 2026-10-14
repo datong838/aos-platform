@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-content-real-inputs-read-admission-20261014-live-r1",
+  "task_id": "qyh-content-real-inputs-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "11037bd4b91f654effb467cc987fc1e83929753e",
+    "authority_revision": "AOS-002027",
+    "files": {
+      ".evidence/qyh-content-real-inputs-read-admission-20261014/live-review-package-r1.txt": "4b7b57f21a756807865b51012c0e6234787d4c1dd7d2320e193ffee64c2d3bf4"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "d8df82a832f6ae7fd1f8d2ee0062a090ce99176e512ccc17df642caff3316f4b",
+  "transport_sha256": "bf6269192d0735e5a363db936ff358f8f649579623dad835702c09a36a2c6797"
+}

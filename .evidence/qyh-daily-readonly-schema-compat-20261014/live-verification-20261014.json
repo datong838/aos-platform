@@ -1,0 +1,123 @@
+{
+  "checkedAt": "2026-10-14T03:59:55.175273+00:00",
+  "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "api": {
+    "pid": 78287,
+    "port": 18080,
+    "actualCwdMatchesFrozenHead": true,
+    "sourceGuardPassed": true
+  },
+  "web": {
+    "pid": 78346,
+    "port": 18434,
+    "actualEntryMatchesFrozenSource": true,
+    "allManifestFilesVerified": 764
+  },
+  "fingerprintComparisons": {
+    "daily-20261014-r2-before": {
+      "tables": 650,
+      "fullRowsAndHashesEqualBefore": true,
+      "native": {
+        "cluster": "7695302940039200809",
+        "schema": "a0v_161",
+        "enabledBindings": 0,
+        "otherActiveClients": 0
+      },
+      "volume": "aos-qyh-history159-prepared-data-20261011",
+      "pgStartedAt": "2026-10-14T02:21:20.479431743Z"
+    },
+    "daily-20261014-r2-after-pg": {
+      "tables": 650,
+      "fullRowsAndHashesEqualBefore": true,
+      "native": {
+        "cluster": "7695302940039200809",
+        "schema": "a0v_161",
+        "enabledBindings": 0,
+        "otherActiveClients": 0
+      },
+      "volume": "aos-qyh-history159-prepared-data-20261011",
+      "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+    },
+    "daily-20261014-r2-after-browser": {
+      "tables": 650,
+      "fullRowsAndHashesEqualBefore": true,
+      "native": {
+        "cluster": "7695302940039200809",
+        "schema": "a0v_161",
+        "enabledBindings": 0,
+        "otherActiveClients": 0
+      },
+      "volume": "aos-qyh-history159-prepared-data-20261011",
+      "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+    },
+    "daily-20261014-final-readonly": {
+      "tables": 650,
+      "fullRowsAndHashesEqualBefore": true,
+      "native": {
+        "cluster": "7695302940039200809",
+        "schema": "a0v_161",
+        "enabledBindings": 0,
+        "otherActiveClients": 0
+      },
+      "volume": "aos-qyh-history159-prepared-data-20261011",
+      "pgStartedAt": "2026-10-14T02:56:36.001669303Z"
+    }
+  },
+  "authenticatedBrowserRootReads": {
+    "task-cockpit": [
+      200
+    ],
+    "content-campaign": [
+      200
+    ],
+    "operations": [
+      200
+    ],
+    "creator-growth": [
+      200
+    ],
+    "media-studio": [
+      200
+    ],
+    "analyst": [
+      200
+    ],
+    "price-governance": [
+      200
+    ],
+    "customer": [
+      200
+    ]
+  },
+  "originalBrowserSubject": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "auxiliary404": [
+    "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+    "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+    "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+    "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+    "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+    "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+    "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+    "/api/v1/ecommerce-workshop/views/customer/contributions",
+    "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+    "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+    "/api/v1/ecommerce-workshop/views/price/closure-contributions"
+  ],
+  "currentDenyEntry": {
+    "unauthMe": 401,
+    "denyMutationBeforeRouting": 405
+  },
+  "dbWrites": false,
+  "noWholeGoalOrFullVisualAcceptance": true,
+  "remaining": [
+    "auxiliary404 reader wiring",
+    "current complete browser child states and visual repairs",
+    "budget C genuine user review/deployment",
+    "natural business chain and install lifecycle/release"
+  ]
+}
