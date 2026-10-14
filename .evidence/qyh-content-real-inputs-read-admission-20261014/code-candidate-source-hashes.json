@@ -1,0 +1,19 @@
+{
+  "headBeforeCommit": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "candidateFileHashes": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "a4fc2ed254e12f01b0efd0a4268739255943288c5320dfb459e939b685d7a6d7",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "93fe0d418f6e11cd09ad620fb008b99ebd13a7e50d0a0872e4058072e1624bbe",
+    "services/aos-api/aos_api/ecommerce_workshop_content_campaign_inputs.py": "8fa43a446715b1fc4f939e91343fcf53c2e52da8b87e89684f199d167d550b46",
+    "services/aos-api/aos_api/ecommerce_content_campaign_authority_store.py": "67362f4692cd1738f89dade9d9d8989893bb112f35a9a913df92f1acdedfe07d",
+    "services/aos-api/aos_api/ecommerce_workshop_read_catalog.py": "041b25f128c8c458890a54a7631751038d8bb9ee238134c35b590d5a59b9d77d",
+    "services/aos-api/aos_api/db.py": "a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010",
+    "services/aos-api/aos_api/tenant_scope.py": "4c727d12810e6e2e9f1bba218d5fed6277afcaf4ddb7eb2ae4f67c73fc532fa6"
+  },
+  "changedProductFiles": [
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py"
+  ],
+  "otherSourcesUnchanged": true,
+  "nativeBaselineGET": 404,
+  "actualAfterReloadGET": "PENDING"
+}

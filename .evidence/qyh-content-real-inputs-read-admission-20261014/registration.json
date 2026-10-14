@@ -1,0 +1,24 @@
+{
+  "base_revision": "AOS-002027",
+  "created_at": "2026-10-14T12:13:25+08:00",
+  "excluded_scope": [
+    "aos-platform/apps/web",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Audit complete real-inputs readonly reader and canonical campaign snapshot, change exactly this GET admission; tenant/noquery/POST fences unchanged;RED/minimal/specialized/adjacent/native/browser/Prime/Delivery;no business Goal completion."
+  ],
+  "lease_expires_at": "2026-10-14T06:00:00+00:00",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "schema": "aos-memory-task-receipt/v1",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    "aos-platform/.evidence/qyh-content-real-inputs-read-admission-20261014",
+    "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md"
+  ],
+  "status": "ACTIVE",
+  "task_id": "qyh-content-real-inputs-read-admission-20261014"
+}

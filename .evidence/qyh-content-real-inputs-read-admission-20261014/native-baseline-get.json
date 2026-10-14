@@ -1,0 +1,14 @@
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "status": 404,
+  "path": "/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+  "apiHead": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "readOnly": true,
+  "at": "2026-10-14T04:34:54.716Z",
+  "secretsSaved": false
+}

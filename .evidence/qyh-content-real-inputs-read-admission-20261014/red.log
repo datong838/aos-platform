@@ -1,0 +1,115 @@
+...........F.FF...........                                               [100%]
+=================================== FAILURES ===================================
+________ test_read_dependency_only_reaches_explicit_audited_get_routes _________
+
+    def test_read_dependency_only_reaches_explicit_audited_get_routes():
+        actual = set()
+        for route in routes.router.routes:
+            uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                            for d in route.dependant.dependencies)
+            if uses_read:
+                assert route.methods == {'GET'}
+                actual.add(route.path)
+>       assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+            '/v1/ecommerce-workshop/source-readiness',
+            '/v1/ecommerce-workshop/views/operations/cases',
+            '/v1/ecommerce-workshop/commands/operations/readiness',
+            '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+            '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+            '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+            '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+            '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+        }
+E       AssertionError: assert {'/v1/ecommer...-growth', ...} == {'/v1/ecommer...-inputs', ...}
+E         
+E         Extra items in the right set:
+E         '/v1/ecommerce-workshop/views/content-campaign/real-inputs'
+E         Use -v to get more diff
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:73: AssertionError
+___________ test_real_inputs_read_denied_before_business_data_access ___________
+
+    def test_real_inputs_read_denied_before_business_data_access():
+        client, legacy, reader = client_with_catalogs()
+        def forbidden_inputs():
+            class Inputs:
+                def read(self, **scope):
+                    pytest.fail('denied installed read must not read business inputs')
+            return Inputs()
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_content_campaign_inputs] = forbidden_inputs
+        response = client.get('/v1/ecommerce-workshop/views/content-campaign/real-inputs')
+        assert response.status_code == 404
+>       assert not legacy.calls
+E       AssertionError: assert not [{'module_id': 'ecommerce.content-campaign', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}]
+E        +  where [{'module_id': 'ecommerce.content-campaign', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x11bef0750>.calls
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:107: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T04:24:05.658601+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T04:24:05.770793+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T04:24:05.771300+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/content-campaign/real-inputs \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/content-campaign/real-inputs "HTTP/1.1 404 Not Found"
+_________ test_admitted_real_inputs_receives_only_authenticated_tenant _________
+
+    def test_admitted_real_inputs_receives_only_authenticated_tenant():
+        client, legacy, reader = client_with_catalogs()
+        def admit(**scope):
+            reader.calls.append(scope)
+        reader.get_readiness = admit
+        class Inputs:
+            def read(self, **scope):
+                assert scope == dict(org_id='org-org', project_id='dev-project')
+                raise ReadReached('real-inputs')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_content_campaign_inputs] = lambda: Inputs()
+>       with pytest.raises(ReadReached, match='real-inputs'):
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:122: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T04:24:05.773736+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T04:24:06.222761+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T04:24:06.223239+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/content-campaign/real-inputs \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/content-campaign/real-inputs "HTTP/1.1 404 Not Found"
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_real_inputs_read_denied_before_business_data_access
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_real_inputs_receives_only_authenticated_tenant
+3 failed, 23 passed, 7 warnings in 3.37s

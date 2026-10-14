@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "00234d6a1064f477c2137bceea90675a59ee28b1ac20c5ed3884865910bebe37",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-content-real-inputs-read-admission-20261014-code-r5",
+    "task_id": "qyh-content-real-inputs-read-admission-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+      "authority_revision": "AOS-002027",
+      "files": {
+        ".evidence/qyh-content-real-inputs-read-admission-20261014/code-review-package-r3.txt": "f4958ff036d2aac8d0911455a777d1f6c47cf1b96cf1232553a830b54dddb929"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The current exact product diff changes only real-inputs GET admission and preserves tenant/query/install fences and every other GET/POST.",
+        "evidence": "diff shows one line in services/aos-api/aos_api/routers/ecommerce_workshop.py changing `catalog: CatalogDependency` to `catalog: ReadCatalogDependency` solely in `get_ecommerce_workshop_content_campaign_real_inputs`. Test file diff adds only `real-inputs` to explicit route whitelist and three new tests. Existing fence handlers `_reject_query_parameters` and `_require_content_campaign_installation` remain. Unreviewed GETs still use legacy catalog per `test_unreviewed_get_still_uses_legacy_admission`.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Current68 adjacent tests and explicit current3 PASSED nodes support a code-candidate commit; historical pre-change RED failures are not current failures.",
+        "evidence": "Source green-adjacent.log shows 68 passed for adjacent tests (full suite). Source red.log is labeled 'pre-change expected failure historical evidence'. Current exact diff shows 3 PASSED nodes for previously failing tests: `test_read_dependency_only_reaches_explicit_audited_get_routes`, `test_real_inputs_read_denied_before_business_data_access`, `test_admitted_real_inputs_receives_only_authenticated_tenant`.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "In the supplied implemented handler and complete subordinate read methods, the authenticated tenant and bounded readonly SELECT path are unchanged, and this one annotation change adds no lifecycle, budget, source or Provider command call.",
+        "evidence": "Handler body unchanged: calls `_reject_query_parameters`, `_require_content_campaign_installation`, then `inputs.read(org_id=principal.org_id, project_id=principal.project_id)`. Input reader uses `connect_read_only(inherit_scope=False)` with `apply_transaction_scope(conn, scope)`. Subordinate selects: `ecom_object` bounded by org/project/cutoff/limit 200; `read_snapshot` uses separate `read_connect_factory` with limit 100 on `ecommerce_campaign_head`, calendar, and variant relations. All reads verified as readonly without write/lifecycle/provider commands.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Proceed with committing only the verified one-line annotation change and the three new test cases in this scope. Ensure no other files are staged. Run final verification of adjacent 68 tests before release."
+  }
+}

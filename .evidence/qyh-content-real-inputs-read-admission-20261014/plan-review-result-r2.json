@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "00234d6a1064f477c2137bceea90675a59ee28b1ac20c5ed3884865910bebe37",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-content-real-inputs-read-admission-20261014-plan-r2",
+    "task_id": "qyh-content-real-inputs-read-admission-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+      "authority_revision": "AOS-002027",
+      "files": {
+        ".evidence/qyh-content-real-inputs-read-admission-20261014/plan-review-package-r2.txt": "728e76e44b27802e43cc3e151ef3dfeb9f7db3156be4b45eb2ad2957cc01d5b7"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The proposed exact diff is a scoped prospective choice for one real-inputs GET catalog dependency, preserving its existing authenticated tenant/query/install fences and leaving every POST and other GET unchanged; no implemented change is claimed yet.",
+        "evidence": "prospective diff in review-package-r2.txt shows exactly one line change in `services/aos-api/aos_api/routers/ecommerce_workshop.py`: replacing `catalog: CatalogDependency` with `catalog: ReadCatalogDependency` for function `get_ecommerce_workshop_content_campaign_real_inputs` only. The plan explicitly states 'Only1GET injection; all business lifecycle/budget incomplete' and confirms existing fences `_reject_query_parameters` and `_require_content_campaign_installation` remain. Current file SHA 8020e80f... confirms no implementation has occurred.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The supplied complete input reader and subordinate canonical snapshot methods use bounded tenant/cutoff readonly persisted data queries and fail-closed/partial contracts; this route can be audited for installed read admission without source reads, budget execution or invoking producer methods.",
+        "evidence": "ecommerce_workshop_content_campaign_inputs.py shows `EcommerceWorkshopContentCampaignInputs.read` uses `connect_read_only(inherit_scope=False)` then `apply_transaction_scope`, with bounded SELECT on `ecom_object` (cutoff, limit 200) and `_campaign_store.read_snapshot(scope, cutoff=cutoff, limit=100)`. ecommerce_content_campaign_authority_store.py shows `read_snapshot` uses read-only connections with savepoint isolation and raises `ContentCampaignAuthorityReadError` on failure. Neither invokes any producer, budget, or external source. Plan confirms 'no external source' and 'readonly persisted data queries'.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The registered scoped plan and unchanged strict review helper support proceeding to RED then minimal implementation and appropriate native/browser/Prime validation, while current full business, budget and visual goals remain explicitly incomplete.",
+        "evidence": "registration.json shows ACTIVE status with task_id 'qyh-content-real-inputs-read-admission-20261014', scope limited to routers/ecommerce_workshop.py, tests, evidence dir, and one doc. review_controller.py is unchanged from prior legal review (SHA 00234d6a...). Plan states '先独立方案复核合法消费，后RED；最小实现后read_http/read_catalog/content_campaign_inputs/authority snapshot相邻回归' and explicitly lists remaining goals as incomplete: '其余十条辅助GET、完整预算C/用户本人exact批准/正式部署、自然Case/Run分析→方案→内容能力→人工续跑→总控Wiki、八真实场景、安装全生命周期、观察发布全部未完成且保留'.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Proceed to RED phase: write the exact diff in ecommerce_workshop.py and test_ecommerce_workshop_read_http.py per plan, then run strict test suite to verify GET admission rejects before installation, passes with ReadCatalogDependency, preserves POST behavior, and validates tenant/cutoff passing."
+  }
+}

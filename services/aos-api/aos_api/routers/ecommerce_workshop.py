@@ -1472,7 +1472,7 @@ def get_ecommerce_workshop_content_campaign_view(
 def get_ecommerce_workshop_content_campaign_real_inputs(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     inputs: ContentCampaignInputsDependency,
 ) -> WorkshopContentCampaignInputsEnvelope:
     _reject_query_parameters(request)

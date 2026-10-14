@@ -1,0 +1,772 @@
+Prospective route plan review only; no implementation or green assertion. Read exact full supplied methods. Protect existing command/read and canonical authority. Only1GET injection; all business lifecycle/budget incomplete. Two readonly transactions sharecutoff notglobal MVCC; no external source. Existing helper copied identically from legally reviewed maintenance helper except exact Task whitelist.
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/implementation-plan.md SHA f8b9713df92ba155ad527ee9dde06ed9e2bf11d2bddac93cae2b3877ea63806c
+# 内容与活动正式输入只读接线
+
+Rules：用户方案先行/最小更改/保护dirty和数据；231总控串行唯一m1写者、八步Loop、真实数据和原稿、独立Prime冻结合法消费。复习231产品L1/L5/L6与文件级/八步合同、231-4只读租户及旧API兼容，交接和D-wave前序结果。不把内部管理投影冒充最终领域隔离运行方案。
+
+Task qyh-content-real-inputs-read-admission-20261014，owner codex-01a13484-f019-7d82-94ce-812396db9124，base AOS-002027，Lease06:00UTC；另一个原卷维护Task仍ACTIVE，两个scope不重叠。当前HEAD6c9b65777eec4ab0688fa50a318e40b0a9b05d9b，router/test无dirty。
+
+## 问题与审计
+
+真实OIDC页root content-campaign200而real-inputs404；source inventory确认该GET仍CatalogDependency。不是认定预算过期导致404。已交付ReadCatalog是legacy成功先返回，legacy404才延迟读取selected当前签名安装与ecommerce.workshop.read；保留租户、角色、markings、模块校验，不让请求选择安装或任意module。
+
+仅 `/v1/ecommerce-workshop/views/content-campaign/real-inputs` 改catalog注入ReadCatalogDependency。_reject_query_parameters和_require_content_campaign_installation保持；reader调用仅用已认证principal org/project。旧POST/workflow/其他未审计GET仍CatalogDependency。
+
+传递链：router默认EcommerceWorkshopContentCampaignInputs；产品/库存connect_read_only(inherit_scope=False)，apply_transaction_scope受信TenantScope，参数化SELECT ecom_object、deleted_at/cutoff/类型过滤、最大200行；只返回公开有界字段/ref/hash而非raw properties。campaign_store默认独立db_read_only_connect，read_snapshot限定cutoff/limit100，savepoint隔离plan/calendar/content失败；_list_current_on_connection与_list_content_variants_on_connection均SELECT，租户/cutoff/版本hash和Receipt校验，无publish/create/consume/外部Connector。SQL表名是服务器固定调用常量，不来自HTTP。产品和campaign是两个只读事务共享时间cutoff，不宣称跨事务单一MVCC快照。unavailable/partial/blocked按现存DTO保留；未知stock不补0。read_snapshot已有辅助content读取属既存canonical库只读，不读取商城源。
+
+## 文件、实现与验证
+
+唯一产品改动 services/aos-api/aos_api/routers/ecommerce_workshop.py：这个函数catalog类型一处替换。测试 services/aos-api/tests/test_ecommerce_workshop_read_http.py：扩展精确GET白名单一项；RED验证拒绝read catalog先到且业务reader不调用、已接纳后受信tenant传递、未知query先拒绝、原POST仍legacy不触consumer。相关真实contract/inputs相邻现有测试复用，不伪造native业务证据。
+
+先独立方案复核合法消费，后RED；最小实现后read_http/read_catalog/content_campaign_inputs/authority snapshot相邻回归。正常原角色READ ONLY native可走原管理环境，不DDL/seed/预算。维护Task负责最新冻结API加载与owned浏览器正常GET：root200/realinputs正式DTO或真实partial/blocked、菜单/原稿同态差异，无POST。浏览器页面已关时先核实际入口再正常只读连接，不重放未知旧操作。
+
+专项通过之后独立代码/证据复审，不以stub到达证明真实业务完成；精确提交自己的router/test/evidence，不能stage用户dirty或私人source/credentials。准确Delivery仅这个读取切片，Authority CAS需其他当前Task先准确交接基线；不能令并存Lease失效后消费旧review。同步项目/Prime强投影而不写个人Codex记忆。每步记录证据及真实缺口。
+
+## 风险、回滚、剩余
+
+ReadCatalog是管理读取接纳，不是runtime可用/预算授权。原DB161/650保持只读；Host/worker/Provider OFF、旧12Run不重放、disabledSchedule不启用。DTO中ready只是现存read状态，页面生成/批准/发布须原独立门，当前management wrapper仍405。不删除来源缺失提示以掩盖缺口；视觉遮挡单独Task先方案。回滚未发布注入与新增测试，保留历史不可变证据，不重签/覆盖旧版本或改DB。
+
+其余十条辅助GET、完整预算C/用户本人exact批准/正式部署、自然Case/Run分析→方案→内容能力→人工续跑→总控Wiki、八真实场景、安装全生命周期、观察发布全部未完成且保留。每日最新m1同原卷PG→API→Web、aos-2不重启照旧。
+
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/registration.json SHA 35aeee005c7dc2d95762c60c9b31e3a4d65473e99dda3d6e2d4a6591f986a4b1
+{
+  "base_revision": "AOS-002027",
+  "created_at": "2026-10-14T12:13:25+08:00",
+  "excluded_scope": [
+    "aos-platform/apps/web",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Audit complete real-inputs readonly reader and canonical campaign snapshot, change exactly this GET admission; tenant/noquery/POST fences unchanged;RED/minimal/specialized/adjacent/native/browser/Prime/Delivery;no business Goal completion."
+  ],
+  "lease_expires_at": "2026-10-14T06:00:00+00:00",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "schema": "aos-memory-task-receipt/v1",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    "aos-platform/.evidence/qyh-content-real-inputs-read-admission-20261014",
+    "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md"
+  ],
+  "status": "ACTIVE",
+  "task_id": "qyh-content-real-inputs-read-admission-20261014"
+}
+
+FILE .evidence/qyh-content-real-inputs-read-admission-20261014/review_controller.py SHA 00234d6a1064f477c2137bceea90675a59ee28b1ac20c5ed3884865910bebe37
+"""Prime supported system-prompt adapter; unchanged strict AOS result gates."""
+import argparse,hashlib,json,os,subprocess,sys,tempfile
+from pathlib import Path
+REPO=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(REPO/'scripts/long-task-watchdog'))
+import aos_review as gate
+
+def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def save(path,value):
+    with path.open('x') as stream:
+        os.chmod(path,0o600);json.dump(value,stream,ensure_ascii=False,indent=2)
+        stream.flush();os.fsync(stream.fileno())
+
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--request',required=True);parser.add_argument('--output',required=True)
+    parser.add_argument('--consume')
+    args=parser.parse_args()
+    request=gate.json.loads(gate.exact_file(REPO,args.request,('.evidence',)).read_text())
+    assert request['task_id']=='qyh-content-real-inputs-read-admission-20261014'
+    prefix='.evidence/'+request['task_id']+'/'
+    assert args.request.startswith(prefix) and args.output.startswith(prefix)
+    output=Path(args.output)
+    assert not output.is_absolute() and '..' not in output.parts and output.suffix=='.json'
+    parent=REPO
+    for part in output.parts[:-1]:
+        parent=parent/part
+        assert not parent.is_symlink() and parent.is_dir()
+    target=REPO/output;assert target.parent.is_dir() and not target.exists()
+    gate.validate_request(REPO,request)
+    own_sha=digest(Path(__file__));validator_sha=digest(Path(gate.__file__))
+    if args.consume:
+        assert args.consume.startswith(prefix)
+        envelope=json.loads(gate.exact_file(REPO,args.consume,('.evidence',)).read_text())
+        transport=json.loads(gate.exact_file(REPO,str(Path(args.consume).with_suffix('.transport.json')),('.evidence',),max_bytes=8*1024*1024).read_text())
+        assert envelope['validator_sha256']==validator_sha
+        record=gate.consumption_record(request,envelope,transport,own_sha)
+        gate.validate_request(REPO,request)
+        marker=target.parent/(hashlib.sha256(request['request_id'].encode()).hexdigest()+'.consumed.json')
+        save(marker,record);save(target,record)
+        print(json.dumps({'consumption':str(target),'status':record['status'],'execution_authorized':False}));return
+    for prior in target.parent.glob('*.attempt.json'):
+        assert json.loads(prior.read_text())['request_id']!=request['request_id'],'existing attempt: reconcile, do not resend'
+    marker=target.parent/(hashlib.sha256(request['request_id'].encode()).hexdigest()+'.attempt.json')
+    save(marker,{'request_id':request['request_id'],'baseline':request['baseline'],'status':'ATTEMPTED_UNKNOWN','runner_sha256':own_sha,'validator_sha256':validator_sha})
+    template={k:request[k] for k in ('request_id','task_id','owner','kind','baseline')}
+    template.update(verdict='<choose PASS/REWORK/NEED_EVIDENCE/NEED_DECISION>',
+        findings=[{'claim':c,'evidence':'<actual supplied file/function/field evidence; do not invent>','assessment':'<choose supported/contradicted/insufficient>'} for c in request['claims']],
+        next_safe_step='<required concrete nonempty safe suggestion, even for PASS>')
+    system=gate.SYSTEM+'\n篇幅合同：每个findings.evidence不超过600个字符，next_safe_step不超过250个字符；只保留定位与核心依据，不重复列出整份源码或叙述全部测试。不得省略任何claims的实际审阅或改变判断门。\n'+'\n输出协议硬要求：整个assistant文本第一个字符必须是{、最后一个字符必须是}。不要输出```或json代码围栏，不能输出JSON之前或之后的解释。以下仅为输出字段框架，标识/claims需逐字复制；它不是已经证明的事实，判定与证据必须实际审阅填写，不得将占位符原样输出。next_safe_step不可遗漏。\n'+json.dumps(template,ensure_ascii=False)
+    with tempfile.TemporaryDirectory(prefix='aos-review-b-system-') as cwd:
+        gate.prepare_review_directory(cwd)
+        command=gate.prime_command(cwd)
+        command[command.index('--system-prompt')+1]=system
+        proc=subprocess.run(command,input=json.dumps(request,ensure_ascii=False),env={'HOME':str(Path.home()),'PATH':str(Path(gate.NODE).parent)+':/usr/bin:/bin'},capture_output=True,text=True,timeout=120)
+    gate.scan_secrets(proc.stdout);gate.scan_secrets(proc.stderr)
+    transport={'returncode':proc.returncode,'stdout':proc.stdout,'stderr':proc.stderr}
+    save(target.with_suffix('.transport.json'),transport)
+    assert proc.returncode==0,'terminal failure; reconcile, no automatic retry'
+    result=gate.parse_response(proc.stdout)  # Exact raw JSON; NEVER strip fences or repair.
+    gate.validate_result(request,result);gate.validate_request(REPO,request)
+    assert digest(Path(__file__))==own_sha and digest(Path(gate.__file__))==validator_sha
+    save(target,{'schema':'aos-material-review-result/v1','mode':'tools-disabled-material-only',
+        'runner_sha256':own_sha,'validator_sha256':validator_sha,'execution_authorized':False,'result':result})
+    print(json.dumps({'result':str(target),'verdict':result['verdict'],'execution_authorized':False}))
+
+if __name__=='__main__':main()
+
+FILE services/aos-api/aos_api/ecommerce_workshop_content_campaign_inputs.py SHA 8fa43a446715b1fc4f939e91343fcf53c2e52da8b87e89684f199d167d550b46
+"""Tenant-safe same-cutoff reader for real content-campaign business inputs."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from contextlib import AbstractContextManager
+from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
+from functools import partial
+from typing import Any
+
+import psycopg
+
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_content_campaign_authority_store import (
+    ContentCampaignAuthorityReadError,
+    EcommerceContentCampaignAuthorityStore,
+)
+from aos_api.ecommerce_workshop_content_campaign_inputs_contracts import (
+    ContentCampaignInputLedger,
+    ContentCampaignInputRef,
+    ContentCampaignInventoryInput,
+    ContentCampaignPlanInput,
+    ContentCampaignProductInput,
+    WorkshopContentCampaignInputsEnvelope,
+)
+from aos_api.tenant_scope import TenantScope, apply_transaction_scope
+
+
+ConnectFactory = Callable[[], AbstractContextManager[Any]]
+Clock = Callable[[], datetime]
+
+
+def _non_negative_int(value: object) -> int | None:
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        number = Decimal(str(value))
+    except InvalidOperation:
+        return None
+    if not number.is_finite() or number < 0 or number != number.to_integral_value():
+        return None
+    return int(number)
+
+
+class EcommerceWorkshopContentCampaignInputs:
+    def __init__(
+        self,
+        *,
+        clock: Clock | None = None,
+        connect_factory: ConnectFactory | None = None,
+        campaign_store: EcommerceContentCampaignAuthorityStore | None = None,
+    ) -> None:
+        self._clock = clock or (lambda: datetime.now(UTC))
+        self._connect_factory = connect_factory or partial(
+            connect_read_only, inherit_scope=False
+        )
+        self._campaign_store = campaign_store or EcommerceContentCampaignAuthorityStore()
+
+    def read(self, *, org_id: str, project_id: str):
+        cutoff = self._clock()
+        if cutoff.utcoffset() is None:
+            raise ValueError("content-campaign input clock requires timezone")
+        scope = TenantScope(org_id, project_id)
+        products: list[ContentCampaignProductInput] = []
+        inventory: list[ContentCampaignInventoryInput] = []
+        plans: list[ContentCampaignPlanInput] = []
+        unavailable: list[str] = []
+        try:
+            with self._connect_factory() as conn:
+                apply_transaction_scope(conn, scope)
+                rows = conn.execute(
+                    "SELECT object_type,external_id,properties,source_updated_at,payload_hash "
+                    "FROM ecom_object WHERE org_id=%s AND workspace_id=%s "
+                    "AND object_type IN (%s,%s) AND deleted_at IS NULL "
+                    "AND source_updated_at<=%s ORDER BY object_type,source_updated_at DESC,external_id DESC LIMIT 200",
+                    (*scope.key, "Product", "ProductSku", cutoff),
+                ).fetchall()
+            product_rows = [row for row in rows if row["object_type"] == "Product"][:100]
+            sku_rows = [row for row in rows if row["object_type"] == "ProductSku"][:100]
+            products = [self._product(row) for row in product_rows]
+            product_by_source_id = {
+                item.product_ref.resource_id.rsplit(":", 1)[-1]: item.product_ref
+                for item in products
+            }
+            inventory = [self._inventory(row, product_by_source_id) for row in sku_rows]
+        except (psycopg.Error, KeyError, TypeError, ValueError):
+            unavailable.extend(["products", "inventory"])
+        try:
+            snapshot = self._campaign_store.read_snapshot(scope, cutoff=cutoff, limit=100)
+            if snapshot.errors:
+                raise ContentCampaignAuthorityReadError("campaign snapshot partial")
+            plans = [self._campaign(item) for item in snapshot.campaigns]
+            plans.extend(self._calendar(item) for item in snapshot.calendar_entries)
+        except ContentCampaignAuthorityReadError:
+            unavailable.append("plans")
+        status = "blocked" if len(unavailable) == 3 else ("partial" if unavailable else "ready")
+        unmatched = sum(item.product_ref is None for item in inventory)
+        return WorkshopContentCampaignInputsEnvelope(
+            tenant={"orgId": org_id, "projectId": project_id},
+            evaluated_at=cutoff,
+            data_cutoff=cutoff,
+            status=status,
+            products=products,
+            inventory=inventory,
+            plans=plans,
+            ledger=ContentCampaignInputLedger(
+                products=len(products), inventory=len(inventory), plans=len(plans),
+                unmatched_inventory=unmatched,
+            ),
+            unavailable_groups=unavailable,
+        )
+
+    @staticmethod
+    def _ref(resource_type: str, row: dict[str, Any]) -> ContentCampaignInputRef:
+        return ContentCampaignInputRef(
+            resource_type=resource_type,
+            resource_id=str(row["external_id"]),
+            content_hash="sha256:" + str(row["payload_hash"]),
+            authority="ecom_object",
+        )
+
+    @classmethod
+    def _product(cls, row: dict[str, Any]) -> ContentCampaignProductInput:
+        props = dict(row["properties"])
+        title = str(props.get("title") or "").strip() or "商品名称来源未提供"
+        return ContentCampaignProductInput(
+            product_ref=cls._ref("Product", row),
+            title=title,
+            price=str(props["price"]) if props.get("price") is not None else None,
+            available_stock=_non_negative_int(props.get("stock")),
+            business_status=str(props["state"]) if props.get("state") is not None else None,
+            source_updated_at=row["source_updated_at"],
+        )
+
+    @classmethod
+    def _inventory(cls, row, products):
+        props = dict(row["properties"])
+        return ContentCampaignInventoryInput(
+            sku_ref=cls._ref("ProductSku", row),
+            product_ref=products.get(str(props.get("productId", ""))),
+            stock=_non_negative_int(props.get("stock")),
+            stock_alarm=_non_negative_int(props.get("stockAlarm")),
+            stock_health=props.get("stock_health"),
+            source_updated_at=row["source_updated_at"],
+        )
+
+    @staticmethod
+    def _authority_ref(resource_type, observation, identity):
+        return ContentCampaignInputRef(
+            resource_type=resource_type,
+            resource_id=identity,
+            revision=observation.revision.revision,
+            content_hash="sha256:" + observation.revision.content_hash,
+            authority="content_campaign_authority",
+        )
+
+    @classmethod
+    def _campaign(cls, observation):
+        item = observation.revision
+        return ContentCampaignPlanInput(
+            plan_ref=cls._authority_ref("CampaignRevision", observation, item.campaign_id),
+            lifecycle=item.lifecycle.value,
+            channel_ids=item.channel_ids,
+            source_updated_at=item.created_at,
+        )
+
+    @classmethod
+    def _calendar(cls, observation):
+        item = observation.revision
+        return ContentCampaignPlanInput(
+            plan_ref=cls._authority_ref("CalendarEntryRevision", observation, item.entry_id),
+            lifecycle=item.lifecycle.value,
+            channel_ids=[],
+            local_start=item.local_start,
+            local_end=item.local_end,
+            source_updated_at=item.created_at,
+        )
+
+
+__all__ = ["EcommerceWorkshopContentCampaignInputs"]
+
+FILE services/aos-api/aos_api/ecommerce_workshop_read_catalog.py SHA 041b25f128c8c458890a54a7631751038d8bb9ee238134c35b590d5a59b9d77d
+"""GET admission candidate over a current, signed, explicitly selected installation.
+
+This adapter does not activate HTTP routes or grant runtime readiness. Legacy
+admission is preserved; selected installed assets require actual exact scope grants.
+"""
+from __future__ import annotations
+
+from aos_api.asset_registry.errors import AssetNotFoundError
+from aos_api.ecommerce_workshop_contracts import WorkshopDependencyType
+
+
+class EcommerceWorkshopReadCatalog:
+    def __init__(self, *, legacy, installed=None, installed_factory=None) -> None:
+        self._legacy = legacy
+        self._installed = installed
+        self._installed_factory = installed_factory
+
+    def get_readiness(self, **scope):
+        try:
+            return self._legacy.get_readiness(**scope)
+        except AssetNotFoundError:
+            # Integrity, signature and availability errors never permit fallback.
+            pass
+        return self.get_installed_readiness(**scope)
+
+    def get_installed_readiness(self, **scope):
+        """Check only the selected installation with the existing exact read gate."""
+        installed = (
+            self._installed_factory() if self._installed_factory is not None
+            else self._installed
+        )
+        result = installed.get_readiness(**scope)
+        item = result.item
+        installation = item.installation_ref
+        required = set(item.permissions.data_scopes)
+        expected_revision = (
+            f'installation:{installation.revision}/lock:{installation.lock_revision}'
+        )
+        granted = {
+            ref.resource_id for ref in item.dependency_refs
+            if ref.resource_type == 'DataScopeGrant'
+            and ref.revision == expected_revision
+            and ref.content_hash == installation.lock_hash
+            and ref.authority == 'postgres:bundle_composition_lock'
+        }
+        permitted_gap_types = {
+            WorkshopDependencyType.OBJECT,
+            WorkshopDependencyType.CAPABILITY,
+            WorkshopDependencyType.AIP_FEATURE,
+        }
+        disallowed = any(
+            blocker.dependency_type not in permitted_gap_types
+            and not (
+                blocker.dependency_type == WorkshopDependencyType.INSTALLATION
+                and blocker.reason_code == 'INSTALLED_ASSET_READONLY'
+                and blocker.dependency_id == installation.installation_id
+            )
+            for blocker in item.blockers
+        )
+        if 'ecommerce.workshop.read' not in required or not required <= granted or disallowed:
+            raise AssetNotFoundError('Workshop module is not installed for scoped reading')
+        # Keep the original disabled state and every runtime/authority gap intact.
+        return result
+
+CURRENT services/aos-api/aos_api/routers/ecommerce_workshop.py FULL FILE SHA 8020e80f541d0c6e2b74befde1ffdc0a8fc7cf2d51e9d11e39c48e1560f698eb; complete named function/method source below
+def get_ecommerce_workshop_read_catalog(
+    legacy: Annotated[EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)],
+) -> EcommerceWorkshopReadCatalog:
+    from aos_api.ecommerce_installed_readonly_catalog import build_installed_readonly_catalog
+
+    return EcommerceWorkshopReadCatalog(
+        legacy=legacy,
+        installed_factory=build_installed_readonly_catalog,
+    )
+def get_ecommerce_workshop_content_campaign_inputs() -> EcommerceWorkshopContentCampaignInputs:
+    return EcommerceWorkshopContentCampaignInputs()
+def _reject_query_parameters(request: Request) -> None:
+    if request.query_params:
+        raise ApiError(
+            code="VALIDATION",
+            message="ecommerce Workshop reads do not accept query parameters",
+            status_code=400,
+        )
+def _require_content_campaign_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.content-campaign",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+def get_ecommerce_workshop_content_campaign_real_inputs(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    inputs: ContentCampaignInputsDependency,
+) -> WorkshopContentCampaignInputsEnvelope:
+    _reject_query_parameters(request)
+    _require_content_campaign_installation(principal=principal, catalog=catalog)
+    return inputs.read(org_id=principal.org_id, project_id=principal.project_id)
+def execute_ecommerce_content_campaign_workflow(
+    request: Request,
+    body: ContentCampaignWorkflowCommandRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    workflow: ContentCampaignWorkflowDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> ContentCampaignWorkflowCommandResponse:
+    _reject_query_parameters(request)
+    _require_content_campaign_installation(principal=principal, catalog=catalog)
+    try:
+        return workflow.execute(
+            TenantScope(principal.org_id, principal.project_id),
+            actor=principal.subject,
+            idempotency_key=_prepare_idempotency(idempotency_key),
+            body=body,
+        )
+    except ContentCampaignWorkflowError as exc:
+        raise _map_content_campaign_workflow_error(exc) from exc
+CURRENT services/aos-api/aos_api/ecommerce_content_campaign_authority_store.py FULL FILE SHA 67362f4692cd1738f89dade9d9d8989893bb112f35a9a913df92f1acdedfe07d; complete named function/method source below
+def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        read_connect_factory: ConnectFactory | None = None,
+    ) -> None:
+        self._connect_factory = connect_factory or db_connect
+        self._read_connect_factory = read_connect_factory or (
+            connect_factory if connect_factory is not None else db_read_only_connect
+        )
+def read_snapshot(
+        self, scope: TenantScope, *, cutoff: datetime, limit: int = 100
+    ) -> ContentCampaignAuthoritySnapshot:
+        """Read all page authorities from one repeatable-read transaction.
+
+        A nested transaction isolates a failed slice with a savepoint while the
+        outer read-only connection preserves one database snapshot and cutoff.
+        """
+        if cutoff.utcoffset() is None:
+            raise ValueError("authority cutoff requires a timezone")
+        if not 1 <= limit <= 100:
+            raise ValueError("authority read limit must be between 1 and 100")
+        campaigns = []
+        calendar_entries = []
+        intents = []
+        variants = []
+        errors: dict[str, ContentCampaignAuthorityReadError] = {}
+        try:
+            with self._read_connect_factory(scope) as conn:
+                try:
+                    with conn.transaction():
+                        campaigns = self._list_current_on_connection(
+                            conn,
+                            scope,
+                            cutoff=cutoff,
+                            limit=limit,
+                            model=CampaignRevision,
+                            head_table="ecommerce_campaign_head",
+                            revision_table="ecommerce_campaign_revision",
+                            identity_column="campaign_id",
+                        )
+                except ContentCampaignAuthorityReadError as exc:
+                    errors["plan"] = exc
+                try:
+                    with conn.transaction():
+                        calendar_entries = self._list_current_on_connection(
+                            conn,
+                            scope,
+                            cutoff=cutoff,
+                            limit=limit,
+                            model=CalendarEntryRevision,
+                            head_table="ecommerce_content_calendar_head",
+                            revision_table="ecommerce_content_calendar_entry_revision",
+                            identity_column="entry_id",
+                        )
+                except ContentCampaignAuthorityReadError as exc:
+                    errors["calendar"] = exc
+                try:
+                    with conn.transaction():
+                        intents = self._list_current_on_connection(
+                            conn,
+                            scope,
+                            cutoff=cutoff,
+                            limit=limit,
+                            model=MasterContentIntentRevision,
+                            head_table="ecommerce_master_content_intent_head",
+                            revision_table="ecommerce_master_content_intent_revision",
+                            identity_column="intent_id",
+                        )
+                        master_refs = tuple(
+                            observation.revision.master_artifact_ref
+                            for observation in intents
+                            if observation.revision.master_artifact_ref is not None
+                        )
+                        variants = self._list_content_variants_on_connection(
+                            conn,
+                            scope,
+                            cutoff=cutoff,
+                            limit=limit,
+                            master_artifact_refs=master_refs,
+                        )
+                except ContentCampaignAuthorityReadError as exc:
+                    intents = []
+                    variants = []
+                    errors["content"] = exc
+        except (psycopg.Error, AttributeError, TypeError, ValueError) as exc:
+            raise ContentCampaignAuthorityReadError(
+                "content-campaign snapshot read failed closed"
+            ) from exc
+        return ContentCampaignAuthoritySnapshot(
+            campaigns=campaigns,
+            calendar_entries=calendar_entries,
+            intents=intents,
+            variants=variants,
+            errors=errors,
+        )
+def _list_content_variants_on_connection(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        *,
+        cutoff: datetime,
+        limit: int,
+        master_artifact_refs: tuple[ContentCampaignExactRef, ...] | None = None,
+    ) -> list[ContentVariantAuthorityObservation]:
+        if cutoff.utcoffset() is None:
+            raise ValueError("ContentVariant cutoff requires a timezone")
+        if not 1 <= limit <= 100:
+            raise ValueError("ContentVariant read limit must be between 1 and 100")
+        if master_artifact_refs == ():
+            return []
+        try:
+            exact_filter = ""
+            exact_params: tuple[Any, ...] = ()
+            if master_artifact_refs is not None:
+                exact_filter = " AND (" + " OR ".join(
+                    "(relation.to_artifact_id=%s AND relation.to_content_hash=%s)"
+                    for _ in master_artifact_refs
+                ) + ") "
+                exact_params = tuple(
+                    value
+                    for ref in master_artifact_refs
+                    for value in (ref.resource_id, ref.content_hash)
+                )
+            rows = conn.execute(
+                    "SELECT relation.org_id,relation.project_id,relation.relation_id,"
+                    "relation.relation_type,relation.from_artifact_id,"
+                    "relation.from_content_hash,relation.to_artifact_id,"
+                    "relation.to_content_hash,variant.content_hash AS variant_current_hash,"
+                    "master.content_hash AS master_current_hash,receipt.receipt_id "
+                    "FROM aip_artifact_relation relation "
+                    "LEFT JOIN aip_artifact variant ON variant.org_id=relation.org_id "
+                    "AND variant.project_id=relation.project_id "
+                    "AND variant.artifact_id=relation.from_artifact_id "
+                    "LEFT JOIN aip_artifact master ON master.org_id=relation.org_id "
+                    "AND master.project_id=relation.project_id "
+                    "AND master.artifact_id=relation.to_artifact_id "
+                    "LEFT JOIN aip_production_contract_receipt receipt "
+                    "ON receipt.org_id=relation.org_id "
+                    "AND receipt.project_id=relation.project_id "
+                    "AND receipt.operation='artifact_relation.create' "
+                    "AND receipt.result_ref->>'resourceType'='ArtifactRelation' "
+                    "AND receipt.result_ref->>'resourceId'=relation.relation_id "
+                    "WHERE relation.org_id=%s AND relation.project_id=%s "
+                    "AND relation.relation_type='variant_of' "
+                    "AND relation.created_at<=%s "
+                    + exact_filter +
+                    "ORDER BY relation.created_at DESC,relation.relation_id LIMIT %s",
+                    (*scope.key, cutoff, *exact_params, limit),
+                ).fetchall()
+            seen: set[str] = set()
+            observations = []
+            for row in rows:
+                if (row["org_id"], row["project_id"]) != scope.key:
+                    raise ValueError("ContentVariant tenant scope drift")
+                if row["relation_type"] != "variant_of":
+                    raise ValueError("ContentVariant relation type drift")
+                if row["relation_id"] in seen:
+                    raise ValueError("ContentVariant relation has duplicate Receipts")
+                seen.add(row["relation_id"])
+                if row["variant_current_hash"] != row["from_content_hash"]:
+                    raise ValueError("ContentVariant artifact hash drift")
+                if row["master_current_hash"] != row["to_content_hash"]:
+                    raise ValueError("ContentVariant master hash drift")
+                observations.append(
+                    ContentVariantAuthorityObservation(
+                        relation_id=row["relation_id"],
+                        master_artifact_id=row["to_artifact_id"],
+                        master_content_hash=row["to_content_hash"],
+                        variant_artifact_id=row["from_artifact_id"],
+                        variant_content_hash=row["from_content_hash"],
+                        receipt_id=row["receipt_id"],
+                    )
+                )
+            return observations
+        except ContentCampaignAuthorityReadError:
+            raise
+        except (psycopg.Error, AttributeError, KeyError, TypeError, ValueError) as exc:
+            raise ContentCampaignAuthorityReadError(
+                "ContentVariant authority read failed closed"
+            ) from exc
+def _list_current_on_connection(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        *,
+        cutoff: datetime,
+        limit: int,
+        model: type[RevisionT],
+        head_table: str,
+        revision_table: str,
+        identity_column: str,
+    ) -> list[ContentCampaignAuthorityObservation[RevisionT]]:
+        if cutoff.utcoffset() is None:
+            raise ValueError("authority cutoff requires a timezone")
+        if not 1 <= limit <= 100:
+            raise ValueError("authority read limit must be between 1 and 100")
+        try:
+            rows = conn.execute(
+                    f"SELECT revision.org_id,revision.project_id,"
+                    f"revision.receipt_id,revision.authority_data FROM {head_table} head "
+                    f"JOIN {revision_table} revision "
+                    "ON revision.org_id=head.org_id "
+                    "AND revision.project_id=head.project_id "
+                    f"AND revision.{identity_column}=head.{identity_column} "
+                    "AND revision.revision=head.current_revision "
+                    "WHERE head.org_id=%s AND head.project_id=%s "
+                    "AND revision.created_at<=%s "
+                    f"ORDER BY revision.created_at DESC,revision.{identity_column} "
+                    "LIMIT %s",
+                    (*scope.key, cutoff, limit),
+                ).fetchall()
+            items = []
+            for row in rows:
+                if (row["org_id"], row["project_id"]) != scope.key:
+                    raise ValueError("content-campaign authority tenant scope drift")
+                item = model.model_validate(self._load(row["authority_data"]))
+                self._require_item_scope(
+                    scope, item.tenant.org_id, item.tenant.project_id
+                )
+                items.append(
+                    ContentCampaignAuthorityObservation(
+                        revision=item,
+                        receipt_id=row["receipt_id"],
+                    )
+                )
+            return items
+        except ContentCampaignAuthorityConflict as exc:
+            raise ContentCampaignAuthorityReadError(str(exc)) from exc
+        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:
+            raise ContentCampaignAuthorityReadError(
+                "content-campaign authority read failed closed"
+            ) from exc
+def _require_item_scope(
+        scope: TenantScope, org_id: str, project_id: str
+    ) -> None:
+        if scope.key != (org_id, project_id):
+            raise ContentCampaignAuthorityConflict("tenant scope mismatch")
+def _load(value: Any) -> Any:
+        return json.loads(value) if isinstance(value, str) else value
+CURRENT services/aos-api/aos_api/db.py FULL FILE SHA a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010; complete named function/method source below
+def _connect(
+    scope: TenantScope | None = None,
+    *,
+    inherit_scope: bool = True,
+    read_only: bool = False,
+    isolation_level: IsolationLevel | None = None,
+    platform_role: bool = False,
+) -> Iterator[psycopg.Connection]:
+    dsn = get_dsn()
+    log.debug("db_connect host_port_from_env=%s", "AOS_DATABASE_URL" in os.environ)
+    with psycopg.connect(dsn, row_factory=dict_row) as conn:
+        # psycopg applies these characteristics when the transaction starts.
+        # They must be configured before client encoding or tenant RLS executes
+        # the first SQL statement; issuing SET TRANSACTION afterwards fails.
+        if isolation_level is not None:
+            conn.isolation_level = isolation_level
+        if read_only:
+            conn.read_only = True
+        # 强制 UTF-8，避免客户端/驱动默认编码把中文写成 ???
+        conn.execute("SET client_encoding TO 'UTF8'")
+        effective_scope = (
+            scope
+            if scope is not None
+            else (current_tenant_scope() if inherit_scope else None)
+        )
+        if effective_scope is not None:
+            apply_transaction_scope(conn, effective_scope)
+        elif platform_role:
+            # Scope-less but still authenticated as the runtime role: needed on
+            # a NOINHERIT login where omitting SET ROLE means "no privileges at
+            # all". Never grants tenant visibility — the GUCs stay unset.
+            apply_platform_role(conn)
+        else:
+            # Scope-less AND no platform role: on a NOINHERIT login this
+            # connection can read nothing at all, and the failure surfaces as
+            # "permission denied" deep inside whichever statement runs first.
+            # Attribute the caller so the residual offenders can be census'd
+            # instead of guessed (see W6 connection-plane debt work).
+            try:
+                frame = sys._getframe(2)
+                caller = f"{frame.f_code.co_filename.rsplit('/', 1)[-1]}:{frame.f_lineno}"
+            except ValueError:  # shallow stack — never let diagnostics break a connect
+                caller = "unknown"
+            log.debug("db_connect_without_scope caller=%s", caller)
+        yield conn
+def connect_read_only(
+    scope: TenantScope | None = None,
+    *,
+    inherit_scope: bool = True,
+    platform_role: bool = False,
+) -> Iterator[psycopg.Connection]:
+    """Open a repeatable-read, read-only transaction before applying RLS scope.
+
+    Pass ``scope=None, inherit_scope=False, platform_role=True`` to read
+    platform-level assets (no tenant RLS) with the runtime identity: a
+    scope-less connection performs no SET ROLE, which on a NOINHERIT login
+    leaves the session with no privileges at all.
+    """
+    return _connect(
+        scope,
+        inherit_scope=inherit_scope,
+        read_only=True,
+        isolation_level=IsolationLevel.REPEATABLE_READ,
+        platform_role=platform_role,
+    )
+CURRENT services/aos-api/aos_api/tenant_scope.py FULL FILE SHA 4c727d12810e6e2e9f1bba218d5fed6277afcaf4ddb7eb2ae4f67c73fc532fa6; complete named function/method source below
+def apply_transaction_scope(conn: Any, scope: TenantScope) -> None:
+    """Set transaction-local role and GUCs.
+
+    Both the role and the tenant GUCs are transaction-local on purpose: a
+    session-scoped setting would leak the previous caller's tenant into the
+    next statement. The cost is the inverse discipline — any intermediate
+    ``commit()``/``rollback()`` discards them, after which ``current_user``
+    reverts to the NOINHERIT login (every table denies) and the RLS policy sees
+    no ``aos.org_id`` (every row is filtered out). Do the whole unit of work in
+    one transaction; use :func:`apply_platform_role` for cross-tenant paths.
+    """
+    conn.execute(f"SET LOCAL ROLE {RUNTIME_DB_ROLE}")
+    conn.execute(
+        """
+        SELECT set_config('aos.org_id', %s, true),
+               set_config('aos.project_id', %s, true)
+        """,
+        scope.key,
+    )
+
+R1 is terminal but INVALID: verdictPASS with insufficient finding was rejected by untouched strict validator. No result envelope/no consumption/no authority. It confused prospective plan review with implemented finaldiff. Product remains unchanged. New r2 asks only whether proposed next modification is scoped and coherent; actual implementation proof will be separate later code review. Exact machine-produced proposed diff below, do not interpret as applied change.
+--- services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ services/aos-api/aos_api/routers/ecommerce_workshop.py (PROSPECTIVE ONLY)
+@@ -1472,7 +1472,7 @@
+ def get_ecommerce_workshop_content_campaign_real_inputs(
+     request: Request,
+     principal: PrincipalDependency,
+-    catalog: CatalogDependency,
++    catalog: ReadCatalogDependency,
+     inputs: ContentCampaignInputsDependency,
+ ) -> WorkshopContentCampaignInputsEnvelope:
+     _reject_query_parameters(request)

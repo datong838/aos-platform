@@ -80,6 +80,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
         '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
         '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
         '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+        '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
     }
 
 
@@ -91,6 +92,44 @@ def test_unknown_query_rejected_before_catalog_call():
 
 class ReadReached(RuntimeError):
     pass
+
+
+def test_real_inputs_read_denied_before_business_data_access():
+    client, legacy, reader = client_with_catalogs()
+    def forbidden_inputs():
+        class Inputs:
+            def read(self, **scope):
+                pytest.fail('denied installed read must not read business inputs')
+        return Inputs()
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_content_campaign_inputs] = forbidden_inputs
+    response = client.get('/v1/ecommerce-workshop/views/content-campaign/real-inputs')
+    assert response.status_code == 404
+    assert not legacy.calls
+    assert reader.calls == [dict(module_id='ecommerce.content-campaign',
+        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])]
+
+
+def test_admitted_real_inputs_receives_only_authenticated_tenant():
+    client, legacy, reader = client_with_catalogs()
+    def admit(**scope):
+        reader.calls.append(scope)
+    reader.get_readiness = admit
+    class Inputs:
+        def read(self, **scope):
+            assert scope == dict(org_id='org-org', project_id='dev-project')
+            raise ReadReached('real-inputs')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_content_campaign_inputs] = lambda: Inputs()
+    with pytest.raises(ReadReached, match='real-inputs'):
+        client.get('/v1/ecommerce-workshop/views/content-campaign/real-inputs')
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+
+
+def test_real_inputs_query_cannot_override_authenticated_scope():
+    client, legacy, reader = client_with_catalogs()
+    response = client.get('/v1/ecommerce-workshop/views/content-campaign/real-inputs?orgId=dev-org')
+    assert response.status_code == 400
+    assert not legacy.calls and not reader.calls
 
 
 @pytest.mark.parametrize('module', sorted(ROOTS))
