@@ -1,0 +1,23 @@
+{
+  "beforeFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/creator-workflow-before-20261014.json",
+  "afterFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/creator-workflow-after-native-20261014.json",
+  "tableCount": 650,
+  "mismatches": [],
+  "equal": true,
+  "beforeCanonicalHash": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+  "afterCanonicalHash": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+  "native": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161",
+    "enabledBindings": 0,
+    "otherActiveClients": 0
+  },
+  "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "pgStartedAt": "2026-10-14T02:56:36.001669303Z",
+  "apiPid": 37761,
+  "webPid": 37975,
+  "apiSource": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+  "webSource": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+  "apiCwd": "p37761\nfcwd\nn/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d\n"
+}

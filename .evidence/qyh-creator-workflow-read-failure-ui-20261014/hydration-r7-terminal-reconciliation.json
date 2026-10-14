@@ -1,0 +1,7 @@
+{
+  "terminal": true,
+  "failure": "model ended without valid response",
+  "envelopeAbsent": true,
+  "transportPreserved": true,
+  "consumed": false
+}

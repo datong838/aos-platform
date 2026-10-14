@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-workflow-live-r2-20261015",
+  "task_id": "qyh-restoration-readonly-continuation-r3-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/live-review-package-r2.txt": "d71ab2470a99b09d02c586fee64df145947b39fcd4e742a682db89b3a77e02e8"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "bbd52f96ac424c4f453abf914950f1eb80eea2fab491b59e95332ef84025079e",
+  "transport_sha256": "d0130bd1e28b4548ee00795e9b0ca607a2a43ba89161486bb71208694e9e7577"
+}

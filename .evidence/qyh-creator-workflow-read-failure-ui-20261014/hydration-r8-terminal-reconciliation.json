@@ -1,0 +1,10 @@
+{
+  "terminal": true,
+  "failure": "model no validresponse",
+  "transportPreserved": true,
+  "consumed": false,
+  "defaultModelUnchanged": true,
+  "nextReviewTaskLocalModel": "agnes-2.0-flash",
+  "strictValidatorUnchanged": true,
+  "aosRuntimeProviderStillOff": true
+}

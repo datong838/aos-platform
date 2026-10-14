@@ -1,0 +1,29 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a00fa9562178204ec7a10c8aa8972b7366db4d3168fb3b72fb8d0f0cf20c7c13",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-workflow-read-failure-ui-20261014-hydration-code-r3",
+    "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-creator-workflow-read-failure-ui-20261014/hydration-code-review-package-r3.txt": "42bf6d488e0bd56805f2a6cb2039a49a3c13d9cc78d98577c13bb7cb56896b83"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "一行水合依赖修复按草稿identity/revision/purpose更新，不因fresh商品数组覆盖编辑；两反例及271项/类型检查支持代码候选，失败浏览器证据保留，尚待新源码现场验收。",
+        "evidence": "材料包含diff（CreatorGrowthPage.tsx:128 deps: [current?.resourceId, current?.revision, purpose]），source verification JSON（hash未变），test log（271 passed）。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "运行独立隔离browser fixture（针对新commit/source head）复验未保存输入恢复场景，确认UI水合行为符合修复。"
+  }
+}

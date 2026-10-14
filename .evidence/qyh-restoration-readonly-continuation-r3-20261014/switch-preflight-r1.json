@@ -1,0 +1,51 @@
+{
+  "head": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+  "lease": {
+    "base_revision": "AOS-002030",
+    "created_at": "2026-10-14T20:46:38+08:00",
+    "excluded_scope": [
+      "aos-platform/maintenance/current-preview-database",
+      "aos-platform/maintenance/current-preview-api",
+      "aos-platform/maintenance/current-preview-web",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py"
+    ],
+    "expected_outputs": [
+      "Carry all incomplete original restoration requirements and same original data/approval/identity into new-owner maintenance;no whole completion claim",
+      "Latest committed freeze excludes dirty; original role readonly native root8;fresh same-volume PG/API/Web restart, same-cutoff full fingerprint/no-effect/owned real OIDC SPA/browser reads then continue business Loop",
+      "Unknown effects read-only reconcile; keep Host/worker/Provider OFF,no old Run/mall source/manual execution/duplicate scripts or credentials disclosure",
+      "Recover latest management READONLY API for exact161db/162closedcandidate without migration or runtime override;strict runtime/unknownschema deny,fullreview;then latestPG/API/Web real8page/visual/deny-entry",
+      "Carry unchanged entire longGoal/user original install/fullrestore authorization, latest actual API87013/head110 and Web78346/head6c equalcurrenttrees plus originalPG; daily/aos latestoriginalvolume fullPG/API/Web, aos-2 no restart; maintain readonly/HostworkerProviderOFF; do not replay failed/unknown intents.",
+      "All earlier fullrestore pending original requirements remain; no fullrestoration/visual/business completion from previous handoff; sameowner unique m1 writer and supported Goal/reminders preserved",
+      "Carry complete remaining original recovery/daily fullPG/API/Web and sole originaluser authorization; actualAPI7645/head23e76 Web78346/head6c identicalfrontendtrees, schema161/650 originalvolume readonly; prior maintenancehandoff not whole completion; no replay/privateGoal/reminder edits",
+      "Carry ALL original remaining maintenance/currentAPI25389f005 currentWeb78346/6c PGoriginal161650bindings0 and daily latestcommittedfullPG/API/Web; this handoff not whole completion"
+    ],
+    "lease_expires_at": "2026-10-14T16:00:00+00:00",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/.evidence/qyh-full-system-restoration-20261011",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/maintenance/qiyuehui-restored-api",
+      "aos-platform/maintenance/qiyuehui-restored-web",
+      "aos-platform/scripts/a0v_qyh_restored_http.py",
+      "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py",
+      "aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013",
+      "aos-platform/.evidence/qyh-daily-readonly-schema-compat-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r2-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014"
+    ],
+    "status": "ACTIVE",
+    "task_id": "qyh-restoration-readonly-continuation-r3-20261014"
+  },
+  "apiPid": 25389,
+  "apiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-f005a195265f4590d9214a810a24fbec0d15ab32",
+  "webPid": 78346,
+  "webCwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "sourceGuard": true,
+  "webManifestVerified": true,
+  "allProductHashesVerified": true,
+  "signal": false,
+  "pgChromeTouched": false
+}

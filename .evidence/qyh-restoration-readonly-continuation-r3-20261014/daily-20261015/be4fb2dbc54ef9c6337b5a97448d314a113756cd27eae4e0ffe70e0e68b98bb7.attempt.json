@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-restoration-readonly-continuation-r3-20261014-daily-controller-20261015-r1",
+  "baseline": {
+    "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/controller-review-package.txt": "c67f8e983467e64b6935801b7793685d9efbbbe7e504dd47fe93b7326e9d30f8"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "9190a684e1f0525b4d0bad8490e630c162d9952a1fea346545ef0fa234823d81",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

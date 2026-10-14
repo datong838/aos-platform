@@ -1,0 +1,7 @@
+{
+  "terminal": true,
+  "failure": "exact claim scope rejected",
+  "transportPreserved": true,
+  "consumed": false,
+  "rawRepaired": false
+}

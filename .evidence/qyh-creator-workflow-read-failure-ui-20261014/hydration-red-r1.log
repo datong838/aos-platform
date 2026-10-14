@@ -1,0 +1,816 @@
+
+ RUN  v2.1.9 /Users/ddt/work/projects/ai_agent/aos-platform/apps/web
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 以真实零数据呈现五标签三栏业务工作区且不注入演示达人
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 以真实零数据呈现五标签三栏业务工作区且不注入演示达人
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 五个标签分别呈现对应业务结构而不是共用空模板
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 五个标签分别呈现对应业务结构而不是共用空模板
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 五个标签分别呈现对应业务结构而不是共用空模板
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 五个标签分别呈现对应业务结构而不是共用空模板
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 五个标签分别呈现对应业务结构而不是共用空模板
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 五个标签分别呈现对应业务结构而不是共用空模板
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 页头搜索、导入达人和新建批次均联动到可编辑准备面板
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 页头搜索、导入达人和新建批次均联动到可编辑准备面板
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 页头搜索、导入达人和新建批次均联动到可编辑准备面板
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 页头搜索、导入达人和新建批次均联动到可编辑准备面板
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 页头搜索、导入达人和新建批次均联动到可编辑准备面板
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 页头搜索、导入达人和新建批次均联动到可编辑准备面板
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 页头搜索、导入达人和新建批次均联动到可编辑准备面板
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 业务动作落到准备区，技术状态仅进入默认折叠诊断
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 业务动作落到准备区，技术状态仅进入默认折叠诊断
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 业务动作落到准备区，技术状态仅进入默认折叠诊断
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 贡献接口暂不可读时仍保留完整业务工作区
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 贡献接口暂不可读时仍保留完整业务工作区
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 页面准备不冒充真实发送签约履约或关系变更
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 页面准备不冒充真实发送签约履约或关系变更
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 页面准备不冒充真实发送签约履约或关系变更
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 刷新后从服务端水合最新内部草稿
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 刷新后从服务端水合最新内部草稿
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 刷新后从服务端水合最新内部草稿
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 修订命令只提交精确草稿引用而不夹带展示字段
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 修订命令只提交精确草稿引用而不夹带展示字段
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 修订命令只提交精确草稿引用而不夹带展示字段
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 命令成功但历史读取失败时保留草稿和回执
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 命令成功但历史读取失败时保留草稿和回执
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 命令成功但历史读取失败时保留草稿和回执
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 命令成功但历史读取失败时保留草稿和回执
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 读取栖月汇正式商品并在达人业务区显示名称价格库存和来源时间
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 读取栖月汇正式商品并在达人业务区显示名称价格库存和来源时间
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 商品读取失败不影响达人内部工作流并提供重新读取入口
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 商品读取失败不影响达人内部工作流并提供重新读取入口
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 商品读取失败不影响达人内部工作流并提供重新读取入口
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 候选条件按中文业务字段保存并带入正式商品引用
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 候选条件按中文业务字段保存并带入正式商品引用
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 候选条件按中文业务字段保存并带入正式商品引用
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 候选条件按中文业务字段保存并带入正式商品引用
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 合作与履约页提供预算权益和交付物证据的直接补录入口
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 合作与履约页提供预算权益和交付物证据的直接补录入口
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 合作与履约页提供预算权益和交付物证据的直接补录入口
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 合作与履约页提供预算权益和交付物证据的直接补录入口
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 合作与履约页提供预算权益和交付物证据的直接补录入口
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 首次草稿读取失败明确禁入，不冒充成功空列表
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 首次草稿读取失败明确禁入，不冒充成功空列表
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 首次草稿读取失败明确禁入，不冒充成功空列表
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 首次草稿读取失败明确禁入，不冒充成功空列表
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 合法空列表保留既有准备入口
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 合法空列表保留既有准备入口
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 合法空列表保留既有准备入口
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 刷新中及失败后缓存不是当前权威，保留编辑并禁审核恢复
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 刷新中及失败后缓存不是当前权威，保留编辑并禁审核恢复
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 刷新中及失败后缓存不是当前权威，保留编辑并禁审核恢复
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 刷新中及失败后缓存不是当前权威，保留编辑并禁审核恢复
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 旧读取迟到失败不能覆盖新的成功快照
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 旧读取迟到失败不能覆盖新的成功快照
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 旧读取迟到失败不能覆盖新的成功快照
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 旧读取迟到失败不能覆盖新的成功快照
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 旧读取迟到失败不能覆盖新的成功快照
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 读取失败不删除已成功回执或自动重发
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 读取失败不删除已成功回执或自动重发
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 读取失败不删除已成功回执或自动重发
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 读取失败不删除已成功回执或自动重发
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 同批次重新读取后旧按钮闭包也不能发起命令
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 同批次重新读取后旧按钮闭包也不能发起命令
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 同批次重新读取后旧按钮闭包也不能发起命令
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 同批次重新读取后旧按钮闭包也不能发起命令
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 新的商品数组在草稿读取失败及恢复时不能覆盖未保存输入
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 新的商品数组在草稿读取失败及恢复时不能覆盖未保存输入
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 新的商品数组在草稿读取失败及恢复时不能覆盖未保存输入
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+    at PreparationPanel (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:599:29)
+    at section
+    at CreatorGrowthPage (/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx:1120:30)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 明确重新读取另一个同版本草稿按resourceId水合
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 明确重新读取另一个同版本草稿按resourceId水合
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 明确重新读取另一个同版本草稿按resourceId水合
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 明确重新读取另一个同版本草稿按resourceId水合
+Warning: The current testing environment is not configured to support act(...)
+
+ ❯ src/components/workshop/CreatorGrowthPage.test.tsx (21 tests | 2 failed) 257ms
+   × CreatorGrowthPage R5-D01 视觉与交互 > 新的商品数组在草稿读取失败及恢复时不能覆盖未保存输入 10ms
+     → expected '达人候选导入' to be '未保存的名称不能丢失' // Object.is equality
+   × CreatorGrowthPage R5-D01 视觉与交互 > 明确重新读取另一个同版本草稿按resourceId水合 8ms
+     → expected '达人候选导入' to be '另一个同版本的草稿' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 新的商品数组在草稿读取失败及恢复时不能覆盖未保存输入
+AssertionError: expected '达人候选导入' to be '未保存的名称不能丢失' // Object.is equality
+
+Expected: "未保存的名称不能丢失"
+Received: "达人候选导入"
+
+ ❯ src/components/workshop/CreatorGrowthPage.test.tsx:239:85
+    237|     await editField('textarea[aria-label="来源与筛选条件"]', "未保存的…
+    238|     await reloadDrafts();
+    239|     expect(host.querySelector<HTMLInputElement>('input[aria-label="任…
+       |                                                                                     ^
+    240|     expect(host.querySelector<HTMLTextAreaElement>('textarea[aria-labe…
+    241|     await reloadDrafts();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/components/workshop/CreatorGrowthPage.test.tsx > CreatorGrowthPage R5-D01 视觉与交互 > 明确重新读取另一个同版本草稿按resourceId水合
+AssertionError: expected '达人候选导入' to be '另一个同版本的草稿' // Object.is equality
+
+Expected: "另一个同版本的草稿"
+Received: "达人候选导入"
+
+ ❯ src/components/workshop/CreatorGrowthPage.test.tsx:251:85
+    249|       .mockResolvedValueOnce({ tenant: emptyView.tenant, items: [next]…
+    250|     await act(async () => root.render(<CreatorGrowthPage client={clien…
+    251|     expect(host.querySelector<HTMLInputElement>('input[aria-label="任…
+       |                                                                                     ^
+    252|     expect(client.executeCreatorInternalWorkflow).not.toHaveBeenCalled…
+    253|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 19 passed (21)
+   Start at  23:11:03
+   Duration  974ms (transform 173ms, setup 0ms, collect 218ms, tests 257ms, environment 297ms, prepare 37ms)
+

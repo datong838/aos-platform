@@ -1,0 +1,174 @@
+{
+  "at": "2026-10-14T14:44:07.571Z",
+  "head": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+  "apiPid": 37761,
+  "webPid": 37975,
+  "who": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "count": 0,
+  "items": 0,
+  "menuNetwork": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 404,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 404,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 200,
+      "method": "GET"
+    }
+  ],
+  "visual": [
+    {
+      "width": 1280,
+      "height": 720,
+      "scrollWidth": 1280,
+      "clippedButtons": [
+        {
+          "text": "补充预算权益",
+          "right": 1376
+        },
+        {
+          "text": "准备候选条件",
+          "right": 1376
+        },
+        {
+          "text": "重新读取业务数据",
+          "right": 1376
+        },
+        {
+          "text": "重新读取",
+          "right": 1390
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "clippedButtons": []
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "scrollWidth": 1920,
+      "clippedButtons": []
+    }
+  ],
+  "denials": {
+    "query": {
+      "error": "ecommerce Workshop reads do not accept query parameters"
+    },
+    "unauthenticatedStatus": 401
+  },
+  "businessCommandsClicked": false
+}

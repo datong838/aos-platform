@@ -1,0 +1,7 @@
+{
+  "pid": 40320,
+  "port": 18574,
+  "server": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-creator-workflow-read-failure-ui-20261014/browser-fixture-server.mjs",
+  "fixtureOnly": true,
+  "spawnedOnly": true
+}

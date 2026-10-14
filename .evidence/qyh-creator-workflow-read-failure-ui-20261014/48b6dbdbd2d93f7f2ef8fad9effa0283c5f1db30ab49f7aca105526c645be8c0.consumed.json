@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-workflow-read-failure-ui-20261014-hydration-code-r3",
+  "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-creator-workflow-read-failure-ui-20261014/hydration-code-review-package-r3.txt": "42bf6d488e0bd56805f2a6cb2039a49a3c13d9cc78d98577c13bb7cb56896b83"
+    }
+  },
+  "status": "NEED_EVIDENCE",
+  "execution_authorized": false,
+  "result_sha256": "01da8af4b9ff08c7308e075f2e783f633dd6ddaac7a22ecd69f1b66f71478abb",
+  "transport_sha256": "51098482b201571a3e0e7001a7adf1113169327731cec59e6e9c9be5fa1c6c87"
+}

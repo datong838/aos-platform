@@ -1,0 +1,23 @@
+{
+  "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+  "apiPid": 64550,
+  "apiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-6bf70940572ccde238eb98eb398a4c49a884253a",
+  "webPid": 64614,
+  "webCwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "webSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014/private/web-source-6bf70940572ccde238eb98eb398a4c49a884253a",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "cluster": "7695302940039200809",
+  "schema": "a0v_161",
+  "pgStartedBefore": "2026-10-14T02:56:36.001669303Z",
+  "pgStartedAfter": "2026-10-14T20:36:36.408087963Z",
+  "fingerprintsEqualBeforeAfterPgFinal": true,
+  "tables": 650,
+  "enabledBindings": 0,
+  "businessWrites": false,
+  "sourceRead": false,
+  "providerHostWorker": "OFF",
+  "genuineIdentityReadback": true,
+  "coreReadAndDeny": true,
+  "wholeGoalComplete": false
+}

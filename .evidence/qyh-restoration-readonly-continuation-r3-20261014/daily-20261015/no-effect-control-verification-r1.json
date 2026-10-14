@@ -1,0 +1,22 @@
+{
+  "controllerSha": "acf75a1f1c11043efb3ad3773a92287a176e450ed4aee8cd0d965e87994a9561",
+  "syntax": true,
+  "originalFingerprintAccepted": true,
+  "historicalCanonicalConsumptionAccepted": true,
+  "rejected": [
+    "containerId",
+    "volume",
+    "pgStartedAt",
+    "cluster",
+    "schema",
+    "enabledBindings",
+    "missingTable",
+    "failedReviewTransport",
+    "tamperedEnvelope",
+    "staleRunner"
+  ],
+  "signals": 0,
+  "dbWrites": 0,
+  "restartAuthorized": false,
+  "remaining": "fresh exact controller Prime quality/config/preflight/full daily restart/native verification"
+}

@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-restoration-readonly-continuation-r3-20261014-switch-r2",
+  "baseline": {
+    "head": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r3-20261014/switch-review-package-r2.txt": "0f8e5078cdf385e140375aacbcc744b6998a742105cd1d49999ac8bc817c6a01"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "739b6205d9d275faa0f82fb64ad608594c9f2da5ee7f144c8008d70836cdd521",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

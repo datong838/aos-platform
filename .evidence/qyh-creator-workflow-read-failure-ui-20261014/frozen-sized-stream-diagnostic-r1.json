@@ -1,0 +1,10 @@
+{
+  "kind": "frozen-sized-stream-transport-diagnostic",
+  "review": false,
+  "retries": 0,
+  "requestBytes": 22189,
+  "status": 200,
+  "firstEvent": true,
+  "firstEventBytes": 194,
+  "elapsed": 0.56
+}

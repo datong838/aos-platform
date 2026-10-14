@@ -1,0 +1,136 @@
+{
+  "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+  "settled": [
+    {
+      "route": "cockpit",
+      "loadingVisible": 1,
+      "bodyTail": "AGENT\n素材采集\n待核对\n策略规划\n待核对\n文案生成\n待核对\n脚本撰写\n待核对\n语音合成\n待核对\n视频合成\n待核对\n内容审核\n待核对\n直播编排\n待核对\n平台适配\n待核对\n数据复盘\n待核对\n明日预告 · 仅显示已排期业务任务\n计划表未验证\n内容评审后的经营反馈\n\n原评审通过后形成的复盘、效果观察与方法候选；这里只读，不代表当前可执行授权。\n\n正在读取原内容评审反馈\n\n运行、发布与审计上下文\n保持原完整功能；默认收起以恢复视觉稿首屏结构"
+    },
+    {
+      "route": "content-campaign",
+      "loadingVisible": 0
+    },
+    {
+      "route": "operations",
+      "loadingVisible": 0
+    },
+    {
+      "route": "creator-growth",
+      "loadingVisible": 0
+    },
+    {
+      "route": "media-studio",
+      "loadingVisible": 0
+    },
+    {
+      "route": "analyst",
+      "loadingVisible": 0
+    },
+    {
+      "route": "price-governance",
+      "loadingVisible": 0
+    },
+    {
+      "route": "customer",
+      "loadingVisible": 0
+    },
+    {
+      "route": "cockpit-r2",
+      "loadingVisible": 1
+    }
+  ],
+  "creatorWidths": [
+    {
+      "width": 1280,
+      "height": 720,
+      "buttons": [
+        {
+          "text": "准备候选条件",
+          "right": 881,
+          "height": 31,
+          "disabled": false
+        },
+        {
+          "text": "补充预算权益",
+          "right": 1376,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "准备候选条件",
+          "right": 1376,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "重新读取业务数据",
+          "right": 1376,
+          "height": 32,
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "buttons": [
+        {
+          "text": "准备候选条件",
+          "right": 897,
+          "height": 31,
+          "disabled": false
+        },
+        {
+          "text": "补充预算权益",
+          "right": 1414,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "准备候选条件",
+          "right": 1414,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "重新读取业务数据",
+          "right": 1414,
+          "height": 32,
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "buttons": [
+        {
+          "text": "准备候选条件",
+          "right": 1137,
+          "height": 31,
+          "disabled": false
+        },
+        {
+          "text": "补充预算权益",
+          "right": 1894,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "准备候选条件",
+          "right": 1894,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "重新读取业务数据",
+          "right": 1894,
+          "height": 32,
+          "disabled": false
+        }
+      ]
+    }
+  ],
+  "initialLoadingScreensPreserved": true,
+  "allVisualPassed": false
+}

@@ -1,0 +1,395 @@
+ACTUAL hydration followup CODE QUALITY only. ce deployed UI browser fixture disproved unsavedinput preservation (freshproducts array). No fakePASS: failed original proof retained. Minimal production one dependency line fix +2newtests; initialfailure2fail19pass->workshop271PASS/typecheck0, hashbeforeafter. Needs NEW committedsource/Web freeze/oneattemptreload/nativefixture rerun beforeDelivery. API37761ce untouched, originalDB no write. FullGoal kept.
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/browser-isolated-proof-r1.json SHA d05110f9372fe17e0b1c5ed6c448563d15294c7134b1a6b05e801af9938b6332
+{
+  "at": "2026-10-14T15:05:39.650Z",
+  "fixtureOnly": true,
+  "originalApiConnected": false,
+  "realUserOrApproval": false,
+  "sourceHead": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+  "steps": [
+    {
+      "label": "success-existing-synthetic",
+      "probe": {
+        "mode": "success",
+        "reads": 1,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "隔离验收未保存编辑",
+      "currentCount": 1,
+      "cachedCount": 0,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": false
+        },
+        {
+          "text": "驳回",
+          "disabled": false
+        },
+        {
+          "text": "新建一份",
+          "disabled": false
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "label": "pending-read",
+      "probe": {
+        "mode": "pending",
+        "reads": 2,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "隔离验收未保存编辑",
+      "currentCount": 0,
+      "cachedCount": 1,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": true
+        },
+        {
+          "text": "驳回",
+          "disabled": true
+        },
+        {
+          "text": "新建一份",
+          "disabled": true
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "label": "failed-read",
+      "probe": {
+        "mode": "pending",
+        "reads": 2,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "隔离测试草稿",
+      "currentCount": 0,
+      "cachedCount": 1,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": true
+        },
+        {
+          "text": "驳回",
+          "disabled": true
+        },
+        {
+          "text": "新建一份",
+          "disabled": true
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "label": "recovered-same-version",
+      "probe": {
+        "mode": "success",
+        "reads": 3,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "隔离测试草稿",
+      "currentCount": 1,
+      "cachedCount": 0,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": false
+        },
+        {
+          "text": "驳回",
+          "disabled": false
+        },
+        {
+          "text": "新建一份",
+          "disabled": false
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": false
+        }
+      ]
+    }
+  ],
+  "apiDenied": {
+    "status": 403
+  },
+  "timeoutReconciledNoOperationReplay": true
+}
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/hydration-source-verification-r3.json SHA 51e6f96aa0e03bfe34866c2a61f2a7e8e4197a05eee1a285ee571c7d56b660fd
+{
+  "at": "2026-10-14T15:12:57.780604+00:00",
+  "finishedAt": "2026-10-14T15:13:12.539769+00:00",
+  "sourceBefore": {
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e",
+    "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "292371bc6f17c0f9c9cea8e410105a8a101bd77569338f015ac8c1b9565e2e53"
+  },
+  "sourceAfter": {
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e",
+    "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "292371bc6f17c0f9c9cea8e410105a8a101bd77569338f015ac8c1b9565e2e53"
+  },
+  "results": {
+    "hydration-cumulative-r3": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/components/workshop",
+        "src/api/ecommerceWorkshop/creatorWorkflowClient.test.ts"
+      ],
+      "logSha256": "f68e2ff6d322bc7aaa7b98f27f1f7381b1773302837970d00dc5d552e8615462"
+    },
+    "hydration-typecheck-r3": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "tsconfig.json"
+      ],
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "originalRuntimeTouched": false
+}
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/code-review-consumption-r1.json SHA 2c1fcd50c9998e1c7ed247017145496e3be2bd1fd6b1e38eec7affb77987b69e
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-workflow-read-failure-ui-20261014-code-r1",
+  "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "5a1855482e92a2de4f028ffa106b9dfccde89a50",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-creator-workflow-read-failure-ui-20261014/code-review-package-r1.txt": "2ff793aed246b0ce6e145466b477fdbb91b303ba4b048dbe644592b2927bc78a"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "df1f208920619d9269245c10e304d8ba6339bcf7a6d28563f5103caac22249d4",
+  "transport_sha256": "308ccf90eb2f425df5ab067c0ba4417238462eaef8f6987afbb90af1d8febbcf"
+}
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/code-review-consumption-r2.json SHA e020ebddb56feb231a0a13001d37c8eda17d8740e8c71e89c79b2f1276655c1a
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-workflow-read-failure-ui-20261014-code-r2",
+  "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "5a1855482e92a2de4f028ffa106b9dfccde89a50",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-creator-workflow-read-failure-ui-20261014/code-review-package-r2.txt": "0bc852acb55beca1ddb13f477fe14d8b252da87c40050ca3b4bbbf79b34abfba"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "dfaaf60193ece3ef7c46906848981809307f12f59579c8d40b94e0884f13e052",
+  "transport_sha256": "387602fe6c51294a5076e54ca4d163d3d51c27127c08cbfa2f526d6e341b930e"
+}
+FULL ACTUAL MINIMAL DIFF
+diff --git a/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx b/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx
+index 3dbd8ae0f..b65f6cda2 100644
+--- a/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx
++++ b/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx
+@@ -225,4 +225,31 @@ describe("CreatorGrowthPage R5-D01 视觉与交互", () => {
+     expect(client.executeCreatorInternalWorkflow).not.toHaveBeenCalled();
+   });
+ 
++
++  it("新的商品数组在草稿读取失败及恢复时不能覆盖未保存输入", async () => {
++    const client = clientFor();
++    client.getContentCampaignRealInputs.mockImplementation(async () => ({ ...realInputs, products: [...realInputs.products] }));
++    client.listCreatorInternalWorkflows.mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 })
++      .mockRejectedValueOnce(new Error("draft read failed"))
++      .mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 });
++    await act(async () => root.render(<CreatorGrowthPage client={client} />)); await openPreparation();
++    await editField('input[aria-label="任务名称"]', "未保存的名称不能丢失");
++    await editField('textarea[aria-label="来源与筛选条件"]', "未保存的准备内容不能丢失", "textarea");
++    await reloadDrafts();
++    expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')!.value).toBe("未保存的名称不能丢失");
++    expect(host.querySelector<HTMLTextAreaElement>('textarea[aria-label="来源与筛选条件"]')!.value).toBe("未保存的准备内容不能丢失");
++    await reloadDrafts();
++    expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')!.value).toBe("未保存的名称不能丢失");
++    expect(client.executeCreatorInternalWorkflow).not.toHaveBeenCalled();
++  });
++
++  it("明确重新读取另一个同版本草稿按resourceId水合", async () => {
++    const client = clientFor();const next={...draft,resourceId:"creator-brief-2",title:"另一个同版本的草稿"};
++    client.listCreatorInternalWorkflows.mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 })
++      .mockResolvedValueOnce({ tenant: emptyView.tenant, items: [next], count: 1 });
++    await act(async () => root.render(<CreatorGrowthPage client={client} />));await openPreparation();await reloadDrafts();
++    expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')!.value).toBe("另一个同版本的草稿");
++    expect(client.executeCreatorInternalWorkflow).not.toHaveBeenCalled();
++  });
++
+ });
+diff --git a/apps/web/src/components/workshop/CreatorGrowthPage.tsx b/apps/web/src/components/workshop/CreatorGrowthPage.tsx
+index 9e8ad5d08..a71808fdd 100644
+--- a/apps/web/src/components/workshop/CreatorGrowthPage.tsx
++++ b/apps/web/src/components/workshop/CreatorGrowthPage.tsx
+@@ -128,7 +128,7 @@ function PreparationPanel({ purpose, products, current, receipt, history, busy,
+   const [deliverables, setDeliverables] = useState(detailText(current?.details, "deliverables"));
+   const [evidence, setEvidence] = useState(detailText(current?.details, "evidence"));
+   const [schedule, setSchedule] = useState(detailText(current?.details, "schedule"));
+-  useEffect(() => { const details = current?.details; setTitle(current?.title ?? copy.defaultTitle); setSummary(current?.summary ?? ""); setOwner(detailText(details, "owner") || "经营负责人"); setProductRef(detailText(details, "productRef") || products[0]?.productRef.resourceId || ""); setCandidateSource(detailText(details, "candidateSource")); setContentCategory(detailText(details, "contentCategory")); setAudienceScale(detailText(details, "audienceScale")); setChannel(detailText(details, "channel")); setBudget(detailText(details, "budget")); setCommission(detailText(details, "commission")); setBenefits(detailText(details, "benefits")); setDeliverables(detailText(details, "deliverables")); setEvidence(detailText(details, "evidence")); setSchedule(detailText(details, "schedule")); }, [current?.revision, purpose, products]);
++  useEffect(() => { const details = current?.details; setTitle(current?.title ?? copy.defaultTitle); setSummary(current?.summary ?? ""); setOwner(detailText(details, "owner") || "经营负责人"); setProductRef(detailText(details, "productRef") || products[0]?.productRef.resourceId || ""); setCandidateSource(detailText(details, "candidateSource")); setContentCategory(detailText(details, "contentCategory")); setAudienceScale(detailText(details, "audienceScale")); setChannel(detailText(details, "channel")); setBudget(detailText(details, "budget")); setCommission(detailText(details, "commission")); setBenefits(detailText(details, "benefits")); setDeliverables(detailText(details, "deliverables")); setEvidence(detailText(details, "evidence")); setSchedule(detailText(details, "schedule")); }, [current?.resourceId, current?.revision, purpose]);
+   const selectedProduct = products.find((item) => item.productRef.resourceId === productRef);
+   const values = { title: title.trim(), summary: summary.trim(), details: { owner: owner.trim(), productRef, productName: selectedProduct?.title ?? detailText(current?.details, "productName"), candidateSource: candidateSource.trim(), contentCategory: contentCategory.trim(), audienceScale: audienceScale.trim(), channel: channel.trim(), budget: budget.trim(), commission: commission.trim(), benefits: benefits.trim(), deliverables: deliverables.trim(), evidence: evidence.trim(), schedule: schedule.trim() } };
+   const disabled = busy || readUnavailable || values.title.length < 2 || values.summary.length < 2;
+
+CURRENT complete hydration/form context
+};
+const WORKFLOW_STATUS: Record<CreatorInternalWorkflowDraft["status"], string> = { draft: "草稿", in_review: "审核中", approved: "已批准", rejected: "已驳回" };
+const detailText = (details: Record<string, unknown> | undefined, key: string) => typeof details?.[key] === "string" ? String(details[key]) : "";
+
+function PreparationPanel({ purpose, products, current, receipt, history, busy, readUnavailable, error, onClose, onCommand, onNew }: { purpose: CreatorInternalWorkflowPurpose; products: ContentCampaignProductInput[]; current: CreatorInternalWorkflowDraft | null; receipt: CreatorInternalWorkflowReceipt | null; history: CreatorInternalWorkflowDraft[]; busy: boolean; readUnavailable: boolean; error: string; onClose: () => void; onCommand: (command: CreatorInternalWorkflowCommand, values: { title: string; summary: string; details: Record<string, unknown> }, restoreRevision?: number) => void; onNew: () => void }) {
+  const copy = PREPARATION_COPY[purpose];
+  const [title, setTitle] = useState(current?.title ?? copy.defaultTitle);
+  const [summary, setSummary] = useState(current?.summary ?? "");
+  const [owner, setOwner] = useState(detailText(current?.details, "owner") || "经营负责人");
+  const [productRef, setProductRef] = useState(detailText(current?.details, "productRef") || products[0]?.productRef.resourceId || "");
+  const [candidateSource, setCandidateSource] = useState(detailText(current?.details, "candidateSource"));
+  const [contentCategory, setContentCategory] = useState(detailText(current?.details, "contentCategory"));
+  const [audienceScale, setAudienceScale] = useState(detailText(current?.details, "audienceScale"));
+  const [channel, setChannel] = useState(detailText(current?.details, "channel"));
+  const [budget, setBudget] = useState(detailText(current?.details, "budget"));
+  const [commission, setCommission] = useState(detailText(current?.details, "commission"));
+  const [benefits, setBenefits] = useState(detailText(current?.details, "benefits"));
+  const [deliverables, setDeliverables] = useState(detailText(current?.details, "deliverables"));
+  const [evidence, setEvidence] = useState(detailText(current?.details, "evidence"));
+  const [schedule, setSchedule] = useState(detailText(current?.details, "schedule"));
+  useEffect(() => { const details = current?.details; setTitle(current?.title ?? copy.defaultTitle); setSummary(current?.summary ?? ""); setOwner(detailText(details, "owner") || "经营负责人"); setProductRef(detailText(details, "productRef") || products[0]?.productRef.resourceId || ""); setCandidateSource(detailText(details, "candidateSource")); setContentCategory(detailText(details, "contentCategory")); setAudienceScale(detailText(details, "audienceScale")); setChannel(detailText(details, "channel")); setBudget(detailText(details, "budget")); setCommission(detailText(details, "commission")); setBenefits(detailText(details, "benefits")); setDeliverables(detailText(details, "deliverables")); setEvidence(detailText(details, "evidence")); setSchedule(detailText(details, "schedule")); }, [current?.resourceId, current?.revision, purpose]);
+  const selectedProduct = products.find((item) => item.productRef.resourceId === productRef);
+  const values = { title: title.trim(), summary: summary.trim(), details: { owner: owner.trim(), productRef, productName: selectedProduct?.title ?? detailText(current?.details, "productName"), candidateSource: candidateSource.trim(), contentCategory: contentCategory.trim(), audienceScale: audienceScale.trim(), channel: channel.trim(), budget: budget.trim(), commission: commission.trim(), benefits: benefits.trim(), deliverables: deliverables.trim(), evidence: evidence.trim(), schedule: schedule.trim() } };
+  const disabled = busy || readUnavailable || values.title.length < 2 || values.summary.length < 2;
+  return <aside className="creator-growth-preparation" aria-label={copy.title}><header><div><span>内部业务工作流</span><h2>{copy.title}</h2></div><button type="button" onClick={onClose}>关闭</button></header>
+    <label>任务名称<input aria-label="任务名称" value={title} onChange={(event) => setTitle(event.target.value)} /></label>
+    <label>{copy.summaryLabel}<textarea aria-label={copy.summaryLabel} value={summary} onChange={(event) => setSummary(event.target.value)} placeholder={copy.placeholder} /></label>
+    <label>关联商品<select aria-label="关联商品" value={productRef} onChange={(event) => setProductRef(event.target.value)}><option value="">暂不关联商品</option>{products.map((item) => <option key={item.productRef.resourceId} value={item.productRef.resourceId}>{item.title}{item.availableStock === null ? "" : ` · 库存 ${item.availableStock}`}</option>)}</select></label>
+    {purpose === "candidate_import" ? <div className="creator-growth-business-fields"><label>候选来源<input aria-label="候选来源" value={candidateSource} onChange={(event) => setCandidateSource(event.target.value)} placeholder="例如：小红书美妆作者库" /></label><label>内容领域<input aria-label="内容领域" value={contentCategory} onChange={(event) => setContentCategory(event.target.value)} placeholder="例如：成分护肤" /></label><label>粉丝范围<input aria-label="粉丝范围" value={audienceScale} onChange={(event) => setAudienceScale(event.target.value)} placeholder="例如：1万至10万" /></label><label>主要渠道<input aria-label="主要渠道" value={channel} onChange={(event) => setChannel(event.target.value)} placeholder="例如：小红书" /></label></div> : null}
+    {purpose === "outreach_batch" || purpose === "outreach_message" ? <div className="creator-growth-business-fields"><label>邀约渠道<input aria-label="邀约渠道" value={channel} onChange={(event) => setChannel(event.target.value)} placeholder="例如：站内私信" /></label><label>合作权益<input aria-label="合作权益" value={benefits} onChange={(event) => setBenefits(event.target.value)} placeholder="例如：寄样与专属佣金" /></label><label>回复期限<input aria-label="回复期限" value={schedule} onChange={(event) => setSchedule(event.target.value)} placeholder="例如：3个工作日内" /></label></div> : null}
+    {purpose === "collaboration" ? <div className="creator-growth-business-fields"><label>合作预算<input aria-label="合作预算" value={budget} onChange={(event) => setBudget(event.target.value)} placeholder="例如：3000元" /></label><label>佣金条件<input aria-label="佣金条件" value={commission} onChange={(event) => setCommission(event.target.value)} placeholder="例如：成交额的15%" /></label><label>合作权益<input aria-label="合作权益" value={benefits} onChange={(event) => setBenefits(event.target.value)} placeholder="例如：寄样与专属优惠券" /></label><label>约定交付物<input aria-label="约定交付物" value={deliverables} onChange={(event) => setDeliverables(event.target.value)} placeholder="例如：图文1篇、短视频1条" /></label><label>合作档期<input aria-label="合作档期" value={schedule} onChange={(event) => setSchedule(event.target.value)} placeholder="例如：9月15日前发布" /></label></div> : null}
+    {purpose === "delivery_check" ? <div className="creator-growth-business-fields"><label>约定交付物<input aria-label="约定交付物" value={deliverables} onChange={(event) => setDeliverables(event.target.value)} placeholder="例如：图文1篇、短视频1条" /></label><label>验收证据<input aria-label="验收证据" value={evidence} onChange={(event) => setEvidence(event.target.value)} placeholder="例如：内容链接、平台截图、数据报表" /></label><label>验收时间<input aria-label="验收时间" value={schedule} onChange={(event) => setSchedule(event.target.value)} placeholder="例如：发布后7天" /></label></div> : null}
+    {purpose === "relationship_plan" ? <div className="creator-growth-business-fields"><label>维护权益<input aria-label="维护权益" value={benefits} onChange={(event) => setBenefits(event.target.value)} placeholder="例如：新品优先试用" /></label><label>复邀窗口<input aria-label="复邀窗口" value={schedule} onChange={(event) => setSchedule(event.target.value)} placeholder="例如：合作结束30天后" /></label></div> : null}
+    <label>负责人<input aria-label="负责人" value={owner} onChange={(event) => setOwner(event.target.value)} /></label>
+    <p>草稿、审核和历史版本保存在当前租户；不会自动导入、发送邀约、签署合同或产生外部触达。</p>
+    {readUnavailable ? <p role="alert">当前内部草稿暂未读取，暂存内容不能作为当前版本操作。请重新读取后再准备或评审。</p> : null}
+    {current ? <section aria-label={readUnavailable ? "上次读取草稿" : "当前草稿"}><strong>{readUnavailable ? "上次读取：" : ""}{WORKFLOW_STATUS[current.status]} · 第 {current.revision} 版</strong><small>{readUnavailable ? "暂存版本" : "写入基线"} {current.version} · {current.resourceId}</small>{receipt ? <small>回执 {receipt.receiptId}{receipt.replay ? " · 幂等重放" : ""}</small> : null}</section> : null}
+    {error ? <p role="alert">{error}</p> : null}
+    <div className="creator-growth-preparation-actions">
+      {!current ? <button type="button" className="is-primary" disabled={disabled} onClick={() => onCommand("create", values)}>保存草稿</button> : null}
+      {current && (current.status === "draft" || current.status === "rejected") ? <><button type="button" disabled={disabled} onClick={() => onCommand("save", values)}>保存修改</button><button type="button" className="is-primary" disabled={disabled} onClick={() => onCommand("submit_review", values)}>提交审核</button></> : null}
+      {current?.status === "in_review" ? <><button type="button" className="is-primary" disabled={busy || readUnavailable} onClick={() => onCommand("approve", values)}>批准</button><button type="button" disabled={busy || readUnavailable} onClick={() => onCommand("reject", values)}>驳回</button></> : null}
+      {current ? <button type="button" disabled={busy || readUnavailable} onClick={onNew}>新建一份</button> : null}
+    </div>
+    {history.length ? <details className="creator-growth-workflow-history"><summary>查看版本历史（{history.length}）</summary>{[...history].reverse().map((item) => <article key={item.revision}><div><strong>第 {item.revision} 版 · {WORKFLOW_STATUS[item.status]}</strong><span>{item.title}</span></div>{item.revision < (current?.revision ?? 0) ? <button type="button" disabled={busy || readUnavailable} onClick={() => onCommand("restore", { title: item.title, summary: item.summary, details: item.details }, item.revision)}>恢复此版本</button> : null}</article>)}</details> : null}
+  </aside>;
+}
+
+const ADVISORS: Record<CreatorBusinessStage, readonly [string, string, string]> = {
+CURRENT load and data wiring
+  const [workflowHistory, setWorkflowHistory] = useState<Partial<Record<CreatorInternalWorkflowPurpose, CreatorInternalWorkflowDraft[]>>>({});
+  const [workflowReceipts, setWorkflowReceipts] = useState<Partial<Record<CreatorInternalWorkflowPurpose, CreatorInternalWorkflowReceipt>>>({});
+  const [workflowBusy, setWorkflowBusy] = useState(false); const [workflowError, setWorkflowError] = useState("");
+  const [workflowReadState, setWorkflowReadState] = useState<"loading" | "ready" | "failed">("loading");
+  const workflowReadReady = useRef(false);
+  useEffect(() => { workflowReadReady.current = workflowReadState === "ready"; }, [workflowReadState]);
+  const workflowIntentKeys = useRef<Record<string, string>>({});
+  const load = () => { const id = ++request.current; workflowReadReady.current = false; setPhase("loading"); setWorkflowReadState("loading"); void Promise.all([client.getCreatorGrowthView(), client.getCreatorContributionView().catch(() => null), client.getCreatorLifecycleView?.().catch(() => null) ?? Promise.resolve(null), client.getThreeModuleClosureContributionView?.("creator").catch(() => null) ?? Promise.resolve(null), client.listCreatorInternalWorkflows().catch(() => null), client.getContentCampaignRealInputs().catch(() => null)]).then(([next, nextContribution, nextLifecycle, nextClosure, workflows, inputs]) => { if (id !== request.current) return; setResponse(next); setContribution(nextContribution ?? unavailableContribution(next)); setLifecycle(nextLifecycle ?? unavailableLifecycle(next)); setClosure(nextClosure ?? unavailableThreeModuleClosure("creator", next.tenant, next.evaluatedAt)); setRealInputs(inputs); setProductReadFailed(inputs === null || inputs.unavailableGroups.includes("products")); if (workflows) { const latest: Partial<Record<CreatorInternalWorkflowPurpose, CreatorInternalWorkflowDraft>> = {}; for (const item of workflows.items) if (!latest[item.purpose]) latest[item.purpose] = item; setWorkflowDrafts(latest); } setWorkflowReadState(workflows === null ? "failed" : "ready"); setPhase("ready"); }, (error: unknown) => { if (id === request.current) { setWorkflowReadState("failed"); setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); } }); };
+  useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
+  useEffect(() => { const search = (event: Event) => setQuery(String((event as CustomEvent<{ value?: string }>).detail?.value ?? "")); const openImport = () => setPreparation("candidate_import"); const openBatch = () => { setSelected("outreach"); setPreparation("outreach_batch"); }; window.addEventListener("aos-workshop-creator-search", search); window.addEventListener("aos-workshop-creator-import", openImport); window.addEventListener("aos-workshop-creator-new-batch", openBatch); return () => { window.removeEventListener("aos-workshop-creator-search", search); window.removeEventListener("aos-workshop-creator-import", openImport); window.removeEventListener("aos-workshop-creator-new-batch", openBatch); }; }, []);
+  const activeDraft = preparation && workflowReadState === "ready" ? workflowDrafts[preparation] : undefined;
+  useEffect(() => {
+    if (!preparation || !activeDraft) return;
+    let active = true;
+    void client.getCreatorInternalWorkflowHistory(activeDraft.resourceId).then(
+      (history) => { if (active) setWorkflowHistory((previous) => ({ ...previous, [preparation]: history.items })); },
+      () => { if (active) setWorkflowError("当前草稿已恢复，但版本历史暂未读取；可重新读取后再试。"); },
+    );
+    return () => { active = false; };
+  }, [client, preparation, activeDraft?.resourceId, activeDraft?.revision]);
+  const slice = response?.slices.find((item) => item.businessStage === selected); const visibleRefs = useMemo(() => slice?.authorityRefs.filter((item) => !query.trim() || `${item.resourceType} ${item.resourceId}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) ?? [], [slice, query]);
+  if (!response || !contribution || !lifecycle || !closure || !slice) return <section className="creator-growth-page"><AsyncStateBoundary state={phase} action={phase === "failed" ? <button type="button" onClick={load}>重新读取</button> : undefined} /></section>;
+  const advisor = advisorFor(selected); const purposeForStage: Record<CreatorBusinessStage, CreatorInternalWorkflowPurpose> = { candidate: "candidate_import", outreach: "outreach_batch", contract: "collaboration", delivery: "delivery_check", relationship: "relationship_plan" }; const openRelevantPreparation = () => setPreparation(purposeForStage[selected]);
+  const executeWorkflow = async (command: CreatorInternalWorkflowCommand, values: { title: string; summary: string; details: Record<string, unknown> }, restoreRevision?: number) => {
+    if (!preparation) return;
+    if (workflowReadState !== "ready" || !workflowReadReady.current) return;
+    const current = workflowDrafts[preparation];
+    const input: CreatorInternalWorkflowCommandInput = { command, purpose: preparation, ...values };
+    if (command !== "create") {
+      if (!current) return;
+      input.draftRef = {
+        resourceType: current.resourceType,
+        resourceId: current.resourceId,
+        revision: current.revision,
+        contentHash: current.contentHash,
+      };
+      input.expectedVersion = current.version;
+    }
+    if (command === "restore") input.restoreRevision = restoreRevision;
+    const intent = JSON.stringify([preparation, command, values, restoreRevision ?? null, current?.version ?? 0]);
+    const idempotencyKey = workflowIntentKeys.current[intent] ?? `creator-${preparation}-${command}-${Date.now()}-${current?.version ?? 0}`;
+    workflowIntentKeys.current[intent] = idempotencyKey;
+    setWorkflowBusy(true); setWorkflowError("");
+    try {
+      const result = await client.executeCreatorInternalWorkflow(input, idempotencyKey);
+      setWorkflowDrafts((previous) => ({ ...previous, [preparation]: result.draft }));
+      setWorkflowReceipts((previous) => ({ ...previous, [preparation]: result.receipt }));
+      setNotice(`${result.message} 当前为${WORKFLOW_STATUS[result.draft.status]}，第 ${result.draft.revision} 版。`);
+      delete workflowIntentKeys.current[intent];
+      try { const history = await client.getCreatorInternalWorkflowHistory(result.draft.resourceId); setWorkflowHistory((previous) => ({ ...previous, [preparation]: history.items })); }
+      catch { setWorkflowError("操作已保存并取得回执，但版本历史暂未刷新；可稍后重新打开或重新读取。"); }
+    } catch (error) { setWorkflowError(error instanceof Error ? `操作结果未确认：${error.message}。再次点击将复用同一请求回执键。` : "操作结果未确认；再次点击将复用同一请求回执键。"); }
+    finally { setWorkflowBusy(false); }
+  };
+  const auditCodes = [...slice.blockers.map((item) => item.code), ...contribution.blockers, ...lifecycle.blockers];
+  return <section className="creator-growth-page" aria-label="达人邀约驾驶舱">
+    <nav className="creator-growth-toolbar" aria-label="达人增长主视图"><div>{STAGES.map((stage) => <button type="button" className={selected === stage ? "is-active" : ""} key={stage} onClick={() => { setSelected(stage); setNotice(""); }}>{TABS[stage]}</button>)}</div></nav>
+    {workflowReadState === "failed" ? <p role="alert">当前内部草稿暂未读取，请重新读取后再准备或评审。</p> : null}
+    <div className="creator-growth-read-model"><div className="creator-growth-board">
+      <aside className="creator-growth-directory"><header><div><h2>达人与机构</h2><span>{response.page.count} 条正式记录</span></div><button type="button" onClick={() => setPreparation("candidate_import")}>导入准备</button></header><label className="creator-growth-search"><input aria-label="检索达人或机构" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索达人、机构、邀约记录" /></label><div className="creator-growth-filters">{FILTERS.map((item) => <button type="button" key={item} className={filter === item ? "is-selected" : ""} aria-pressed={filter === item} onClick={() => setFilter(item)}>{item}</button>)}</div><p className="creator-growth-range">{filter} · {query || "全部关键词"} · {visibleRefs.length} 条</p><section className="creator-growth-products"><header><strong>栖月汇商品</strong><span>{productReadFailed ? "商品数据暂未读取" : `正式商品 ${realInputs?.products.length ?? 0}`}</span></header>{realInputs?.products.slice(0, 4).map((item) => <article key={item.productRef.resourceId}><strong>{item.title}</strong><span>{item.price === null ? "价格待核对" : `¥${item.price}`} · {item.availableStock === null ? "库存待核对" : `库存 ${item.availableStock}`}</span><small>来源更新 {new Date(item.sourceUpdatedAt).toLocaleDateString("zh-CN")}</small></article>)}{productReadFailed ? <button type="button" onClick={load}>重新读取业务数据</button> : null}</section><div className="creator-growth-stage-list">{response.slices.map((item) => <button type="button" className={`content-campaign-slice${selected === item.businessStage ? " is-selected" : ""}`} key={item.businessStage} onClick={() => setSelected(item.businessStage)}><strong>{STAGE_LABELS[item.businessStage]}</strong><span>{item.authorityRefs.length}</span><small>{STAGE_DESCRIPTIONS[item.businessStage]}</small></button>)}</div><section className="creator-growth-directory-empty"><strong>{visibleRefs.length ? `${visibleRefs.length} 条匹配记录` : "没有匹配记录"}</strong><p>{visibleRefs.length ? "选择业务阶段查看正式数据。" : "调整关键词或先准备候选来源与筛选条件。"}</p></section></aside>
+      <main className="creator-growth-main"><StageWorkspace stage={selected} slice={{ ...slice, authorityRefs: visibleRefs }} lifecycle={lifecycle} onPrepare={setPreparation} />{notice ? <p className="creator-growth-notice" role="status">{notice}</p> : null}</main>
+      <aside className="creator-growth-analysis"><header><h2>{advisor[0]}</h2><span>{slice.authorityRefs.length} 条依据</span></header><section className="creator-growth-analysis-summary"><span>当前判断</span><strong>{slice.authorityRefs.length ? "可基于正式记录继续核对" : "当前没有可验证业务对象"}</strong><p>{advisor[1]}没有正式记录时不生成姓名、联系方式、匹配分或经营结果。</p></section><section className="creator-growth-next-actions"><h3>下一步动作</h3><div><button type="button" onClick={() => setPreparation("candidate_import")}>补充候选条件</button><button type="button" onClick={() => setPreparation("collaboration")}>补充预算权益</button><button type="button" onClick={() => setPreparation("delivery_check")}>补充交付物证据</button><button type="button" onClick={openRelevantPreparation}>{advisor[2]}</button>{selected === "outreach" ? <button type="button" onClick={() => setPreparation("outreach_message")}>编写邀约内容</button> : null}</div><button type="button" onClick={() => { load(); setNotice("已重新读取栖月汇当前正式数据。" ); }}>重新读取业务数据</button><small>页面准备不会自动触达达人，也不会代替合同、履约或关系记录。</small></section><section className="creator-growth-colleagues"><h3>共享数字同事</h3><div><span>导购顾问</span><span>数据参谋</span><span>活动策划师</span><span>内容官</span><span>私域管家</span></div></section><details className="creator-growth-audit-context"><summary>技术与数据诊断</summary><dl><div><dt>租户</dt><dd>{response.tenant.orgId}/{response.tenant.projectId}</dd></div><div><dt>数据截止</dt><dd>{new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</dd></div><div><dt>内容校验</dt><dd>{slice.authorityRefs.length ? short(slice.authorityRefs[0]!.contentHash) : "无正式记录"}</dd></div></dl>{auditCodes.length ? <ul>{auditCodes.map((code) => <li key={code}>{code}</li>)}</ul> : <p>当前读取链无诊断项。</p>}<ThreeModuleClosureCard value={closure} /></details><footer><span>数据截止 {new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</span><button type="button" onClick={load}>重新读取</button></footer></aside>
+    </div></div>{preparation ? <PreparationPanel purpose={preparation} products={realInputs?.products ?? []} current={workflowDrafts[preparation] ?? null} receipt={workflowReceipts[preparation] ?? null} history={workflowHistory[preparation] ?? []} busy={workflowBusy} readUnavailable={workflowReadState !== "ready"} error={workflowError} onClose={() => setPreparation(null)} onCommand={(command, values, restoreRevision) => { void executeWorkflow(command, values, restoreRevision); }} onNew={() => { setWorkflowDrafts((previous) => ({ ...previous, [preparation]: undefined })); setWorkflowHistory((previous) => ({ ...previous, [preparation]: [] })); setWorkflowReceipts((previous) => ({ ...previous, [preparation]: undefined })); setWorkflowError(""); }} /> : null}
+  </section>;
+}
+PLAN FOLLOWUP
+
+
+已提交ce的逻辑在本地新商品数组返回时仍触发原PreparationPanel useEffect(products)，失败后标题由未保存输入回到旧草稿；browser-isolated-proof-r1实际反证，不合格，不得消费作成功。修复仅水合依赖绑定当前草稿resourceId/revision与purpose，去掉products对象引用（商品选项仍渲染最新props）；同草稿同version的商品刷新或失败不能覆盖输入。不同authority identity/版本仍按原明确重新读取水合语义，不声称全部并发编辑冲突已解决。初次打开仍使用当前商品默认值；若初次商品未读取，稍后新列表不强制替用户选择或重置字段。新增mock每次返回fresh products数组的失败/恢复反例及同version不同resourceId正确水合测试，RED→最小改动→专项/累计/typecheck→独立Prime/source冻结/新Web维护门→新隔离browser实际复验。原已运行API无需因UI一行修复再重放，Web只fresh新intent/精确旧37975/sourcece/新版源码后切换；任何失败原记录保留。
+
+CURRENT 2full source hashes {"apps/web/src/components/workshop/CreatorGrowthPage.tsx": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e", "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "292371bc6f17c0f9c9cea8e410105a8a101bd77569338f015ac8c1b9565e2e53"}
+FINAL SUMMARY
+
+ ✓ src/components/workshop/ThreeModuleClosureCard.test.tsx (1 test) 13ms
+ ✓ src/components/workshop/TaskCockpitPage.test.tsx (33 tests) 1042ms
+
+ Test Files  32 passed (32)
+      Tests  271 passed (271)
+   Start at  23:12:57
+   Duration  2.61s (transform 2.82s, setup 0ms, collect 8.30s, tests 4.66s, environment 11.73s, prepare 1.61s)

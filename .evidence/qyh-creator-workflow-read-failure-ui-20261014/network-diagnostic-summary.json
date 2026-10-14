@@ -1,0 +1,14 @@
+{
+  "sameConfiguredProvider": "agnes",
+  "modelDefaultUnchanged": true,
+  "privateSettingsUnchanged": true,
+  "credentialsPrinted": false,
+  "dnsFamilies": [
+    "IPv4",
+    "IPv6"
+  ],
+  "unauthenticatedPublicV4Status": 401,
+  "reviewInferenceHealthyUnproven": true,
+  "taskLocalDNSPreference": "ipv4first",
+  "strictValidatorUnchanged": true
+}

@@ -1,0 +1,8 @@
+{
+  "existingFixturePid": 40320,
+  "failure": "fixture root had no react module resolution",
+  "repair": "reuse existing apps/web node_modules symlink, no installs or lock changes",
+  "originalServicesTouched": false,
+  "productionSourceChanged": false,
+  "unknownReplay": false
+}

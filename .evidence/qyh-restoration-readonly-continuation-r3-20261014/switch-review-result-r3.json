@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "739b6205d9d275faa0f82fb64ad608594c9f2da5ee7f144c8008d70836cdd521",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r3-20261014-switch-r3",
+    "task_id": "qyh-restoration-readonly-continuation-r3-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r3-20261014/switch-review-package-r3.txt": "a465b97d33bb955de1cc931cfe355f22d7be9d59a42a9bb36f5ee9020f18da0a"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "控制器代码在signal前核验租约/版本/冻结/hash/PIDcwd监听及唯一意图，保留只读与无重放，不碰PG/Chrome；启动后真实性另验。",
+        "evidence": "文件: .evidence/qyh-restoration-readonly-continuation-r3-20261014/creator_workflow_switch.py (SHA 6049b1872421ea7699bd612f6ff2cc9e5477012c5d7a5c8f01c0ae0f37d531ca)。函数base()校验HEAD==ce1f8258...、branch==m1、authority==AOS-002030、active lease with owner/cwd/expiration；pre Flight/assert oldAPI PID 25389/listeners port 18080 & cwd;oldWeb PID 78346/listeners port 18434。api phase先reviewed_controller校验switch-review-package-r3冻结/hash，再assert not api-switch-intent-r1.json & not api-started-r1.json('existing phase:reconcile only')防重放，再listeners/cwd核对后save intent才os.kill(SIGTERM)。pgChromeTouched字段显式false。启动用--serve-management-readonly+安装readOnly+source-candidate+OIDC config，未带PG/Chrome操作。web phase同理用creator-workflow-web-source.json验证manifest/head/port/apiTarget=18080，env过滤AOS_/PG/VITE_前缀，仅换entry点不改浏览器/PG。启动后真实性依赖外部八页面/OIDC/fingerprint验收(见creator-workflow-api-20261014.json remaining字段与complete-code-review-manifest.json originalRuntimeAccepted=false/fullGoalComplete=false)。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "控制器代码在signal前核验租约/版本/冻结/hash/PIDcwd监听及唯一意图，保留只读与无重放，不碰PG/Chrome；启动后真实性另验。",
+        "evidence": "消费记录: switch-review-consumption-r3.json verdict PASS status CONSUMED_MATERIAL_REVIEW result_sha256与switch-review-result-r3.json一致。preFlight输出switch-preflight-r1.json显示signal=false pgChromeTouched=false sourceGuard=true webManifestVerified=true allProductHashesVerified=true。API启动参数中--source-candidate指向Creator草稿的creator-workflow-api-20261014.json(确认head/source/manifestSha256一致)，--installed-readonly-installation ab2fd72f-d81c-400d-bbbc-e1589a159d6b，未启用migration/mocks/host-worker，符合只读预算。Web生成entry替换private/latest-vite-cache→private/creator-workflow-vite-cache并用creator-workflow-web-source.json(manifest已verify)，不引入新env/credentials。完整意图链: base→reviewed_controller→intent save→old kill→port-free assert→spawn with explicit args。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "控制器代码在signal前核验租约/版本/冻结/hash/PIDcwd监听及唯一意图，保留只读与无重放，不碰PG/Chrome；启动后真实性另验。",
+        "evidence": "材料同时提供完整的验证依赖链: Creator草稿API报告指出runtimeAuthorized=false/eightPagesAccepted=false/remaining含'formal OIDC settings'和'guarded PG/API/Web restart'; complete-code-review-manifest.json中originalRuntimeAccepted=false/fullGoalComplete=false。这意味着控制器本身不完成真实性验证——它仅在spawn后保存spawnedOnly标志并打印pid。真实性须由后续独立的真人OIDC读取/root菜单/空DTO/400401/650 fingerprint验收流程覆盖。当前审阅范围恰为控制器信号前核验与只读约束，该范围在此材料下已被PASS(r3)且被CONSUMED。启动后真实性留待下一阶段独立消费。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续独立真人OIDC读取与8页面验收(含400/401/650 fingerprint与root菜单验证)，再决定是否消费本次API Web新进程的实际运行状态与数据一致性。"
+  }
+}

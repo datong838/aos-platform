@@ -1,0 +1,826 @@
+POST-EFFECT LIVE MATERIAL REVIEW; NOT execution approval or wholeGoal completion. Current source6bf/Authority2030/sameowner23UTC. Controller codePASS/consumed before one samevolumePG/API/Web effect. Review only factual bounds supported by frozen code+reports. No real corrupt/nonempty originaldraft or budgetapproval manufactured.
+
+FILE .evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/live-report-r1.md SHA b1a72cc96f3f03412f0b4b0bd5f3f4501969309cbb422f4c636d6584d1feeb15
+# 今日完整重启与草稿读取现场
+
+Rules/231/唯一m1写者/完整Goal保持。代码6bf70940572ccde238eb98eb398a4c49a884253a，Authority2030；四同owner不重叠Lease至23UTC。hydation r16独立PASS合法消费后仅两个登记UI文件与公共证据提交；冻结API8687/Web764，未复制dirty/.env/凭据。证据原始diff/log的空白保留，不修冻料；产品两文件whitespace检查通过。
+
+原CID84989681…/卷aos-qyh-history159-prepared-data-20261011/cluster7695302940039200809/18446在PG→API→Web按新intent单次重启；PGStartedAt从02:56:36到20:36:36UTC，API64550最新archive、Web64614最新archive/18434→18080。controller独立PASS/合法消费；preflight实际cwd/command/listener/source与当前Lease，PG后和全部初次菜单/核心读取/后续稳定态对账650指纹相等、schema161/绑定0。HostworkerProvider仍OFF，原业务DB只读、预算162未部署、旧unknown12Run/Schedules/source/noPush边界保持。
+
+原真人登录观察步骤工具timeout并重置kernel，未重发登录；只读对账页面已登录，原客户端me回读subject6f31cfdc-a26c-4f1f-ad6b-95a8559cc657/org-org/dev-project/oidc。正常草稿list200/count0/items0；unknownquery400；独立无凭据requestcontext匿名401。初次浏览器直接跨端口匿名fetch被CORS拒绝，不能当401，后者context实际401才有效。认证POST状态因观察丢失不声称保存了200回执；只证明当前正常真人身份和正式读取。
+
+八个真实菜单anchor点击+root GET200/同tenant，读取阶段全部GET；辅助404：creator/closure-contributions，price-governance/contributions、dispositions、price/closure-contributions，customer/contributions、contact-contributions、closure-contributions。现现场不是这些辅助读闭环。
+
+初批截图在root网络完成但组件/辅助加载未完，保留native/*-1440.png反证。后续已实际检视：活动/运营/达人/多媒体/价格/客户无核心加载态；总控前r2/r3仍读任务/反馈，不能作为完成图，最终settled-cockpit-1440-r4.png准确等待两specific标记消失，显示2历史业务任务（取消/待规划），不是新执行。经营参谋先settled图仍读分析记录，最终settled-analyst-1440-r3.png等全部读取标记消失，原Case无Run；不能把root200或中间截图当完成。原稿foundry/html三栏及真实空/部分/待条件保留，未复制演示人数/进度。此报告不声称全视觉/所有页签/滚动/无障碍或八真实经营场景通过。
+
+本次达人1280/1440/1920稳定截图并量按钮边界，1280右1376>1280裁切P1仍在，1440/1920可见。价格滤钮仍明显纵向拉伸；参谋说明首屏偏多，媒体为数字人非原文案同态。原非空坏草稿不制造；新增水合修复的非空/失败/恢复编辑保留沿用同sourceSHA精确隔离browser-r2证据与271PASS/typecheck，不重复验收或冒充原真人预算/审批。
+
+本次只交付读取slice/有界reader/UI失败与水合保护、今日原卷维护，非完整安装/恢复/经营完成。fullC原唯一真人最终预算/部署、自然有来源CaseRun→建议exact审阅→内容能力产物→人审自动续跑→总控Wiki、安装全生命周期/八真实场景/视觉P1/持续观察发布均保持。立即下一已登记辅助/private GET审计，原Goal ACTIVE。
+
+FILE .evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/verify_daily_live.py SHA 3a3074f8463388daadf000852a4bd4082bbfa8ba99c5322eb4ef7450a247cf3f
+"""Read-only current process/source and already-taken native evidence verification."""
+from pathlib import Path
+import hashlib,json,subprocess,sys
+P=Path(__file__).resolve().parent;R=P.parents[2]
+def read(p):return json.loads(p.read_text())
+def cmd(*args):return subprocess.check_output(args,cwd=R,text=True).strip()
+cfg=read(P/'config.json');assert cfg['head']==cmd('git','rev-parse','HEAD') and cmd('git','branch','--show-current')=='m1'
+sys.path.insert(0,str(R/'scripts'));import a0v_qyh_restored_http as guard
+source=guard.require_api_source_candidate(Path(cfg['apiReport']))
+api=read(P/'api-started.json');web=read(P/'web-started.json');wr=read(Path(cfg['webReport']))
+assert api['head']==web['head']==wr['head']==cfg['head']
+for port,proc in [(18080,api),(18434,web)]:
+ assert cmd('lsof','-t','-nP',f'-iTCP:{port}','-sTCP:LISTEN')==str(proc['pid'])
+ cwd=next(x[1:] for x in cmd('lsof','-a','-p',str(proc['pid']),'-d','cwd','-Fn').splitlines() if x.startswith('n'))
+ assert cwd==(str(source) if port==18080 else str(R))
+w=Path(wr['source']);assert {str(p.relative_to(w)):hashlib.sha256(p.read_bytes()).hexdigest() for p in w.rglob('*') if p.is_file()}==wr['manifest']
+ui=read(R/'.evidence/qyh-creator-workflow-read-failure-ui-20261014/hydration-code-review-manifest-r16.json')
+assert all(hashlib.sha256((w/f).read_bytes()).hexdigest()==sha for f,sha in ui['sourceHashes'].items())
+fp=R/'.evidence/qyh-restoration-successor-latest-restart-20261013'
+b=read(fp/'daily-latest-before-20261015.json');a=read(fp/'daily-after-pg-20261015.json');f=read(fp/'daily-accepted-final-20261015.json')
+assert b['fingerprints']==a['fingerprints']==f['fingerprints'] and len(f['fingerprints'])==650
+assert b['containerId']==a['containerId']==f['containerId']=='84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c'
+assert all(x['volume']=='aos-qyh-history159-prepared-data-20261011' and x['native']['cluster']=='7695302940039200809' and x['native']['schema']=='a0v_161' and x['native']['enabledBindings']==0 for x in [b,a,f])
+assert a['pgStartedAt']==f['pgStartedAt']==read(P/'pg-terminal.json')['startedAfter'] and b['pgStartedAt']!=f['pgStartedAt']
+core=read(P/'native-core-read-deny-r1.json');assert core['who']=={'subject':'6f31cfdc-a26c-4f1f-ad6b-95a8559cc657','orgId':'org-org','projectId':'dev-project','tokenKind':'oidc'}
+assert core['drafts']=={'tenant':{'orgId':'org-org','projectId':'dev-project'},'count':0,'items':0} and core['unknownQuery']['status']==400 and core['anonymousStatus']==401
+pages=read(P/'native-eight-menu-r1.json')['pages'];assert len(pages)==8 and len({x['route'] for x in pages})==8 and all(x['rootStatus']==200 and x['tenant']==core['drafts']['tenant'] for x in pages)
+net=read(P/'native-network-final-r1.json');assert not net['nonGet'] and all(x['method']=='GET' for x in net['network'])
+report={'head':cfg['head'],'apiPid':api['pid'],'webPid':web['pid'],'apiSourceGuard':True,'webManifestVerified':True,'hydrationSourceHashesExact':True,'sameVolumeCluster':True,'fingerprints650Equal':True,'genuineOidcReadback':True,'rootsEight200':True,'coreDraftsEmpty200Query400Anonymous401':True,'nonGetBusinessRequests':0,'auxiliary404Remaining':sorted({x['path'] for x in net['network'] if x['status']==404}),'allVisualPassed':False,'wholeGoalComplete':False,'scriptSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+with (P/'live-verification-r2.json').open('x') as out:json.dump(report,out,indent=2)
+print(json.dumps(report))
+
+FILE .evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/live-verification-r2.json SHA 2ae47110d500d96b6ac91f49bcb3b5c87a356b7930d5b7ea1fd2d21e59552c54
+{
+  "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+  "apiPid": 64550,
+  "webPid": 64614,
+  "apiSourceGuard": true,
+  "webManifestVerified": true,
+  "hydrationSourceHashesExact": true,
+  "sameVolumeCluster": true,
+  "fingerprints650Equal": true,
+  "genuineOidcReadback": true,
+  "rootsEight200": true,
+  "coreDraftsEmpty200Query400Anonymous401": true,
+  "nonGetBusinessRequests": 0,
+  "auxiliary404Remaining": [
+    "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+    "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+    "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+    "/api/v1/ecommerce-workshop/views/customer/contributions",
+    "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+    "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+    "/api/v1/ecommerce-workshop/views/price/closure-contributions"
+  ],
+  "allVisualPassed": false,
+  "wholeGoalComplete": false,
+  "scriptSha256": "3a3074f8463388daadf000852a4bd4082bbfa8ba99c5322eb4ef7450a247cf3f"
+}
+FILE .evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/runtime-data-native-proof-r1.json SHA cd7d02b220412de9accd685d237f83f57f741bf571e2d9615e64b7d8a2c8e857
+{
+  "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+  "apiPid": 64550,
+  "apiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-6bf70940572ccde238eb98eb398a4c49a884253a",
+  "webPid": 64614,
+  "webCwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+  "webSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014/private/web-source-6bf70940572ccde238eb98eb398a4c49a884253a",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "cluster": "7695302940039200809",
+  "schema": "a0v_161",
+  "pgStartedBefore": "2026-10-14T02:56:36.001669303Z",
+  "pgStartedAfter": "2026-10-14T20:36:36.408087963Z",
+  "fingerprintsEqualBeforeAfterPgFinal": true,
+  "tables": 650,
+  "enabledBindings": 0,
+  "businessWrites": false,
+  "sourceRead": false,
+  "providerHostWorker": "OFF",
+  "genuineIdentityReadback": true,
+  "coreReadAndDeny": true,
+  "wholeGoalComplete": false
+}
+FILE .evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/native-core-read-deny-r1.json SHA bbc63532637f8716c8458a2b4ee2e193c3a44a387c3a62ec9f65926ce34906b0
+{
+  "who": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "drafts": {
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "count": 0,
+    "items": 0
+  },
+  "unknownQuery": {
+    "status": 400,
+    "rejected": true
+  },
+  "anonymousStatus": 401,
+  "queryNetwork": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "method": "GET",
+      "status": 400
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "method": "GET",
+      "status": 400
+    }
+  ]
+}
+FILE .evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/native-eight-menu-r1.json SHA 20fada155462f54630b7c1062155122266f3de49ab05dd33bf5740bebcb9fdd0
+{
+  "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+  "apiPid": 64550,
+  "webPid": 64614,
+  "who": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "pages": [
+    {
+      "route": "cockpit",
+      "rootStatus": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "url": "http://127.0.0.1:18434/workshop/cockpit"
+    },
+    {
+      "route": "content-campaign",
+      "rootStatus": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "url": "http://127.0.0.1:18434/workshop/content-campaign"
+    },
+    {
+      "route": "operations",
+      "rootStatus": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "url": "http://127.0.0.1:18434/workshop/operations"
+    },
+    {
+      "route": "creator-growth",
+      "rootStatus": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "url": "http://127.0.0.1:18434/workshop/creator-growth"
+    },
+    {
+      "route": "media-studio",
+      "rootStatus": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "url": "http://127.0.0.1:18434/workshop/media-studio"
+    },
+    {
+      "route": "analyst",
+      "rootStatus": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "url": "http://127.0.0.1:18434/workshop/analyst"
+    },
+    {
+      "route": "price-governance",
+      "rootStatus": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "url": "http://127.0.0.1:18434/workshop/price-governance"
+    },
+    {
+      "route": "customer",
+      "rootStatus": 200,
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "url": "http://127.0.0.1:18434/workshop/customer"
+    }
+  ],
+  "network": [
+    {
+      "path": "/api/v1/aip/memory-authority/memories",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/improvement-observations",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/candidates",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/capability-catalog",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/agent-registry",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/improvement-observations",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/memories",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/candidates",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/capability-catalog",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/agent-registry",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations/cases",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations/cases",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/async-jobs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/async-jobs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "nonGet": [],
+  "wholeGoalComplete": false
+}
+FILE .evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/native-settled-visual-r2.json SHA c5940a79503f9dd0a09d090678c8db31e1460658854853ec0fe3405a8472bed9
+{
+  "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+  "settled": [
+    {
+      "route": "cockpit",
+      "loadingVisible": 1,
+      "bodyTail": "AGENT\n素材采集\n待核对\n策略规划\n待核对\n文案生成\n待核对\n脚本撰写\n待核对\n语音合成\n待核对\n视频合成\n待核对\n内容审核\n待核对\n直播编排\n待核对\n平台适配\n待核对\n数据复盘\n待核对\n明日预告 · 仅显示已排期业务任务\n计划表未验证\n内容评审后的经营反馈\n\n原评审通过后形成的复盘、效果观察与方法候选；这里只读，不代表当前可执行授权。\n\n正在读取原内容评审反馈\n\n运行、发布与审计上下文\n保持原完整功能；默认收起以恢复视觉稿首屏结构"
+    },
+    {
+      "route": "content-campaign",
+      "loadingVisible": 0
+    },
+    {
+      "route": "operations",
+      "loadingVisible": 0
+    },
+    {
+      "route": "creator-growth",
+      "loadingVisible": 0
+    },
+    {
+      "route": "media-studio",
+      "loadingVisible": 0
+    },
+    {
+      "route": "analyst",
+      "loadingVisible": 0
+    },
+    {
+      "route": "price-governance",
+      "loadingVisible": 0
+    },
+    {
+      "route": "customer",
+      "loadingVisible": 0
+    },
+    {
+      "route": "cockpit-r2",
+      "loadingVisible": 1
+    }
+  ],
+  "creatorWidths": [
+    {
+      "width": 1280,
+      "height": 720,
+      "buttons": [
+        {
+          "text": "准备候选条件",
+          "right": 881,
+          "height": 31,
+          "disabled": false
+        },
+        {
+          "text": "补充预算权益",
+          "right": 1376,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "准备候选条件",
+          "right": 1376,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "重新读取业务数据",
+          "right": 1376,
+          "height": 32,
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "buttons": [
+        {
+          "text": "准备候选条件",
+          "right": 897,
+          "height": 31,
+          "disabled": false
+        },
+        {
+          "text": "补充预算权益",
+          "right": 1414,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "准备候选条件",
+          "right": 1414,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "重新读取业务数据",
+          "right": 1414,
+          "height": 32,
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "buttons": [
+        {
+          "text": "准备候选条件",
+          "right": 1137,
+          "height": 31,
+          "disabled": false
+        },
+        {
+          "text": "补充预算权益",
+          "right": 1894,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "准备候选条件",
+          "right": 1894,
+          "height": 32,
+          "disabled": false
+        },
+        {
+          "text": "重新读取业务数据",
+          "right": 1894,
+          "height": 32,
+          "disabled": false
+        }
+      ]
+    }
+  ],
+  "initialLoadingScreensPreserved": true,
+  "allVisualPassed": false
+}
+FILE .evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/pg-terminal.json SHA 3a700e6ccd0a5b8b9608cb566649671261f03095079739ad96a180e66f79756c
+{
+  "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "startedAfter": "2026-10-14T20:36:36.408087963Z",
+  "noMigration": true
+}
+FILE .evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/api-started.json SHA f2616359fe0a541e9886948a861814cea5c0c143ab9c76565d6281a384227cb3
+{
+  "pid": 64550,
+  "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-6bf70940572ccde238eb98eb398a4c49a884253a",
+  "spawnedOnly": true
+}
+FILE .evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/web-started.json SHA 78ac3d79293ff3cd493d87bf1e5a7c9de967cb75d6b1501e723738d20347ef32
+{
+  "pid": 64614,
+  "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014/private/web-source-6bf70940572ccde238eb98eb398a4c49a884253a",
+  "spawnedOnly": true
+}
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/hydration-code-review-manifest-r16.json SHA d09ed3f8010f36789166436543407df143b804de5545b8eef8225de88a2f83c6
+{
+  "baseHead": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+  "sourceHashes": {
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e",
+    "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "292371bc6f17c0f9c9cea8e410105a8a101bd77569338f015ac8c1b9565e2e53"
+  },
+  "reviewResult": "hydration-code-review-result-r16.json",
+  "reviewConsumption": "hydration-code-review-consumption-r16.json",
+  "deployed": false,
+  "wholeGoalComplete": false
+}
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/hydration-code-review-consumption-r16.json SHA 6f44e08e3c499d3b992f45fdd549cef92ef0505b0542645eea1f742c5de60d42
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-workflow-read-failure-ui-20261014-hydration-code-r16",
+  "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-creator-workflow-read-failure-ui-20261014/hydration-code-review-package-r16.txt": "16c89c06ebd090e43e42a3ad80da06847448df88957f78984f5aa9fcdc388b6e"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "3d8fae616e627f2c25a9bca26b9f169678f42e675cb4fb41fa663b92f48bcd95",
+  "transport_sha256": "017786dd1ae3229e8b05c26646b3deac166df11aed5ecd68452a811521af47eb"
+}
+FILE .evidence/qyh-creator-workflow-read-admission-20261014/code-review-consumption-r1.json SHA 60adaa02f848e2f7e2f15e8b336a7b98903ac3b8f707dfaf32479922da0f8cc7
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-workflow-read-admission-20261014-code-r1",
+  "task_id": "qyh-creator-workflow-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "5a1855482e92a2de4f028ffa106b9dfccde89a50",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-creator-workflow-read-admission-20261014/code-review-package-r1.txt": "a0487ddc2362e46d6f173c61f5fd386b236b3e0c14c07b887b1c4314b283496c"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "4f5e543f9e1080e26f56c8c28dd425c002fd4741438fdfeba4c46a8894f6fc61",
+  "transport_sha256": "bda756f57ee5ab53e200954875c7aa33fc1f8621a5ea823f1525ba0e4b44ef10"
+}
+FILE .evidence/qyh-creator-workflow-bounded-reader-20261014/code-review-consumption-r2.json SHA 7d9e2922ffa04d01bd8d524d4e6736bf4ee6982b48faa65cf4f859f9ea146f75
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-workflow-bounded-reader-20261014-code-r2",
+  "task_id": "qyh-creator-workflow-bounded-reader-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "90ca032b60071cb0f2c84294e21018f13d99f150",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-creator-workflow-bounded-reader-20261014/code-review-package-r1.txt": "1612b6b0e8aa781ef24511223b5a0651be69be8a698a3f5ba3cc13a19f31a7bc"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "61a30be851c95767d27a8cbca7c60023fafba2beaa765fad4abe4eacfe6e9937",
+  "transport_sha256": "6be9e8d76bb87fe7b46819ea3be3ea7f7bde7bffdea98c08c48c0c88639c91ca"
+}

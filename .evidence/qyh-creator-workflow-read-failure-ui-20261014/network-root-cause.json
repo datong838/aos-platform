@@ -1,0 +1,12 @@
+{
+  "defaultNodeFailure": "UND_ERR_CONNECT_TIMEOUT",
+  "defaultElapsedMs": 10539,
+  "configuredSameEndpointV4Status": 401,
+  "task60sElapsedMs": 18118,
+  "taskLocalPreloadSha256": "aaa9aa9a2570fad2db2cabae820f62172b4a8bf4f30af4a4ef5990fa7c798540",
+  "tlsValidationChanged": false,
+  "authChanged": false,
+  "retryEnabled": false,
+  "strictValidatorChanged": false,
+  "defaultSettingsChanged": false
+}

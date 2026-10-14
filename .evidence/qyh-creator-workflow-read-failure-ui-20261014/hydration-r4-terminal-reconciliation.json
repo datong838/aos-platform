@@ -1,0 +1,8 @@
+{
+  "terminal": true,
+  "failure": "strict rawJSON extra data",
+  "transportPreserved": true,
+  "envelopeAbsent": true,
+  "consumed": false,
+  "repairedRaw": false
+}

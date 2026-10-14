@@ -1,0 +1,8 @@
+{
+  "terminal": true,
+  "modelError": "Request timed out",
+  "assistantContentEmpty": true,
+  "transportPreserved": true,
+  "consumed": false,
+  "repaired": false
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "single-minimal-inference-diagnostic",
+  "model": "agnes-2.5-flash",
+  "review": false,
+  "retries": 0,
+  "status": 200,
+  "valid_probe": true,
+  "choices": 1,
+  "elapsed": 17.76
+}

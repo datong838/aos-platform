@@ -1,0 +1,15 @@
+# 草稿读取现场与水合修复待复审检查点
+
+Rules：AGENTS/231完整Goal/唯一m1写者。Authority2030/7强CURRENT；四sameowner不重叠Task通过支持CAS连续续至2026-10-14T20:00:00Z，不扩大scope。当前已提交HEAD ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d。
+
+本轮实际API25389→37761/Web78346→37975单次切ce，经控制器r3独立PASS合法消费。原真人OIDC登录和真实listGET/menu200，租户org-org/dev-project，items[]/count0；query400/匿名401，closure仍404。原卷650逐表前后指纹一致，schema161/绑定0/cluster/PGStartedAt/volume同一；PG/Chrome未signal，预算162未部署、HostworkerProviderOFF。这不是经营、全恢复或全视觉完成。1280按钮right1376/1390裁切P1仍在。
+
+隔离浏览器同ce组件实际发现fresh products数组导致读取失败后未保存标题被重置，保留反证，不假验收。所有场景dev-org/fixture-project、不接真实API、命令0调用/API403；fixture40320停止，原ownedURL/1440恢复。修复仅本Task CreatorGrowthPage.tsx一行useEffect依赖从revision/purpose/products改resourceId/revision/purpose，加两回归测试；RED2fail19pass→271工作台PASS/Typecheck0/hashes前后相等。不同新authority的明确刷新仍水合，不声称解决全部并发编辑冲突。
+
+new隔离候选sourceHash c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e，真实pending/failed/recovery均保留title和summary；故障全部命令/restore禁用、commands0，截图实际查看且有隔离badge。42706已准确停止/端口free，原页恢复。它是精确未提交候选测试，不是原客户非空或真人审批。
+
+新fix两文件未提交/未部署。Hydration r3 NEED_EVIDENCE已消费；r4/r5格式或claim非法未消费；r6/r7/r8及同provider配置Flash20任务局部r9无有效响应，均保留raw且不修、不假PASS。公网基础endpoint301只证明基础连接，不证明模型推理健康。默认模型/凭据/原AOSProviderOFF未改；严格validator未改，等待模型恢复后的新ID有效质量复审。旧UI codePASS不能覆盖新改动。
+
+日期切2026-10-15，今日完整最新m1原卷PG→API→Web方案及readonly-baseline已登记maintenance/daily-20261015。当前latestcommitted ce，不能复制未提交c0fc，若先合法复审并提交要重建最新基线。今日全重启尚未执行，不把10/14 partial切换当daily，不重放昨天意图。
+
+继续独立复审/最新源/今日完整重启/真实联合验收/准确各sliceDelivery/AuthorityPrime，再剩余helper/fullC唯一用户最后预算与原部署、自然有来源CaseRun建议exact评审内容能力产物人审续跑总控Wiki、安装完整生命周期/八场景/视觉P1/连续观察发布。完整Goal ACTIVE，不缩小、不暂停。

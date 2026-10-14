@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "9190a684e1f0525b4d0bad8490e630c162d9952a1fea346545ef0fa234823d81",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r3-20261014-daily-controller-20261015-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r3-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "6bf70940572ccde238eb98eb398a4c49a884253a",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/controller-review-package.txt": "c67f8e983467e64b6935801b7793685d9efbbbe7e504dd47fe93b7326e9d30f8"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "控制器仅重启同一原权威卷并按PG→API→Web串行推进，原数据库迁移及运行写者仍关闭。",
+        "evidence": "controller源码:VOL='aos-qyh-history159-prepared-data-20261011';pg()校验Mounts[0]['Name']==VOL及CID;pg phase执行docker restart --time 30 PG并检查StartedAt改变;api/web phase启动参数含--serve-management-readonly及--installed-readonly-installation。preFlight-terminal.json与api-started.json均含noMigration=True/spawnedOnly=True。review_controller_owned_undici.py设execution_authorized=False。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "控制器在实际效果前核对精确版本、原进程、当前租约及合法独立复审，持久化单次意图并拒绝已存在意图重放。",
+        "evidence": "base():校验head==6bf70940...、branch=='m1'、authority.json.project_revision=='AOS-002030'、lease[0]['owner']==OWNER且lease_expires_at>now。preflight/assertion核对oldApiPid=37761/oldWebPid=37975及其cwd/port/command。pg-intent.json/api-intent.json/web-intent.json逐阶段'x'模式fsync持久化。review_controller_owned_undici.py对attempt标记校验request_id不重复并设execution_authorized=False。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "等待本请求独立复审结果写入controller-review-result.json与相应attempt/consumed标记;复核通过后按原计划进入pg/api/web阶段重启并收集real browser proof。"
+  }
+}
