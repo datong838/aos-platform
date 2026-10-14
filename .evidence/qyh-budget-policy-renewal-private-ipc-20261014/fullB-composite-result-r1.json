@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "62c0a39e628a1c099245b6d943ccf4422d33ebfd74d6c83a490b0bd06fd992e1",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-private-ipc-20261014-fullB-composite-r1",
+    "task_id": "qyh-budget-policy-renewal-private-ipc-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "c5c06bd8110d611f30fb7a643160bcc4f76d6182",
+      "authority_revision": "AOS-002026",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/fullB-composite-package-r1.txt": "bd0301c3959cd34d65af7522942115562b013c760451c27a45850bdd220ee08f"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The complete current B seven-source candidate has exact current native source parity, full three-part independent code/native PASS coverage and actual strict legal consumption; no obsolete or malformed result has been upgraded and no partial gate is presented as the complete business Goal.",
+        "evidence": "全量材料 .evidence/.../fullB-composite-package-r1.txt 提供了 fullB-review-freeze-r4.json，其 groups.p3 包含 prepare_native_b_fixture_r4.py/migrate_native_b_fixture_r4.py/run_native_b_worker_r13.py/native-b-driver-r13.py 及 native-b-final-readback-r4.json/native-b-worker-source-readback-r13.json/native-b-fixture-stopped-r4.json。native-b-worker-source-readback-r13.json (SHA c7b4...) 显示 currentSevenHashesMatched=true 且 worker/七文件 hash 与 fullB-review-freeze-r4.json 完全一致；native-b-final-readback-r4.json (SHA 982b...) 记录 Proposal/Decision/Receipt/Canonical=[2,2,5,2]、head=[14,14]、allSixNoLogin=true、originalGuardsRestored=[O,O]、noRealConsent=true、originalVolumeTouched=false。三独立 review 结果 r5system-p1 (SHA a0c8...), r5system-p2 (SHA 1fda...), r6concise-p3 (SHA 14e9...) 均为 PASS 且各自有对应 consumption (SHA 89f4..., 0590..., 161b...)，status=CONSUMED_MATERIAL_REVIEW，runner_sha256 分别绑定 502587.../502587.../62c0a3...，无伪造旧 runner。old r1p2/r2p1/r3p1/r4p2/r4p3 fenced/raw/missingnext 被保留为 unconsumable 且未升级为当前 gate。三个 PASS claims 覆盖材料声称的七源代码、三组独立测试与原生 acceptance；fullGoalActive=true。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The new evidence-scoped review controller changes only the supported Prime system-prompt output contract while retaining original raw JSON/baseline/owner/Lease/tool-disabled/runner-hash and legal-consumption gates; its supplied source and actual outcomes show no response repair, fake old runner provenance or grant of execution authority.",
+        "evidence": "review_full_b_system_contract.py (SHA 502587...) 与 review_full_b_system_contract_concise.py (SHA 62c0a3...) 均 import aos_review as gate，调用 gate.validate_request/gate.validate_result/gate.parse_response/gate.scan_secrets/gate.consumption_record/gate.prime_command/gate.prepare_review_directory，保留 --no-tools/--no-extensions/--no-skills/--no-context-files/--no-session/--offline 与 no-retry/refine/compaction/telemetry；二者唯一差异是在 system 拼接前追加 '篇幅合同：每个findings.evidence不超过600个字符...' 段落，属于 gate.SYSTEM 之下的 supported output contract supplement。result r5system-p1/r5system-p2 使用 runner_sha256=502587...（原始），r6concise-p3 使用 62c0a3...（新），各自 consumption 记录 runner/validator SHA 并与结果 envelope 一致；无 repair、无伪造旧 provenance、execution_authorized=false 在所有结果中保持一致。validator_sha256 统一为 cf7c089c...（aos_review.py 原 SHA）。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The supplied current native and cleanup evidence supports closed B code-only candidate delivery without original DB, credentials, roles, userdirty or external business effects; real budget proposal/user consent/C deployment, model-price/source admission, full natural business chain and eight-workbench lifecycle/visual/release goals remain explicitly incomplete.",
+        "evidence": "native-b-final-readback-r4.json 记录 noRealConsent=true、originalVolumeTouched=false、extraLostAckProposalOnlyPrepared=true、allSixNoLogin=true、originalGuardsRestored=[O,O]，fixture cid 11f7f4... 状态 exited 且原始 volume aos-qyh-history159-prepared-data-20261011 未被触碰。review_full_b_system_contract.py 的 assert proc.returncode==0 之后仅 parse_response 并 validate，不触发任何 DB/Keycloak/Provider/mall/source 调用。material 声明 current production schema161/650/expired Policy13 unchanged、no real person JWT/consent/DB mutation/original Run replay/userdirty overwrite/deployment occurs。fullGoalActive=true 表明 Full Goal 仍 ACTIVE，C protected deployment、real budget proposal/user consent/model-price/source admission、natural business chain、eight-workbench lifecycle/visual/release 明确列为待完成项，B 仅限 code/service/process/schema。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前基线 c5c06bd8 与三组 CONSUMED_MATERIAL_REVIEW 结论；下一步由 A 依赖推进 daily/latest same named volume PG/API/Web 重启、八工位 visuals、真实 Budget 审批与 C 部署，B 不再单独扩展。"
+  }
+}

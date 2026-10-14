@@ -1,0 +1,623 @@
+{
+  "$defs": {
+    "RenewalConsumeCommand": {
+      "additionalProperties": false,
+      "description": "Identify an original decision for consumption or read-only reconciliation.",
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "orgId": {
+          "const": "org-org",
+          "title": "Orgid",
+          "type": "string"
+        },
+        "projectId": {
+          "const": "dev-project",
+          "title": "Projectid",
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Idempotencykey",
+          "type": "string"
+        },
+        "proposalId": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Proposalid",
+          "type": "string"
+        },
+        "proposalHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Proposalhash",
+          "type": "string"
+        },
+        "decisionId": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Decisionid",
+          "type": "string"
+        },
+        "decisionHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Decisionhash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "orgId",
+        "projectId",
+        "idempotencyKey",
+        "proposalId",
+        "proposalHash",
+        "decisionId",
+        "decisionHash"
+      ],
+      "title": "RenewalConsumeCommand",
+      "type": "object"
+    },
+    "RenewalDecisionCommand": {
+      "additionalProperties": false,
+      "description": "Decide the exact prepared target; identity comes from the private issuer.",
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "orgId": {
+          "const": "org-org",
+          "title": "Orgid",
+          "type": "string"
+        },
+        "projectId": {
+          "const": "dev-project",
+          "title": "Projectid",
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Idempotencykey",
+          "type": "string"
+        },
+        "proposalId": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Proposalid",
+          "type": "string"
+        },
+        "proposalHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Proposalhash",
+          "type": "string"
+        },
+        "targetActiveHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Targetactivehash",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "approved",
+            "rejected"
+          ],
+          "title": "Decision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "orgId",
+        "projectId",
+        "idempotencyKey",
+        "proposalId",
+        "proposalHash",
+        "targetActiveHash",
+        "decision"
+      ],
+      "title": "RenewalDecisionCommand",
+      "type": "object"
+    },
+    "RenewalProposalCommand": {
+      "additionalProperties": false,
+      "description": "Condition a machine proposal on a source head, never supply a target body.",
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "orgId": {
+          "const": "org-org",
+          "title": "Orgid",
+          "type": "string"
+        },
+        "projectId": {
+          "const": "dev-project",
+          "title": "Projectid",
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Idempotencykey",
+          "type": "string"
+        },
+        "sourcePolicyId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Sourcepolicyid",
+          "type": "string"
+        },
+        "expectedSourceRevision": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "title": "Expectedsourcerevision",
+          "type": "integer"
+        },
+        "expectedHeadVersion": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "title": "Expectedheadversion",
+          "type": "integer"
+        },
+        "expectedSourceHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Expectedsourcehash",
+          "type": "string"
+        },
+        "effectiveFrom": {
+          "format": "date-time",
+          "title": "Effectivefrom",
+          "type": "string"
+        },
+        "effectiveUntil": {
+          "format": "date-time",
+          "title": "Effectiveuntil",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "orgId",
+        "projectId",
+        "idempotencyKey",
+        "sourcePolicyId",
+        "expectedSourceRevision",
+        "expectedHeadVersion",
+        "expectedSourceHash",
+        "effectiveFrom",
+        "effectiveUntil"
+      ],
+      "title": "RenewalProposalCommand",
+      "type": "object"
+    },
+    "RenewalRevocationCommand": {
+      "additionalProperties": false,
+      "description": "Withdraw one exact decision through the independently authenticated issuer.\n\nThis input is neither a persisted revocation nor evidence of human consent.\nThe issuer must serialize withdrawal with consumption at the proposal lock.",
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "orgId": {
+          "const": "org-org",
+          "title": "Orgid",
+          "type": "string"
+        },
+        "projectId": {
+          "const": "dev-project",
+          "title": "Projectid",
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Idempotencykey",
+          "type": "string"
+        },
+        "proposalId": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Proposalid",
+          "type": "string"
+        },
+        "proposalHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Proposalhash",
+          "type": "string"
+        },
+        "decisionId": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Decisionid",
+          "type": "string"
+        },
+        "decisionHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Decisionhash",
+          "type": "string"
+        },
+        "reasonCode": {
+          "enum": [
+            "approval_withdrawn",
+            "scope_changed",
+            "dependency_changed"
+          ],
+          "title": "Reasoncode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "orgId",
+        "projectId",
+        "idempotencyKey",
+        "proposalId",
+        "proposalHash",
+        "decisionId",
+        "decisionHash",
+        "reasonCode"
+      ],
+      "title": "RenewalRevocationCommand",
+      "type": "object"
+    },
+    "RenewalResponseFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestHash",
+        "activationEligible",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "integer",
+          "const": 1
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "propose",
+            "decide",
+            "revoke",
+            "consume"
+          ]
+        },
+        "requestHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "activationEligible": {
+          "type": "boolean",
+          "const": false
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": true,
+          "$comment": "Native SQL artifact fields remain governed by A Store and independent readonly history.",
+          "required": [
+            "operation",
+            "requestHash",
+            "activationEligible",
+            "status"
+          ],
+          "properties": {
+            "operation": {
+              "type": "string",
+              "enum": [
+                "propose",
+                "decide",
+                "revoke",
+                "consume"
+              ]
+            },
+            "requestHash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "activationEligible": {
+              "type": "boolean",
+              "const": false
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "prepared",
+                "decided",
+                "revoked",
+                "observed",
+                "unresolved",
+                "conflict",
+                "blocked"
+              ]
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "propose"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "properties": {
+                  "operation": {
+                    "const": "propose"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "decide"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "properties": {
+                  "operation": {
+                    "const": "decide"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "revoke"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "properties": {
+                  "operation": {
+                    "const": "revoke"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "consume"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "properties": {
+                  "operation": {
+                    "const": "consume"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1,
+      "title": "Schemaversion",
+      "type": "integer"
+    },
+    "mode": {
+      "enum": [
+        "execute",
+        "reconcile"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "operation": {
+      "enum": [
+        "propose",
+        "decide",
+        "revoke",
+        "consume"
+      ],
+      "title": "Operation",
+      "type": "string"
+    },
+    "command": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RenewalProposalCommand"
+        },
+        {
+          "$ref": "#/$defs/RenewalDecisionCommand"
+        },
+        {
+          "$ref": "#/$defs/RenewalRevocationCommand"
+        },
+        {
+          "$ref": "#/$defs/RenewalConsumeCommand"
+        }
+      ],
+      "title": "Command"
+    },
+    "bearerToken": {
+      "anyOf": [
+        {
+          "format": "password",
+          "type": "string",
+          "writeOnly": true
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bearertoken"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "mode",
+    "operation",
+    "command"
+  ],
+  "title": "RenewalRequest",
+  "type": "object",
+  "$id": "aos.budget-policy-renewal.ipc/v1",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "propose"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "command": {
+            "$ref": "#/$defs/RenewalProposalCommand"
+          }
+        },
+        "not": {
+          "required": [
+            "bearerToken"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "decide"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "command": {
+            "$ref": "#/$defs/RenewalDecisionCommand"
+          },
+          "bearerToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16384
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "revoke"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "command": {
+            "$ref": "#/$defs/RenewalRevocationCommand"
+          },
+          "bearerToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16384
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "consume"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "command": {
+            "$ref": "#/$defs/RenewalConsumeCommand"
+          }
+        },
+        "not": {
+          "required": [
+            "bearerToken"
+          ]
+        }
+      }
+    }
+  ]
+}

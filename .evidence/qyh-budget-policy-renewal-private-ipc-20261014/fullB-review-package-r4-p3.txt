@@ -1,0 +1,804 @@
+CURRENT COMPLETE B CANDIDATE, not production deployment or human consent. m1 c5c06bd8110d611f30fb7a643160bcc4f76d6182; Authority AOS-002026; active B Task sole owner codex-01a13484-f019-7d82-94ce-812396db9124 expires 2026-10-14T04:00Z. A complete closed three-actor native journal/producer/consumer was delivered at this HEAD, default NOLOGIN, immutable receipts/FORCERLS/sealed original guard; A is a dependency rather than scope for alteration. This B has all seven registered files, preserving original generic auth and shared DSN exclusion. Production remains closed/schema161/650/customer Policy13 expired; no real JWT used for fixture consent, no original DB/roles/Keycloak/mall/Provider changes. Host/worker/Provider remain OFF. The complete Goal, daily latest same named volume PG/API/Web restart, full natural business chain and eight-workbench visuals remain OPEN.
+Runtime fixture r4 is fresh standard full migrations162/611, not restored customer650. Latest r13 calls all four write operations through real module CLI/stdin/purpose SCRAM connection/original verifier/current fixture member/Store/native COMMIT, parent independent readonly. Separate JWKS18448 is in own PG network namespace, genuine RS256 test key, never real Keycloak or fake Principal. Source historical Budget1/Policy13/member are explicit fixture facts only: own admin tx locks temporarily disables ONLY Budget active insert guard and original policy configuration insert guard, creates FK parent org/workspace and history, restores both in SAME tx before COMMIT; no B operation runs before restored O. These historical facts are not approved production facts. Fixture outcome P/D/R/canonical2/2/5/2, head14/14, 6roles NOLOGIN and guards O after cleanup. Extra proposal is actual COMMIT with lost-return injection, not consumed. B source7 tar-readback hashes match current. Latest unit/adjacent118 PASS1 native skipped; real native acceptance is separately r13 complete test, not the skip or mocks.
+Local operator protected deployment config/package/private credentials are TCB. Selected package source hashes and canonical private paths are checked; no claim to resist a malicious operator/schema admin changing body+seal/source pins together. Static ancestor alias refusal is not claimed a concurrent filesystem anti-TCB guarantee. Durable private markers intentionally remain ATTEMPTED; observed authority is native immutable DB Receipt, not marker rearming. Unknown commit/read errors never authorize resending. Full B delivery requires all quality parts + native review + composite legal consumption; none grants execution authority. Eight visuals/installation/real budget approval and C deployment/business are uncompleted.
+CURRENT ALL7 SHA256: {"services/aos-api/aos_api/aip_budget_policy_renewal_connection.py": "f684042fe806b06239123b063e3f5014fe018a34e79e07c3c6d0acc3c825946e", "services/aos-api/aos_api/aip_budget_policy_renewal_process.py": "47db4f8cb3eb3d2accc2dff9e7b032f1472a60e9f9325021184595eeb53ca350", "services/aos-api/aos_api/aip_budget_policy_renewal_schema.json": "e0f2f9d1167d9823f7c50fe87663e1f991d8e26ac8cb5d19ef30cc2c430d5db6", "services/aos-api/aos_api/aip_budget_policy_renewal_service.py": "8df25c8e8e8e552f3c900c6953924647a6a3da7f7c2ca6dc3f84f188f01cbe30", "services/aos-api/tests/aip/test_budget_policy_renewal_connection.py": "9b1b83c30e225f1787e623a5d551e3c7d7c81127312c9c9a7bd12b5c8e98d58d", "services/aos-api/tests/aip/test_budget_policy_renewal_process.py": "2ca2917a227a090f49c38aee716e8c916a5226d786c17720eaf684cd954ad017", "services/aos-api/tests/aip/test_budget_policy_renewal_service.py": "360efad0184870fe13b6217835576e4dca52f39927c1db2dda6a15bf05b11bda"}
+
+SOURCE services/aos-api/tests/aip/test_budget_policy_renewal_connection.py SHA256 9b1b83c30e225f1787e623a5d551e3c7d7c81127312c9c9a7bd12b5c8e98d58d
+"""B protected connection boundary; fixture files, never live credentials."""
+from pathlib import Path
+
+import pytest
+
+
+def private_file(tmp_path, text, *, mode=0o600):
+    directory = tmp_path / 'private'
+    directory.mkdir(mode=0o700)
+    path = directory / 'renewal.json'
+    path.write_text(text)
+    path.chmod(mode)
+    return path
+
+
+def test_missing_private_config_never_uses_shared_api_dsn(tmp_path, monkeypatch):
+    from aos_api.aip_budget_policy_renewal_connection import load_protected_config, RenewalConnectionBlocked
+    monkeypatch.setenv('AOS_DATABASE_URL', 'postgresql://shared@127.0.0.1:1/unused')
+    with pytest.raises(RenewalConnectionBlocked, match='PRIVATE_CONFIG'):
+        load_protected_config(tmp_path / 'absent.json')
+
+
+@pytest.mark.parametrize('file_mode,parent_mode', [(0o644,0o700),(0o600,0o755)])
+def test_broad_file_or_directory_permissions_are_rejected(tmp_path,file_mode,parent_mode):
+    from aos_api.aip_budget_policy_renewal_connection import load_protected_config, RenewalConnectionBlocked
+    path=private_file(tmp_path,'{}',mode=file_mode)
+    path.parent.chmod(parent_mode)
+    with pytest.raises(RenewalConnectionBlocked, match='PRIVATE_CONFIG'):
+        load_protected_config(path)
+
+
+def test_symlink_private_configuration_is_not_followed(tmp_path):
+    from aos_api.aip_budget_policy_renewal_connection import load_protected_config, RenewalConnectionBlocked
+    path=private_file(tmp_path,'{}')
+    link=path.parent/'alias.json'
+    link.symlink_to(path)
+    with pytest.raises(RenewalConnectionBlocked, match='PRIVATE_CONFIG'):
+        load_protected_config(link)
+
+
+def test_ancestor_symlink_cannot_hide_inside_private_directory(tmp_path):
+    from aos_api.aip_budget_policy_renewal_connection import _private_bytes, RenewalConnectionBlocked
+    path=private_file(tmp_path,'fixture-sensitive-sentinel')
+    alias=tmp_path/'ancestor-alias'
+    alias.symlink_to(tmp_path,target_is_directory=True)
+    with pytest.raises(RenewalConnectionBlocked,match='PRIVATE_CONFIG'):
+        _private_bytes(alias/'private'/'renewal.json')
+
+
+def test_duplicate_json_keys_and_embedded_password_are_rejected_without_echo(tmp_path):
+    from aos_api.aip_budget_policy_renewal_connection import load_protected_config, RenewalConnectionBlocked
+    path=private_file(tmp_path,'{"schemaVersion":1,"schemaVersion":2,"password":"fixture-sensitive-sentinel"}')
+    with pytest.raises(RenewalConnectionBlocked) as error:
+        load_protected_config(path)
+    assert 'fixture-sensitive-sentinel' not in str(error.value)
+
+
+def test_relative_configuration_path_is_not_resolved_from_working_directory():
+    from aos_api.aip_budget_policy_renewal_connection import load_protected_config, RenewalConnectionBlocked
+    with pytest.raises(RenewalConnectionBlocked, match='PRIVATE_CONFIG'):
+        load_protected_config(Path('private/renewal.json'))
+
+
+def closed_config(tmp_path):
+    import json,hashlib
+    from aos_api.aip_budget_policy_renewal_connection import ROOT,PACKAGE_FILES,_CALLERS
+    directory=tmp_path/'private'
+    directory.mkdir(mode=0o700)
+    issuer='http://127.0.0.1:18448/realms/qyh-local'
+    oidc={'schemaVersion':'aos.local-management-oidc/v1','issuer':issuer,'audience':'aos-api',
+          'clientId':'aos-api','jwksUrl':issuer+'/protocol/openid-connect/certs',
+          'tokenUrl':issuer+'/protocol/openid-connect/token','clockSkewSeconds':0}
+    identity=directory/'oidc.json';identity.write_text(json.dumps(oidc));identity.chmod(0o600)
+    profiles={}
+    for purpose,user in _CALLERS.items():
+        password=directory/(purpose+'.pgpass')
+        password.write_text(f'127.0.0.1:1:unused:{user}:fixture-only\n');password.chmod(0o600)
+        profiles[purpose]={'host':'127.0.0.1','port':1,'database':'unused','user':user,
+            'passfile':str(password),'passfileSha256':hashlib.sha256(password.read_bytes()).hexdigest(),
+            'manifestSha256':'a'*64}
+    value={'schemaVersion':'aos.budget-policy-renewal.private/v1','orgId':'org-org',
+        'projectId':'dev-project','enabled':False,'identityConfigPath':str(identity),
+        'identityConfigSha256':hashlib.sha256(identity.read_bytes()).hexdigest(),'profiles':profiles,
+        'packageSources':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in PACKAGE_FILES}}
+    path=directory/'renewal.json';path.write_text(json.dumps(value));path.chmod(0o600)
+    return path,value
+
+
+def test_complete_closed_provenance_loads_without_contacting_any_database(tmp_path):
+    from aos_api.aip_budget_policy_renewal_connection import load_protected_config,open_purpose_connection,RenewalConnectionBlocked
+    path,_=closed_config(tmp_path)
+    config=load_protected_config(path)
+    assert config.enabled is False
+    assert config.binding.subject=='6f31cfdc-a26c-4f1f-ad6b-95a8559cc657'
+    assert len(config.profiles)==3
+    with pytest.raises(RenewalConnectionBlocked,match='CLOSED_OR_DRIFTED'):
+        with open_purpose_connection(config,'maker',False):
+            pytest.fail('closed config yielded connection')
+
+
+@pytest.mark.parametrize('drift',['identityHash','sourceHash','caller','wildcardCredential','differentDatabase'])
+def test_complete_provenance_rejects_drift_before_connect(tmp_path,drift):
+    import json
+    from aos_api.aip_budget_policy_renewal_connection import load_protected_config,RenewalConnectionBlocked
+    path,value=closed_config(tmp_path)
+    if drift=='identityHash':value['identityConfigSha256']='b'*64
+    elif drift=='sourceHash':value['packageSources'][next(iter(value['packageSources']))]='b'*64
+    elif drift=='caller':value['profiles']['maker']['user']='aos_app'
+    elif drift=='differentDatabase':value['profiles']['consumer']['database']='other'
+    else:
+        password=Path(value['profiles']['maker']['passfile'])
+        password.write_text('*:*:*:*:fixture-only\n')
+        import hashlib
+        value['profiles']['maker']['passfileSha256']=hashlib.sha256(password.read_bytes()).hexdigest()
+    path.write_text(json.dumps(value))
+    with pytest.raises(RenewalConnectionBlocked):load_protected_config(path)
+
+
+SOURCE services/aos-api/tests/aip/test_budget_policy_renewal_service.py SHA256 360efad0184870fe13b6217835576e4dca52f39927c1db2dda6a15bf05b11bda
+"""Pure B envelope/schema tests; no identity/PG acceptance inferred here."""
+import json
+from pathlib import Path
+import pytest
+from aos_api.aip_budget_policy_renewal_service import RenewalRequest,protocol_schema
+from aos_api.aip_budget_policy_renewal_contracts import (
+    RenewalDecisionCommand,RenewalConsumeCommand,RenewalRevocationCommand,
+)
+
+
+def envelope(operation,**extra):
+    c={'schemaVersion':1,'orgId':'org-org','projectId':'dev-project','idempotencyKey':'fixture-service',
+       'proposalId':'fixture-proposal','proposalHash':'a'*64}
+    if operation=='decide':c.update(targetActiveHash='b'*64,decision='approved')
+    else:c.update(decisionId='fixture-decision',decisionHash='b'*64)
+    if operation=='revoke':c['reasonCode']='approval_withdrawn'
+    body={'schemaVersion':1,'mode':'execute','operation':operation,'command':c}
+    if operation in {'decide','revoke'}:body['bearerToken']='fixture-invalid-token-not-consent'
+    return {**body,**extra}
+
+
+@pytest.mark.parametrize('op,cls',[('decide',RenewalDecisionCommand),('consume',RenewalConsumeCommand),('revoke',RenewalRevocationCommand)])
+def test_exact_operation_and_typed_command_reparse(op,cls):
+    r=RenewalRequest.model_validate(envelope(op))
+    assert type(r.command) is cls
+    assert r.revalidated().command.request_hash==r.command.request_hash
+
+
+@pytest.mark.parametrize('mutation',['boolVersion','wrongCommand','machineToken','issuerMissingToken','extraActor'])
+def test_wire_identity_and_discriminator_mutation_rejected(mutation):
+    body=envelope('consume')
+    if mutation=='boolVersion':body['schemaVersion']=True
+    elif mutation=='wrongCommand':body['operation']='decide'
+    elif mutation=='machineToken':body['bearerToken']=None
+    elif mutation=='issuerMissingToken':body=envelope('decide');body.pop('bearerToken')
+    else:body['actor']='forged'
+    with pytest.raises(ValueError):RenewalRequest.model_validate(body)
+
+
+def test_generated_json_schema_matches_shipped_schema_and_discriminator():
+    path=Path(__file__).resolve().parents[2]/'aos_api/aip_budget_policy_renewal_schema.json'
+    schema=json.loads(path.read_text())
+    assert schema==protocol_schema()
+    assert schema['additionalProperties'] is False
+    assert len(schema['allOf'])==4
+
+
+def test_generated_schema_includes_closed_native_result_frame():
+    frame=protocol_schema()['$defs']['RenewalResponseFrame']
+    assert frame['additionalProperties'] is False
+    assert set(frame['required'])=={'schemaVersion','operation','requestHash','activationEligible','result'}
+    properties=frame['properties']
+    assert properties['schemaVersion']=={'type':'integer','const':1}
+    assert properties['activationEligible']=={'type':'boolean','const':False}
+    assert properties['requestHash']['pattern']=='^[0-9a-f]{64}$'
+    assert set(properties['operation']['enum'])=={'propose','decide','consume','revoke'}
+    result=properties['result']
+    assert set(result['required'])=={'operation','requestHash','activationEligible','status'}
+    assert set(result['properties']['status']['enum'])=={'prepared','decided','revoked','observed','unresolved','conflict','blocked'}
+
+
+def test_model_copy_cannot_smuggle_actor_or_command_kind():
+    r=RenewalRequest.model_validate(envelope('consume'))
+    altered=r.model_copy(update={'operation':'decide'})
+    with pytest.raises(ValueError):altered.revalidated()
+
+
+# Original fixtures only create data in the explicitly owned disposable DB.
+from tests.aip.test_budget_policy_renewal_pg import schema_database, schema_source as original_schema_source
+
+
+@pytest.fixture(scope='session')
+def schema_source(schema_database):
+    """Seed historical fixture facts under admin locks; guards restored pre-commit.
+
+    Full migrations prohibit unapproved ACTIVE inserts. This setup is explicitly
+    fixture history, never an acceptance of human approval or a runtime bypass.
+    No B operation runs until both original guards are enabled again.
+    """
+    _,admin=schema_database
+    source=original_schema_source.__wrapped__(schema_database)
+    with admin.transaction():
+        admin.execute("INSERT INTO public.meta_org(id,name) VALUES('org-org','isolated B fixture org')")
+        admin.execute("INSERT INTO public.meta_workspace(org_id,project_id,name) VALUES('org-org','dev-project','isolated B fixture workspace')")
+        admin.execute('ALTER TABLE public.aip_budget_revision DISABLE TRIGGER aip_budget_active_insert_guard')
+        admin.execute('ALTER TABLE public.aip_model_governance_policy_revision DISABLE TRIGGER cost_configuration_write_guard')
+        value=next(source)
+        admin.execute('SET CONSTRAINTS ALL IMMEDIATE')
+        admin.execute('ALTER TABLE public.aip_budget_revision ENABLE TRIGGER aip_budget_active_insert_guard')
+        admin.execute('ALTER TABLE public.aip_model_governance_policy_revision ENABLE TRIGGER cost_configuration_write_guard')
+    try:yield value
+    finally:
+        try:next(source)
+        except StopIteration:pass
+
+
+@pytest.fixture
+def isolated_signed_gateway(schema_source,tmp_path,monkeypatch):
+    """Actual RS256/JWKS in a separate PG network namespace, never real consent."""
+    import os,hashlib,threading,time
+    import jwt
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+    from psycopg.conninfo import conninfo_to_dict
+    from psycopg import sql
+    from tests.aip.test_budget_policy_renewal_connection import closed_config
+    from aos_api.aip_budget_policy_renewal_connection import load_protected_config,_CALLERS,_FORBIDDEN_ENV
+    if os.environ.get('AOS_RENEWAL_ISOLATED_SIGNER')!='1':
+        pytest.skip('separate owned network namespace required for fixture signer')
+    dsn,admin,source,now=schema_source
+    parts=conninfo_to_dict(dsn)
+    assert parts['host']=='127.0.0.1' and parts['port']=='5432'
+    assert parts['dbname'].startswith('aos_test_')
+    for key in _FORBIDDEN_ENV:monkeypatch.delenv(key,raising=False)
+    key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
+    jwk=json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(key.public_key()))
+    jwk.update(kid='isolated-b-fixture',alg='RS256',use='sig')
+    requests=[]
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            requests.append(self.path)
+            if self.path!='/realms/qyh-local/protocol/openid-connect/certs':
+                self.send_error(404);return
+            body=json.dumps({'keys':[jwk]}).encode()
+            self.send_response(200);self.send_header('Content-Type','application/json')
+            self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+        def log_message(self,*args):pass
+    server=ThreadingHTTPServer(('127.0.0.1',18448),Handler)
+    thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+    path,value=closed_config(tmp_path)
+    seal=admin.execute("SELECT obj_description('public.aip_budget_policy_renewal_proposal'::regclass,'pg_class')").fetchone()[0]
+    value['enabled']=True
+    for purpose,user in _CALLERS.items():
+        # Fixture-only secret; HBA is SCRAM for callers in the owned test PG.
+        password='isolated-b-fixture-password'
+        admin.execute(sql.SQL('ALTER ROLE {} LOGIN PASSWORD {}').format(sql.Identifier(user),sql.Literal(password)))
+        profile=value['profiles'][purpose]
+        passfile=Path(profile['passfile'])
+        passfile.write_text(f"127.0.0.1:5432:{parts['dbname']}:{user}:{password}\n")
+        profile.update(port=5432,database=parts['dbname'],
+            passfileSha256=hashlib.sha256(passfile.read_bytes()).hexdigest(),
+            manifestSha256=hashlib.sha256(seal.encode()).hexdigest())
+    path.write_text(json.dumps(value))
+    attempts=tmp_path/'attempts';attempts.mkdir(mode=0o700)
+    issuer='http://127.0.0.1:18448/realms/qyh-local'
+    def token(**overrides):
+        claims={'iss':issuer,'aud':'aos-api','sub':'6f31cfdc-a26c-4f1f-ad6b-95a8559cc657',
+            'iat':int(time.time()),'exp':int(time.time())+120,
+            'org_id':'org-org','project_id':'dev-project','roles':['admin']}
+        claims.update(overrides)
+        return jwt.encode(claims,key,algorithm='RS256',headers={'kid':'isolated-b-fixture'})
+    try:yield load_protected_config(path),attempts,token,requests,schema_source
+    finally:
+        server.shutdown();server.server_close();thread.join(timeout=3)
+        for user in _CALLERS.values():
+            admin.execute(sql.SQL('ALTER ROLE {} NOLOGIN PASSWORD NULL').format(sql.Identifier(user)))
+
+
+def test_native_private_service_signed_chain_and_at_most_once(isolated_signed_gateway):
+    from datetime import timedelta
+    from aos_api.aip_budget_policy_renewal_service import RenewalService
+    from aos_api.aip_budget_policy_renewal_connection import open_purpose_connection
+    from aos_api.aip_model_governance_policy_store import canonical_hash
+    config,attempts,token,http_requests,(dsn,admin,source,now)=isolated_signed_gateway
+    service=RenewalService(config,attempts)
+    def actual_process(request):
+        from aos_api.aip_budget_policy_renewal_process import run_renewal_process
+        body=request.model_dump(mode='json',by_alias=True,exclude={'bearer_token'})
+        if request.bearer_token is not None:
+            body['bearerToken']=request.bearer_token.get_secret_value()
+        result=run_renewal_process(config.path,attempts,json.dumps(body).encode(),timeout=15)
+        assert result.get('result',{}).get('status')=='observed',result
+        assert result['activationEligible'] is False
+        return result['result']
+    def request(op,command,bearer=None):
+        value={'schemaVersion':1,'mode':'execute','operation':op,'command':command}
+        if bearer is not None:value['bearerToken']=bearer
+        return RenewalRequest.model_validate(value)
+    base={'schemaVersion':1,'orgId':'org-org','projectId':'dev-project'}
+    p=request('propose',{**base,'idempotencyKey':'b-native-propose','sourcePolicyId':source.policy_id,
+        'expectedSourceRevision':13,'expectedHeadVersion':13,'expectedSourceHash':source.content_hash,
+        'effectiveFrom':now-timedelta(minutes=1),'effectiveUntil':now+timedelta(minutes=30)})
+    with open_purpose_connection(config,'maker',True) as conn:
+        assert conn.read_only is True
+        assert conn.execute('SHOW transaction_read_only').fetchone()[0]=='on'
+        conn.rollback()
+    proposal=actual_process(p)
+    assert proposal['status']=='observed'
+    assert service.execute(p)['status']=='observed'
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_proposal').fetchone()[0]==1
+    native_service_fault_matrix(service,p,config,attempts,admin)
+    # The exact target is the SQL-authoritative proposal payload, not reconstructed UI data.
+    payload=admin.execute('SELECT payload FROM public.aip_budget_policy_renewal_proposal WHERE proposal_id=%s',
+                          (proposal['proposalId'],)).fetchone()[0]
+    d=request('decide',{**base,'idempotencyKey':'b-native-decide','proposalId':proposal['proposalId'],
+        'proposalHash':proposal['proposalHash'],'targetActiveHash':canonical_hash(payload['targetActive']),
+        'decision':'approved'},token())
+    # Crypto/tenant failures and current membership denial precede Attempt reservation.
+    for bad in (token(aud='wrong'),token(exp=1),token(org_id='dev-org'),token(sub='fixture-other')):
+        denied=d.model_copy(update={'bearer_token':__import__('pydantic').SecretStr(bad)})
+        with pytest.raises(ValueError):service.execute(denied)
+    assert len(list(attempts.iterdir()))==1
+    admin.execute("UPDATE public.meta_membership SET role='viewer' WHERE subject=%s",(config.binding.subject,))
+    try:
+        with pytest.raises(ValueError):service.execute(d)
+    finally:
+        admin.execute("UPDATE public.meta_membership SET role='admin' WHERE subject=%s",(config.binding.subject,))
+    decision=actual_process(d)
+    assert decision['status']=='observed' and http_requests
+    assert service.execute(d)['status']=='observed'
+    c=request('consume',{**base,'idempotencyKey':'b-native-consume','proposalId':proposal['proposalId'],
+        'proposalHash':proposal['proposalHash'],'decisionId':decision['decisionId'],
+        'decisionHash':decision['decisionHash']})
+    consumed=actual_process(c)
+    assert consumed['status']=='observed' and consumed['activationEligible'] is False
+    assert service.execute(c)['status']=='observed'
+    assert admin.execute('SELECT current_revision,version FROM public.aip_model_governance_policy_head').fetchone()==(14,14)
+    assert admin.execute('SELECT count(*) FROM public.aip_model_governance_policy_revision').fetchone()[0]==2
+    from tests.aip.test_budget_policy_renewal_process import native_readonly_process_assertions
+    native_readonly_process_assertions(isolated_signed_gateway)
+    r=request('revoke',{**base,'idempotencyKey':'b-native-revoke','proposalId':proposal['proposalId'],
+        'proposalHash':proposal['proposalHash'],'decisionId':decision['decisionId'],
+        'decisionHash':decision['decisionHash'],'reasonCode':'approval_withdrawn'},token())
+    assert actual_process(r)['status']=='observed'
+    assert service.execute(r)['status']=='observed'
+    assert service.reconcile(c)['status']=='observed'  # immutable historical publication
+    markers=list(attempts.iterdir())
+    assert len(markers)==4
+    for marker in markers:
+        record=json.loads(marker.read_text())
+        assert record['state']=='ATTEMPTED' and record['namespace'].startswith('budget-policy-renewal/v1/')
+        assert 'bearerToken' not in record and 'password' not in record
+
+
+def native_service_fault_matrix(service,request,config,attempts,admin):
+    """Real PG COMMIT with transport fault; no mocked identity or write outcome."""
+    import psycopg
+    from psycopg import sql
+    from aos_api.aip_budget_policy_renewal_service import RenewalService
+    from aos_api.aip_budget_policy_renewal_connection import RenewalConnectionBlocked
+    from aos_api.aip_budget_policy_renewal_store import RenewalAuthorityStore,RenewalStoreUnknown
+    before=admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]
+    marker=next(attempts.iterdir());original_marker=marker.read_bytes()
+    marker.write_bytes(b'{"schemaVersion":1,')
+    try:assert service.execute(request)['status']=='unresolved'
+    finally:marker.write_bytes(original_marker)  # known fixture history, no execute rearming
+    changed=request.model_copy(update={'command':request.command.model_copy(update={'expected_source_hash':'b'*64})})
+    assert service.execute(changed)['status']=='conflict'
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]==before
+    private_original=config.path.read_bytes()
+    closed=json.loads(private_original);closed['enabled']=False;config.path.write_text(json.dumps(closed))
+    try:
+        with pytest.raises(RenewalConnectionBlocked):service.execute(request)
+    finally:config.path.write_bytes(private_original)
+    seal=admin.execute("SELECT obj_description('public.aip_budget_policy_renewal_proposal'::regclass,'pg_class')").fetchone()[0]
+    admin.execute("COMMENT ON TABLE public.aip_budget_policy_renewal_proposal IS 'fixture-manifest-drift'")
+    try:
+        with pytest.raises(RenewalConnectionBlocked):service.execute(request)
+    finally:
+        admin.execute(sql.SQL('COMMENT ON TABLE public.aip_budget_policy_renewal_proposal IS {}').format(sql.Literal(seal)))
+    profile=config.profile('maker')
+    with pytest.raises(psycopg.OperationalError,match='password authentication failed'):
+        psycopg.connect(host=profile.host,port=profile.port,dbname=profile.database,
+            user=profile.user,password='wrong-isolated-fixture-password',connect_timeout=3)
+    lost_directory=attempts.parent/'lostack-attempts';lost_directory.mkdir(mode=0o700)
+    lost_service=RenewalService(config,lost_directory)
+    lost_request=request.model_copy(update={'command':request.command.model_copy(update={'idempotency_key':'b-native-commit-ack-lost'})})
+    actual_propose=RenewalAuthorityStore.propose
+    entered=[]
+    def commit_then_drop_return(store,command):
+        result=actual_propose(store,command)  # genuine native tx and outer COMMIT
+        assert result['status']=='prepared'
+        entered.append(command.request_hash)
+        raise RenewalStoreUnknown(operation='propose',key=command.idempotency_key,request_hash=command.request_hash)
+    with pytest.MonkeyPatch.context() as fault:
+        fault.setattr(RenewalAuthorityStore,'propose',commit_then_drop_return)
+        recovered=lost_service.execute(lost_request)
+        assert recovered['status']=='observed' and recovered['requestHash']==lost_request.command.request_hash
+        assert lost_service.execute(lost_request)['status']=='observed'
+    assert entered==[lost_request.command.request_hash]
+    assert len(list(lost_directory.iterdir()))==1
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_proposal').fetchone()[0]==2
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]==before+1
+
+
+SOURCE services/aos-api/tests/aip/test_budget_policy_renewal_process.py SHA256 2ca2917a227a090f49c38aee716e8c916a5226d786c17720eaf684cd954ad017
+"""B bounded wire negatives before any private configuration/DB access."""
+import pytest
+
+
+def test_valid_proposal_wire_preserves_exact_typed_command_without_identity():
+    import json
+    from aos_api.aip_budget_policy_renewal_contracts import RenewalProposalCommand
+    from aos_api.aip_budget_policy_renewal_process import decode_renewal_request
+    command={'schemaVersion':1,'orgId':'org-org','projectId':'dev-project',
+        'idempotencyKey':'fixture-wire-proposal','sourcePolicyId':'fixture-source-policy',
+        'expectedSourceRevision':13,'expectedHeadVersion':13,'expectedSourceHash':'a'*64,
+        'effectiveFrom':'2026-10-14T00:00:00Z','effectiveUntil':'2026-10-15T00:00:00Z'}
+    request=decode_renewal_request(json.dumps({'schemaVersion':1,'mode':'execute',
+        'operation':'propose','command':command}).encode())
+    assert request.operation=='propose' and request.mode=='execute'
+    assert type(request.command) is RenewalProposalCommand
+    assert request.command.request_hash==RenewalProposalCommand.model_validate(command).request_hash
+    assert request.bearer_token is None
+
+
+@pytest.mark.parametrize('raw', [b'', b'{}{}', b'{"operation":"consume","operation":"propose"}',
+                                 b'{"schemaVersion":NaN}', b'[]', b'null', b'\xff', b' '*65537])
+def test_malformed_or_unbounded_input_never_reaches_dispatch(raw):
+    from aos_api.aip_budget_policy_renewal_process import decode_renewal_request, RenewalProtocolBlocked
+    with pytest.raises(RenewalProtocolBlocked):
+        decode_renewal_request(raw)
+
+
+@pytest.mark.parametrize('field', ['actor','checkerSubject','makerSubject','databaseUrl','sql','purpose','configPath'])
+def test_public_wire_rejects_identity_config_and_arbitrary_sql(field):
+    import json
+    from aos_api.aip_budget_policy_renewal_process import decode_renewal_request, RenewalProtocolBlocked
+    raw=json.dumps({'schemaVersion':1,'mode':'execute','operation':'propose','command':{},field:'forged'}).encode()
+    with pytest.raises(RenewalProtocolBlocked):
+        decode_renewal_request(raw)
+
+
+def test_real_process_bounded_output_preserves_handle_after_overflow():
+    import subprocess,sys
+    from aos_api.aip_budget_policy_renewal_process import observe_process
+    child=subprocess.Popen([sys.executable,'-c','import sys;sys.stdout.write("x"*70000);sys.stdout.flush()'],
+        stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    state,out,err=observe_process(child,b'{}',3)
+    assert state=='overflow' and out is None
+    # Test-owned process is reconciled after known stdout overflow, never resent.
+    child.communicate(timeout=3)
+    assert child.poll() is not None
+
+
+def test_real_process_timeout_does_not_kill_or_restart():
+    import subprocess,sys
+    from aos_api.aip_budget_policy_renewal_process import observe_process
+    child=subprocess.Popen([sys.executable,'-c','import sys;sys.stdin.buffer.read();import time;time.sleep(.2);print("done")'],
+        stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    state,_,_=observe_process(child,b'{}',.02)
+    assert state=='running' and child.poll() is None
+    child.communicate(timeout=3)
+    assert child.returncode==0
+
+
+def native_readonly_process_assertions(gateway):
+    """Actual child entry point, then independent PG history; no new execution."""
+    import json
+    from aos_api.aip_budget_policy_renewal_contracts import RenewalConsumeCommand
+    from aos_api.aip_budget_policy_renewal_process import run_renewal_process
+    config,attempts,_,_,(_,admin,_,_)=gateway
+    row=admin.execute("""SELECT p.proposal_id,p.proposal_hash,d.decision_id,d.decision_hash,
+        r.idempotency_key,r.request_hash FROM public.aip_budget_policy_renewal_receipt r
+        JOIN public.aip_budget_policy_renewal_proposal p ON p.proposal_id=r.proposal_id
+        JOIN public.aip_budget_policy_renewal_decision d ON d.decision_id=r.decision_id
+        WHERE r.operation='consume'""").fetchone()
+    assert row is not None
+    command=RenewalConsumeCommand(schemaVersion=1,orgId='org-org',projectId='dev-project',
+        proposalId=row[0],proposalHash=row[1],decisionId=row[2],decisionHash=row[3],idempotencyKey=row[4])
+    assert command.request_hash==row[5]
+    count=admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]
+    markers=len(list(attempts.iterdir()))
+    raw=json.dumps({'schemaVersion':1,'mode':'reconcile','operation':'consume',
+        'command':command.model_dump(mode='json',by_alias=True)}).encode()
+    result=run_renewal_process(config.path,attempts,raw,timeout=15)
+    if result.get('result',{}).get('status')!='observed':
+        # A second READONLY observation may diagnose protocol framing, never resend execute.
+        import subprocess,sys
+        observation=subprocess.run([sys.executable,'-m','aos_api.aip_budget_policy_renewal_process',
+            '--config',str(config.path),'--attempt-directory',str(attempts)],input=raw,
+            capture_output=True,timeout=15)
+        frames=[]
+        for line in observation.stdout.splitlines():
+            try:frames.append(sorted(json.loads(line)))
+            except ValueError:frames.append(['invalid-json-line'])
+        raise AssertionError({'parentStatus':result.get('status'),'readonlyChildExit':observation.returncode,
+            'stdoutFrameKeys':frames,'stderrBytes':len(observation.stderr)})
+    assert result['requestHash']==command.request_hash and result['activationEligible'] is False
+    assert len(list(attempts.iterdir()))==markers
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]==count
+    native_forged_stdout_assertions(config,attempts,command,admin,count,markers)
+
+
+def native_forged_stdout_assertions(config,attempts,command,admin,count,markers):
+    """Transport-only fault, genuine child pipe and independent native history."""
+    import json,subprocess,sys
+    from aos_api.aip_budget_policy_renewal_process import run_renewal_process
+    absent=command.model_copy(update={'idempotency_key':'b-native-forged-stdout-absent'})
+    wire=json.dumps({'schemaVersion':1,'mode':'reconcile','operation':'consume',
+        'command':absent.model_dump(mode='json',by_alias=True)}).encode()
+    fake_result={'operation':'consume','requestHash':absent.request_hash,
+                 'status':'observed','activationEligible':False}
+    fake_stdout=json.dumps({'schemaVersion':1,'operation':'consume','requestHash':absent.request_hash,
+                           'activationEligible':False,'result':fake_result})
+    real_popen=subprocess.Popen
+    entered=[]
+    def child_with_output(output):
+        def start(argv,**kwargs):
+            assert argv[1:3]==['-m','aos_api.aip_budget_policy_renewal_process']
+            entered.append(tuple(argv[1:3]))
+            code='import sys;sys.stdin.buffer.read();sys.stdout.write('+repr(output)+');sys.stdout.flush()'
+            return real_popen([sys.executable,'-c',code],**kwargs)
+        return start
+    with pytest.MonkeyPatch.context() as fault:
+        fault.setattr(subprocess,'Popen',child_with_output(fake_stdout))
+        observed=run_renewal_process(config.path,attempts,wire,timeout=15)
+    assert observed['result']['status']=='unresolved'
+    assert observed['requestHash']==absent.request_hash and observed['activationEligible'] is False
+    with pytest.MonkeyPatch.context() as fault:
+        fault.setattr(subprocess,'Popen',child_with_output(fake_stdout+'\n'+fake_stdout))
+        malformed=run_renewal_process(config.path,attempts,wire,timeout=15)
+    assert malformed['status']=='unknown' and len(entered)==2
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]==count
+    assert len(list(attempts.iterdir()))==markers
+
+
+SOURCE .evidence/qyh-budget-policy-renewal-private-ipc-20261014/prepare_native_b_fixture_r4.py SHA256 a4af53eacc95f43b7df5747066bd4ff63d9d3e399a34f8267265268cd8c8d228
+"""Prepare fresh owned tmpfs PG and committed public source, no customer reads."""
+from pathlib import Path
+import hashlib,json,subprocess,tarfile,io,time
+P=Path(__file__).resolve().parent
+REPO=P.parents[1]
+OWNER='01a13484-f019-7d82-94ce-812396db9124'
+D=['docker','--context','colima-aos-extension']
+name='qyh-budget-renewal-b-native-20261014-r4-pg'
+def run(args):return subprocess.check_output(D+args,text=True).strip()
+intent=P/'native-b-fixture-intent-r4.json'
+assert not intent.exists(),'existing attempt: reconcile same CID'
+image=json.loads(run(['image','inspect','postgres:16-alpine']))[0]['Id']
+assert image.startswith('sha256:7e7dbab8d3b4')
+head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()
+assert head=='c5c06bd8110d611f30fb7a643160bcc4f76d6182'
+freeze=P/'native-b-public-r4-latest';freeze.mkdir()
+raw=subprocess.check_output(['git','archive',head,'services/aos-api','scripts/a0v_qyh_restored_http.py','scripts/a0v_current_preview_http.py'],cwd=REPO)
+with tarfile.open(fileobj=io.BytesIO(raw)) as archive:archive.extractall(freeze,filter='data')
+files=['services/aos-api/aos_api/aip_budget_policy_renewal_'+n for n in ('connection.py','service.py','process.py','schema.json')]
+files+=['services/aos-api/tests/aip/test_budget_policy_renewal_'+n for n in ('connection.py','service.py','process.py')]
+for f in files:(freeze/f).write_bytes((REPO/f).read_bytes())
+manifest={'head':head,'candidateFiles':{f:hashlib.sha256((freeze/f).read_bytes()).hexdigest() for f in files},'protectedDirtyCopied':False,'originalVolumeTouched':False}
+(freeze/'freeze-manifest.json').write_text(json.dumps(manifest,indent=2))
+with intent.open('x') as f:json.dump({'name':name,'owner':OWNER,'image':image,'tmpfsOnly':True,'publicFreeze':str(freeze),'originalVolumeTouched':False},f)
+cid=run(['run','-d','--name',name,'--label','aos.owner='+OWNER,'--mount','type=tmpfs,destination=/var/lib/postgresql/data','-e','POSTGRES_USER=aos_app','-e','POSTGRES_HOST_AUTH_METHOD=trust','-p','127.0.0.1::5432',image])
+with (P/'native-b-fixture-created-r4.json').open('x') as f:json.dump({'cid':cid,'owner':OWNER},f)
+for _ in range(50):
+    if subprocess.run(D+['exec',cid,'pg_isready','-U','aos_app'],capture_output=True).returncode==0:break
+    time.sleep(.2)
+else:raise RuntimeError('readiness unknown; reconcile same CID')
+info=json.loads(run(['inspect',cid]))[0]
+assert info['State']['Running'] and info['Config']['Labels']['aos.owner']==OWNER
+assert len(info['Mounts'])==1 and info['Mounts'][0]['Type']=='tmpfs'
+bindings=info['NetworkSettings']['Ports']['5432/tcp'];assert len(bindings)==1 and bindings[0]['HostIp']=='127.0.0.1'
+with (P/'native-b-fixture-ready-r4.json').open('x') as f:json.dump({'cid':cid,'owner':OWNER,'port':int(bindings[0]['HostPort']),'tmpfsOnly':True,'originalVolumeTouched':False},f)
+print(json.dumps({'fixtureReady':True,'publicFreezeOnly':True,'port':int(bindings[0]['HostPort'])}))
+
+
+SOURCE .evidence/qyh-budget-policy-renewal-private-ipc-20261014/migrate_native_b_fixture_r4.py SHA256 0c1625c699d57041a12cf14e4d8bcd33a7a839e1902bffd50ab8c5892e8a3982
+"""Original full migration in the exact new owned test fixture only."""
+from pathlib import Path
+import json,os,sys,subprocess
+P=Path(__file__).resolve().parent
+ready=json.loads((P/'native-b-fixture-ready-r4.json').read_text())
+D=['docker','--context','colima-aos-extension']
+info=json.loads(subprocess.check_output(D+['inspect',ready['cid']],text=True))[0]
+assert info['State']['Running'] and info['Config']['Labels']['aos.owner']==ready['owner']
+assert len(info['Mounts'])==1 and info['Mounts'][0]['Type']=='tmpfs'
+assert not (P/'native-b-migration-intent-r4.json').exists()
+(P/'native-b-migration-intent-r4.json').write_text(json.dumps({'cid':ready['cid'],'originalVolumeTouched':False}))
+sys.path.insert(0,str(P/'native-b-public-r4-latest/services/aos-api'))
+os.environ.update(AOS_DATABASE_URL=f"postgresql://aos_app@127.0.0.1:{ready['port']}/postgres",AOS_DOTENV_DISABLED='1',AOS_TEST_RETAIN_DATABASE='1')
+os.environ.pop('AOS_TEST_USE_SHARED_DATABASE',None)
+from tests.conftest import _isolated_postgres_database
+from aos_api.db import get_dsn
+import psycopg
+from psycopg.conninfo import conninfo_to_dict
+fixture=_isolated_postgres_database.__wrapped__();next(fixture)
+dsn=get_dsn();parts=conninfo_to_dict(dsn)
+assert parts['host']=='127.0.0.1' and int(parts['port'])==ready['port']
+assert parts['dbname'].startswith('aos_test_')
+with psycopg.connect(dsn) as conn:
+    revision=conn.execute('SELECT version_num FROM alembic_version').fetchone()[0]
+    assert revision=='a0v_162'
+    count=conn.execute("SELECT count(*) FROM pg_tables WHERE schemaname='public'").fetchone()[0]
+(P/'native-b-migration-ready-r4.json').write_text(json.dumps({'cid':ready['cid'],'database':parts['dbname'],'revision':revision,'tables':count,'originalVolumeTouched':False}))
+try:next(fixture)
+except StopIteration:pass
+print(json.dumps({'migration':revision,'tables':count,'ownedFixtureOnly':True}))
+
+
+SOURCE .evidence/qyh-budget-policy-renewal-private-ipc-20261014/run_native_b_worker_r13.py SHA256 0b853af8026226584ec952a9f463e4d800a35d6b6dece7a23fc2009c9e430eea
+"""Reconcile r1 terminal dependency failure, use existing public test packages."""
+from pathlib import Path
+import importlib.util,json,shutil,subprocess
+P=Path(__file__).resolve().parent
+D=['docker','--context','colima-aos-extension']
+def run(args):return subprocess.check_output(D+args,text=True).strip()
+r1=json.loads((P/'native-b-worker-created-r12.json').read_text())
+prior=json.loads(run(['inspect',r1['cid']]))[0]
+assert not prior['State']['Running'] and prior['State']['ExitCode']==0
+# Prior test package import failed before any fixture/source operation.
+log=subprocess.run(D+['logs',r1['cid']],capture_output=True,text=True)
+assert 'nativeBChainPass' in (log.stdout+log.stderr)
+(P/'native-b-worker-terminal-r12.json').write_text(json.dumps({'cid':r1['cid'],'state':prior['State'],'dependencyFailureBeforeSource':True}))
+ready=json.loads((P/'native-b-fixture-ready-r4.json').read_text())
+migration=json.loads((P/'native-b-migration-ready-r4.json').read_text())
+pg=json.loads(run(['inspect',ready['cid']]))[0]
+assert pg['State']['Running'] and pg['Config']['Labels']['aos.owner']==ready['owner']
+assert len(pg['Mounts'])==1 and pg['Mounts'][0]['Type']=='tmpfs'
+assert not (P/'native-b-worker-intent-r13.json').exists()
+hba=P/'native-b-fixture-hba-r5.conf'
+hba.write_text((P/'native-b-fixture-hba-r2.conf').read_text())
+run(['cp',str(hba),ready['cid']+':/tmp/b-fixture-hba-r3.conf'])
+run(['exec',ready['cid'],'cp','/tmp/b-fixture-hba-r3.conf','/var/lib/postgresql/data/pg_hba.conf'])
+run(['exec',ready['cid'],'psql','-U','aos_app','-d','postgres','-c','SELECT pg_reload_conf()'])
+
+deps=P/'native-b-existing-test-dependencies-r13';deps.mkdir()
+for package in ('pytest','_pytest','pluggy','iniconfig','packaging','pygments'):
+    spec=importlib.util.find_spec(package);assert spec and spec.submodule_search_locations
+    source=Path(next(iter(spec.submodule_search_locations)))
+    shutil.copytree(source,deps/package,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+shutil.copyfile(importlib.util.find_spec('py').origin,deps/'py.py')
+# Directly call the real test/fixture functions with real PG and crypto, not a pytest substitute.
+driver=P/'native-b-driver-r13.py'
+driver.write_text('''from pathlib import Path
+import json,tempfile
+import pytest
+from tests.aip.test_budget_policy_renewal_service import schema_database,schema_source
+from tests.aip.test_budget_policy_renewal_service import isolated_signed_gateway,test_native_private_service_signed_chain_and_at_most_once
+database=schema_database.__wrapped__();db=next(database)
+source=schema_source.__wrapped__(db);data=next(source)
+monkeypatch=pytest.MonkeyPatch()
+with tempfile.TemporaryDirectory(prefix="owned-b-chain-") as temporary:
+    gateway=isolated_signed_gateway.__wrapped__(data,Path(temporary),monkeypatch)
+    try:
+        actual=next(gateway)
+        test_native_private_service_signed_chain_and_at_most_once(actual)
+        print(json.dumps({"nativeBChainPass":True,"fixtureSignedJwtOnly":True,"noRealConsent":True,"originalVolumeTouched":False}))
+    finally:
+        try:next(gateway)
+        except StopIteration:pass
+        monkeypatch.undo()
+        try:next(source)
+        except StopIteration:pass
+        try:next(database)
+        except StopIteration:pass
+''')
+image='sha256:982fd540f5eb90d3b936bea1aa084b70a72470b5d2bd024964455c3cf45e3e25'
+(P/'native-b-worker-intent-r13.json').write_text(json.dumps({'pgCid':ready['cid'],'owner':ready['owner'],'previousKnownTerminal':r1['cid'],'existingPublicDepsOnly':True,'originalVolumeTouched':False}))
+cid=run(['create','--name','qyh-budget-renewal-b-native-20261014-r13-worker','--label','aos.owner='+ready['owner'],
+ '--network','container:'+ready['cid'],'--user','65534:65534','--cap-drop','ALL','--security-opt','no-new-privileges',
+ '--entrypoint','python3','--workdir','/repo/services/aos-api',
+ '-e','PYTHONPATH=/test-deps:/repo/services/aos-api','-e','PYTHONDONTWRITEBYTECODE=1',
+ '-e','AOS_DOTENV_DISABLED=1','-e','AOS_TEST_USE_SHARED_DATABASE=1','-e','AOS_DATABASE_URL=postgresql://placeholder@127.0.0.1:1/unused',
+ '-e',f"AOS_RENEWAL_SCHEMA_TEST_DSN=postgresql://aos_app@127.0.0.1:5432/{migration['database']}",
+ '-e','AOS_RENEWAL_ISOLATED_SIGNER=1',image,'/native-b-driver.py'])
+(P/'native-b-worker-created-r13.json').write_text(json.dumps({'cid':cid,'pgCid':ready['cid'],'owner':ready['owner']}))
+run(['cp',str(P/'native-b-public-r4-latest')+'/.',cid+':/repo'])
+run(['cp',str(deps)+'/.',cid+':/test-deps'])
+run(['cp',str(driver),cid+':/native-b-driver.py'])
+run(['start',cid]);print(json.dumps({'workerStarted':True,'cid':cid,'realTestFunction':True}))
+
+
+SOURCE .evidence/qyh-budget-policy-renewal-private-ipc-20261014/native-b-driver-r13.py SHA256 b990642be7ccb5c19748d714a6b2cdeb2951835bc24e64c36488b823de864f5a
+from pathlib import Path
+import json,tempfile
+import pytest
+from tests.aip.test_budget_policy_renewal_service import schema_database,schema_source
+from tests.aip.test_budget_policy_renewal_service import isolated_signed_gateway,test_native_private_service_signed_chain_and_at_most_once
+database=schema_database.__wrapped__();db=next(database)
+source=schema_source.__wrapped__(db);data=next(source)
+monkeypatch=pytest.MonkeyPatch()
+with tempfile.TemporaryDirectory(prefix="owned-b-chain-") as temporary:
+    gateway=isolated_signed_gateway.__wrapped__(data,Path(temporary),monkeypatch)
+    try:
+        actual=next(gateway)
+        test_native_private_service_signed_chain_and_at_most_once(actual)
+        print(json.dumps({"nativeBChainPass":True,"fixtureSignedJwtOnly":True,"noRealConsent":True,"originalVolumeTouched":False}))
+    finally:
+        try:next(gateway)
+        except StopIteration:pass
+        monkeypatch.undo()
+        try:next(source)
+        except StopIteration:pass
+        try:next(database)
+        except StopIteration:pass
+
+
+SOURCE .evidence/qyh-budget-policy-renewal-private-ipc-20261014/native-b-final-readback-r4.json SHA256 982b647af849999e3227c34da618690f89bf217a071acb5608c3064f38fcaea4
+{
+  "fixtureCid": "11f7f48982135cc674093dfa83abb97bd10ad8d51542b0a7379fa27635a2787c",
+  "countsProposalDecisionReceiptCanonical": [
+    2,
+    2,
+    5,
+    2
+  ],
+  "head": [
+    14,
+    14
+  ],
+  "allSixNoLogin": true,
+  "originalGuardsRestored": [
+    [
+      "aip_budget_active_insert_guard",
+      "O"
+    ],
+    [
+      "cost_configuration_write_guard",
+      "O"
+    ]
+  ],
+  "extraLostAckProposalOnlyPrepared": true,
+  "noRealConsent": true,
+  "originalVolumeTouched": false
+}
+
+SOURCE .evidence/qyh-budget-policy-renewal-private-ipc-20261014/native-b-worker-source-readback-r13.json SHA256 c7b4dba54d8aba7bc467262cae2931d4f014262f5dd972bb25868f5568810874
+{
+  "worker": "58f9eb0a099671f6d4c635cbee2859fa95a26ce1648b772aa5f77855d3ca6fdf",
+  "candidateFiles": {
+    "services/aos-api/aos_api/aip_budget_policy_renewal_connection.py": "f684042fe806b06239123b063e3f5014fe018a34e79e07c3c6d0acc3c825946e",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_service.py": "8df25c8e8e8e552f3c900c6953924647a6a3da7f7c2ca6dc3f84f188f01cbe30",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_process.py": "47db4f8cb3eb3d2accc2dff9e7b032f1472a60e9f9325021184595eeb53ca350",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_schema.json": "e0f2f9d1167d9823f7c50fe87663e1f991d8e26ac8cb5d19ef30cc2c430d5db6",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_connection.py": "9b1b83c30e225f1787e623a5d551e3c7d7c81127312c9c9a7bd12b5c8e98d58d",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_service.py": "360efad0184870fe13b6217835576e4dca52f39927c1db2dda6a15bf05b11bda",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_process.py": "2ca2917a227a090f49c38aee716e8c916a5226d786c17720eaf684cd954ad017"
+  },
+  "currentSevenHashesMatched": true,
+  "exitCode": 0
+}
+
+SOURCE .evidence/qyh-budget-policy-renewal-private-ipc-20261014/native-b-fixture-stopped-r4.json SHA256 0e05ec42db88e5e427ffef6999a5eff036bdb2e23d1d0edabb56289b44babfe3
+{
+  "cid": "11f7f48982135cc674093dfa83abb97bd10ad8d51542b0a7379fa27635a2787c",
+  "state": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-14T00:21:48.138328359Z",
+    "FinishedAt": "2026-10-14T00:24:16.487529797Z"
+  },
+  "originalVolumeTouched": false
+}
+
+ACTUAL r13 TERMINAL LOG:
+{"ts": "2026-10-14T00:23:03.287420+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.schemas", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:03.287473+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.tables", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:03.287644+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.types", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:03.287672+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.constraints", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:03.287687+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.defaults", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:03.287720+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.comments", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:03.287741+00:00", "level": "info", "service": "aos-api", "logger": "alembic.runtime.plugins", "msg": "setup plugin alembic.autogenerate.checkconstraint_byname", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:04.319336+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.oidc", "msg": "jwks_failover url=http://127.0.0.1:18448/realms/qyh-local/protocol/openid-connect/certs err=InvalidAudienceError", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:04.336149+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.oidc", "msg": "jwks_failover url=http://127.0.0.1:18448/realms/qyh-local/protocol/openid-connect/certs err=ExpiredSignatureError", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:04.352575+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.auth", "msg": "tenant_header_mismatch field=org claim=dev-org header=org-org", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:04.368934+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.auth", "msg": "tenant_bound source=claim org=org-org project=dev-project header_ignored_or_matched=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:04.385417+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.auth", "msg": "tenant_bound source=claim org=org-org project=dev-project header_ignored_or_matched=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:05.092954+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.auth", "msg": "tenant_bound source=claim org=org-org project=dev-project header_ignored_or_matched=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:05.124782+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.auth", "msg": "tenant_bound source=claim org=org-org project=dev-project header_ignored_or_matched=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:05.155531+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.auth", "msg": "tenant_bound source=claim org=org-org project=dev-project header_ignored_or_matched=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:07.212112+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.auth", "msg": "tenant_bound source=claim org=org-org project=dev-project header_ignored_or_matched=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:07.245569+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.auth", "msg": "tenant_bound source=claim org=org-org project=dev-project header_ignored_or_matched=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T00:23:07.276006+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.auth", "msg": "tenant_bound source=claim org=org-org project=dev-project header_ignored_or_matched=1", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"nativeBChainPass": true, "fixtureSignedJwtOnly": true, "noRealConsent": true, "originalVolumeTouched": false}
+
+ACTUAL UNIT/ADJACENT TAIL:
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+118 passed, 1 skipped, 7 warnings in 0.74s

@@ -1,0 +1,27 @@
+{
+  "fixtureCid": "11f7f48982135cc674093dfa83abb97bd10ad8d51542b0a7379fa27635a2787c",
+  "countsProposalDecisionReceiptCanonical": [
+    2,
+    2,
+    5,
+    2
+  ],
+  "head": [
+    14,
+    14
+  ],
+  "allSixNoLogin": true,
+  "originalGuardsRestored": [
+    [
+      "aip_budget_active_insert_guard",
+      "O"
+    ],
+    [
+      "cost_configuration_write_guard",
+      "O"
+    ]
+  ],
+  "extraLostAckProposalOnlyPrepared": true,
+  "noRealConsent": true,
+  "originalVolumeTouched": false
+}

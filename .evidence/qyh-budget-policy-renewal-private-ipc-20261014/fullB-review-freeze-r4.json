@@ -1,0 +1,42 @@
+{
+  "codeFiles": {
+    "services/aos-api/aos_api/aip_budget_policy_renewal_connection.py": "f684042fe806b06239123b063e3f5014fe018a34e79e07c3c6d0acc3c825946e",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_service.py": "8df25c8e8e8e552f3c900c6953924647a6a3da7f7c2ca6dc3f84f188f01cbe30",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_process.py": "47db4f8cb3eb3d2accc2dff9e7b032f1472a60e9f9325021184595eeb53ca350",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_schema.json": "e0f2f9d1167d9823f7c50fe87663e1f991d8e26ac8cb5d19ef30cc2c430d5db6",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_connection.py": "9b1b83c30e225f1787e623a5d551e3c7d7c81127312c9c9a7bd12b5c8e98d58d",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_service.py": "360efad0184870fe13b6217835576e4dca52f39927c1db2dda6a15bf05b11bda",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_process.py": "2ca2917a227a090f49c38aee716e8c916a5226d786c17720eaf684cd954ad017"
+  },
+  "groups": {
+    "p1": [
+      "services/aos-api/aos_api/aip_budget_policy_renewal_connection.py",
+      "services/aos-api/aos_api/aip_budget_policy_renewal_process.py",
+      "services/aos-api/tests/aip/test_budget_policy_renewal_connection.py",
+      "services/aos-api/tests/aip/test_budget_policy_renewal_process.py",
+      "services/aos-api/aos_api/aip_budget_policy_renewal_identity.py",
+      "services/aos-api/aos_api/aip_budget_policy_renewal_store.py"
+    ],
+    "p2": [
+      "services/aos-api/aos_api/aip_budget_policy_renewal_service.py",
+      "services/aos-api/aos_api/aip_budget_policy_renewal_schema.json",
+      "services/aos-api/tests/aip/test_budget_policy_renewal_service.py",
+      "services/aos-api/aos_api/aip_network_issuer_attempt.py"
+    ],
+    "p3": [
+      "services/aos-api/tests/aip/test_budget_policy_renewal_connection.py",
+      "services/aos-api/tests/aip/test_budget_policy_renewal_service.py",
+      "services/aos-api/tests/aip/test_budget_policy_renewal_process.py",
+      ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/prepare_native_b_fixture_r4.py",
+      ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/migrate_native_b_fixture_r4.py",
+      ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/run_native_b_worker_r13.py",
+      ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/native-b-driver-r13.py",
+      ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/native-b-final-readback-r4.json",
+      ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/native-b-worker-source-readback-r13.json",
+      ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/native-b-fixture-stopped-r4.json"
+    ]
+  },
+  "nativeCurrentSource": "r13",
+  "fullGoalActive": true,
+  "execution_authorized": false
+}

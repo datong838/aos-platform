@@ -1,0 +1,1292 @@
+CURRENT COMPLETE B CANDIDATE, not production deployment or human consent. m1 c5c06bd8110d611f30fb7a643160bcc4f76d6182; Authority AOS-002026; active B Task sole owner codex-01a13484-f019-7d82-94ce-812396db9124 expires 2026-10-14T04:00Z. A complete closed three-actor native journal/producer/consumer was delivered at this HEAD, default NOLOGIN, immutable receipts/FORCERLS/sealed original guard; A is a dependency rather than scope for alteration. This B has all seven registered files, preserving original generic auth and shared DSN exclusion. Production remains closed/schema161/650/customer Policy13 expired; no real JWT used for fixture consent, no original DB/roles/Keycloak/mall/Provider changes. Host/worker/Provider remain OFF. The complete Goal, daily latest same named volume PG/API/Web restart, full natural business chain and eight-workbench visuals remain OPEN.
+Runtime fixture r4 is fresh standard full migrations162/611, not restored customer650. Latest r13 calls all four write operations through real module CLI/stdin/purpose SCRAM connection/original verifier/current fixture member/Store/native COMMIT, parent independent readonly. Separate JWKS18448 is in own PG network namespace, genuine RS256 test key, never real Keycloak or fake Principal. Source historical Budget1/Policy13/member are explicit fixture facts only: own admin tx locks temporarily disables ONLY Budget active insert guard and original policy configuration insert guard, creates FK parent org/workspace and history, restores both in SAME tx before COMMIT; no B operation runs before restored O. These historical facts are not approved production facts. Fixture outcome P/D/R/canonical2/2/5/2, head14/14, 6roles NOLOGIN and guards O after cleanup. Extra proposal is actual COMMIT with lost-return injection, not consumed. B source7 tar-readback hashes match current. Latest unit/adjacent118 PASS1 native skipped; real native acceptance is separately r13 complete test, not the skip or mocks.
+Local operator protected deployment config/package/private credentials are TCB. Selected package source hashes and canonical private paths are checked; no claim to resist a malicious operator/schema admin changing body+seal/source pins together. Static ancestor alias refusal is not claimed a concurrent filesystem anti-TCB guarantee. Durable private markers intentionally remain ATTEMPTED; observed authority is native immutable DB Receipt, not marker rearming. Unknown commit/read errors never authorize resending. Full B delivery requires all quality parts + native review + composite legal consumption; none grants execution authority. Eight visuals/installation/real budget approval and C deployment/business are uncompleted.
+CURRENT ALL7 SHA256: {"services/aos-api/aos_api/aip_budget_policy_renewal_connection.py": "f684042fe806b06239123b063e3f5014fe018a34e79e07c3c6d0acc3c825946e", "services/aos-api/aos_api/aip_budget_policy_renewal_process.py": "47db4f8cb3eb3d2accc2dff9e7b032f1472a60e9f9325021184595eeb53ca350", "services/aos-api/aos_api/aip_budget_policy_renewal_schema.json": "e0f2f9d1167d9823f7c50fe87663e1f991d8e26ac8cb5d19ef30cc2c430d5db6", "services/aos-api/aos_api/aip_budget_policy_renewal_service.py": "8df25c8e8e8e552f3c900c6953924647a6a3da7f7c2ca6dc3f84f188f01cbe30", "services/aos-api/tests/aip/test_budget_policy_renewal_connection.py": "9b1b83c30e225f1787e623a5d551e3c7d7c81127312c9c9a7bd12b5c8e98d58d", "services/aos-api/tests/aip/test_budget_policy_renewal_process.py": "2ca2917a227a090f49c38aee716e8c916a5226d786c17720eaf684cd954ad017", "services/aos-api/tests/aip/test_budget_policy_renewal_service.py": "360efad0184870fe13b6217835576e4dca52f39927c1db2dda6a15bf05b11bda"}
+
+SOURCE services/aos-api/aos_api/aip_budget_policy_renewal_service.py SHA256 8df25c8e8e8e552f3c900c6953924647a6a3da7f7c2ca6dc3f84f188f01cbe30
+"""Five renewal operations behind protected configuration and at-most-once IPC.
+
+Human JWTs are memory-only. This service never provisions roles or approves on
+behalf of a user; issuer decisions require the exact explicit request and JWT.
+"""
+from pathlib import Path
+from typing import Literal
+
+from pydantic import ConfigDict, Field, SecretStr, field_validator, model_validator
+
+from aos_api.aip_contracts import AipContractModel
+from aos_api.aip_budget_policy_renewal_contracts import (
+    RenewalProposalCommand,RenewalDecisionCommand,RenewalRevocationCommand,RenewalConsumeCommand,
+)
+from aos_api.aip_budget_policy_renewal_connection import (
+    ProtectedRenewalConfig,open_purpose_connection,
+)
+from aos_api.aip_budget_policy_renewal_identity import _database_identity,authenticate_checker
+from aos_api.aip_budget_policy_renewal_store import RenewalAuthorityStore,RenewalStoreBlocked
+from aos_api.aip_network_issuer_attempt import (
+    AttemptReceipt,AttemptAlreadyRecorded,AttemptConflict,AttemptUnknown,_reserve_attempt_receipt,
+)
+
+COMMANDS={'propose':RenewalProposalCommand,'decide':RenewalDecisionCommand,
+          'revoke':RenewalRevocationCommand,'consume':RenewalConsumeCommand}
+PURPOSES={'propose':'maker','decide':'issuer','revoke':'issuer','consume':'consumer'}
+
+
+class RenewalServiceBlocked(ValueError):
+    pass
+
+
+class RenewalRequest(AipContractModel):
+    model_config=ConfigDict(frozen=True)
+    schema_version: Literal[1]
+    mode: Literal['execute','reconcile']
+    operation: Literal['propose','decide','revoke','consume']
+    command: RenewalProposalCommand|RenewalDecisionCommand|RenewalRevocationCommand|RenewalConsumeCommand
+    bearer_token: SecretStr|None=None
+
+    @model_validator(mode='before')
+    @classmethod
+    def public_identity_fields(cls,value):
+        if type(value) is dict and value.get('operation') not in {'decide','revoke'} and 'bearerToken' in value:
+            raise ValueError('machine token field forbidden')
+        return value
+
+    @field_validator('schema_version',mode='before')
+    @classmethod
+    def version(cls,value):
+        if type(value) is not int:
+            raise ValueError('exact version required')
+        return value
+
+    @field_validator('command',mode='before')
+    @classmethod
+    def exact_command(cls,value,info):
+        expected=COMMANDS.get(info.data.get('operation'))
+        if expected is None:
+            raise ValueError('operation required')
+        if type(value) is expected:
+            value=value.model_dump(mode='python',by_alias=True)
+        if type(value) is not dict:
+            raise ValueError('exact command required')
+        return expected.model_validate(value)
+
+    @field_validator('bearer_token',mode='before')
+    @classmethod
+    def secret(cls,value):
+        if value is None:
+            return None
+        if type(value) is SecretStr:
+            value=value.get_secret_value()
+        if type(value) is not str or not 0<len(value)<=16384:
+            raise ValueError('bounded token required')
+        return SecretStr(value)
+
+    @model_validator(mode='after')
+    def identity_kind(self):
+        if type(self.command) is not COMMANDS[self.operation]:
+            raise ValueError('command operation mismatch')
+        if (self.operation in {'decide','revoke'})!=(self.bearer_token is not None):
+            raise ValueError('issuer token required; machine token forbidden')
+        return self
+
+    def revalidated(self):
+        excluded={'bearer_token'} if self.bearer_token is None else set()
+        return type(self).model_validate(self.model_dump(mode='python',by_alias=True,exclude=excluded))
+
+
+def protocol_schema():
+    schema=RenewalRequest.model_json_schema(by_alias=True)
+    schema['$id']='aos.budget-policy-renewal.ipc/v1'
+    metadata={
+        'operation':{'type':'string','enum':list(COMMANDS)},
+        'requestHash':{'type':'string','pattern':'^[0-9a-f]{64}$'},
+        'activationEligible':{'type':'boolean','const':False},
+    }
+    schema['$defs']['RenewalResponseFrame']={
+        'type':'object','additionalProperties':False,
+        'required':['schemaVersion','operation','requestHash','activationEligible','result'],
+        'properties':{'schemaVersion':{'type':'integer','const':1},**metadata,
+            'result':{'type':'object','additionalProperties':True,
+                '$comment':'Native SQL artifact fields remain governed by A Store and independent readonly history.',
+                'required':['operation','requestHash','activationEligible','status'],
+                'properties':{**metadata,'status':{'type':'string','enum':[
+                    'prepared','decided','revoked','observed','unresolved','conflict','blocked']}}}},
+        'allOf':[{'if':{'properties':{'operation':{'const':operation}},'required':['operation']},
+            'then':{'properties':{'result':{'properties':{'operation':{'const':operation}}}}}}
+            for operation in COMMANDS],
+    }
+    schema['allOf']=[]
+    for operation,command in COMMANDS.items():
+        then={'properties':{'command':{'$ref':'#/$defs/'+command.__name__}}}
+        if operation in {'decide','revoke'}:
+            then['required']=['bearerToken']
+            then['properties']['bearerToken']={'type':'string','minLength':1,'maxLength':16384}
+        else:
+            then['not']={'required':['bearerToken']}
+        schema['allOf'].append({'if':{'properties':{'operation':{'const':operation}},'required':['operation']},'then':then})
+    return schema
+
+
+class RenewalService:
+    def __init__(self,config,attempt_directory):
+        if type(config) is not ProtectedRenewalConfig or not Path(attempt_directory).is_absolute():
+            raise RenewalServiceBlocked('RENEWAL_PRIVATE_SERVICE_REQUIRED')
+        self.config=config
+        self.attempt_directory=Path(attempt_directory)
+
+    def reconcile(self,request):
+        request=request.revalidated()
+        purpose=PURPOSES[request.operation]
+        with open_purpose_connection(self.config,purpose,True) as conn:
+            store=RenewalAuthorityStore(conn,checker_binding=self.config.binding)
+            return store.reconcile(request.command,token=request.bearer_token)
+
+    def execute(self,request):
+        if type(request) is not RenewalRequest:
+            raise RenewalServiceBlocked('RENEWAL_EXACT_PRIVATE_REQUEST_REQUIRED')
+        request=request.revalidated()
+        if request.mode=='reconcile':
+            return self.reconcile(request)
+        purpose=PURPOSES[request.operation]
+        # Current authentication precedes reservation; A rechecks in its write tx.
+        with open_purpose_connection(self.config,purpose,True) as conn:
+            with conn.transaction():
+                conn.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED, READ ONLY')
+                conn.execute("SELECT set_config('aos.org_id','org-org',true),set_config('aos.project_id','dev-project',true)")
+                login=_database_identity(conn,purpose)
+                subject=('postgres-service:'+login if purpose!='issuer' else
+                         authenticate_checker(request.bearer_token,binding=self.config.binding,conn=conn).subject)
+        command=request.command
+        identifier=(command.source_policy_id if request.operation=='propose' else command.proposal_id)
+        marker=AttemptReceipt(command.org_id,command.project_id,identifier,
+                              command.idempotency_key,command.request_hash,subject)
+        try:
+            _reserve_attempt_receipt(self.attempt_directory,marker,
+                                    namespace='budget-policy-renewal/v1/'+request.operation)
+        except AttemptAlreadyRecorded:
+            return self.reconcile(request)
+        except AttemptConflict:
+            return self._history_status(request,'conflict')
+        except AttemptUnknown:
+            return self._history_status(request,'unresolved')
+        # No exception can cause another execute call after the marker exists.
+        try:
+            with open_purpose_connection(self.config,purpose,False) as conn:
+                store=RenewalAuthorityStore(conn,checker_binding=self.config.binding)
+                if purpose=='issuer':
+                    return getattr(store,request.operation)(command,token=request.bearer_token)
+                return getattr(store,request.operation)(command)
+        except RenewalStoreBlocked:
+            # Confirmed rollback/pre-write refusal is not an unknown COMMIT.
+            # The durable marker still prevents a later automatic execute.
+            return self._history_status(request,'blocked')
+        except Exception:
+            try:
+                return self.reconcile(request)
+            except Exception:
+                return self._history_status(request,'unresolved')
+
+    @staticmethod
+    def _history_status(request,status):
+        return {'operation':request.operation,'requestHash':request.command.request_hash,
+                'status':status,'activationEligible':False}
+
+
+SOURCE services/aos-api/aos_api/aip_budget_policy_renewal_schema.json SHA256 e0f2f9d1167d9823f7c50fe87663e1f991d8e26ac8cb5d19ef30cc2c430d5db6
+{
+  "$defs": {
+    "RenewalConsumeCommand": {
+      "additionalProperties": false,
+      "description": "Identify an original decision for consumption or read-only reconciliation.",
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "orgId": {
+          "const": "org-org",
+          "title": "Orgid",
+          "type": "string"
+        },
+        "projectId": {
+          "const": "dev-project",
+          "title": "Projectid",
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Idempotencykey",
+          "type": "string"
+        },
+        "proposalId": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Proposalid",
+          "type": "string"
+        },
+        "proposalHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Proposalhash",
+          "type": "string"
+        },
+        "decisionId": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Decisionid",
+          "type": "string"
+        },
+        "decisionHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Decisionhash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "orgId",
+        "projectId",
+        "idempotencyKey",
+        "proposalId",
+        "proposalHash",
+        "decisionId",
+        "decisionHash"
+      ],
+      "title": "RenewalConsumeCommand",
+      "type": "object"
+    },
+    "RenewalDecisionCommand": {
+      "additionalProperties": false,
+      "description": "Decide the exact prepared target; identity comes from the private issuer.",
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "orgId": {
+          "const": "org-org",
+          "title": "Orgid",
+          "type": "string"
+        },
+        "projectId": {
+          "const": "dev-project",
+          "title": "Projectid",
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Idempotencykey",
+          "type": "string"
+        },
+        "proposalId": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Proposalid",
+          "type": "string"
+        },
+        "proposalHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Proposalhash",
+          "type": "string"
+        },
+        "targetActiveHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Targetactivehash",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "approved",
+            "rejected"
+          ],
+          "title": "Decision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "orgId",
+        "projectId",
+        "idempotencyKey",
+        "proposalId",
+        "proposalHash",
+        "targetActiveHash",
+        "decision"
+      ],
+      "title": "RenewalDecisionCommand",
+      "type": "object"
+    },
+    "RenewalProposalCommand": {
+      "additionalProperties": false,
+      "description": "Condition a machine proposal on a source head, never supply a target body.",
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "orgId": {
+          "const": "org-org",
+          "title": "Orgid",
+          "type": "string"
+        },
+        "projectId": {
+          "const": "dev-project",
+          "title": "Projectid",
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Idempotencykey",
+          "type": "string"
+        },
+        "sourcePolicyId": {
+          "maxLength": 200,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Sourcepolicyid",
+          "type": "string"
+        },
+        "expectedSourceRevision": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "title": "Expectedsourcerevision",
+          "type": "integer"
+        },
+        "expectedHeadVersion": {
+          "maximum": 9007199254740991,
+          "minimum": 1,
+          "title": "Expectedheadversion",
+          "type": "integer"
+        },
+        "expectedSourceHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Expectedsourcehash",
+          "type": "string"
+        },
+        "effectiveFrom": {
+          "format": "date-time",
+          "title": "Effectivefrom",
+          "type": "string"
+        },
+        "effectiveUntil": {
+          "format": "date-time",
+          "title": "Effectiveuntil",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "orgId",
+        "projectId",
+        "idempotencyKey",
+        "sourcePolicyId",
+        "expectedSourceRevision",
+        "expectedHeadVersion",
+        "expectedSourceHash",
+        "effectiveFrom",
+        "effectiveUntil"
+      ],
+      "title": "RenewalProposalCommand",
+      "type": "object"
+    },
+    "RenewalRevocationCommand": {
+      "additionalProperties": false,
+      "description": "Withdraw one exact decision through the independently authenticated issuer.\n\nThis input is neither a persisted revocation nor evidence of human consent.\nThe issuer must serialize withdrawal with consumption at the proposal lock.",
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "orgId": {
+          "const": "org-org",
+          "title": "Orgid",
+          "type": "string"
+        },
+        "projectId": {
+          "const": "dev-project",
+          "title": "Projectid",
+          "type": "string"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Idempotencykey",
+          "type": "string"
+        },
+        "proposalId": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Proposalid",
+          "type": "string"
+        },
+        "proposalHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Proposalhash",
+          "type": "string"
+        },
+        "decisionId": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Decisionid",
+          "type": "string"
+        },
+        "decisionHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Decisionhash",
+          "type": "string"
+        },
+        "reasonCode": {
+          "enum": [
+            "approval_withdrawn",
+            "scope_changed",
+            "dependency_changed"
+          ],
+          "title": "Reasoncode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "orgId",
+        "projectId",
+        "idempotencyKey",
+        "proposalId",
+        "proposalHash",
+        "decisionId",
+        "decisionHash",
+        "reasonCode"
+      ],
+      "title": "RenewalRevocationCommand",
+      "type": "object"
+    },
+    "RenewalResponseFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "operation",
+        "requestHash",
+        "activationEligible",
+        "result"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "integer",
+          "const": 1
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "propose",
+            "decide",
+            "revoke",
+            "consume"
+          ]
+        },
+        "requestHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "activationEligible": {
+          "type": "boolean",
+          "const": false
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": true,
+          "$comment": "Native SQL artifact fields remain governed by A Store and independent readonly history.",
+          "required": [
+            "operation",
+            "requestHash",
+            "activationEligible",
+            "status"
+          ],
+          "properties": {
+            "operation": {
+              "type": "string",
+              "enum": [
+                "propose",
+                "decide",
+                "revoke",
+                "consume"
+              ]
+            },
+            "requestHash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "activationEligible": {
+              "type": "boolean",
+              "const": false
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "prepared",
+                "decided",
+                "revoked",
+                "observed",
+                "unresolved",
+                "conflict",
+                "blocked"
+              ]
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "propose"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "properties": {
+                  "operation": {
+                    "const": "propose"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "decide"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "properties": {
+                  "operation": {
+                    "const": "decide"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "revoke"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "properties": {
+                  "operation": {
+                    "const": "revoke"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "consume"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "properties": {
+                  "operation": {
+                    "const": "consume"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1,
+      "title": "Schemaversion",
+      "type": "integer"
+    },
+    "mode": {
+      "enum": [
+        "execute",
+        "reconcile"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "operation": {
+      "enum": [
+        "propose",
+        "decide",
+        "revoke",
+        "consume"
+      ],
+      "title": "Operation",
+      "type": "string"
+    },
+    "command": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RenewalProposalCommand"
+        },
+        {
+          "$ref": "#/$defs/RenewalDecisionCommand"
+        },
+        {
+          "$ref": "#/$defs/RenewalRevocationCommand"
+        },
+        {
+          "$ref": "#/$defs/RenewalConsumeCommand"
+        }
+      ],
+      "title": "Command"
+    },
+    "bearerToken": {
+      "anyOf": [
+        {
+          "format": "password",
+          "type": "string",
+          "writeOnly": true
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bearertoken"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "mode",
+    "operation",
+    "command"
+  ],
+  "title": "RenewalRequest",
+  "type": "object",
+  "$id": "aos.budget-policy-renewal.ipc/v1",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "propose"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "command": {
+            "$ref": "#/$defs/RenewalProposalCommand"
+          }
+        },
+        "not": {
+          "required": [
+            "bearerToken"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "decide"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "command": {
+            "$ref": "#/$defs/RenewalDecisionCommand"
+          },
+          "bearerToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16384
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "revoke"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "command": {
+            "$ref": "#/$defs/RenewalRevocationCommand"
+          },
+          "bearerToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16384
+          }
+        },
+        "required": [
+          "bearerToken"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "consume"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "command": {
+            "$ref": "#/$defs/RenewalConsumeCommand"
+          }
+        },
+        "not": {
+          "required": [
+            "bearerToken"
+          ]
+        }
+      }
+    }
+  ]
+}
+
+
+SOURCE services/aos-api/tests/aip/test_budget_policy_renewal_service.py SHA256 360efad0184870fe13b6217835576e4dca52f39927c1db2dda6a15bf05b11bda
+"""Pure B envelope/schema tests; no identity/PG acceptance inferred here."""
+import json
+from pathlib import Path
+import pytest
+from aos_api.aip_budget_policy_renewal_service import RenewalRequest,protocol_schema
+from aos_api.aip_budget_policy_renewal_contracts import (
+    RenewalDecisionCommand,RenewalConsumeCommand,RenewalRevocationCommand,
+)
+
+
+def envelope(operation,**extra):
+    c={'schemaVersion':1,'orgId':'org-org','projectId':'dev-project','idempotencyKey':'fixture-service',
+       'proposalId':'fixture-proposal','proposalHash':'a'*64}
+    if operation=='decide':c.update(targetActiveHash='b'*64,decision='approved')
+    else:c.update(decisionId='fixture-decision',decisionHash='b'*64)
+    if operation=='revoke':c['reasonCode']='approval_withdrawn'
+    body={'schemaVersion':1,'mode':'execute','operation':operation,'command':c}
+    if operation in {'decide','revoke'}:body['bearerToken']='fixture-invalid-token-not-consent'
+    return {**body,**extra}
+
+
+@pytest.mark.parametrize('op,cls',[('decide',RenewalDecisionCommand),('consume',RenewalConsumeCommand),('revoke',RenewalRevocationCommand)])
+def test_exact_operation_and_typed_command_reparse(op,cls):
+    r=RenewalRequest.model_validate(envelope(op))
+    assert type(r.command) is cls
+    assert r.revalidated().command.request_hash==r.command.request_hash
+
+
+@pytest.mark.parametrize('mutation',['boolVersion','wrongCommand','machineToken','issuerMissingToken','extraActor'])
+def test_wire_identity_and_discriminator_mutation_rejected(mutation):
+    body=envelope('consume')
+    if mutation=='boolVersion':body['schemaVersion']=True
+    elif mutation=='wrongCommand':body['operation']='decide'
+    elif mutation=='machineToken':body['bearerToken']=None
+    elif mutation=='issuerMissingToken':body=envelope('decide');body.pop('bearerToken')
+    else:body['actor']='forged'
+    with pytest.raises(ValueError):RenewalRequest.model_validate(body)
+
+
+def test_generated_json_schema_matches_shipped_schema_and_discriminator():
+    path=Path(__file__).resolve().parents[2]/'aos_api/aip_budget_policy_renewal_schema.json'
+    schema=json.loads(path.read_text())
+    assert schema==protocol_schema()
+    assert schema['additionalProperties'] is False
+    assert len(schema['allOf'])==4
+
+
+def test_generated_schema_includes_closed_native_result_frame():
+    frame=protocol_schema()['$defs']['RenewalResponseFrame']
+    assert frame['additionalProperties'] is False
+    assert set(frame['required'])=={'schemaVersion','operation','requestHash','activationEligible','result'}
+    properties=frame['properties']
+    assert properties['schemaVersion']=={'type':'integer','const':1}
+    assert properties['activationEligible']=={'type':'boolean','const':False}
+    assert properties['requestHash']['pattern']=='^[0-9a-f]{64}$'
+    assert set(properties['operation']['enum'])=={'propose','decide','consume','revoke'}
+    result=properties['result']
+    assert set(result['required'])=={'operation','requestHash','activationEligible','status'}
+    assert set(result['properties']['status']['enum'])=={'prepared','decided','revoked','observed','unresolved','conflict','blocked'}
+
+
+def test_model_copy_cannot_smuggle_actor_or_command_kind():
+    r=RenewalRequest.model_validate(envelope('consume'))
+    altered=r.model_copy(update={'operation':'decide'})
+    with pytest.raises(ValueError):altered.revalidated()
+
+
+# Original fixtures only create data in the explicitly owned disposable DB.
+from tests.aip.test_budget_policy_renewal_pg import schema_database, schema_source as original_schema_source
+
+
+@pytest.fixture(scope='session')
+def schema_source(schema_database):
+    """Seed historical fixture facts under admin locks; guards restored pre-commit.
+
+    Full migrations prohibit unapproved ACTIVE inserts. This setup is explicitly
+    fixture history, never an acceptance of human approval or a runtime bypass.
+    No B operation runs until both original guards are enabled again.
+    """
+    _,admin=schema_database
+    source=original_schema_source.__wrapped__(schema_database)
+    with admin.transaction():
+        admin.execute("INSERT INTO public.meta_org(id,name) VALUES('org-org','isolated B fixture org')")
+        admin.execute("INSERT INTO public.meta_workspace(org_id,project_id,name) VALUES('org-org','dev-project','isolated B fixture workspace')")
+        admin.execute('ALTER TABLE public.aip_budget_revision DISABLE TRIGGER aip_budget_active_insert_guard')
+        admin.execute('ALTER TABLE public.aip_model_governance_policy_revision DISABLE TRIGGER cost_configuration_write_guard')
+        value=next(source)
+        admin.execute('SET CONSTRAINTS ALL IMMEDIATE')
+        admin.execute('ALTER TABLE public.aip_budget_revision ENABLE TRIGGER aip_budget_active_insert_guard')
+        admin.execute('ALTER TABLE public.aip_model_governance_policy_revision ENABLE TRIGGER cost_configuration_write_guard')
+    try:yield value
+    finally:
+        try:next(source)
+        except StopIteration:pass
+
+
+@pytest.fixture
+def isolated_signed_gateway(schema_source,tmp_path,monkeypatch):
+    """Actual RS256/JWKS in a separate PG network namespace, never real consent."""
+    import os,hashlib,threading,time
+    import jwt
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+    from psycopg.conninfo import conninfo_to_dict
+    from psycopg import sql
+    from tests.aip.test_budget_policy_renewal_connection import closed_config
+    from aos_api.aip_budget_policy_renewal_connection import load_protected_config,_CALLERS,_FORBIDDEN_ENV
+    if os.environ.get('AOS_RENEWAL_ISOLATED_SIGNER')!='1':
+        pytest.skip('separate owned network namespace required for fixture signer')
+    dsn,admin,source,now=schema_source
+    parts=conninfo_to_dict(dsn)
+    assert parts['host']=='127.0.0.1' and parts['port']=='5432'
+    assert parts['dbname'].startswith('aos_test_')
+    for key in _FORBIDDEN_ENV:monkeypatch.delenv(key,raising=False)
+    key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
+    jwk=json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(key.public_key()))
+    jwk.update(kid='isolated-b-fixture',alg='RS256',use='sig')
+    requests=[]
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            requests.append(self.path)
+            if self.path!='/realms/qyh-local/protocol/openid-connect/certs':
+                self.send_error(404);return
+            body=json.dumps({'keys':[jwk]}).encode()
+            self.send_response(200);self.send_header('Content-Type','application/json')
+            self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+        def log_message(self,*args):pass
+    server=ThreadingHTTPServer(('127.0.0.1',18448),Handler)
+    thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+    path,value=closed_config(tmp_path)
+    seal=admin.execute("SELECT obj_description('public.aip_budget_policy_renewal_proposal'::regclass,'pg_class')").fetchone()[0]
+    value['enabled']=True
+    for purpose,user in _CALLERS.items():
+        # Fixture-only secret; HBA is SCRAM for callers in the owned test PG.
+        password='isolated-b-fixture-password'
+        admin.execute(sql.SQL('ALTER ROLE {} LOGIN PASSWORD {}').format(sql.Identifier(user),sql.Literal(password)))
+        profile=value['profiles'][purpose]
+        passfile=Path(profile['passfile'])
+        passfile.write_text(f"127.0.0.1:5432:{parts['dbname']}:{user}:{password}\n")
+        profile.update(port=5432,database=parts['dbname'],
+            passfileSha256=hashlib.sha256(passfile.read_bytes()).hexdigest(),
+            manifestSha256=hashlib.sha256(seal.encode()).hexdigest())
+    path.write_text(json.dumps(value))
+    attempts=tmp_path/'attempts';attempts.mkdir(mode=0o700)
+    issuer='http://127.0.0.1:18448/realms/qyh-local'
+    def token(**overrides):
+        claims={'iss':issuer,'aud':'aos-api','sub':'6f31cfdc-a26c-4f1f-ad6b-95a8559cc657',
+            'iat':int(time.time()),'exp':int(time.time())+120,
+            'org_id':'org-org','project_id':'dev-project','roles':['admin']}
+        claims.update(overrides)
+        return jwt.encode(claims,key,algorithm='RS256',headers={'kid':'isolated-b-fixture'})
+    try:yield load_protected_config(path),attempts,token,requests,schema_source
+    finally:
+        server.shutdown();server.server_close();thread.join(timeout=3)
+        for user in _CALLERS.values():
+            admin.execute(sql.SQL('ALTER ROLE {} NOLOGIN PASSWORD NULL').format(sql.Identifier(user)))
+
+
+def test_native_private_service_signed_chain_and_at_most_once(isolated_signed_gateway):
+    from datetime import timedelta
+    from aos_api.aip_budget_policy_renewal_service import RenewalService
+    from aos_api.aip_budget_policy_renewal_connection import open_purpose_connection
+    from aos_api.aip_model_governance_policy_store import canonical_hash
+    config,attempts,token,http_requests,(dsn,admin,source,now)=isolated_signed_gateway
+    service=RenewalService(config,attempts)
+    def actual_process(request):
+        from aos_api.aip_budget_policy_renewal_process import run_renewal_process
+        body=request.model_dump(mode='json',by_alias=True,exclude={'bearer_token'})
+        if request.bearer_token is not None:
+            body['bearerToken']=request.bearer_token.get_secret_value()
+        result=run_renewal_process(config.path,attempts,json.dumps(body).encode(),timeout=15)
+        assert result.get('result',{}).get('status')=='observed',result
+        assert result['activationEligible'] is False
+        return result['result']
+    def request(op,command,bearer=None):
+        value={'schemaVersion':1,'mode':'execute','operation':op,'command':command}
+        if bearer is not None:value['bearerToken']=bearer
+        return RenewalRequest.model_validate(value)
+    base={'schemaVersion':1,'orgId':'org-org','projectId':'dev-project'}
+    p=request('propose',{**base,'idempotencyKey':'b-native-propose','sourcePolicyId':source.policy_id,
+        'expectedSourceRevision':13,'expectedHeadVersion':13,'expectedSourceHash':source.content_hash,
+        'effectiveFrom':now-timedelta(minutes=1),'effectiveUntil':now+timedelta(minutes=30)})
+    with open_purpose_connection(config,'maker',True) as conn:
+        assert conn.read_only is True
+        assert conn.execute('SHOW transaction_read_only').fetchone()[0]=='on'
+        conn.rollback()
+    proposal=actual_process(p)
+    assert proposal['status']=='observed'
+    assert service.execute(p)['status']=='observed'
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_proposal').fetchone()[0]==1
+    native_service_fault_matrix(service,p,config,attempts,admin)
+    # The exact target is the SQL-authoritative proposal payload, not reconstructed UI data.
+    payload=admin.execute('SELECT payload FROM public.aip_budget_policy_renewal_proposal WHERE proposal_id=%s',
+                          (proposal['proposalId'],)).fetchone()[0]
+    d=request('decide',{**base,'idempotencyKey':'b-native-decide','proposalId':proposal['proposalId'],
+        'proposalHash':proposal['proposalHash'],'targetActiveHash':canonical_hash(payload['targetActive']),
+        'decision':'approved'},token())
+    # Crypto/tenant failures and current membership denial precede Attempt reservation.
+    for bad in (token(aud='wrong'),token(exp=1),token(org_id='dev-org'),token(sub='fixture-other')):
+        denied=d.model_copy(update={'bearer_token':__import__('pydantic').SecretStr(bad)})
+        with pytest.raises(ValueError):service.execute(denied)
+    assert len(list(attempts.iterdir()))==1
+    admin.execute("UPDATE public.meta_membership SET role='viewer' WHERE subject=%s",(config.binding.subject,))
+    try:
+        with pytest.raises(ValueError):service.execute(d)
+    finally:
+        admin.execute("UPDATE public.meta_membership SET role='admin' WHERE subject=%s",(config.binding.subject,))
+    decision=actual_process(d)
+    assert decision['status']=='observed' and http_requests
+    assert service.execute(d)['status']=='observed'
+    c=request('consume',{**base,'idempotencyKey':'b-native-consume','proposalId':proposal['proposalId'],
+        'proposalHash':proposal['proposalHash'],'decisionId':decision['decisionId'],
+        'decisionHash':decision['decisionHash']})
+    consumed=actual_process(c)
+    assert consumed['status']=='observed' and consumed['activationEligible'] is False
+    assert service.execute(c)['status']=='observed'
+    assert admin.execute('SELECT current_revision,version FROM public.aip_model_governance_policy_head').fetchone()==(14,14)
+    assert admin.execute('SELECT count(*) FROM public.aip_model_governance_policy_revision').fetchone()[0]==2
+    from tests.aip.test_budget_policy_renewal_process import native_readonly_process_assertions
+    native_readonly_process_assertions(isolated_signed_gateway)
+    r=request('revoke',{**base,'idempotencyKey':'b-native-revoke','proposalId':proposal['proposalId'],
+        'proposalHash':proposal['proposalHash'],'decisionId':decision['decisionId'],
+        'decisionHash':decision['decisionHash'],'reasonCode':'approval_withdrawn'},token())
+    assert actual_process(r)['status']=='observed'
+    assert service.execute(r)['status']=='observed'
+    assert service.reconcile(c)['status']=='observed'  # immutable historical publication
+    markers=list(attempts.iterdir())
+    assert len(markers)==4
+    for marker in markers:
+        record=json.loads(marker.read_text())
+        assert record['state']=='ATTEMPTED' and record['namespace'].startswith('budget-policy-renewal/v1/')
+        assert 'bearerToken' not in record and 'password' not in record
+
+
+def native_service_fault_matrix(service,request,config,attempts,admin):
+    """Real PG COMMIT with transport fault; no mocked identity or write outcome."""
+    import psycopg
+    from psycopg import sql
+    from aos_api.aip_budget_policy_renewal_service import RenewalService
+    from aos_api.aip_budget_policy_renewal_connection import RenewalConnectionBlocked
+    from aos_api.aip_budget_policy_renewal_store import RenewalAuthorityStore,RenewalStoreUnknown
+    before=admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]
+    marker=next(attempts.iterdir());original_marker=marker.read_bytes()
+    marker.write_bytes(b'{"schemaVersion":1,')
+    try:assert service.execute(request)['status']=='unresolved'
+    finally:marker.write_bytes(original_marker)  # known fixture history, no execute rearming
+    changed=request.model_copy(update={'command':request.command.model_copy(update={'expected_source_hash':'b'*64})})
+    assert service.execute(changed)['status']=='conflict'
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]==before
+    private_original=config.path.read_bytes()
+    closed=json.loads(private_original);closed['enabled']=False;config.path.write_text(json.dumps(closed))
+    try:
+        with pytest.raises(RenewalConnectionBlocked):service.execute(request)
+    finally:config.path.write_bytes(private_original)
+    seal=admin.execute("SELECT obj_description('public.aip_budget_policy_renewal_proposal'::regclass,'pg_class')").fetchone()[0]
+    admin.execute("COMMENT ON TABLE public.aip_budget_policy_renewal_proposal IS 'fixture-manifest-drift'")
+    try:
+        with pytest.raises(RenewalConnectionBlocked):service.execute(request)
+    finally:
+        admin.execute(sql.SQL('COMMENT ON TABLE public.aip_budget_policy_renewal_proposal IS {}').format(sql.Literal(seal)))
+    profile=config.profile('maker')
+    with pytest.raises(psycopg.OperationalError,match='password authentication failed'):
+        psycopg.connect(host=profile.host,port=profile.port,dbname=profile.database,
+            user=profile.user,password='wrong-isolated-fixture-password',connect_timeout=3)
+    lost_directory=attempts.parent/'lostack-attempts';lost_directory.mkdir(mode=0o700)
+    lost_service=RenewalService(config,lost_directory)
+    lost_request=request.model_copy(update={'command':request.command.model_copy(update={'idempotency_key':'b-native-commit-ack-lost'})})
+    actual_propose=RenewalAuthorityStore.propose
+    entered=[]
+    def commit_then_drop_return(store,command):
+        result=actual_propose(store,command)  # genuine native tx and outer COMMIT
+        assert result['status']=='prepared'
+        entered.append(command.request_hash)
+        raise RenewalStoreUnknown(operation='propose',key=command.idempotency_key,request_hash=command.request_hash)
+    with pytest.MonkeyPatch.context() as fault:
+        fault.setattr(RenewalAuthorityStore,'propose',commit_then_drop_return)
+        recovered=lost_service.execute(lost_request)
+        assert recovered['status']=='observed' and recovered['requestHash']==lost_request.command.request_hash
+        assert lost_service.execute(lost_request)['status']=='observed'
+    assert entered==[lost_request.command.request_hash]
+    assert len(list(lost_directory.iterdir()))==1
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_proposal').fetchone()[0]==2
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]==before+1
+
+
+SOURCE services/aos-api/aos_api/aip_network_issuer_attempt.py SHA256 5a281eaffff81f61a4fd0c5e6ee9c176b62b67230bbb7b6eda226764f8c29603
+"""Private durable at-most-once marker for an isolated approval issuer."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import stat
+from dataclasses import dataclass
+from pathlib import Path
+
+from aos_api.auth import Principal
+from aos_api.aip_network_issuer_contracts import NetworkIssuerDecisionCommand
+
+
+class AttemptBlocked(RuntimeError):
+    pass
+
+
+class AttemptAlreadyRecorded(AttemptBlocked):
+    pass
+
+
+class AttemptConflict(AttemptBlocked):
+    pass
+
+
+class AttemptUnknown(AttemptBlocked):
+    pass
+
+
+@dataclass(frozen=True)
+class AttemptReceipt:
+    org_id: str
+    project_id: str
+    proposal_id: str
+    idempotency_key: str
+    request_hash: str
+    principal_subject: str
+
+
+def _private_directory_fd(directory: Path) -> int:
+    try:
+        fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+        info = os.fstat(fd)
+        if (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid()
+                or stat.S_IMODE(info.st_mode) != 0o700):
+            os.close(fd)
+            raise AttemptBlocked("ISSUER_ATTEMPT_PRIVATE_DIRECTORY_REQUIRED")
+        return fd
+    except OSError as exc:
+        raise AttemptBlocked("ISSUER_ATTEMPT_PRIVATE_DIRECTORY_REQUIRED") from exc
+
+
+def _read_marker(directory_fd: int, filename: str, *, allow_missing: bool = False) -> dict | None:
+    try:
+        fd = os.open(filename, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK,
+                     dir_fd=directory_fd)
+        try:
+            info = os.fstat(fd)
+            if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid()
+                    or stat.S_IMODE(info.st_mode) != 0o600 or info.st_size > 4096):
+                raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED")
+            raw = os.read(fd, 4097)
+        finally:
+            os.close(fd)
+        if not raw or len(raw) > 4096:
+            raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED")
+        prior = json.loads(raw)
+    except FileNotFoundError as exc:
+        if allow_missing:
+            return None
+        raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED") from exc
+    except (OSError, ValueError, TypeError) as exc:
+        raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED") from exc
+    if not isinstance(prior, dict):
+        raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED")
+    return prior
+
+
+def _read_prior(directory_fd: int, filename: str, expected: dict[str, str | int]) -> None:
+    prior = _read_marker(directory_fd, filename)
+    if not isinstance(prior, dict) or set(prior) != set(expected):
+        raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED")
+    if prior != expected:
+        raise AttemptConflict("ISSUER_ATTEMPT_EXACT_REQUEST_CONFLICT")
+    raise AttemptAlreadyRecorded("ISSUER_ATTEMPT_ALREADY_RECORDED")
+
+
+def _attempt_filename(parts: list[str]) -> str:
+    key = json.dumps(parts, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(key).hexdigest() + ".json"
+
+
+def read_decision_attempt(private_directory: Path, *, org_id: str, project_id: str,
+                          proposal_id: str, idempotency_key: str, principal_subject: str) -> str | None:
+    """Read one authenticated caller's original hash; no directory listing or reservation."""
+    directory_fd = _private_directory_fd(private_directory)
+    try:
+        prior = _read_marker(directory_fd, _attempt_filename([org_id, project_id, idempotency_key]),
+                             allow_missing=True)
+    finally:
+        os.close(directory_fd)
+    if prior is None:
+        return None
+    expected = {'schemaVersion': 1, 'state': 'ATTEMPTED', 'orgId': org_id,
+                'projectId': project_id, 'proposalId': proposal_id, 'idempotencyKey': idempotency_key,
+                'principalSubject': principal_subject}
+    if (set(prior) != set(expected) | {'requestHash'} or type(prior.get('schemaVersion')) is not int
+            or any(prior.get(k) != v for k, v in expected.items())
+            or not isinstance(prior.get('requestHash'), str)
+            or re.fullmatch('[0-9a-f]{64}', prior['requestHash']) is None):
+        raise AttemptUnknown('ISSUER_ATTEMPT_RECEIPT_UNTRUSTED')
+    return prior['requestHash']
+
+
+def reserve_decision_attempt(
+    private_directory: str | Path,
+    command: NetworkIssuerDecisionCommand,
+    principal: Principal,
+) -> AttemptReceipt:
+    """Persist before one call; every later call with the key is denied."""
+    if (type(command) is not NetworkIssuerDecisionCommand or type(principal) is not Principal
+            or principal.token_kind != "oidc" or principal.org_id != command.org_id
+            or principal.project_id != command.project_id or not principal.subject
+            or principal.subject == "unknown" or principal.subject != principal.subject.strip()
+            or not principal.subject.isprintable()):
+        raise AttemptBlocked("ISSUER_ATTEMPT_AUTHENTICATED_SCOPE_REQUIRED")
+    receipt = AttemptReceipt(command.org_id, command.project_id, command.proposal_id,
+                             command.idempotency_key, command.request_hash,
+                             principal.subject)
+    return _reserve_attempt_receipt(private_directory, receipt)
+
+
+def _reserve_attempt_receipt(
+    private_directory: str | Path,
+    receipt: AttemptReceipt,
+    *, namespace: str | None = None,
+) -> AttemptReceipt:
+    """Shared persistence primitive; callers own authenticated request validation."""
+    expected: dict[str, str | int] = {
+        "schemaVersion": 1, "state": "ATTEMPTED",
+        "orgId": receipt.org_id, "projectId": receipt.project_id,
+        "proposalId": receipt.proposal_id,
+        "idempotencyKey": receipt.idempotency_key,
+        "requestHash": receipt.request_hash,
+        "principalSubject": receipt.principal_subject,
+    }
+    key_parts = [receipt.org_id, receipt.project_id, receipt.idempotency_key]
+    if namespace is not None:
+        expected['namespace'] = namespace
+        key_parts.insert(0, namespace)
+    filename = _attempt_filename(key_parts)
+    payload = json.dumps(expected, sort_keys=True, separators=(",", ":"),
+                         ensure_ascii=False).encode("utf-8")
+    directory_fd = _private_directory_fd(Path(private_directory))
+    try:
+        try:
+            fd = os.open(filename, os.O_WRONLY | os.O_CREAT | os.O_EXCL
+                         | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600, dir_fd=directory_fd)
+        except FileExistsError:
+            _read_prior(directory_fd, filename, expected)
+            raise AssertionError("prior receipt reader must deny")
+        except OSError as exc:
+            raise AttemptBlocked("ISSUER_ATTEMPT_RESERVATION_FAILED") from exc
+        try:
+            if stat.S_IMODE(os.fstat(fd).st_mode) != 0o600:
+                raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED")
+            written = 0
+            while written < len(payload):
+                chunk = os.write(fd, payload[written:])
+                if chunk <= 0:
+                    raise AttemptUnknown("ISSUER_ATTEMPT_PERSISTENCE_UNKNOWN")
+                written += chunk
+            os.fsync(fd)
+            os.fsync(directory_fd)
+        except (OSError, AttemptUnknown) as exc:
+            raise AttemptUnknown("ISSUER_ATTEMPT_PERSISTENCE_UNKNOWN") from exc
+        finally:
+            os.close(fd)
+        return receipt
+    finally:
+        os.close(directory_fd)
+

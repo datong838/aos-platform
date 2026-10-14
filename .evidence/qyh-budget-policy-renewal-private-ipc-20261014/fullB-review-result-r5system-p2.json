@@ -1,0 +1,34 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "5025870634b1f9cd0e08c41b1bf0eb8de994a4d56d819eba98c0bbb80a414f37",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-private-ipc-20261014-fullB-r5system-p2",
+    "task_id": "qyh-budget-policy-renewal-private-ipc-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "c5c06bd8110d611f30fb7a643160bcc4f76d6182",
+      "authority_revision": "AOS-002026",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/fullB-review-package-r4-p2.txt": "cbe4961e2e1f6c3e43a9f408bb60106a7fa4b995d3d4c53ef9b5f8355014bf97"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Complete B typed service and generated request plus child-response-frame schema reject public actor/config/SQL and operation-command drift; all four execute operations and fifth readonly mode use genuine private purpose sessions and original pinned issuer verification, preserving fixed scope and no implicit consent.",
+        "evidence": "Source services/aos-api/aos_api/aip_budget_policy_renewal_service.py SHA256 8df25c8e8e8e552f3c900c6953924647a6a3da7f7c2ca6dc3f84f188f01cbe30: RenewalService.__init__ enforces ProtectedRenewalConfig and absolute path; execute revalidates via request.revalidated() before any business logic. RenewalRequest identity_kind validator asserts (operation in {decide,revoke}) == (bearer_token is not None) and command type matches operation. public_identity_fields validator rejects bearerToken for non-issuer operations. schema.json SHA256 e0f2f9d1167d9823f7c50fe87663e1f991d8e26ac8cb5d19ef30cc2c430d5db6: generated schema has additionalProperties=False, allOf discriminators enforce operation/command/bearerToken alignment, response frame includes activationEligible const false and status enum including conflict/unresolved/blocked. Test test_budget_policy_renewal_service.py SHA256 360efad0184870fe13b6217835576e4dca52f39927c1db2dda6a15bf05b11bda: test_generated_json_schema_matches_shipped_schema_and_discriminator asserts exact match and allOf length 4; test_native_private_service_signed_chain_and_at_most_once exercises all four operations plus readonly check (SHOW transaction_read_only=='on') with isolated_signed_gateway using RS256 JWKS on port 18448, separate PG namespace, never real Keycloak.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Complete B durable Attempt is persisted before a write, exact repetition only reconciles, conflict/corrupt markers refuse writing and any post-marker uncertain result reconciles without another write; the native tests preserve truthful distinction between real fixture identities and production user approval.",
+        "evidence": "Source services/aos-api/aos_api/aip_network_issuer_attempt.py SHA256 5a281eaffff81f61a4fd0c5e6ee9c176b62b67230bbb7b6eda226764f8c29603: _reserve_attempt_receipt uses O_WRONLY|O_CREAT|O_EXCL (atomic exclusive create); FileExistsError routes to _read_prior which raises AttemptAlreadyRecorded for exact match, AttemptConflict for mismatch, AttemptUnknown for corrupt schema. In service.py, reserve happens before the store write call; AfterEach exception handler attempts reconcile and returns unresolved status without another execute write. Test test_budget_policy_renewal_service.py: marker write_bytes corrupted JSON triggers status='unresolved' and marker restored; changed request with wrong expected_source_hash triggers status='conflict'; fault matrix commit_then_drop_return injects RenewalStoreUnknown after COMMIT and lost-service correctly recovers observed status with single marker. Fixture signer uses isolated-b-fixture password in own PG namespace with admin NOLOGIN reset; tokens reject wrong aud/exp/subject/org_id before reservation. Note: claim mentions five modes but schema only defines four operations (propose/decide/revoke/consume) plus readonly reconciliation; readonly mode is exercised via SHOW transaction_read_only check in test.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Proceed to composite legal consumption review for B delivery gate; verify that A dependency remains unaltered and eight-workbench visuals remain open for subsequent C deployment planning."
+  }
+}
