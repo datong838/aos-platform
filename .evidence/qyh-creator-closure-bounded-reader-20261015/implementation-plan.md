@@ -1,0 +1,29 @@
+# Creator 保存闭环贡献只读接线方案
+
+上位：231完整Goal；产品v2/05达人邀约与签约；技术57-W6-09 ADR（尤其6/7当前实现补记），原three_module_closure模型/服务/Store及w6_009原DDL。HEAD2f/Authority2031/current维护r4、creator-closure-root和新增bounded-reader Task同owner不重叠。原库161/650、HostworkerProviderOFF。只读接线不代替自然闭环、预算批准、安装全生命周期/八场景/视觉/观察发布。
+
+## 文件与接口
+
+本root Task只改routers/ecommerce_workshop.py和test_ecommerce_workshop_read_http.py，D-wave/本证据。独立bounded Task只新增aos_api/ecommerce_three_module_closure_readonly.py及tests/test_ecommerce_three_module_closure_readonly.py，已支持登记并回读。原公共模型/服务/Store、AIP authority、POST/price/customer命令、schema及Web不改。
+
+原GET /views/{module}/closure-contributions保留query拒绝、principal/scope、安装/签名/角色/marking/DataScope。creator以ReadCatalog准入得到typed readiness；INSTALLED_ASSET_READONLY marker仅选择新reader，typed未知503，正常无marker走原service。其他模块仍用原Catalog与_require_three_module_installation，不借creator放行price/customer。独立reader错误固定503文案/code，不输出SQL/字段/原异常。不直接修改维护HTTP allowlist或用空DTO绕过reader。依赖构造不产生DB连接；任何新增依赖不得使旧POST进入readonly或丢失既有准入。
+
+## 专用 reader 合同
+
+单次connect_read_only scoped session，明确read_only=True/autocommit=False/REPEATABLE_READ；transaction_timestamp同一截止面，四个固定表只SELECT。最新closure仅creator，以created_at DESC/closure_id确定tie-break LIMIT1；三binding按同scope/closure_id、created_at DESC/binding_id LIMIT1。故意不过滤未来时间或错误module来隐藏异常；所选未来created_at拒绝。每行SQL先octet_length(authority_data::text)且CASE最多64KiB才传payload，四行总1MiB及最终DTO1MiB上限；不截断item计数、不把限额错误当空。
+
+外层org/project、revision严格int1、identity/source_id/module/hash/time与typed payload逐项核对；closure必须creator、派生closure_id遵原scope/module/source_id算法。binding.module按原_append允许NULL或creator，其他值拒绝；必须关联同一closure的完整ClosureExactRef（type/id/revision/hash/receiptId），binding_id遵原typed payload哈希派生，outer.created_at==compiled_at/bound_at。复用原canonical_hash：closure payload含typed module/sourceRef/items；binding payload是typed closureRef+其原resolved字段，不能改为model_dump JSON签名。closure ledger必须与原_ledger(items)一致，items唯一itemKey，originalRef关联原source:lane，originalStatus映射复用原Store _STATUS而非复制业务状态机。
+
+typed四模型extra forbid保留；taskRef/taskRunRef虽是dict，读取仅允许原ResourceRef/HandoffResourceRef公开合同的有限字段，分别Task/TaskRun，不传任意扩展字典。输出使用原模型字节/类型合同，敏感内容沿原redact_sensitive防护，疑似联系方式/私密扩展拒绝，不脱敏后假装原签名仍有效。不新查AIP Task/Usage/Effect/Handoff，不解析secret或商城源；这是已存binding物证，不宣称引用的全部外部authority现态已复核。
+
+时间必须aware，compiled/bound/observed不晚于读取cutoff且binding不早于closure。Effect成熟窗口cutoffAt可在未来用于immature/insufficient/unknown，不能一律拒绝合法未来窗口；mature需cutoffAt<=observedAt<=boundAt，未知/未成熟不造完成。Usage unknown保持quantity=None；五轴关系/unknown/request_more独立，沿原service贡献映射/blockers，以snapshot.cutoff作为evaluatedAt。只读DTO显式allowedCommands=[]、handoffConsumeAllowed/memoryPromotionAllowed/externalEffectsAllowed=False。
+
+## 验证及序列
+
+先独立route方案合法消费。RED覆盖empty真实语义与四blockers、正常完整saved闭环（producer原typedhash）、binding NULLmodule兼容、unknown量/immature未来窗、每类外层/嵌套tenant/hash/ref/module/time/revision/ledger漂移、arbitrary任务ref扩展与privacy、bytes超限/未知连接/SQL错误，断言仅4固定表SELECT/一次snapshot/不commit/commands空。Root REDcreator readonly走reader/normal legacy不变/pricecustomer不借放行/query与role/scope/marker未知503/reader错误安全。最小实现后专项+相邻原closure/creator/read-http回归；隔离真实4表PG并发snapshot/SQLCASE/RLS/write25006，非原650或真人批准。
+
+原真人实际GET只在代码独立质量合法消费/精确m1提交/latestarchive/fresh维护门后；原650前后、可信空/401400、菜单三视口对原稿，无原坏数据/编译/绑定/POST。原共享Store权限/commands正常回归，Web五轴不变。独立现场Prime/精确各sliceDelivery/完整维护handoff/Authority七强Prime/立即下一已登记helper。预算C唯一真人最后决定/原部署、自然CaseRun建议评审内容能力产物人审续跑总控Wiki/安装全生命周期/八场景/视觉P1/持续观察发布继续，Goal ACTIVE。
+
+整体方案route-r2已合法PASS/消费；此独立Task严格只两个新产品/测试文件。原Store模块NULL及原typed对象hash不可重构成JSONhash。
+
+代码自查补充：原resolve_usage/effect/handoff固定产出UsageReceipt/EffectReviewRevision/HandoffEnvelope。ClosureExactRef公共基类本身允许其他resourceType，因此本专用reader必须核对这三种既有固定引用类型；不能把合法形状且可重算hash的无关ProtectedContact引用当作该绑定轴。新三反例先RED，再最小检查；不改原模型/共享Store/命令。之后重新冻结精确候选及native物证，旧SHA的native-r1只作历史。

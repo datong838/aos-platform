@@ -1,0 +1,43 @@
+{
+  "containerId": "4e41056b75234d5ae7e28e5b6120586e3f08bc559b49fc0356f4ede33b478edc",
+  "fixtureOnlyNotOriginalSchema": true,
+  "tables": [
+    "ecommerce_three_module_closure_revision",
+    "ecommerce_three_module_usage_binding_revision",
+    "ecommerce_three_module_effect_binding_revision",
+    "ecommerce_three_module_handoff_binding_revision"
+  ],
+  "exactW6DdlSha": "e2be75ca114e98b188a1860e31b9db83e387abee715bfc54fbcd1c05d922014d",
+  "sourceSha": "b0d7a66aa9a1a7c63c81031c10c7fa28a070f5d3637ca98ac6e3a8163252a15b",
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "snapshotFirstQuantity": null,
+  "snapshotNextQuantity": 7.0,
+  "foreignRowsHiddenWithoutWhere": true,
+  "writeDeniedSqlstate": "25006",
+  "oversizeSqlCaseError": "CREATOR_CLOSURE_READ_LIMIT_EXCEEDED",
+  "privacyError": "CREATOR_CLOSURE_READ_PRIVACY_UNAVAILABLE",
+  "commandsEmpty": true,
+  "originalVolumeTouched": false,
+  "realUserApproval": false
+}

@@ -1,0 +1,602 @@
+...........F.............................................FFFFFFFFFFFFFFF [100%]
+=================================== FAILURES ===================================
+________ test_read_dependency_only_reaches_explicit_audited_get_routes _________
+
+    def test_read_dependency_only_reaches_explicit_audited_get_routes():
+        actual = set()
+        for route in routes.router.routes:
+            uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                            for d in route.dependant.dependencies)
+            if uses_read:
+                assert route.methods == {'GET'}
+                actual.add(route.path)
+>       assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+            '/v1/ecommerce-workshop/source-readiness',
+            '/v1/ecommerce-workshop/views/operations/cases',
+            '/v1/ecommerce-workshop/commands/operations/readiness',
+            '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+            '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+            '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+            '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+            '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+            '/v1/ecommerce-workshop/views/creator-growth/contributions',
+            '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+            '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
+            '/v1/ecommerce-workshop/views/{module}/closure-contributions',
+        }
+E       AssertionError: assert {'/v1/ecommer...-inputs', ...} == {'/v1/ecommer...-inputs', ...}
+E         
+E         Extra items in the right set:
+E         '/v1/ecommerce-workshop/views/{module}/closure-contributions'
+E         Use -v to get more diff
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:73: AssertionError
+_________ test_creator_closure_selects_only_the_admitted_reader[True] __________
+
+readonly = True
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_creator_closure_selects_only_the_admitted_reader(readonly):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:457: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11e970190>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+_________ test_creator_closure_selects_only_the_admitted_reader[False] _________
+
+readonly = False
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_creator_closure_selects_only_the_admitted_reader(readonly):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:457: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11c81d250>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+_______________ test_creator_closure_denied_before_both_readers ________________
+
+    def test_creator_closure_denied_before_both_readers():
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:468: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11c3ecdd0>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+____________ test_other_closure_modules_keep_legacy_catalog[price] _____________
+
+module = 'price'
+
+    @pytest.mark.parametrize('module', ['price', 'customer'])
+    def test_other_closure_modules_keep_legacy_catalog(module):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:476: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11c823210>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+___________ test_other_closure_modules_keep_legacy_catalog[customer] ___________
+
+module = 'customer'
+
+    @pytest.mark.parametrize('module', ['price', 'customer'])
+    def test_other_closure_modules_keep_legacy_catalog(module):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:476: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11d795710>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+___ test_creator_closure_query_cannot_change_scope_or_reader[orgId=foreign] ____
+
+query = 'orgId=foreign'
+
+    @pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+    def test_creator_closure_query_cannot_change_scope_or_reader(query):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:485: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f34d050>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+_ test_creator_closure_query_cannot_change_scope_or_reader[projectId=foreign] __
+
+query = 'projectId=foreign'
+
+    @pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+    def test_creator_closure_query_cannot_change_scope_or_reader(query):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:485: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11d1370d0>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+______ test_creator_closure_query_cannot_change_scope_or_reader[limit=1] _______
+
+query = 'limit=1'
+
+    @pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+    def test_creator_closure_query_cannot_change_scope_or_reader(query):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:485: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11d0ecb10>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+____ test_creator_closure_query_cannot_change_scope_or_reader[mode=legacy] _____
+
+query = 'mode=legacy'
+
+    @pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+    def test_creator_closure_query_cannot_change_scope_or_reader(query):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:485: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11cd38d90>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+_________ test_creator_closure_unknown_admission_is_unavailable[None] __________
+
+admission = None
+
+    @pytest.mark.parametrize('admission', [None, object()])
+    def test_creator_closure_unknown_admission_is_unavailable(admission):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:493: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11e03e090>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+______ test_creator_closure_unknown_admission_is_unavailable[admission1] _______
+
+admission = <object object at 0x11b62db00>
+
+    @pytest.mark.parametrize('admission', [None, object()])
+    def test_creator_closure_unknown_admission_is_unavailable(admission):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:493: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11d14c6d0>, failure = None
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+_ test_creator_closure_reader_failure_cannot_be_empty_success[CREATOR_CLOSURE_READ_AUTHORITY_DRIFT] _
+
+code = 'CREATOR_CLOSURE_READ_AUTHORITY_DRIFT'
+
+    @pytest.mark.parametrize('code', ['CREATOR_CLOSURE_READ_AUTHORITY_DRIFT',
+        'CREATOR_CLOSURE_READ_PRIVACY_UNAVAILABLE', 'CREATOR_CLOSURE_READ_LIMIT_EXCEEDED',
+        'CREATOR_CLOSURE_READ_UNAVAILABLE'])
+    def test_creator_closure_reader_failure_cannot_be_empty_success(code):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client, failure=code)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:505: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11cceafd0>
+failure = 'CREATOR_CLOSURE_READ_AUTHORITY_DRIFT'
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+_ test_creator_closure_reader_failure_cannot_be_empty_success[CREATOR_CLOSURE_READ_PRIVACY_UNAVAILABLE] _
+
+code = 'CREATOR_CLOSURE_READ_PRIVACY_UNAVAILABLE'
+
+    @pytest.mark.parametrize('code', ['CREATOR_CLOSURE_READ_AUTHORITY_DRIFT',
+        'CREATOR_CLOSURE_READ_PRIVACY_UNAVAILABLE', 'CREATOR_CLOSURE_READ_LIMIT_EXCEEDED',
+        'CREATOR_CLOSURE_READ_UNAVAILABLE'])
+    def test_creator_closure_reader_failure_cannot_be_empty_success(code):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client, failure=code)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:505: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11d6ebd10>
+failure = 'CREATOR_CLOSURE_READ_PRIVACY_UNAVAILABLE'
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+_ test_creator_closure_reader_failure_cannot_be_empty_success[CREATOR_CLOSURE_READ_LIMIT_EXCEEDED] _
+
+code = 'CREATOR_CLOSURE_READ_LIMIT_EXCEEDED'
+
+    @pytest.mark.parametrize('code', ['CREATOR_CLOSURE_READ_AUTHORITY_DRIFT',
+        'CREATOR_CLOSURE_READ_PRIVACY_UNAVAILABLE', 'CREATOR_CLOSURE_READ_LIMIT_EXCEEDED',
+        'CREATOR_CLOSURE_READ_UNAVAILABLE'])
+    def test_creator_closure_reader_failure_cannot_be_empty_success(code):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client, failure=code)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:505: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11d17bb90>
+failure = 'CREATOR_CLOSURE_READ_LIMIT_EXCEEDED'
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+_ test_creator_closure_reader_failure_cannot_be_empty_success[CREATOR_CLOSURE_READ_UNAVAILABLE] _
+
+code = 'CREATOR_CLOSURE_READ_UNAVAILABLE'
+
+    @pytest.mark.parametrize('code', ['CREATOR_CLOSURE_READ_AUTHORITY_DRIFT',
+        'CREATOR_CLOSURE_READ_PRIVACY_UNAVAILABLE', 'CREATOR_CLOSURE_READ_LIMIT_EXCEEDED',
+        'CREATOR_CLOSURE_READ_UNAVAILABLE'])
+    def test_creator_closure_reader_failure_cannot_be_empty_success(code):
+        client, legacy, catalog = client_with_catalogs()
+>       calls = closure_probes(client, failure=code)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:505: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11d794290>
+failure = 'CREATOR_CLOSURE_READ_UNAVAILABLE'
+
+    def closure_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def contribution_view(self, scope, module):
+                calls.append(('legacy', scope.key, module.value))
+                raise ReadReached('legacy-closure')
+        class Readonly:
+            def read(self, scope):
+                calls.append(('readonly', scope.key, 'creator'))
+                if failure:
+                    from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                    raise CreatorClosureReadonlyError(failure)
+                raise ReadReached('readonly-closure')
+        client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:450: AttributeError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_selects_only_the_admitted_reader[True]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_selects_only_the_admitted_reader[False]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_denied_before_both_readers
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_other_closure_modules_keep_legacy_catalog[price]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_other_closure_modules_keep_legacy_catalog[customer]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_query_cannot_change_scope_or_reader[orgId=foreign]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_query_cannot_change_scope_or_reader[projectId=foreign]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_query_cannot_change_scope_or_reader[limit=1]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_query_cannot_change_scope_or_reader[mode=legacy]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_unknown_admission_is_unavailable[None]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_unknown_admission_is_unavailable[admission1]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_reader_failure_cannot_be_empty_success[CREATOR_CLOSURE_READ_AUTHORITY_DRIFT]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_reader_failure_cannot_be_empty_success[CREATOR_CLOSURE_READ_PRIVACY_UNAVAILABLE]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_reader_failure_cannot_be_empty_success[CREATOR_CLOSURE_READ_LIMIT_EXCEEDED]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_closure_reader_failure_cannot_be_empty_success[CREATOR_CLOSURE_READ_UNAVAILABLE]
+16 failed, 56 passed, 7 warnings in 8.31s

@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-closure-root-code-r1",
+  "task_id": "qyh-creator-closure-read-admission-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "2f9362bb8fcf71eb167d8d18630a7d82cdeef824",
+    "authority_revision": "AOS-002031",
+    "files": {
+      ".evidence/qyh-creator-closure-read-admission-20261015/code-review-package-r1.txt": "2fc6de5f2038652e3d80bfd799ea5ca149007514bbc4e56609ae1c2da51da04f"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "fea1cb2218162890d908c6f1f3783ecee9a7efc1cf163a94af126ce28cd08f57",
+  "transport_sha256": "b8b3da1a397133db5f9297a94ed68ec8199d902103927b8b9f612672e887e5d9"
+}

@@ -105,6 +105,9 @@ from aos_api.ecommerce_content_campaign_workflow_contracts import (
 from aos_api.ecommerce_creator_internal_workflow_readonly import (
     CreatorInternalWorkflowReadonlyReader, CreatorWorkflowReadonlyError,
 )
+from aos_api.ecommerce_three_module_closure_readonly import (
+    CreatorClosureReadonlyError, CreatorClosureReadonlyReader,
+)
 from aos_api.ecommerce_creator_internal_workflow import (
     CreatorInternalWorkflowConflict,
     CreatorInternalWorkflowError,
@@ -661,6 +664,16 @@ def get_creator_workflow_readonly() -> CreatorInternalWorkflowReadonlyReader:
 
 CreatorWorkflowReadonlyDependency = Annotated[
     CreatorInternalWorkflowReadonlyReader, Depends(get_creator_workflow_readonly)
+]
+
+
+@lru_cache(maxsize=1)
+def get_creator_closure_readonly() -> CreatorClosureReadonlyReader:
+    return CreatorClosureReadonlyReader()
+
+
+CreatorClosureReadonlyDependency = Annotated[
+    CreatorClosureReadonlyReader, Depends(get_creator_closure_readonly)
 ]
 
 
@@ -2789,9 +2802,23 @@ def get_three_module_closure_contribution_view(
     module: ThreeModule,
     principal: PrincipalDependency,
     catalog: CatalogDependency,
+    read_catalog: ReadCatalogDependency,
     service: ThreeModuleClosureDependency,
+    readonly: CreatorClosureReadonlyDependency,
 ) -> ThreeModuleClosureContributionView:
     _reject_query_parameters(request)
+    if module is ThreeModule.CREATOR:
+        admission = _require_creator_growth_installation(principal=principal, catalog=read_catalog)
+        if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+            raise ApiError(code="CREATOR_CLOSURE_READ_ADMISSION_UNAVAILABLE",
+                           message="当前闭环贡献读取准入不可核验。", status_code=503)
+        if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+            try:
+                return readonly.read(TenantScope(principal.org_id, principal.project_id))
+            except CreatorClosureReadonlyError as exc:
+                raise ApiError(code=exc.code, message="当前闭环贡献暂不可读，请核对保存记录或读取范围。",
+                               status_code=503) from exc
+        return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
     _require_three_module_installation(module, principal=principal, catalog=catalog)
     return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
 

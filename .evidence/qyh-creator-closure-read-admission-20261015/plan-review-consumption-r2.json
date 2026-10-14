@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-closure-plan-r2-20261015",
+  "task_id": "qyh-creator-closure-read-admission-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "2f9362bb8fcf71eb167d8d18630a7d82cdeef824",
+    "authority_revision": "AOS-002031",
+    "files": {
+      ".evidence/qyh-creator-closure-read-admission-20261015/plan-review-package-r2.txt": "12a590883941217af07d92462013d4ffdd125f62ddc090dc5ff97053fc3274f7"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "ac34e17fdb17e6bc3f7d24469552121ea8893b848e066501bd99b78ba057e1f8",
+  "transport_sha256": "b8157269c519c2d2916fa944d41785c69b8dab0800b10011dd9138b15ff927ff"
+}

@@ -84,6 +84,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
         '/v1/ecommerce-workshop/views/creator-growth/contributions',
         '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
         '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
+        '/v1/ecommerce-workshop/views/{module}/closure-contributions',
     }
 
 
@@ -427,3 +428,83 @@ def test_workflow_successful_empty_has_current_authenticated_scope():
     assert response.status_code == 200
     assert response.json() == dict(tenant=dict(orgId='org-org', projectId='dev-project'), items=[], count=0)
     assert not legacy.calls
+
+
+CLOSURE_PATH = '/v1/ecommerce-workshop/views/creator/closure-contributions'
+
+
+def closure_probes(client, *, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope, module):
+            calls.append(('legacy', scope.key, module.value))
+            raise ReadReached('legacy-closure')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key, 'creator'))
+            if failure:
+                from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                raise CreatorClosureReadonlyError(failure)
+            raise ReadReached('readonly-closure')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+    client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+    return calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_creator_closure_selects_only_the_admitted_reader(readonly):
+    client, legacy, catalog = client_with_catalogs()
+    calls = closure_probes(client)
+    catalog.get_readiness = lambda **scope: lifecycle_admission(readonly=readonly)
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-closure'):
+        client.get(CLOSURE_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'), 'creator')]
+    assert not legacy.calls
+
+
+def test_creator_closure_denied_before_both_readers():
+    client, legacy, catalog = client_with_catalogs()
+    calls = closure_probes(client)
+    assert client.get(CLOSURE_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+
+
+@pytest.mark.parametrize('module', ['price', 'customer'])
+def test_other_closure_modules_keep_legacy_catalog(module):
+    client, legacy, catalog = client_with_catalogs()
+    calls = closure_probes(client)
+    catalog.get_readiness = lambda **scope: lifecycle_admission()
+    assert client.get('/v1/ecommerce-workshop/views/' + module + '/closure-contributions').status_code == 404
+    assert not calls and legacy.calls and not catalog.calls
+
+
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+def test_creator_closure_query_cannot_change_scope_or_reader(query):
+    client, legacy, catalog = client_with_catalogs()
+    calls = closure_probes(client)
+    assert client.get(CLOSURE_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+
+
+@pytest.mark.parametrize('admission', [None, object()])
+def test_creator_closure_unknown_admission_is_unavailable(admission):
+    client, legacy, catalog = client_with_catalogs()
+    calls = closure_probes(client)
+    catalog.get_readiness = lambda **scope: admission
+    response = client.get(CLOSURE_PATH)
+    assert response.status_code == 503 and 'CREATOR_CLOSURE_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls
+
+
+@pytest.mark.parametrize('code', ['CREATOR_CLOSURE_READ_AUTHORITY_DRIFT',
+    'CREATOR_CLOSURE_READ_PRIVACY_UNAVAILABLE', 'CREATOR_CLOSURE_READ_LIMIT_EXCEEDED',
+    'CREATOR_CLOSURE_READ_UNAVAILABLE'])
+def test_creator_closure_reader_failure_cannot_be_empty_success(code):
+    client, legacy, catalog = client_with_catalogs()
+    calls = closure_probes(client, failure=code)
+    catalog.get_readiness = lambda **scope: lifecycle_admission()
+    response = client.get(CLOSURE_PATH)
+    assert response.status_code == 503 and code in response.text
+    assert 'latestClosure' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'), 'creator')] and not legacy.calls

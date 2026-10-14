@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "baf0288910ca799fb63051dd52381c85030ddc815fae47263677babc2f0ca6fc",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-closure-reader-code-r1",
+    "task_id": "qyh-creator-closure-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "2f9362bb8fcf71eb167d8d18630a7d82cdeef824",
+      "authority_revision": "AOS-002031",
+      "files": {
+        ".evidence/qyh-creator-closure-bounded-reader-20261015/code-review-package-r1.txt": "1cb919978f6b12b9d2e80140c92b072aa11d31143d981a7513bc17260333f8ca"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "专用reader按单次有界只读snapshot读取四类保存物证，核对原typed哈希、tenant/identity/ref/ledger/time/privacy，失败不能冒充空或完成。",
+        "evidence": "文件 services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py 类 CreatorClosureReadonlyReader。read() 方法先校验 conn.read_only=True、autocommit=False、isolation_level=REPEATABLE_READ；取 transaction_timestamp() 作为 cutoff；对 closure/usage/effect/handoff 四个表按顺序执行 SELECT LIMIT 1，使用 MAX_ITEM_BYTES=64KB 和 MAX_TOTAL_BYTES=1MB 做 hask 体积门控；_decode 依次校验 scope、revision=1、_time(created_at/compiled_at/bound_at/observed_at/cutoff_at, cutoff)、tenant.org/project、row.content_hash vs model.content_hash、ledger(_ledger(items))、sourceRef/receiptRef/closureRef/usageReceiptRef/effectReviewRef/handoffRef revision、identity 派生规则（closure 为 three-module-closure-{hash[:24]}，binding 为 three-module-{kind}-{hash[:24]}）、payload canonical_hash。异常分类：psycopg.Error->UNAVAILABLE、类型错->AUTHORITY_DRIFT、红检失败->PRIVACY_UNAVAILABLE、超量->LIMIT_EXCEEDED。测试 test_ecommerce_three_module_closure_readonly.py 覆盖空结果（4 blockers+allowed_commands=[]）、outer/nested drift、ref 借用、ledger 篡改、SQL oversize、wrong transaction、backend 异常、敏感 actor、手风琴 ref、重复 item、wrong task kind 等 case；native 脚本 native_fixture_r2.py 报告 writeDeniedSqlstate='25006'、oversize->LIMIT_EXCEEDED、privacy->PRIVACY_UNAVAILABLE、commandsEmpty=true、originalVolumeTouched=false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原producer、共享Store和五轴语义保持；本候选的原合同回归及隔离真实PG证据支持代码边界，不替代原真人授权、原650迁移或经营闭环。",
+        "evidence": "文件 services/aos-api/aos_api/ecommerce_workshop_three_module_closure.py 中 EcommerceWorkshopThreeModuleClosureService、ThreeModuleClosureContributionView、_ledger、_CONTRIBUTION 保持原五轴（items/usage/effect/handoff + closure）语义与 allowed_commands 默认值。reader 仅消费贡献视图并通过 _SavedBindings 代理 store.latest_bindings，不调用 compile/bind。测试 test_legacy_producer_remains_unchanged 确认原 ProducerFixture + 空 store 仍返回 4 allowed_commands。source-verification-r4.json 证明 4 个相关源文件在 pytest 前后 SHA 不变（ecommerce_three_module_closure_readonly.py、test_ecommerce_three_module_closure_readonly.py、ecommerce_workshop.py、test_ecommerce_workshop_read_http.py），baseHead=2f9362bb...，returncode=0，244 passed。native-r2-result.json 记录 fixtureOnlyNotOriginalSchema=true、exactW6DdlSha=e2be75...、originalVolumeTouched=false、realUserApproval=false，明确说明使用合成 w6_009 四表而非原 650 迁移，且无真人审批。concurrent_usage snapshot 测试 first.quantity=None、second.quantity=7.0 证明 MVCC 隔离。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前 AOS-002031 基线审阅结论；如需上线前进一步隔离，补充原 650 DDL 的真实 PG 环境回归测试与真人授权签收记录。"
+  }
+}

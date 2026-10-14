@@ -1,0 +1,25 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-closure-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002031",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py",
+    "aos-platform/.evidence/qyh-creator-closure-bounded-reader-20261015"
+  ],
+  "excluded_scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_three_module_closure.py",
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_three_module_closure_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Whole231Goal retained; only dedicated creator saved closure4table bounded REPEATABLE_READ readonly reader and tests; exact original typedhash/ledger/mapping/NULLbindingmodule/times/refschema/tenant/privacy; no legacy/writer/POST alteration",
+    "PlanPrime beforeRED/minimal; isolated nativePG snapshot/write25006/RLS/SQLbyteguard, scopednativegenuineGET through later rootadmission/650 noeffects, exact quality/live and preciseSliceDelivery; fixture not real approval/business closure"
+  ],
+  "lease_expires_at": "2026-10-15T00:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-15T05:19:18+08:00"
+}

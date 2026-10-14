@@ -1,0 +1,563 @@
+PLAN only, code not yet implemented. FullGoal current231/sameowner nonoverlap/base2031, originalreadonly/noEffects. Original w6_009 binding.module nullable and producer actually writesNone; original typed object canonical_hash must be preserved. Review plan against supplied originals, not legacyhistorical ADR NOTSTARTED.
+
+FILE .evidence/qyh-creator-closure-read-admission-20261015/implementation-plan.md SHA 2d25b44c2f934224e3b44a0d964d68354bf1cfc53dc0e094420adad6de3d1f9f
+# Creator 保存闭环贡献只读接线方案
+
+上位：231完整Goal；产品v2/05达人邀约与签约；技术57-W6-09 ADR（尤其6/7当前实现补记），原three_module_closure模型/服务/Store及w6_009原DDL。HEAD2f/Authority2031/current维护r4、creator-closure-root和新增bounded-reader Task同owner不重叠。原库161/650、HostworkerProviderOFF。只读接线不代替自然闭环、预算批准、安装全生命周期/八场景/视觉/观察发布。
+
+## 文件与接口
+
+本root Task只改routers/ecommerce_workshop.py和test_ecommerce_workshop_read_http.py，D-wave/本证据。独立bounded Task只新增aos_api/ecommerce_three_module_closure_readonly.py及tests/test_ecommerce_three_module_closure_readonly.py，已支持登记并回读。原公共模型/服务/Store、AIP authority、POST/price/customer命令、schema及Web不改。
+
+原GET /views/{module}/closure-contributions保留query拒绝、principal/scope、安装/签名/角色/marking/DataScope。creator以ReadCatalog准入得到typed readiness；INSTALLED_ASSET_READONLY marker仅选择新reader，typed未知503，正常无marker走原service。其他模块仍用原Catalog与_require_three_module_installation，不借creator放行price/customer。独立reader错误固定503文案/code，不输出SQL/字段/原异常。不直接修改维护HTTP allowlist或用空DTO绕过reader。依赖构造不产生DB连接；任何新增依赖不得使旧POST进入readonly或丢失既有准入。
+
+## 专用 reader 合同
+
+单次connect_read_only scoped session，明确read_only=True/autocommit=False/REPEATABLE_READ；transaction_timestamp同一截止面，四个固定表只SELECT。最新closure仅creator，以created_at DESC/closure_id确定tie-break LIMIT1；三binding按同scope/closure_id、created_at DESC/binding_id LIMIT1。故意不过滤未来时间或错误module来隐藏异常；所选未来created_at拒绝。每行SQL先octet_length(authority_data::text)且CASE最多64KiB才传payload，四行总1MiB及最终DTO1MiB上限；不截断item计数、不把限额错误当空。
+
+外层org/project、revision严格int1、identity/source_id/module/hash/time与typed payload逐项核对；closure必须creator、派生closure_id遵原scope/module/source_id算法。binding.module按原_append允许NULL或creator，其他值拒绝；必须关联同一closure的完整ClosureExactRef（type/id/revision/hash/receiptId），binding_id遵原typed payload哈希派生，outer.created_at==compiled_at/bound_at。复用原canonical_hash：closure payload含typed module/sourceRef/items；binding payload是typed closureRef+其原resolved字段，不能改为model_dump JSON签名。closure ledger必须与原_ledger(items)一致，items唯一itemKey，originalRef关联原source:lane，originalStatus映射复用原Store _STATUS而非复制业务状态机。
+
+typed四模型extra forbid保留；taskRef/taskRunRef虽是dict，读取仅允许原ResourceRef/HandoffResourceRef公开合同的有限字段，分别Task/TaskRun，不传任意扩展字典。输出使用原模型字节/类型合同，敏感内容沿原redact_sensitive防护，疑似联系方式/私密扩展拒绝，不脱敏后假装原签名仍有效。不新查AIP Task/Usage/Effect/Handoff，不解析secret或商城源；这是已存binding物证，不宣称引用的全部外部authority现态已复核。
+
+时间必须aware，compiled/bound/observed不晚于读取cutoff且binding不早于closure。Effect成熟窗口cutoffAt可在未来用于immature/insufficient/unknown，不能一律拒绝合法未来窗口；mature需cutoffAt<=observedAt<=boundAt，未知/未成熟不造完成。Usage unknown保持quantity=None；五轴关系/unknown/request_more独立，沿原service贡献映射/blockers，以snapshot.cutoff作为evaluatedAt。只读DTO显式allowedCommands=[]、handoffConsumeAllowed/memoryPromotionAllowed/externalEffectsAllowed=False。
+
+## 验证及序列
+
+先独立route方案合法消费。RED覆盖empty真实语义与四blockers、正常完整saved闭环（producer原typedhash）、binding NULLmodule兼容、unknown量/immature未来窗、每类外层/嵌套tenant/hash/ref/module/time/revision/ledger漂移、arbitrary任务ref扩展与privacy、bytes超限/未知连接/SQL错误，断言仅4固定表SELECT/一次snapshot/不commit/commands空。Root REDcreator readonly走reader/normal legacy不变/pricecustomer不借放行/query与role/scope/marker未知503/reader错误安全。最小实现后专项+相邻原closure/creator/read-http回归；隔离真实4表PG并发snapshot/SQLCASE/RLS/write25006，非原650或真人批准。
+
+原真人实际GET只在代码独立质量合法消费/精确m1提交/latestarchive/fresh维护门后；原650前后、可信空/401400、菜单三视口对原稿，无原坏数据/编译/绑定/POST。原共享Store权限/commands正常回归，Web五轴不变。独立现场Prime/精确各sliceDelivery/完整维护handoff/Authority七强Prime/立即下一已登记helper。预算C唯一真人最后决定/原部署、自然CaseRun建议评审内容能力产物人审续跑总控Wiki/安装全生命周期/八场景/视觉P1/持续观察发布继续，Goal ACTIVE。
+
+FILE .evidence/qyh-creator-closure-bounded-reader-20261015/task-lease-readback.json SHA a7225e12c1cb786e3f93d1a43d89e5452a4fe97f8fdfa7d4f4b4dfd3a2587fe5
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-closure-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002031",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py",
+    "aos-platform/.evidence/qyh-creator-closure-bounded-reader-20261015"
+  ],
+  "excluded_scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_three_module_closure.py",
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_three_module_closure_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Whole231Goal retained; only dedicated creator saved closure4table bounded REPEATABLE_READ readonly reader and tests; exact original typedhash/ledger/mapping/NULLbindingmodule/times/refschema/tenant/privacy; no legacy/writer/POST alteration",
+    "PlanPrime beforeRED/minimal; isolated nativePG snapshot/write25006/RLS/SQLbyteguard, scopednativegenuineGET through later rootadmission/650 noeffects, exact quality/live and preciseSliceDelivery; fixture not real approval/business closure"
+  ],
+  "lease_expires_at": "2026-10-15T00:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-15T05:19:18+08:00"
+}
+FILE services/aos-api/aos_api/ecommerce_workshop_three_module_closure.py SHA abb7798aae5fe3ca87ec0a05e2445bdbbf16cb54663009709bff20252458ea40
+"""W6-09 canonical closure bridge for creator, price and customer modules.
+
+The bridge never accepts caller-declared aggregate success.  Item outcomes,
+usage, effect maturity and handoff decisions are resolved from their existing
+tenant authorities and remain five independent axes.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
+
+from pydantic import Field, model_validator
+
+from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.tenant_scope import TenantScope
+
+
+THREE_MODULE_CLOSURE_SCHEMA_VERSION = "aos.ecommerce-workshop.three-module-closure/v1"
+
+
+def canonical_hash(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+class ThreeModuleClosureBlocked(RuntimeError):
+    code = "THREE_MODULE_CLOSURE_BLOCKED"
+
+
+class ThreeModuleClosureConflict(ThreeModuleClosureBlocked):
+    code = "THREE_MODULE_CLOSURE_CONFLICT"
+
+
+class ThreeModule(StrEnum):
+    CREATOR = "creator"
+    PRICE = "price"
+    CUSTOMER = "customer"
+
+
+class CanonicalItemOutcome(StrEnum):
+    IN_PROGRESS = "in_progress"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+    DISPUTED = "disputed"
+    SKIPPED = "skipped"
+
+
+class ClosureState(StrEnum):
+    EMPTY = "empty"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    PARTIAL = "partial"
+    UNKNOWN = "unknown"
+
+
+class ClosureExactRef(AipContractModel):
+    resource_type: str = Field(min_length=1, max_length=120)
+    resource_id: str = Field(min_length=1, max_length=240)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    receipt_id: str = Field(min_length=1, max_length=240)
+
+
+class CompileThreeModuleClosureRequest(AipContractModel):
+    module: ThreeModule
+    source_ref: ClosureExactRef
+
+    @model_validator(mode="after")
+    def _source_type(self) -> "CompileThreeModuleClosureRequest":
+        expected = {
+            ThreeModule.CREATOR: "CreatorBatchStartDecisionRevision",
+            ThreeModule.PRICE: "PriceDispositionRevision",
+            ThreeModule.CUSTOMER: "CustomerBatchStartDecisionRevision",
+        }
+        if self.source_ref.resource_type != expected[self.module]:
+            raise ValueError("three-module sourceRef type drifted")
+        return self
+
+
+class ThreeModuleItemOutcome(AipContractModel):
+    item_key: str = Field(min_length=1, max_length=240)
+    original_status: str = Field(min_length=1, max_length=80)
+    canonical_outcome: CanonicalItemOutcome
+    original_ref: ClosureExactRef
+    receipt_ref: ClosureExactRef | None = None
+
+
+class ThreeModuleClosureLedger(AipContractModel):
+    total: int = Field(ge=0)
+    in_progress: int = Field(ge=0)
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    unknown: int = Field(ge=0)
+    disputed: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    state: ClosureState
+
+    @model_validator(mode="after")
+    def _conserved(self) -> "ThreeModuleClosureLedger":
+        values = [self.in_progress, self.succeeded, self.failed, self.unknown, self.disputed, self.skipped]
+        if self.total != sum(values):
+            raise ValueError("three-module closure ledger must conserve items")
+        nonzero = sum(value > 0 for value in values)
+        expected = (
+            ClosureState.EMPTY if self.total == 0 else
+            ClosureState.COMPLETED if self.succeeded == self.total else
+            ClosureState.FAILED if self.failed == self.total else
+            ClosureState.UNKNOWN if self.unknown == self.total else
+            ClosureState.IN_PROGRESS if self.in_progress == self.total else
+            ClosureState.PARTIAL if nonzero > 1 else
+            ClosureState.PARTIAL
+        )
+        if self.state is not expected:
+            raise ValueError("three-module closure state does not match item algebra")
+        return self
+
+
+class ThreeModuleClosureRevision(AipContractModel):
+    tenant: TenantContext
+    closure_id: str
+    revision: int = 1
+    module: ThreeModule
+    source_ref: ClosureExactRef
+    items: list[ThreeModuleItemOutcome] = Field(default_factory=list, max_length=2000)
+    ledger: ThreeModuleClosureLedger
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    compiled_by: str
+    compiled_at: datetime
+
+
+class BindThreeModuleUsageRequest(AipContractModel):
+    closure_ref: ClosureExactRef
+    usage_receipt_id: str = Field(min_length=1, max_length=240)
+
+    @model_validator(mode="after")
+    def _closure(self) -> "BindThreeModuleUsageRequest":
+        if self.closure_ref.resource_type != "ThreeModuleClosureRevision":
+            raise ValueError("closureRef drifted")
+        return self
+
+
+class ThreeModuleUsageBindingRevision(AipContractModel):
+    tenant: TenantContext
+    binding_id: str
+    revision: int = 1
+    closure_ref: ClosureExactRef
+    usage_receipt_ref: ClosureExactRef
+    lineage_id: str
+    quality: str = Field(pattern=r"^(measured|estimated|unknown)$")
+    quantity: float | None = Field(default=None, ge=0)
+    unit: str
+    adjustment_total: float = 0
+    settlement: str = Field(pattern=r"^(measured|estimated|unknown)$")
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    bound_at: datetime
+
+    @model_validator(mode="after")
+    def _unknown_has_no_quantity(self) -> "ThreeModuleUsageBindingRevision":
+        if self.quality == "unknown" and self.quantity is not None:
+            raise ValueError("unknown usage cannot invent zero or quantity")
+        if self.quality != "unknown" and self.quantity is None:
+            raise ValueError("known usage requires canonical quantity")
+        return self
+
+
+class BindThreeModuleEffectRequest(AipContractModel):
+    closure_ref: ClosureExactRef
+    effect_review_id: str = Field(min_length=1, max_length=240)
+
+    @model_validator(mode="after")
+    def _closure(self) -> "BindThreeModuleEffectRequest":
+        if self.closure_ref.resource_type != "ThreeModuleClosureRevision":
+            raise ValueError("closureRef drifted")
+        return self
+
+
+class ThreeModuleEffectBindingRevision(AipContractModel):
+    tenant: TenantContext
+    binding_id: str
+    revision: int = 1
+    closure_ref: ClosureExactRef
+    effect_review_ref: ClosureExactRef
+    maturity_status: str = Field(pattern=r"^(immature|mature|insufficient|unknown)$")
+    accepted: bool
+    effect_completed: bool
+    sample_count: int = Field(ge=0)
+    min_sample: int = Field(ge=1)
+    cutoff_at: datetime
+    observed_at: datetime
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    bound_at: datetime
+
+    @model_validator(mode="after")
+    def _maturity_is_honest(self) -> "ThreeModuleEffectBindingRevision":
+        if self.effect_completed != (self.maturity_status == "mature"):
+            raise ValueError("effectCompleted must follow canonical maturity only")
+        return self
+
+
+class BindThreeModuleHandoffRequest(AipContractModel):
+    closure_ref: ClosureExactRef
+    handoff_id: str = Field(min_length=1, max_length=240)
+
+    @model_validator(mode="after")
+    def _closure(self) -> "BindThreeModuleHandoffRequest":
+        if self.closure_ref.resource_type != "ThreeModuleClosureRevision":
+            raise ValueError("closureRef drifted")
+        return self
+
+
+class ThreeModuleHandoffBindingRevision(AipContractModel):
+    tenant: TenantContext
+    binding_id: str
+    revision: int = 1
+    closure_ref: ClosureExactRef
+    handoff_ref: ClosureExactRef
+    transport_status: str
+    business_decision: str | None = Field(default=None, pattern=r"^(accepted|rejected|request_more|returned)$")
+    task_ref: dict[str, Any]
+    task_run_ref: dict[str, Any]
+    disclosure_ref_count: int = Field(ge=0)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    bound_at: datetime
+
+
+class ThreeModuleClosureContributionView(AipContractModel):
+    schema_version: str = THREE_MODULE_CLOSURE_SCHEMA_VERSION
+    tenant: TenantContext
+    module: ThreeModule
+    evaluated_at: datetime
+    atomic_skill_ids: list[str]
+    logic_id: str
+    primary_colleague: str
+    collaborator_colleagues: list[str]
+    latest_closure: ThreeModuleClosureRevision | None
+    latest_usage: ThreeModuleUsageBindingRevision | None
+    latest_effect: ThreeModuleEffectBindingRevision | None
+    latest_handoff: ThreeModuleHandoffBindingRevision | None
+    blockers: list[str]
+    allowed_commands: list[str] = Field(default_factory=lambda: [
+        "COMPILE_THREE_MODULE_CLOSURE",
+        "BIND_CANONICAL_USAGE",
+        "BIND_CANONICAL_EFFECT_REVIEW",
+        "BIND_CANONICAL_HANDOFF",
+    ])
+    handoff_consume_allowed: bool = False
+    memory_promotion_allowed: bool = False
+    external_effects_allowed: bool = False
+
+
+_CONTRIBUTION = {
+    ThreeModule.CREATOR: (
+        ["creator-batch-prepare", "creator-lane-reconcile", "creator-relationship-review"],
+        "ecommerce-creator-growth",
+        "达人运营官",
+        ["内容官", "数据参谋"],
+    ),
+    ThreeModule.PRICE: (
+        ["compile-price-case", "prepare-price-handoff", "evaluate-price-effect"],
+        "ecommerce-price-governance",
+        "数据参谋",
+        ["活动策划师", "导购顾问"],
+    ),
+    ThreeModule.CUSTOMER: (
+        ["segment-customers", "design-customer-journey", "evaluate-dialogue-effect"],
+        "ecommerce-customer-relationship",
+        "私域管家",
+        ["内容官", "客服专员", "导购顾问", "数据参谋"],
+    ),
+}
+
+
+def _ledger(items: list[ThreeModuleItemOutcome]) -> ThreeModuleClosureLedger:
+    counts = {value.value: 0 for value in CanonicalItemOutcome}
+    for item in items:
+        counts[item.canonical_outcome.value] += 1
+    total = len(items)
+    nonzero = sum(value > 0 for value in counts.values())
+    state = (
+        ClosureState.EMPTY if total == 0 else
+        ClosureState.COMPLETED if counts["succeeded"] == total else
+        ClosureState.FAILED if counts["failed"] == total else
+        ClosureState.UNKNOWN if counts["unknown"] == total else
+        ClosureState.IN_PROGRESS if counts["in_progress"] == total else
+        ClosureState.PARTIAL if nonzero > 1 else
+        ClosureState.PARTIAL
+    )
+    return ThreeModuleClosureLedger(total=total, state=state, **counts)
+
+
+class EcommerceWorkshopThreeModuleClosureService:
+    def __init__(self, store: Any) -> None:
+        self.store = store
+
+    @staticmethod
+    def _tenant(scope: TenantScope) -> TenantContext:
+        return TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+
+    @staticmethod
+    def _ref(resource_type: str, resource_id: str, content_hash: str) -> ClosureExactRef:
+        return ClosureExactRef(
+            resourceType=resource_type,
+            resourceId=resource_id,
+            revision=1,
+            contentHash=f"sha256:{content_hash}",
+            receiptId=f"receipt-{resource_id}",
+        )
+
+    def compile(self, scope: TenantScope, request: CompileThreeModuleClosureRequest, actor: str, *, now: datetime | None = None) -> ThreeModuleClosureRevision:
+        at = now or datetime.now(UTC)
+        items = self.store.resolve_domain_items(scope, request.module, request.source_ref)
+        payload = {"module": request.module, "sourceRef": request.source_ref, "items": items}
+        content_hash = canonical_hash(payload)
+        closure_id = f"three-module-closure-{canonical_hash([*scope.key, request.module, request.source_ref.resource_id])[:24]}"
+        item = ThreeModuleClosureRevision(
+            tenant=self._tenant(scope), closureId=closure_id, module=request.module,
+            sourceRef=request.source_ref, items=items, ledger=_ledger(items),
+            contentHash=content_hash, compiledBy=actor, compiledAt=at,
+        )
+        return self.store.append_closure(scope, item)
+
+    def require_closure(self, scope: TenantScope, ref: ClosureExactRef) -> ThreeModuleClosureRevision:
+        return self.store.require_closure(scope, ref)
+
+    def bind_usage(self, scope: TenantScope, request: BindThreeModuleUsageRequest, *, now: datetime | None = None) -> ThreeModuleUsageBindingRevision:
+        at = now or datetime.now(UTC)
+        self.store.require_closure(scope, request.closure_ref)
+        resolved = self.store.resolve_usage(scope, request.usage_receipt_id)
+        payload = {"closureRef": request.closure_ref, **resolved}
+        content_hash = canonical_hash(payload)
+        item = ThreeModuleUsageBindingRevision(
+            tenant=self._tenant(scope), bindingId=f"three-module-usage-{content_hash[:24]}",
+            closureRef=request.closure_ref, contentHash=content_hash, boundAt=at, **resolved,
+        )
+        return self.store.append_usage_binding(scope, item)
+
+    def bind_effect(self, scope: TenantScope, request: BindThreeModuleEffectRequest, *, now: datetime | None = None) -> ThreeModuleEffectBindingRevision:
+        at = now or datetime.now(UTC)
+        closure = self.store.require_closure(scope, request.closure_ref)
+        resolved = self.store.resolve_effect(scope, request.effect_review_id, closure.source_ref)
+        payload = {"closureRef": request.closure_ref, **resolved}
+        content_hash = canonical_hash(payload)
+        item = ThreeModuleEffectBindingRevision(
+            tenant=self._tenant(scope), bindingId=f"three-module-effect-{content_hash[:24]}",
+            closureRef=request.closure_ref, contentHash=content_hash, boundAt=at, **resolved,
+        )
+        return self.store.append_effect_binding(scope, item)
+
+    def bind_handoff(self, scope: TenantScope, request: BindThreeModuleHandoffRequest, *, now: datetime | None = None) -> ThreeModuleHandoffBindingRevision:
+        at = now or datetime.now(UTC)
+        self.store.require_closure(scope, request.closure_ref)
+        resolved = self.store.resolve_handoff(scope, request.handoff_id)
+        payload = {"closureRef": request.closure_ref, **resolved}
+        content_hash = canonical_hash(payload)
+        item = ThreeModuleHandoffBindingRevision(
+            tenant=self._tenant(scope), bindingId=f"three-module-handoff-{content_hash[:24]}",
+            closureRef=request.closure_ref, contentHash=content_hash, boundAt=at, **resolved,
+        )
+        return self.store.append_handoff_binding(scope, item)
+
+    def contribution_view(self, scope: TenantScope, module: ThreeModule, *, now: datetime | None = None) -> ThreeModuleClosureContributionView:
+        at = now or datetime.now(UTC)
+        latest = self.store.latest_bindings(scope, module)
+        skills, logic, primary, collaborators = _CONTRIBUTION[module]
+        closure = latest["closure"]
+        blockers: list[str] = []
+        if closure is None:
+            blockers.append("THREE_MODULE_CLOSURE_NOT_COMPILED")
+        if latest["usage"] is None:
+            blockers.append("THREE_MODULE_USAGE_NOT_BOUND")
+        if latest["effect"] is None:
+            blockers.append("THREE_MODULE_EFFECT_NOT_BOUND")
+        elif latest["effect"].maturity_status != "mature":
+            blockers.append(f"THREE_MODULE_EFFECT_{latest['effect'].maturity_status.upper()}")
+        if latest["handoff"] is None:
+            blockers.append("THREE_MODULE_HANDOFF_NOT_BOUND")
+        return ThreeModuleClosureContributionView(
+            tenant=self._tenant(scope), module=module, evaluatedAt=at,
+            atomicSkillIds=skills, logicId=logic, primaryColleague=primary,
+            collaboratorColleagues=collaborators, latestClosure=closure,
+            latestUsage=latest["usage"], latestEffect=latest["effect"],
+            latestHandoff=latest["handoff"], blockers=blockers,
+        )
+
+
+__all__ = [name for name in globals() if name.startswith("ThreeModule") or name.startswith("BindThree") or name.startswith("CompileThree") or name == "EcommerceWorkshopThreeModuleClosureService"]
+
+FILE services/aos-api/alembic/versions/w6_009_three_module_closure.py SHA e2be75ca114e98b188a1860e31b9db83e387abee715bfc54fbcd1c05d922014d
+"""Three-module partial, usage, effect and handoff closure bridge (W6-09).
+
+Revision ID: w6_009
+Revises: w6_008
+"""
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+from alembic import op
+
+revision: str = "w6_009"
+down_revision: str | Sequence[str] | None = "w6_008"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
+
+
+_BINDING_TABLES = (
+    "ecommerce_three_module_usage_binding_revision",
+    "ecommerce_three_module_effect_binding_revision",
+    "ecommerce_three_module_handoff_binding_revision",
+)
+
+
+def _scope(table: str) -> None:
+    op.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY")
+    op.execute(f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY")
+    op.execute(f"""CREATE POLICY tenant_scope ON {table}
+      USING (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+      WITH CHECK (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))""")
+    op.execute(f"GRANT SELECT, INSERT ON {table} TO aos_runtime")
+
+
+def upgrade() -> None:
+    op.execute("""
+    CREATE TABLE ecommerce_three_module_closure_revision (
+      org_id TEXT NOT NULL, project_id TEXT NOT NULL,
+      closure_id TEXT NOT NULL, revision INTEGER NOT NULL CHECK(revision=1),
+      module TEXT NOT NULL CHECK(module IN ('creator','price','customer')),
+      source_id TEXT NOT NULL,
+      content_hash CHAR(64) NOT NULL CHECK(content_hash ~ '^[0-9a-f]{64}$'),
+      authority_data JSONB NOT NULL CHECK(jsonb_typeof(authority_data)='object'),
+      created_at TIMESTAMPTZ NOT NULL,
+      PRIMARY KEY(org_id,project_id,closure_id,revision),
+      FOREIGN KEY(org_id,project_id) REFERENCES meta_workspace(org_id,project_id)
+    )""")
+    _scope("ecommerce_three_module_closure_revision")
+    op.execute("CREATE INDEX ecommerce_three_module_closure_latest_idx ON ecommerce_three_module_closure_revision(org_id,project_id,module,created_at DESC)")
+    for table in _BINDING_TABLES:
+        op.execute(f"""
+        CREATE TABLE {table} (
+          org_id TEXT NOT NULL, project_id TEXT NOT NULL,
+          binding_id TEXT NOT NULL, revision INTEGER NOT NULL CHECK(revision=1),
+          module TEXT, closure_id TEXT NOT NULL,
+          content_hash CHAR(64) NOT NULL CHECK(content_hash ~ '^[0-9a-f]{{64}}$'),
+          authority_data JSONB NOT NULL CHECK(jsonb_typeof(authority_data)='object'),
+          created_at TIMESTAMPTZ NOT NULL,
+          PRIMARY KEY(org_id,project_id,binding_id,revision),
+          FOREIGN KEY(org_id,project_id,closure_id,revision)
+            REFERENCES ecommerce_three_module_closure_revision(org_id,project_id,closure_id,revision)
+        )""")
+        _scope(table)
+        op.execute(f"CREATE INDEX {table}_closure_idx ON {table}(org_id,project_id,closure_id,created_at DESC)")
+
+
+def downgrade() -> None:
+    for table in reversed(_BINDING_TABLES):
+        op.execute(f"DROP TABLE {table}")
+    op.execute("DROP TABLE ecommerce_three_module_closure_revision")
+
+STORE EXACT latest_bindings
+    def latest_bindings(self, scope: TenantScope, module: ThreeModule) -> dict[str, Any]:
+        with self._connect(scope) as conn:
+            closure_row = conn.execute(
+                "SELECT authority_data FROM ecommerce_three_module_closure_revision WHERE org_id=%s AND project_id=%s AND module=%s ORDER BY created_at DESC LIMIT 1",
+                (*scope.key, module.value),
+            ).fetchone()
+            if closure_row is None:
+                return {"closure": None, "usage": None, "effect": None, "handoff": None}
+            closure = ThreeModuleClosureRevision.model_validate(closure_row["authority_data"])
+            result: dict[str, Any] = {"closure": closure}
+            for key, table, model in (
+                ("usage", "ecommerce_three_module_usage_binding_revision", ThreeModuleUsageBindingRevision),
+                ("effect", "ecommerce_three_module_effect_binding_revision", ThreeModuleEffectBindingRevision),
+                ("handoff", "ecommerce_three_module_handoff_binding_revision", ThreeModuleHandoffBindingRevision),
+            ):
+                row = conn.execute(
+                    f"SELECT authority_data FROM {table} WHERE org_id=%s AND project_id=%s AND closure_id=%s ORDER BY created_at DESC LIMIT 1",
+                    (*scope.key, closure.closure_id),
+                ).fetchone()
+                result[key] = None if row is None else model.model_validate(row["authority_data"])
+        return result
+
+
+__all__ = ["EcommerceWorkshopThreeModuleClosureStore"]
+
+STORE EXACT _append producer
+    def _append(self, scope: TenantScope, table: str, identity: str, item: Any, created_at: Any) -> Any:
+        self._assert_tenant(scope, item)
+        content_hash = item.content_hash
+        with self._serial_connect(scope) as conn:
+            conn.execute(
+                f"INSERT INTO {table}(org_id,project_id,binding_id,revision,module,closure_id,content_hash,authority_data,created_at) VALUES (%s,%s,%s,1,%s,%s,%s,%s::jsonb,%s) ON CONFLICT DO NOTHING",
+                (*scope.key, identity, getattr(item, "module", None), getattr(item, "closure_id", None) or item.closure_ref.resource_id, content_hash, self._json(item.model_dump(mode="json", by_alias=True)), created_at),
+            )
+            row = conn.execute(
+                f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND binding_id=%s AND revision=1",
+                (*scope.key, identity),
+            ).fetchone()
+            if row is None or row["content_hash"] != content_hash:
+                raise ThreeModuleClosureBlocked("THREE_MODULE_BINDING_IDEMPOTENCY_CONFLICT")
+            conn.commit()
+        return type(item).model_validate(row["authority_data"])
+
