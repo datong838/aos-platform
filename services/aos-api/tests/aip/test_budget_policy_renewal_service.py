@@ -26,12 +26,13 @@ def test_exact_operation_and_typed_command_reparse(op,cls):
     assert r.revalidated().command.request_hash==r.command.request_hash
 
 
-@pytest.mark.parametrize('mutation',['boolVersion','wrongCommand','machineToken','issuerMissingToken','extraActor'])
+@pytest.mark.parametrize('mutation',['boolVersion','wrongCommand','machineToken','machineSnakeToken','issuerMissingToken','extraActor'])
 def test_wire_identity_and_discriminator_mutation_rejected(mutation):
     body=envelope('consume')
     if mutation=='boolVersion':body['schemaVersion']=True
     elif mutation=='wrongCommand':body['operation']='decide'
     elif mutation=='machineToken':body['bearerToken']=None
+    elif mutation=='machineSnakeToken':body['bearer_token']=None
     elif mutation=='issuerMissingToken':body=envelope('decide');body.pop('bearerToken')
     else:body['actor']='forged'
     with pytest.raises(ValueError):RenewalRequest.model_validate(body)

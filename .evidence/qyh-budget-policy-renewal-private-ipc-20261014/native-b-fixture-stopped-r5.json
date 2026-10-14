@@ -1,0 +1,17 @@
+{
+  "cid": "6880431ccfc8c78eab5e8b3be83abf1cfe590a962769f1e25942bc437927f182",
+  "state": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-14T01:39:41.655517832Z",
+    "FinishedAt": "2026-10-14T01:44:50.449730451Z"
+  },
+  "originalVolumeTouched": false
+}

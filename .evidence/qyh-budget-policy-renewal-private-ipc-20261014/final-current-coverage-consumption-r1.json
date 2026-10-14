@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-budget-policy-renewal-private-ipc-20261014-final-current-coverage-r1",
+  "task_id": "qyh-budget-policy-renewal-private-ipc-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "9c96edf3c4fe74f92708c7d30c485a29bdf42c96",
+    "authority_revision": "AOS-002026",
+    "files": {
+      ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/final-current-coverage-package-r1.txt": "3b2665cca872b8771eb36f43a7ab3c1bb2861cc8e3fa5c375c1b1f2de321447b"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "d611429e39d8be58bf2abf13169865183d34be66c73ad0bd06b1480216a1f1fc",
+  "transport_sha256": "cc3ba814f0d043ab1be6cfc79968ecfbdd1398af0ebce042cb98952c8d72b70e"
+}

@@ -41,7 +41,8 @@ class RenewalRequest(AipContractModel):
     @model_validator(mode='before')
     @classmethod
     def public_identity_fields(cls,value):
-        if type(value) is dict and value.get('operation') not in {'decide','revoke'} and 'bearerToken' in value:
+        if (type(value) is dict and value.get('operation') not in {'decide','revoke'}
+                and any(key in value for key in ('bearerToken','bearer_token'))):
             raise ValueError('machine token field forbidden')
         return value
 

@@ -1,0 +1,34 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "62c0a39e628a1c099245b6d943ccf4422d33ebfd74d6c83a490b0bd06fd992e1",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-private-ipc-20261014-alias-current-quality-r3",
+    "task_id": "qyh-budget-policy-renewal-private-ipc-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "9c96edf3c4fe74f92708c7d30c485a29bdf42c96",
+      "authority_revision": "AOS-002026",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/alias-current-quality-package-r3.txt": "b7b1650cacda7f6eef89b934df8b2edc84865ff28786e15f30fcfed9c63f8618"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The supplied current complete service and test source plus exact diff correctly reject both machine bearer field spellings including null, preserve genuine issuer JWT requirements and original purpose/tenant/native authority gates, and change no other B source or production data.",
+        "evidence": "Diff in aip_budget_policy_renewal_service.py: public_identity_fields now checks any key in ('bearerToken','bearer_token') for non-decide/revoke operations; test added machineSnakeToken path setting body['bearer_token']=None. Service identity_kind validator enforces issuer token required for decide/revoke and forbidden for others. Seven hashes match native-b-worker-source-readback-r14.json.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The supplied current exact two PASSED nodes, 119-pass regression and matching current all-seven real signed four-write CLI/native fault-matrix/readback/cleanup support this minimal stricter repair; no real budget consent, original deployment or completed business Goal is claimed.",
+        "evidence": "machine-token-alias-green.log: 2 passed (machineToken, machineSnakeToken). b-adjacent-unit-r4.log: 119 passed, 1 skipped. native-b-final-readback-r5.json: allSixNoLogin=true, noRealConsent=true, originalGuardsRestored=true, originalVolumeTouched=false. native-b-fixture-stopped-r5.json: exitCode=0.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前基线并关闭此复核请求；如有后续发布需求，需走完整 B delivery 流程。"
+  }
+}

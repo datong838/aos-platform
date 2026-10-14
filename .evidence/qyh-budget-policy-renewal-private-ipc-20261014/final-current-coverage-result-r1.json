@@ -1,0 +1,34 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "62c0a39e628a1c099245b6d943ccf4422d33ebfd74d6c83a490b0bd06fd992e1",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-budget-policy-renewal-private-ipc-20261014-final-current-coverage-r1",
+    "task_id": "qyh-budget-policy-renewal-private-ipc-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "9c96edf3c4fe74f92708c7d30c485a29bdf42c96",
+      "authority_revision": "AOS-002026",
+      "files": {
+        ".evidence/qyh-budget-policy-renewal-private-ipc-20261014/final-current-coverage-package-r1.txt": "3b2665cca872b8771eb36f43a7ab3c1bb2861cc8e3fa5c375c1b1f2de321447b"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The actual prior full-seven independent quality/composite baseline, exact unchanged-five hashes, current complete changed-two delta PASS legally consumed, and matching all-seven current real signed four-write CLI/native/source-parity/readback demonstrate full current B closed code-candidate coverage without promoting obsolete, malformed or unconsumed results.",
+        "evidence": "材料包含 alias-current-quality-result-r3 (verdict PASS, SHA 7958..., baseline head 9c96edf, status CONSUMED_MATERIAL_REVIEW) 与 fullB-composite-result-r1 (verdict PASS, SHA ab74..., baseline head c5c06bd8, status CONSUMED_MATERIAL_REVIEW)。unchanged5 hashes 在 current7 与 old7 中完全一致。native-b-worker-source-readback-r14.json 显示 currentSevenHashesMatched=true 且七文件 hash 与 current7 键值一一对应，CLI/write SHA 由 worker/validator 绑定。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Candidate delivery preserves original production data/roles/credentials/userdirty and real user budget consent/deployment boundaries; the full Goal, natural business chain, eight workbench visuals and lifecycle/release plus today latest same-volume complete restart remain explicitly incomplete.",
+        "evidence": "native-b-final-readback-r5.json 记录 noRealConsent=true, originalVolumeTouched=false, allSixNoLogin=true, originalGuardsRestored=[O,O]。alias-current-quality-result-r3 声明 no real budget consent/deployment 发生。fullB-composite-result-r1 的 findings 明确 fullGoalActive=true 且 Deployment/Consent/Visuals 为待完成项，B 仅限于 code/service/process/schema。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前基线 9c96edf 及已消费的 r3/r1 结论；关闭本次 B 候选复核；待 A 依赖推进 daily volume 重启、八工位 visuals 及真实 Budget 审批后方可进行 C 部署。"
+  }
+}

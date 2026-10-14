@@ -1,0 +1,652 @@
+Review the current minimal B change. Machine operations forbid BOTH bearerToken and bearer_token keys INCLUDING explicit null. None cannot provide identity or privilege, but its key is still forbidden. Shared base populate_by_name supports Python field aliases; this change rejects the alias too, before normalization. The envelope helper ONLY adds a bearerToken for decide/revoke, never for consume. Current two exact negative nodes PASSED, full119 PASS1 native skip, actual four-write signed CLI native R14 passed at all current7 hashes. Production unchanged. Official B delivery still pending. Do not infer failure from historical RED: it was before patch and is not supplied here. Old malformed reviews are not PASS and have not been repaired. This review is for full changed2 sources and their bounded diff; unchanged5 and prior complete B quality/composite are separately frozen history.
+CURRENT7 HASHES:
+{"services/aos-api/aos_api/aip_budget_policy_renewal_connection.py": "f684042fe806b06239123b063e3f5014fe018a34e79e07c3c6d0acc3c825946e", "services/aos-api/aos_api/aip_budget_policy_renewal_process.py": "47db4f8cb3eb3d2accc2dff9e7b032f1472a60e9f9325021184595eeb53ca350", "services/aos-api/aos_api/aip_budget_policy_renewal_schema.json": "e0f2f9d1167d9823f7c50fe87663e1f991d8e26ac8cb5d19ef30cc2c430d5db6", "services/aos-api/aos_api/aip_budget_policy_renewal_service.py": "d707ceb6e30c3d915999815f4832203d8ac53d5f651ebc75cac79ddb9f85fcd8", "services/aos-api/tests/aip/test_budget_policy_renewal_connection.py": "9b1b83c30e225f1787e623a5d551e3c7d7c81127312c9c9a7bd12b5c8e98d58d", "services/aos-api/tests/aip/test_budget_policy_renewal_process.py": "2ca2917a227a090f49c38aee716e8c916a5226d786c17720eaf684cd954ad017", "services/aos-api/tests/aip/test_budget_policy_renewal_service.py": "fdb0f875ffc7ddbd1704ebe854bc698b6979de243bb630ea1dfba264ea9e0d0a"}
+FULL CURRENT SOURCE services/aos-api/aos_api/aip_budget_policy_renewal_service.py
+"""Five renewal operations behind protected configuration and at-most-once IPC.
+
+Human JWTs are memory-only. This service never provisions roles or approves on
+behalf of a user; issuer decisions require the exact explicit request and JWT.
+"""
+from pathlib import Path
+from typing import Literal
+
+from pydantic import ConfigDict, Field, SecretStr, field_validator, model_validator
+
+from aos_api.aip_contracts import AipContractModel
+from aos_api.aip_budget_policy_renewal_contracts import (
+    RenewalProposalCommand,RenewalDecisionCommand,RenewalRevocationCommand,RenewalConsumeCommand,
+)
+from aos_api.aip_budget_policy_renewal_connection import (
+    ProtectedRenewalConfig,open_purpose_connection,
+)
+from aos_api.aip_budget_policy_renewal_identity import _database_identity,authenticate_checker
+from aos_api.aip_budget_policy_renewal_store import RenewalAuthorityStore,RenewalStoreBlocked
+from aos_api.aip_network_issuer_attempt import (
+    AttemptReceipt,AttemptAlreadyRecorded,AttemptConflict,AttemptUnknown,_reserve_attempt_receipt,
+)
+
+COMMANDS={'propose':RenewalProposalCommand,'decide':RenewalDecisionCommand,
+          'revoke':RenewalRevocationCommand,'consume':RenewalConsumeCommand}
+PURPOSES={'propose':'maker','decide':'issuer','revoke':'issuer','consume':'consumer'}
+
+
+class RenewalServiceBlocked(ValueError):
+    pass
+
+
+class RenewalRequest(AipContractModel):
+    model_config=ConfigDict(frozen=True)
+    schema_version: Literal[1]
+    mode: Literal['execute','reconcile']
+    operation: Literal['propose','decide','revoke','consume']
+    command: RenewalProposalCommand|RenewalDecisionCommand|RenewalRevocationCommand|RenewalConsumeCommand
+    bearer_token: SecretStr|None=None
+
+    @model_validator(mode='before')
+    @classmethod
+    def public_identity_fields(cls,value):
+        if (type(value) is dict and value.get('operation') not in {'decide','revoke'}
+                and any(key in value for key in ('bearerToken','bearer_token'))):
+            raise ValueError('machine token field forbidden')
+        return value
+
+    @field_validator('schema_version',mode='before')
+    @classmethod
+    def version(cls,value):
+        if type(value) is not int:
+            raise ValueError('exact version required')
+        return value
+
+    @field_validator('command',mode='before')
+    @classmethod
+    def exact_command(cls,value,info):
+        expected=COMMANDS.get(info.data.get('operation'))
+        if expected is None:
+            raise ValueError('operation required')
+        if type(value) is expected:
+            value=value.model_dump(mode='python',by_alias=True)
+        if type(value) is not dict:
+            raise ValueError('exact command required')
+        return expected.model_validate(value)
+
+    @field_validator('bearer_token',mode='before')
+    @classmethod
+    def secret(cls,value):
+        if value is None:
+            return None
+        if type(value) is SecretStr:
+            value=value.get_secret_value()
+        if type(value) is not str or not 0<len(value)<=16384:
+            raise ValueError('bounded token required')
+        return SecretStr(value)
+
+    @model_validator(mode='after')
+    def identity_kind(self):
+        if type(self.command) is not COMMANDS[self.operation]:
+            raise ValueError('command operation mismatch')
+        if (self.operation in {'decide','revoke'})!=(self.bearer_token is not None):
+            raise ValueError('issuer token required; machine token forbidden')
+        return self
+
+    def revalidated(self):
+        excluded={'bearer_token'} if self.bearer_token is None else set()
+        return type(self).model_validate(self.model_dump(mode='python',by_alias=True,exclude=excluded))
+
+
+def protocol_schema():
+    schema=RenewalRequest.model_json_schema(by_alias=True)
+    schema['$id']='aos.budget-policy-renewal.ipc/v1'
+    metadata={
+        'operation':{'type':'string','enum':list(COMMANDS)},
+        'requestHash':{'type':'string','pattern':'^[0-9a-f]{64}$'},
+        'activationEligible':{'type':'boolean','const':False},
+    }
+    schema['$defs']['RenewalResponseFrame']={
+        'type':'object','additionalProperties':False,
+        'required':['schemaVersion','operation','requestHash','activationEligible','result'],
+        'properties':{'schemaVersion':{'type':'integer','const':1},**metadata,
+            'result':{'type':'object','additionalProperties':True,
+                '$comment':'Native SQL artifact fields remain governed by A Store and independent readonly history.',
+                'required':['operation','requestHash','activationEligible','status'],
+                'properties':{**metadata,'status':{'type':'string','enum':[
+                    'prepared','decided','revoked','observed','unresolved','conflict','blocked']}}}},
+        'allOf':[{'if':{'properties':{'operation':{'const':operation}},'required':['operation']},
+            'then':{'properties':{'result':{'properties':{'operation':{'const':operation}}}}}}
+            for operation in COMMANDS],
+    }
+    schema['allOf']=[]
+    for operation,command in COMMANDS.items():
+        then={'properties':{'command':{'$ref':'#/$defs/'+command.__name__}}}
+        if operation in {'decide','revoke'}:
+            then['required']=['bearerToken']
+            then['properties']['bearerToken']={'type':'string','minLength':1,'maxLength':16384}
+        else:
+            then['not']={'required':['bearerToken']}
+        schema['allOf'].append({'if':{'properties':{'operation':{'const':operation}},'required':['operation']},'then':then})
+    return schema
+
+
+class RenewalService:
+    def __init__(self,config,attempt_directory):
+        if type(config) is not ProtectedRenewalConfig or not Path(attempt_directory).is_absolute():
+            raise RenewalServiceBlocked('RENEWAL_PRIVATE_SERVICE_REQUIRED')
+        self.config=config
+        self.attempt_directory=Path(attempt_directory)
+
+    def reconcile(self,request):
+        request=request.revalidated()
+        purpose=PURPOSES[request.operation]
+        with open_purpose_connection(self.config,purpose,True) as conn:
+            store=RenewalAuthorityStore(conn,checker_binding=self.config.binding)
+            return store.reconcile(request.command,token=request.bearer_token)
+
+    def execute(self,request):
+        if type(request) is not RenewalRequest:
+            raise RenewalServiceBlocked('RENEWAL_EXACT_PRIVATE_REQUEST_REQUIRED')
+        request=request.revalidated()
+        if request.mode=='reconcile':
+            return self.reconcile(request)
+        purpose=PURPOSES[request.operation]
+        # Current authentication precedes reservation; A rechecks in its write tx.
+        with open_purpose_connection(self.config,purpose,True) as conn:
+            with conn.transaction():
+                conn.execute('SET TRANSACTION ISOLATION LEVEL READ COMMITTED, READ ONLY')
+                conn.execute("SELECT set_config('aos.org_id','org-org',true),set_config('aos.project_id','dev-project',true)")
+                login=_database_identity(conn,purpose)
+                subject=('postgres-service:'+login if purpose!='issuer' else
+                         authenticate_checker(request.bearer_token,binding=self.config.binding,conn=conn).subject)
+        command=request.command
+        identifier=(command.source_policy_id if request.operation=='propose' else command.proposal_id)
+        marker=AttemptReceipt(command.org_id,command.project_id,identifier,
+                              command.idempotency_key,command.request_hash,subject)
+        try:
+            _reserve_attempt_receipt(self.attempt_directory,marker,
+                                    namespace='budget-policy-renewal/v1/'+request.operation)
+        except AttemptAlreadyRecorded:
+            return self.reconcile(request)
+        except AttemptConflict:
+            return self._history_status(request,'conflict')
+        except AttemptUnknown:
+            return self._history_status(request,'unresolved')
+        # No exception can cause another execute call after the marker exists.
+        try:
+            with open_purpose_connection(self.config,purpose,False) as conn:
+                store=RenewalAuthorityStore(conn,checker_binding=self.config.binding)
+                if purpose=='issuer':
+                    return getattr(store,request.operation)(command,token=request.bearer_token)
+                return getattr(store,request.operation)(command)
+        except RenewalStoreBlocked:
+            # Confirmed rollback/pre-write refusal is not an unknown COMMIT.
+            # The durable marker still prevents a later automatic execute.
+            return self._history_status(request,'blocked')
+        except Exception:
+            try:
+                return self.reconcile(request)
+            except Exception:
+                return self._history_status(request,'unresolved')
+
+    @staticmethod
+    def _history_status(request,status):
+        return {'operation':request.operation,'requestHash':request.command.request_hash,
+                'status':status,'activationEligible':False}
+
+FULL CURRENT SOURCE services/aos-api/tests/aip/test_budget_policy_renewal_service.py
+"""Pure B envelope/schema tests; no identity/PG acceptance inferred here."""
+import json
+from pathlib import Path
+import pytest
+from aos_api.aip_budget_policy_renewal_service import RenewalRequest,protocol_schema
+from aos_api.aip_budget_policy_renewal_contracts import (
+    RenewalDecisionCommand,RenewalConsumeCommand,RenewalRevocationCommand,
+)
+
+
+def envelope(operation,**extra):
+    c={'schemaVersion':1,'orgId':'org-org','projectId':'dev-project','idempotencyKey':'fixture-service',
+       'proposalId':'fixture-proposal','proposalHash':'a'*64}
+    if operation=='decide':c.update(targetActiveHash='b'*64,decision='approved')
+    else:c.update(decisionId='fixture-decision',decisionHash='b'*64)
+    if operation=='revoke':c['reasonCode']='approval_withdrawn'
+    body={'schemaVersion':1,'mode':'execute','operation':operation,'command':c}
+    if operation in {'decide','revoke'}:body['bearerToken']='fixture-invalid-token-not-consent'
+    return {**body,**extra}
+
+
+@pytest.mark.parametrize('op,cls',[('decide',RenewalDecisionCommand),('consume',RenewalConsumeCommand),('revoke',RenewalRevocationCommand)])
+def test_exact_operation_and_typed_command_reparse(op,cls):
+    r=RenewalRequest.model_validate(envelope(op))
+    assert type(r.command) is cls
+    assert r.revalidated().command.request_hash==r.command.request_hash
+
+
+@pytest.mark.parametrize('mutation',['boolVersion','wrongCommand','machineToken','machineSnakeToken','issuerMissingToken','extraActor'])
+def test_wire_identity_and_discriminator_mutation_rejected(mutation):
+    body=envelope('consume')
+    if mutation=='boolVersion':body['schemaVersion']=True
+    elif mutation=='wrongCommand':body['operation']='decide'
+    elif mutation=='machineToken':body['bearerToken']=None
+    elif mutation=='machineSnakeToken':body['bearer_token']=None
+    elif mutation=='issuerMissingToken':body=envelope('decide');body.pop('bearerToken')
+    else:body['actor']='forged'
+    with pytest.raises(ValueError):RenewalRequest.model_validate(body)
+
+
+def test_generated_json_schema_matches_shipped_schema_and_discriminator():
+    path=Path(__file__).resolve().parents[2]/'aos_api/aip_budget_policy_renewal_schema.json'
+    schema=json.loads(path.read_text())
+    assert schema==protocol_schema()
+    assert schema['additionalProperties'] is False
+    assert len(schema['allOf'])==4
+
+
+def test_generated_schema_includes_closed_native_result_frame():
+    frame=protocol_schema()['$defs']['RenewalResponseFrame']
+    assert frame['additionalProperties'] is False
+    assert set(frame['required'])=={'schemaVersion','operation','requestHash','activationEligible','result'}
+    properties=frame['properties']
+    assert properties['schemaVersion']=={'type':'integer','const':1}
+    assert properties['activationEligible']=={'type':'boolean','const':False}
+    assert properties['requestHash']['pattern']=='^[0-9a-f]{64}$'
+    assert set(properties['operation']['enum'])=={'propose','decide','consume','revoke'}
+    result=properties['result']
+    assert set(result['required'])=={'operation','requestHash','activationEligible','status'}
+    assert set(result['properties']['status']['enum'])=={'prepared','decided','revoked','observed','unresolved','conflict','blocked'}
+
+
+def test_model_copy_cannot_smuggle_actor_or_command_kind():
+    r=RenewalRequest.model_validate(envelope('consume'))
+    altered=r.model_copy(update={'operation':'decide'})
+    with pytest.raises(ValueError):altered.revalidated()
+
+
+# Original fixtures only create data in the explicitly owned disposable DB.
+from tests.aip.test_budget_policy_renewal_pg import schema_database, schema_source as original_schema_source
+
+
+@pytest.fixture(scope='session')
+def schema_source(schema_database):
+    """Seed historical fixture facts under admin locks; guards restored pre-commit.
+
+    Full migrations prohibit unapproved ACTIVE inserts. This setup is explicitly
+    fixture history, never an acceptance of human approval or a runtime bypass.
+    No B operation runs until both original guards are enabled again.
+    """
+    _,admin=schema_database
+    source=original_schema_source.__wrapped__(schema_database)
+    with admin.transaction():
+        admin.execute("INSERT INTO public.meta_org(id,name) VALUES('org-org','isolated B fixture org')")
+        admin.execute("INSERT INTO public.meta_workspace(org_id,project_id,name) VALUES('org-org','dev-project','isolated B fixture workspace')")
+        admin.execute('ALTER TABLE public.aip_budget_revision DISABLE TRIGGER aip_budget_active_insert_guard')
+        admin.execute('ALTER TABLE public.aip_model_governance_policy_revision DISABLE TRIGGER cost_configuration_write_guard')
+        value=next(source)
+        admin.execute('SET CONSTRAINTS ALL IMMEDIATE')
+        admin.execute('ALTER TABLE public.aip_budget_revision ENABLE TRIGGER aip_budget_active_insert_guard')
+        admin.execute('ALTER TABLE public.aip_model_governance_policy_revision ENABLE TRIGGER cost_configuration_write_guard')
+    try:yield value
+    finally:
+        try:next(source)
+        except StopIteration:pass
+
+
+@pytest.fixture
+def isolated_signed_gateway(schema_source,tmp_path,monkeypatch):
+    """Actual RS256/JWKS in a separate PG network namespace, never real consent."""
+    import os,hashlib,threading,time
+    import jwt
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+    from psycopg.conninfo import conninfo_to_dict
+    from psycopg import sql
+    from tests.aip.test_budget_policy_renewal_connection import closed_config
+    from aos_api.aip_budget_policy_renewal_connection import load_protected_config,_CALLERS,_FORBIDDEN_ENV
+    if os.environ.get('AOS_RENEWAL_ISOLATED_SIGNER')!='1':
+        pytest.skip('separate owned network namespace required for fixture signer')
+    dsn,admin,source,now=schema_source
+    parts=conninfo_to_dict(dsn)
+    assert parts['host']=='127.0.0.1' and parts['port']=='5432'
+    assert parts['dbname'].startswith('aos_test_')
+    for key in _FORBIDDEN_ENV:monkeypatch.delenv(key,raising=False)
+    key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
+    jwk=json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(key.public_key()))
+    jwk.update(kid='isolated-b-fixture',alg='RS256',use='sig')
+    requests=[]
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            requests.append(self.path)
+            if self.path!='/realms/qyh-local/protocol/openid-connect/certs':
+                self.send_error(404);return
+            body=json.dumps({'keys':[jwk]}).encode()
+            self.send_response(200);self.send_header('Content-Type','application/json')
+            self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+        def log_message(self,*args):pass
+    server=ThreadingHTTPServer(('127.0.0.1',18448),Handler)
+    thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+    path,value=closed_config(tmp_path)
+    seal=admin.execute("SELECT obj_description('public.aip_budget_policy_renewal_proposal'::regclass,'pg_class')").fetchone()[0]
+    value['enabled']=True
+    for purpose,user in _CALLERS.items():
+        # Fixture-only secret; HBA is SCRAM for callers in the owned test PG.
+        password='isolated-b-fixture-password'
+        admin.execute(sql.SQL('ALTER ROLE {} LOGIN PASSWORD {}').format(sql.Identifier(user),sql.Literal(password)))
+        profile=value['profiles'][purpose]
+        passfile=Path(profile['passfile'])
+        passfile.write_text(f"127.0.0.1:5432:{parts['dbname']}:{user}:{password}\n")
+        profile.update(port=5432,database=parts['dbname'],
+            passfileSha256=hashlib.sha256(passfile.read_bytes()).hexdigest(),
+            manifestSha256=hashlib.sha256(seal.encode()).hexdigest())
+    path.write_text(json.dumps(value))
+    attempts=tmp_path/'attempts';attempts.mkdir(mode=0o700)
+    issuer='http://127.0.0.1:18448/realms/qyh-local'
+    def token(**overrides):
+        claims={'iss':issuer,'aud':'aos-api','sub':'6f31cfdc-a26c-4f1f-ad6b-95a8559cc657',
+            'iat':int(time.time()),'exp':int(time.time())+120,
+            'org_id':'org-org','project_id':'dev-project','roles':['admin']}
+        claims.update(overrides)
+        return jwt.encode(claims,key,algorithm='RS256',headers={'kid':'isolated-b-fixture'})
+    try:yield load_protected_config(path),attempts,token,requests,schema_source
+    finally:
+        server.shutdown();server.server_close();thread.join(timeout=3)
+        for user in _CALLERS.values():
+            admin.execute(sql.SQL('ALTER ROLE {} NOLOGIN PASSWORD NULL').format(sql.Identifier(user)))
+
+
+def test_native_private_service_signed_chain_and_at_most_once(isolated_signed_gateway):
+    from datetime import timedelta
+    from aos_api.aip_budget_policy_renewal_service import RenewalService
+    from aos_api.aip_budget_policy_renewal_connection import open_purpose_connection
+    from aos_api.aip_model_governance_policy_store import canonical_hash
+    config,attempts,token,http_requests,(dsn,admin,source,now)=isolated_signed_gateway
+    service=RenewalService(config,attempts)
+    def actual_process(request):
+        from aos_api.aip_budget_policy_renewal_process import run_renewal_process
+        body=request.model_dump(mode='json',by_alias=True,exclude={'bearer_token'})
+        if request.bearer_token is not None:
+            body['bearerToken']=request.bearer_token.get_secret_value()
+        result=run_renewal_process(config.path,attempts,json.dumps(body).encode(),timeout=15)
+        assert result.get('result',{}).get('status')=='observed',result
+        assert result['activationEligible'] is False
+        return result['result']
+    def request(op,command,bearer=None):
+        value={'schemaVersion':1,'mode':'execute','operation':op,'command':command}
+        if bearer is not None:value['bearerToken']=bearer
+        return RenewalRequest.model_validate(value)
+    base={'schemaVersion':1,'orgId':'org-org','projectId':'dev-project'}
+    p=request('propose',{**base,'idempotencyKey':'b-native-propose','sourcePolicyId':source.policy_id,
+        'expectedSourceRevision':13,'expectedHeadVersion':13,'expectedSourceHash':source.content_hash,
+        'effectiveFrom':now-timedelta(minutes=1),'effectiveUntil':now+timedelta(minutes=30)})
+    with open_purpose_connection(config,'maker',True) as conn:
+        assert conn.read_only is True
+        assert conn.execute('SHOW transaction_read_only').fetchone()[0]=='on'
+        conn.rollback()
+    proposal=actual_process(p)
+    assert proposal['status']=='observed'
+    assert service.execute(p)['status']=='observed'
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_proposal').fetchone()[0]==1
+    native_service_fault_matrix(service,p,config,attempts,admin)
+    # The exact target is the SQL-authoritative proposal payload, not reconstructed UI data.
+    payload=admin.execute('SELECT payload FROM public.aip_budget_policy_renewal_proposal WHERE proposal_id=%s',
+                          (proposal['proposalId'],)).fetchone()[0]
+    d=request('decide',{**base,'idempotencyKey':'b-native-decide','proposalId':proposal['proposalId'],
+        'proposalHash':proposal['proposalHash'],'targetActiveHash':canonical_hash(payload['targetActive']),
+        'decision':'approved'},token())
+    # Crypto/tenant failures and current membership denial precede Attempt reservation.
+    for bad in (token(aud='wrong'),token(exp=1),token(org_id='dev-org'),token(sub='fixture-other')):
+        denied=d.model_copy(update={'bearer_token':__import__('pydantic').SecretStr(bad)})
+        with pytest.raises(ValueError):service.execute(denied)
+    assert len(list(attempts.iterdir()))==1
+    admin.execute("UPDATE public.meta_membership SET role='viewer' WHERE subject=%s",(config.binding.subject,))
+    try:
+        with pytest.raises(ValueError):service.execute(d)
+    finally:
+        admin.execute("UPDATE public.meta_membership SET role='admin' WHERE subject=%s",(config.binding.subject,))
+    decision=actual_process(d)
+    assert decision['status']=='observed' and http_requests
+    assert service.execute(d)['status']=='observed'
+    c=request('consume',{**base,'idempotencyKey':'b-native-consume','proposalId':proposal['proposalId'],
+        'proposalHash':proposal['proposalHash'],'decisionId':decision['decisionId'],
+        'decisionHash':decision['decisionHash']})
+    consumed=actual_process(c)
+    assert consumed['status']=='observed' and consumed['activationEligible'] is False
+    assert service.execute(c)['status']=='observed'
+    assert admin.execute('SELECT current_revision,version FROM public.aip_model_governance_policy_head').fetchone()==(14,14)
+    assert admin.execute('SELECT count(*) FROM public.aip_model_governance_policy_revision').fetchone()[0]==2
+    from tests.aip.test_budget_policy_renewal_process import native_readonly_process_assertions
+    native_readonly_process_assertions(isolated_signed_gateway)
+    r=request('revoke',{**base,'idempotencyKey':'b-native-revoke','proposalId':proposal['proposalId'],
+        'proposalHash':proposal['proposalHash'],'decisionId':decision['decisionId'],
+        'decisionHash':decision['decisionHash'],'reasonCode':'approval_withdrawn'},token())
+    assert actual_process(r)['status']=='observed'
+    assert service.execute(r)['status']=='observed'
+    assert service.reconcile(c)['status']=='observed'  # immutable historical publication
+    markers=list(attempts.iterdir())
+    assert len(markers)==4
+    for marker in markers:
+        record=json.loads(marker.read_text())
+        assert record['state']=='ATTEMPTED' and record['namespace'].startswith('budget-policy-renewal/v1/')
+        assert 'bearerToken' not in record and 'password' not in record
+
+
+def native_service_fault_matrix(service,request,config,attempts,admin):
+    """Real PG COMMIT with transport fault; no mocked identity or write outcome."""
+    import psycopg
+    from psycopg import sql
+    from aos_api.aip_budget_policy_renewal_service import RenewalService
+    from aos_api.aip_budget_policy_renewal_connection import RenewalConnectionBlocked
+    from aos_api.aip_budget_policy_renewal_store import RenewalAuthorityStore,RenewalStoreUnknown
+    before=admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]
+    marker=next(attempts.iterdir());original_marker=marker.read_bytes()
+    marker.write_bytes(b'{"schemaVersion":1,')
+    try:assert service.execute(request)['status']=='unresolved'
+    finally:marker.write_bytes(original_marker)  # known fixture history, no execute rearming
+    changed=request.model_copy(update={'command':request.command.model_copy(update={'expected_source_hash':'b'*64})})
+    assert service.execute(changed)['status']=='conflict'
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]==before
+    private_original=config.path.read_bytes()
+    closed=json.loads(private_original);closed['enabled']=False;config.path.write_text(json.dumps(closed))
+    try:
+        with pytest.raises(RenewalConnectionBlocked):service.execute(request)
+    finally:config.path.write_bytes(private_original)
+    seal=admin.execute("SELECT obj_description('public.aip_budget_policy_renewal_proposal'::regclass,'pg_class')").fetchone()[0]
+    admin.execute("COMMENT ON TABLE public.aip_budget_policy_renewal_proposal IS 'fixture-manifest-drift'")
+    try:
+        with pytest.raises(RenewalConnectionBlocked):service.execute(request)
+    finally:
+        admin.execute(sql.SQL('COMMENT ON TABLE public.aip_budget_policy_renewal_proposal IS {}').format(sql.Literal(seal)))
+    profile=config.profile('maker')
+    with pytest.raises(psycopg.OperationalError,match='password authentication failed'):
+        psycopg.connect(host=profile.host,port=profile.port,dbname=profile.database,
+            user=profile.user,password='wrong-isolated-fixture-password',connect_timeout=3)
+    lost_directory=attempts.parent/'lostack-attempts';lost_directory.mkdir(mode=0o700)
+    lost_service=RenewalService(config,lost_directory)
+    lost_request=request.model_copy(update={'command':request.command.model_copy(update={'idempotency_key':'b-native-commit-ack-lost'})})
+    actual_propose=RenewalAuthorityStore.propose
+    entered=[]
+    def commit_then_drop_return(store,command):
+        result=actual_propose(store,command)  # genuine native tx and outer COMMIT
+        assert result['status']=='prepared'
+        entered.append(command.request_hash)
+        raise RenewalStoreUnknown(operation='propose',key=command.idempotency_key,request_hash=command.request_hash)
+    with pytest.MonkeyPatch.context() as fault:
+        fault.setattr(RenewalAuthorityStore,'propose',commit_then_drop_return)
+        recovered=lost_service.execute(lost_request)
+        assert recovered['status']=='observed' and recovered['requestHash']==lost_request.command.request_hash
+        assert lost_service.execute(lost_request)['status']=='observed'
+    assert entered==[lost_request.command.request_hash]
+    assert len(list(lost_directory.iterdir()))==1
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_proposal').fetchone()[0]==2
+    assert admin.execute('SELECT count(*) FROM public.aip_budget_policy_renewal_receipt').fetchone()[0]==before+1
+
+EXACT CURRENT DIFF
+diff --git a/services/aos-api/aos_api/aip_budget_policy_renewal_service.py b/services/aos-api/aos_api/aip_budget_policy_renewal_service.py
+index 2eb00a810..2c7bdbdbd 100644
+--- a/services/aos-api/aos_api/aip_budget_policy_renewal_service.py
++++ b/services/aos-api/aos_api/aip_budget_policy_renewal_service.py
+@@ -41,7 +41,8 @@ class RenewalRequest(AipContractModel):
+     @model_validator(mode='before')
+     @classmethod
+     def public_identity_fields(cls,value):
+-        if type(value) is dict and value.get('operation') not in {'decide','revoke'} and 'bearerToken' in value:
++        if (type(value) is dict and value.get('operation') not in {'decide','revoke'}
++                and any(key in value for key in ('bearerToken','bearer_token'))):
+             raise ValueError('machine token field forbidden')
+         return value
+ 
+diff --git a/services/aos-api/tests/aip/test_budget_policy_renewal_service.py b/services/aos-api/tests/aip/test_budget_policy_renewal_service.py
+index a80a010c6..188aadfc2 100644
+--- a/services/aos-api/tests/aip/test_budget_policy_renewal_service.py
++++ b/services/aos-api/tests/aip/test_budget_policy_renewal_service.py
+@@ -26,12 +26,13 @@ def test_exact_operation_and_typed_command_reparse(op,cls):
+     assert r.revalidated().command.request_hash==r.command.request_hash
+ 
+ 
+-@pytest.mark.parametrize('mutation',['boolVersion','wrongCommand','machineToken','issuerMissingToken','extraActor'])
++@pytest.mark.parametrize('mutation',['boolVersion','wrongCommand','machineToken','machineSnakeToken','issuerMissingToken','extraActor'])
+ def test_wire_identity_and_discriminator_mutation_rejected(mutation):
+     body=envelope('consume')
+     if mutation=='boolVersion':body['schemaVersion']=True
+     elif mutation=='wrongCommand':body['operation']='decide'
+     elif mutation=='machineToken':body['bearerToken']=None
++    elif mutation=='machineSnakeToken':body['bearer_token']=None
+     elif mutation=='issuerMissingToken':body=envelope('decide');body.pop('bearerToken')
+     else:body['actor']='forged'
+     with pytest.raises(ValueError):RenewalRequest.model_validate(body)
+
+CURRENT EVIDENCE machine-token-alias-green.log
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0 -- /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python
+rootdir: /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collecting ... collected 2 items
+
+services/aos-api/tests/aip/test_budget_policy_renewal_service.py::test_wire_identity_and_discriminator_mutation_rejected[machineToken] PASSED [ 50%]
+services/aos-api/tests/aip/test_budget_policy_renewal_service.py::test_wire_identity_and_discriminator_mutation_rejected[machineSnakeToken] PASSED [100%]
+
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 2 passed, 7 warnings in 0.32s =========================
+
+CURRENT EVIDENCE b-adjacent-unit-r4.log
+.........................s.............................................. [ 60%]
+................................................                         [100%]
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+119 passed, 1 skipped, 7 warnings in 0.76s
+
+CURRENT EVIDENCE native-b-worker-source-readback-r14.json
+{
+  "worker": "2882df9308652cc9db95bd672f55cae7c3465c1878b7d2b56774f3555a7796b3",
+  "candidateFiles": {
+    "services/aos-api/aos_api/aip_budget_policy_renewal_connection.py": "f684042fe806b06239123b063e3f5014fe018a34e79e07c3c6d0acc3c825946e",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_service.py": "d707ceb6e30c3d915999815f4832203d8ac53d5f651ebc75cac79ddb9f85fcd8",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_process.py": "47db4f8cb3eb3d2accc2dff9e7b032f1472a60e9f9325021184595eeb53ca350",
+    "services/aos-api/aos_api/aip_budget_policy_renewal_schema.json": "e0f2f9d1167d9823f7c50fe87663e1f991d8e26ac8cb5d19ef30cc2c430d5db6",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_connection.py": "9b1b83c30e225f1787e623a5d551e3c7d7c81127312c9c9a7bd12b5c8e98d58d",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_service.py": "fdb0f875ffc7ddbd1704ebe854bc698b6979de243bb630ea1dfba264ea9e0d0a",
+    "services/aos-api/tests/aip/test_budget_policy_renewal_process.py": "2ca2917a227a090f49c38aee716e8c916a5226d786c17720eaf684cd954ad017"
+  },
+  "currentSevenHashesMatched": true,
+  "exitCode": 0
+}
+CURRENT EVIDENCE native-b-final-readback-r5.json
+{
+  "fixtureCid": "6880431ccfc8c78eab5e8b3be83abf1cfe590a962769f1e25942bc437927f182",
+  "countsProposalDecisionReceiptCanonical": [
+    2,
+    2,
+    5,
+    2
+  ],
+  "head": [
+    14,
+    14
+  ],
+  "allSixNoLogin": true,
+  "originalGuardsRestored": [
+    [
+      "aip_budget_active_insert_guard",
+      "O"
+    ],
+    [
+      "cost_configuration_write_guard",
+      "O"
+    ]
+  ],
+  "extraLostAckProposalOnlyPrepared": true,
+  "noRealConsent": true,
+  "originalVolumeTouched": false
+}
+CURRENT EVIDENCE native-b-fixture-stopped-r5.json
+{
+  "cid": "6880431ccfc8c78eab5e8b3be83abf1cfe590a962769f1e25942bc437927f182",
+  "state": {
+    "Status": "exited",
+    "Running": false,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 0,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-10-14T01:39:41.655517832Z",
+    "FinishedAt": "2026-10-14T01:44:50.449730451Z"
+  },
+  "originalVolumeTouched": false
+}
