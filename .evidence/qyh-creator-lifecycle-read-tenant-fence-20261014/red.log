@@ -1,0 +1,204 @@
+FFFFFFFFFF..........                                                     [100%]
+=================================== FAILURES ===================================
+_ test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-latest_start_for_tenant_or_none] _
+
+method = 'latest_start_for_tenant_or_none'
+foreign = TenantScope(org_id='dev-org', project_id='dev-project')
+
+    @pytest.mark.parametrize('method', MODELS)
+    @pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+    def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+        valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+        bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+        rows = [bad] if method.startswith('latest_') else [valid, bad]
+        store, calls = store_with_rows(rows)
+>       with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+E       Failed: DID NOT RAISE CreatorLifecycleBlocked
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py:97: Failed
+_ test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_lane_observations] _
+
+method = 'list_lane_observations'
+foreign = TenantScope(org_id='dev-org', project_id='dev-project')
+
+    @pytest.mark.parametrize('method', MODELS)
+    @pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+    def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+        valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+        bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+        rows = [bad] if method.startswith('latest_') else [valid, bad]
+        store, calls = store_with_rows(rows)
+>       with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+E       Failed: DID NOT RAISE CreatorLifecycleBlocked
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py:97: Failed
+_ test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_contracts] _
+
+method = 'list_contracts'
+foreign = TenantScope(org_id='dev-org', project_id='dev-project')
+
+    @pytest.mark.parametrize('method', MODELS)
+    @pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+    def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+        valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+        bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+        rows = [bad] if method.startswith('latest_') else [valid, bad]
+        store, calls = store_with_rows(rows)
+>       with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+E       Failed: DID NOT RAISE CreatorLifecycleBlocked
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py:97: Failed
+_ test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_deliveries] _
+
+method = 'list_deliveries'
+foreign = TenantScope(org_id='dev-org', project_id='dev-project')
+
+    @pytest.mark.parametrize('method', MODELS)
+    @pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+    def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+        valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+        bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+        rows = [bad] if method.startswith('latest_') else [valid, bad]
+        store, calls = store_with_rows(rows)
+>       with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+E       Failed: DID NOT RAISE CreatorLifecycleBlocked
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py:97: Failed
+_ test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_relationships] _
+
+method = 'list_relationships'
+foreign = TenantScope(org_id='dev-org', project_id='dev-project')
+
+    @pytest.mark.parametrize('method', MODELS)
+    @pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+    def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+        valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+        bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+        rows = [bad] if method.startswith('latest_') else [valid, bad]
+        store, calls = store_with_rows(rows)
+>       with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+E       Failed: DID NOT RAISE CreatorLifecycleBlocked
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py:97: Failed
+_ test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-latest_start_for_tenant_or_none] _
+
+method = 'latest_start_for_tenant_or_none'
+foreign = TenantScope(org_id='org-org', project_id='other')
+
+    @pytest.mark.parametrize('method', MODELS)
+    @pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+    def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+        valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+        bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+        rows = [bad] if method.startswith('latest_') else [valid, bad]
+        store, calls = store_with_rows(rows)
+>       with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+E       Failed: DID NOT RAISE CreatorLifecycleBlocked
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py:97: Failed
+_ test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_lane_observations] _
+
+method = 'list_lane_observations'
+foreign = TenantScope(org_id='org-org', project_id='other')
+
+    @pytest.mark.parametrize('method', MODELS)
+    @pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+    def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+        valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+        bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+        rows = [bad] if method.startswith('latest_') else [valid, bad]
+        store, calls = store_with_rows(rows)
+>       with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+E       Failed: DID NOT RAISE CreatorLifecycleBlocked
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py:97: Failed
+_ test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_contracts] _
+
+method = 'list_contracts'
+foreign = TenantScope(org_id='org-org', project_id='other')
+
+    @pytest.mark.parametrize('method', MODELS)
+    @pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+    def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+        valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+        bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+        rows = [bad] if method.startswith('latest_') else [valid, bad]
+        store, calls = store_with_rows(rows)
+>       with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+E       Failed: DID NOT RAISE CreatorLifecycleBlocked
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py:97: Failed
+_ test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_deliveries] _
+
+method = 'list_deliveries'
+foreign = TenantScope(org_id='org-org', project_id='other')
+
+    @pytest.mark.parametrize('method', MODELS)
+    @pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+    def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+        valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+        bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+        rows = [bad] if method.startswith('latest_') else [valid, bad]
+        store, calls = store_with_rows(rows)
+>       with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+E       Failed: DID NOT RAISE CreatorLifecycleBlocked
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py:97: Failed
+_ test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_relationships] _
+
+method = 'list_relationships'
+foreign = TenantScope(org_id='org-org', project_id='other')
+
+    @pytest.mark.parametrize('method', MODELS)
+    @pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+    def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+        valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+        bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+        rows = [bad] if method.startswith('latest_') else [valid, bad]
+        store, calls = store_with_rows(rows)
+>       with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+E       Failed: DID NOT RAISE CreatorLifecycleBlocked
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py:97: Failed
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-latest_start_for_tenant_or_none]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_lane_observations]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_contracts]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_deliveries]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_relationships]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-latest_start_for_tenant_or_none]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_lane_observations]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_contracts]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_deliveries]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_relationships]
+10 failed, 10 passed, 7 warnings in 0.39s

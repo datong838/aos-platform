@@ -1,0 +1,545 @@
+CURRENT response tenant security code review. Current20securitycases/79jointPASS; prechangeRED10foreignfail/10validemptyPass historical, notcurrentfailure. Exactlythree view readpaths nowvalidate everyitem viaexisting_assert_tenant; original GET remainslegacy and no native originalcorruption seeded. Sourcechange onlyStore/newtest. It is code-only securitycandidate before furtherbounded lifecycle reader admission, notwholeGoal.
+FILE .evidence/qyh-creator-lifecycle-read-tenant-fence-20261014/implementation-plan.md SHA e18bdc93027b54369771b004f5b0a939a38db513addad6a1e70b91232eb70f20
+# 生命周期view读取JSON租户失配拒绝
+
+Rules：用户先方案/最小改动/保护正常数据；231唯一m1写者/逐波Loop/独立Prime。Task/base2029/sameowner/14:00UTC已登记精确Store与新安全测试范围，与router和维护Scope不重叠。原DB只读、HostworkerProvider OFF。
+
+现状：Store.latest_start_for_tenant_or_none、list_lane_observations、_list返回严格DTO但没有调用已存在_assert_tenant，因而SQL行的org/project与authority_data内部tenant失配时会输出其他租户payload。写入_append已有_assert；SQL/RLS与JSON一致性是不同防线，不能只用WHERE推断payload正确。正常同租户不变，跨org/workspace或坏payload必须失败关闭。
+
+唯一产品文件services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_store.py：在三个view读路径解析后的item/items返回前逐个调用既有_assert_tenant；latest无row仍None，各list空仍[]。不用全局默认、不吞TENANT_DRIFT、不把错误改成功空态；保持连接readfactory/SQL/参数/排序/其他生产读写方法不变。
+
+新增services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py：真实Pydantic完整DTO序列化为假行、Spy只读连接捕获实际SQL/参数；5公开view读方法分别覆盖foreign org/workspace必拒、合法scope保持完整对象、空无row保持语义。Spy写/commit必须失败。只是隔离安全逻辑，不声称真实用户/native业务，也不创建原记录。先独立方案门，再RED/minimal/专项+既有w6_04/lifecycle/store及读取相邻、完整源代码Prime合法消费；生命周期GET仍legacy，原正常只读native可以核库/已关闭执行门，不制造坏原数据。准确Delivery仅JSONtenant防线，不能勾掉限额/隐私/截面一致性与GET接线。
+
+另发现_lane与三类_list没有数量限额且多事务无统一cutoff；不在本修复偷偷截断、分页或改变统计，不以此声称全量可安全暴露。原routerTask保留这些审计门，再设计兼容的有界读取及unknown状态后接线。其余helpers、完整C/真实用户预算审批/原部署、新自然首链、安装全生命周期、八场景/视觉/观察发布全部保留。无DDL/Role/预算/Source/旧Run/disabledSchedule/外部动作，保护全部userdirty。
+
+FILE .evidence/qyh-creator-lifecycle-read-tenant-fence-20261014/plan-review-consumption-r1.json SHA e99b4feb1891e3c17fc31256d14e9ceae36242bad33c60df5854450ff8155a5c
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-lifecycle-read-tenant-fence-20261014-plan-r1",
+  "task_id": "qyh-creator-lifecycle-read-tenant-fence-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "d3e9e44bdb77015570d67c7fcb2131ca26efd0a5",
+    "authority_revision": "AOS-002029",
+    "files": {
+      ".evidence/qyh-creator-lifecycle-read-tenant-fence-20261014/plan-review-package-r1.txt": "33b4bcbc4cd4d14bdabdc8cc1cb3de596337933054d5fb545b75324cdc54e1f1"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "94faba02cbfacbe11f31393d63584d6d149a0ced1dac49704fe7a8490297b828",
+  "transport_sha256": "c35c035ecc994f4092dcecd831ca85d892034f820eea4ae479233dab29672c1c"
+}
+FILE services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_store.py SHA 708b2a5b24f2447cea14daf39eff52fb8d35da47f690ef1a41019d1defa33490
+"""Tenant-scoped append-only persistence for W6-04 creator lifecycle."""
+from __future__ import annotations
+
+import json
+from collections.abc import Callable
+from typing import Any
+
+import psycopg
+
+from aos_api.db import connect
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorExactRef
+from aos_api.ecommerce_workshop_creator_growth_store import authority_receipt_id
+from aos_api.ecommerce_workshop_creator_lifecycle import (
+    CreatorActionLaneRequest,
+    CreatorBatchStartDecisionRevision,
+    CreatorContractRevision,
+    CreatorDeliveryObservation,
+    CreatorLaneObservation,
+    CreatorLifecycleBlocked,
+    CreatorRelationshipRevision,
+)
+from aos_api.tenant_scope import TenantScope
+
+
+class EcommerceWorkshopCreatorLifecycleStore:
+    def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
+        self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
+
+    @staticmethod
+    def _json(value: Any) -> str:
+        return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+
+    @staticmethod
+    def _assert_tenant(scope: TenantScope, item: Any) -> None:
+        if (item.tenant.org_id, item.tenant.project_id) != scope.key:
+            raise CreatorLifecycleBlocked("CREATOR_LIFECYCLE_TENANT_DRIFT")
+
+    def _append(self, scope: TenantScope, table: str, identity_column: str, identity: str, revision: int, content_hash: str, item: Any, created_at: Any, *, extra_columns: str = "", extra_values: tuple[Any, ...] = (), receipt_id: str | None = None) -> Any:
+        self._assert_tenant(scope, item)
+        payload = item.model_dump(mode="json", by_alias=True)
+        columns = [column for column in extra_columns.split(",") if column]
+        values = list(extra_values)
+        if receipt_id is not None:
+            columns.append("authority_receipt_id")
+            values.append(receipt_id)
+        column_suffix = f",{','.join(columns)}" if columns else ""
+        value_suffix = "," + ",".join(["%s"] * len(values)) if values else ""
+        with self._connect(scope) as conn:
+            conn.execute(
+                f"INSERT INTO {table}(org_id,project_id,{identity_column},revision,content_hash,authority_data,created_at{column_suffix}) "
+                f"VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s{value_suffix}) ON CONFLICT DO NOTHING",
+                (*scope.key, identity, revision, content_hash, self._json(payload), created_at, *values),
+            )
+            row = conn.execute(
+                f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",
+                (*scope.key, identity, revision),
+            ).fetchone()
+            if row is None or row["content_hash"] != content_hash:
+                raise CreatorLifecycleBlocked("CREATOR_LIFECYCLE_IDEMPOTENCY_CONFLICT")
+            conn.commit()
+        return type(item).model_validate(row["authority_data"])
+
+    def append_start(self, scope: TenantScope, batch_id: str, item: CreatorBatchStartDecisionRevision) -> CreatorBatchStartDecisionRevision:
+        return self._append(scope, "ecommerce_creator_batch_start_decision_revision", "decision_id", item.decision_id, item.revision, item.content_hash, item, item.started_at, extra_columns="batch_id", extra_values=(batch_id,))
+
+    def latest_start_or_none(self, scope: TenantScope, batch_id: str) -> CreatorBatchStartDecisionRevision | None:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                "SELECT authority_data FROM ecommerce_creator_batch_start_decision_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s ORDER BY revision DESC LIMIT 1",
+                (*scope.key, batch_id),
+            ).fetchone()
+        return None if row is None else CreatorBatchStartDecisionRevision.model_validate(row["authority_data"])
+
+    def latest_start_for_tenant_or_none(self, scope: TenantScope) -> CreatorBatchStartDecisionRevision | None:
+        try:
+            with self._read_connect(scope) as conn:
+                row = conn.execute(
+                    "SELECT authority_data FROM ecommerce_creator_batch_start_decision_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,revision DESC LIMIT 1",
+                    scope.key,
+                ).fetchone()
+        except psycopg.Error as exc:
+            raise CreatorLifecycleBlocked("CREATOR_LIFECYCLE_AUTHORITY_UNAVAILABLE") from exc
+        if row is None:
+            return None
+        item = CreatorBatchStartDecisionRevision.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+
+    def require_start(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorBatchStartDecisionRevision:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                "SELECT authority_data,content_hash FROM ecommerce_creator_batch_start_decision_revision WHERE org_id=%s AND project_id=%s AND decision_id=%s AND revision=%s",
+                (*scope.key, ref.resource_id, ref.revision),
+            ).fetchone()
+        if row is None or row["content_hash"] != ref.content_hash:
+            raise CreatorLifecycleBlocked("CREATOR_START_DECISION_MISSING_OR_DRIFTED")
+        return CreatorBatchStartDecisionRevision.model_validate(row["authority_data"])
+
+    def require_action_receipt(self, scope: TenantScope, ref: CreatorExactRef, binding_hash: str) -> None:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                "SELECT receipt_content_hash,action_binding_hash FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND receipt_id=%s",
+                (*scope.key, ref.resource_id),
+            ).fetchone()
+        if row is None or row["receipt_content_hash"] != ref.content_hash or row["action_binding_hash"] != binding_hash:
+            raise CreatorLifecycleBlocked("CREATOR_ACTION_RECEIPT_MISSING_OR_BINDING_DRIFTED")
+
+    def require_lane_authorities(self, scope: TenantScope, lane: CreatorActionLaneRequest) -> None:
+        """Fail closed until every W5 authority has one canonical exact resolver.
+
+        W5 currently persists these facts across several stores and the budget
+        reservation is intentionally unavailable for external action families.
+        Treating well-shaped caller JSON as authority would be unsafe.
+        """
+        _ = (scope, lane)
+        raise CreatorLifecycleBlocked("CREATOR_ACTION_LANE_AUTHORITY_RESOLVER_UNAVAILABLE")
+
+    def append_lane_observation(self, scope: TenantScope, item: CreatorLaneObservation) -> CreatorLaneObservation:
+        return self._append(scope, "ecommerce_creator_lane_observation", "observation_id", item.observation_id, item.revision, item.content_hash, item, item.observed_at, extra_columns="decision_id,lane_id", extra_values=(item.start_decision_ref.resource_id, item.lane_id))
+
+    def list_lane_observations(self, scope: TenantScope, decision_id: str) -> list[CreatorLaneObservation]:
+        with self._read_connect(scope) as conn:
+            rows = conn.execute(
+                "SELECT authority_data FROM ecommerce_creator_lane_observation WHERE org_id=%s AND project_id=%s AND decision_id=%s ORDER BY observed_at,observation_id",
+                (*scope.key, decision_id),
+            ).fetchall()
+        items = [CreatorLaneObservation.model_validate(row["authority_data"]) for row in rows]
+        for item in items:
+            self._assert_tenant(scope, item)
+        return items
+
+    def append_contract(self, scope: TenantScope, item: CreatorContractRevision) -> CreatorContractRevision:
+        receipt_id = authority_receipt_id(*scope.key, "CreatorContractRevision", item.collaboration_id, item.revision, item.content_hash)
+        return self._append(scope, "ecommerce_creator_contract_revision", "collaboration_id", item.collaboration_id, item.revision, item.content_hash, item, item.created_at, receipt_id=receipt_id)
+
+    def require_contract(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorContractRevision:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                "SELECT authority_data,content_hash FROM ecommerce_creator_contract_revision WHERE org_id=%s AND project_id=%s AND collaboration_id=%s AND revision=%s",
+                (*scope.key, ref.resource_id, ref.revision),
+            ).fetchone()
+        if row is None or row["content_hash"] != ref.content_hash:
+            raise CreatorLifecycleBlocked("CREATOR_CONTRACT_MISSING_OR_DRIFTED")
+        return CreatorContractRevision.model_validate(row["authority_data"])
+
+    def append_delivery(self, scope: TenantScope, item: CreatorDeliveryObservation) -> CreatorDeliveryObservation:
+        receipt_id = authority_receipt_id(*scope.key, "CreatorDeliveryObservation", item.observation_id, 1, item.content_hash)
+        return self._append(scope, "ecommerce_creator_delivery_observation", "observation_id", item.observation_id, 1, item.content_hash, item, item.observed_at, receipt_id=receipt_id)
+
+    def require_delivery(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorDeliveryObservation:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                "SELECT authority_data,content_hash FROM ecommerce_creator_delivery_observation WHERE org_id=%s AND project_id=%s AND observation_id=%s AND revision=%s",
+                (*scope.key, ref.resource_id, ref.revision),
+            ).fetchone()
+        if row is None or row["content_hash"] != ref.content_hash:
+            raise CreatorLifecycleBlocked("CREATOR_DELIVERY_MISSING_OR_DRIFTED")
+        return CreatorDeliveryObservation.model_validate(row["authority_data"])
+
+    def append_relationship(self, scope: TenantScope, item: CreatorRelationshipRevision) -> CreatorRelationshipRevision:
+        receipt_id = authority_receipt_id(*scope.key, "CreatorRelationshipRevision", item.relationship_id, item.revision, item.content_hash)
+        return self._append(scope, "ecommerce_creator_relationship_revision", "relationship_id", item.relationship_id, item.revision, item.content_hash, item, item.created_at, receipt_id=receipt_id)
+
+    def latest_relationship_or_none(self, scope: TenantScope, relationship_id: str) -> CreatorRelationshipRevision | None:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                "SELECT authority_data FROM ecommerce_creator_relationship_revision WHERE org_id=%s AND project_id=%s AND relationship_id=%s ORDER BY revision DESC LIMIT 1",
+                (*scope.key, relationship_id),
+            ).fetchone()
+        return None if row is None else CreatorRelationshipRevision.model_validate(row["authority_data"])
+
+    def _list(self, scope: TenantScope, table: str, model: type[Any]) -> list[Any]:
+        with self._read_connect(scope) as conn:
+            rows = conn.execute(f"SELECT authority_data FROM {table} WHERE org_id=%s AND project_id=%s ORDER BY created_at", scope.key).fetchall()
+        items = [model.model_validate(row["authority_data"]) for row in rows]
+        for item in items:
+            self._assert_tenant(scope, item)
+        return items
+
+    def list_contracts(self, scope: TenantScope) -> list[CreatorContractRevision]:
+        return self._list(scope, "ecommerce_creator_contract_revision", CreatorContractRevision)
+
+    def list_deliveries(self, scope: TenantScope) -> list[CreatorDeliveryObservation]:
+        return self._list(scope, "ecommerce_creator_delivery_observation", CreatorDeliveryObservation)
+
+    def list_relationships(self, scope: TenantScope) -> list[CreatorRelationshipRevision]:
+        return self._list(scope, "ecommerce_creator_relationship_revision", CreatorRelationshipRevision)
+
+
+__all__ = ["EcommerceWorkshopCreatorLifecycleStore"]
+
+FILE services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py SHA 27888cc65e6c2d6008fc0bd35ca0c53dc205b2680b6c3feb3b5cb6a6cbd7dd5e
+"""Serialized tenant must agree with scoped SQL; fixtures open no database."""
+from contextlib import contextmanager
+from datetime import UTC, datetime
+
+import pytest
+
+from aos_api.ecommerce_workshop_creator_lifecycle import (
+    CreatorBatchStartDecisionRevision, CreatorContractRevision,
+    CreatorDeliveryObservation, CreatorLaneObservation, CreatorLifecycleBlocked,
+    CreatorRelationshipRevision,
+)
+from aos_api.ecommerce_workshop_creator_lifecycle_store import EcommerceWorkshopCreatorLifecycleStore
+from aos_api.tenant_scope import TenantScope
+
+SCOPE = TenantScope('org-org', 'dev-project')
+NOW = datetime(2026, 10, 14, tzinfo=UTC)
+HASH = 'a' * 64
+MODELS = {
+    'latest_start_for_tenant_or_none': CreatorBatchStartDecisionRevision,
+    'list_lane_observations': CreatorLaneObservation,
+    'list_contracts': CreatorContractRevision,
+    'list_deliveries': CreatorDeliveryObservation,
+    'list_relationships': CreatorRelationshipRevision,
+}
+
+
+def ref(kind):
+    return dict(resourceType=kind, resourceId='fixture-ref', revision=1, contentHash=HASH)
+
+
+def item(method, scope=SCOPE):
+    common = dict(tenant=dict(orgId=scope.org_id, projectId=scope.project_id), contentHash=HASH)
+    payloads = {
+        'latest_start_for_tenant_or_none': dict(
+            decisionId='fixture-start', lifecycle='governance_prepared',
+            batchRef=ref('CreatorBatchPreparationRevision'), batchItemHashes=[], lanes=[],
+            ledger=dict(eligibleItems=0, lanes=0, prepared=0, accepted=0, applied=0,
+                        failed=0, unknown=0, disputed=0, completed=0),
+            operationalBlockers=[], startedBy='fixture-not-human-approval', startedAt=NOW),
+        'list_lane_observations': dict(
+            observationId='fixture-lane', startDecisionRef=ref('CreatorBatchStartDecisionRevision'),
+            laneId='fixture-lane', actionReceiptRef=ref('ActionReceiptRevision'),
+            outcome='prepared', observedAt=NOW),
+        'list_contracts': dict(
+            collaborationId='fixture-contract', revision=1, candidateRef=ref('CreatorCandidateRevision'),
+            startDecisionRef=ref('CreatorBatchStartDecisionRevision'), termsHash=HASH,
+            monetaryTermsRef=ref('MonetaryTermsRevision'), lifecycle='draft',
+            createdBy='fixture-not-human-approval', createdAt=NOW),
+        'list_deliveries': dict(
+            observationId='fixture-delivery', collaborationId='fixture-contract',
+            contractRef=ref('CreatorContractRevision'), deliveryRef=ref('DeliveryRevision'),
+            evidenceBundleRef=ref('EvidenceBundleRevision'), sequence=1, status='expected', observedAt=NOW),
+        'list_relationships': dict(
+            relationshipId='fixture-relationship', revision=1, collaborationId='fixture-contract',
+            contractRef=ref('CreatorContractRevision'), deliveryObservationRefs=[],
+            maturityPolicyRef=ref('RelationshipMaturityPolicyRevision'),
+            maturityWindowEndsAt=NOW, status='preliminary', createdAt=NOW),
+    }
+    return MODELS[method](**common, **payloads[method])
+
+
+def store_with_rows(rows):
+    calls = []
+    class Connection:
+        def execute(self, sql, params):
+            assert sql.startswith('SELECT ')
+            assert tuple(params[:2]) == SCOPE.key
+            calls.append((sql, params))
+            return self
+        def fetchone(self):
+            return rows[0] if rows else None
+        def fetchall(self):
+            return rows
+        def commit(self):
+            pytest.fail('view reader must not commit a write')
+    @contextmanager
+    def read(scope):
+        assert scope == SCOPE
+        yield Connection()
+    def writer(_scope):
+        pytest.fail('view must use read connection, not write connection')
+    return EcommerceWorkshopCreatorLifecycleStore(writer, read_connect_factory=read), calls
+
+
+def invoke(store, method):
+    args = (SCOPE, 'fixture-start') if method == 'list_lane_observations' else (SCOPE,)
+    return getattr(store, method)(*args)
+
+
+@pytest.mark.parametrize('method', MODELS)
+@pytest.mark.parametrize('foreign', [TenantScope('dev-org', 'dev-project'), TenantScope('org-org', 'other')])
+def test_foreign_serialized_tenant_is_rejected_even_under_correct_sql(method, foreign):
+    valid = dict(authority_data=item(method).model_dump(mode='json', by_alias=True))
+    bad = dict(authority_data=item(method, foreign).model_dump(mode='json', by_alias=True))
+    rows = [bad] if method.startswith('latest_') else [valid, bad]
+    store, calls = store_with_rows(rows)
+    with pytest.raises(CreatorLifecycleBlocked, match='CREATOR_LIFECYCLE_TENANT_DRIFT'):
+        invoke(store, method)
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize('method', MODELS)
+def test_valid_serialized_tenant_preserves_complete_item(method):
+    expected = item(method)
+    store, calls = store_with_rows([dict(authority_data=expected.model_dump(mode='json', by_alias=True))])
+    actual = invoke(store, method)
+    assert actual == (expected if method.startswith('latest_') else [expected])
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize('method', MODELS)
+def test_empty_reader_retains_existing_none_or_empty_semantics(method):
+    store, calls = store_with_rows([])
+    assert invoke(store, method) == (None if method.startswith('latest_') else [])
+    assert len(calls) == 1
+
+ACTUAL red.log SHA d4f1517180966b0239f6eb5e9f1b9a7294c235f726eeef54854fb90ae099a418
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-latest_start_for_tenant_or_none]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_lane_observations]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_contracts]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_deliveries]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_relationships]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-latest_start_for_tenant_or_none]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_lane_observations]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_contracts]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_deliveries]
+FAILED services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_relationships]
+10 failed, 10 passed, 7 warnings in 0.39s
+ACTUAL green-adjacent.log SHA 5873b27f9c74a4bce1d9046aa2bf4439cfbbbd310513a110e5452b5d6e44c561
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-latest_start_for_tenant_or_none] PASSED [  1%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_lane_observations] PASSED [  2%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_contracts] PASSED [  3%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_deliveries] PASSED [  5%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_relationships] PASSED [  6%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-latest_start_for_tenant_or_none] PASSED [  7%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_lane_observations] PASSED [  8%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_contracts] PASSED [ 10%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_deliveries] PASSED [ 11%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_relationships] PASSED [ 12%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[latest_start_for_tenant_or_none] PASSED [ 13%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_lane_observations] PASSED [ 15%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_contracts] PASSED [ 16%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_deliveries] PASSED [ 17%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_relationships] PASSED [ 18%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[latest_start_for_tenant_or_none] PASSED [ 20%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_lane_observations] PASSED [ 21%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_contracts] PASSED [ 22%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_deliveries] PASSED [ 24%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_relationships] PASSED [ 25%]
+======================== 79 passed, 7 warnings in 4.84s ========================
+EXACT STORE DIFF
+diff --git a/services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_store.py b/services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_store.py
+index 212f01eaa..218788192 100644
+--- a/services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_store.py
++++ b/services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_store.py
+@@ -88,7 +88,11 @@ class EcommerceWorkshopCreatorLifecycleStore:
+                 ).fetchone()
+         except psycopg.Error as exc:
+             raise CreatorLifecycleBlocked("CREATOR_LIFECYCLE_AUTHORITY_UNAVAILABLE") from exc
+-        return None if row is None else CreatorBatchStartDecisionRevision.model_validate(row["authority_data"])
++        if row is None:
++            return None
++        item = CreatorBatchStartDecisionRevision.model_validate(row["authority_data"])
++        self._assert_tenant(scope, item)
++        return item
+ 
+     def require_start(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorBatchStartDecisionRevision:
+         with self._read_connect(scope) as conn:
+@@ -128,7 +132,10 @@ class EcommerceWorkshopCreatorLifecycleStore:
+                 "SELECT authority_data FROM ecommerce_creator_lane_observation WHERE org_id=%s AND project_id=%s AND decision_id=%s ORDER BY observed_at,observation_id",
+                 (*scope.key, decision_id),
+             ).fetchall()
+-        return [CreatorLaneObservation.model_validate(row["authority_data"]) for row in rows]
++        items = [CreatorLaneObservation.model_validate(row["authority_data"]) for row in rows]
++        for item in items:
++            self._assert_tenant(scope, item)
++        return items
+ 
+     def append_contract(self, scope: TenantScope, item: CreatorContractRevision) -> CreatorContractRevision:
+         receipt_id = authority_receipt_id(*scope.key, "CreatorContractRevision", item.collaboration_id, item.revision, item.content_hash)
+@@ -173,7 +180,10 @@ class EcommerceWorkshopCreatorLifecycleStore:
+     def _list(self, scope: TenantScope, table: str, model: type[Any]) -> list[Any]:
+         with self._read_connect(scope) as conn:
+             rows = conn.execute(f"SELECT authority_data FROM {table} WHERE org_id=%s AND project_id=%s ORDER BY created_at", scope.key).fetchall()
+-        return [model.model_validate(row["authority_data"]) for row in rows]
++        items = [model.model_validate(row["authority_data"]) for row in rows]
++        for item in items:
++            self._assert_tenant(scope, item)
++        return items
+ 
+     def list_contracts(self, scope: TenantScope) -> list[CreatorContractRevision]:
+         return self._list(scope, "ecommerce_creator_contract_revision", CreatorContractRevision)
+
+COMPLETE ACTUAL CURRENT PYTEST OUTPUT (not rerun or edited): .evidence/qyh-creator-lifecycle-read-tenant-fence-20261014/green-adjacent.log SHA 5873b27f9c74a4bce1d9046aa2bf4439cfbbbd310513a110e5452b5d6e44c561
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0 -- /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python
+rootdir: /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collecting ... collected 79 items
+
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-latest_start_for_tenant_or_none] PASSED [  1%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_lane_observations] PASSED [  2%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_contracts] PASSED [  3%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_deliveries] PASSED [  5%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_relationships] PASSED [  6%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-latest_start_for_tenant_or_none] PASSED [  7%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_lane_observations] PASSED [  8%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_contracts] PASSED [ 10%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_deliveries] PASSED [ 11%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_relationships] PASSED [ 12%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[latest_start_for_tenant_or_none] PASSED [ 13%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_lane_observations] PASSED [ 15%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_contracts] PASSED [ 16%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_deliveries] PASSED [ 17%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_relationships] PASSED [ 18%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[latest_start_for_tenant_or_none] PASSED [ 20%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_lane_observations] PASSED [ 21%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_contracts] PASSED [ 22%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_deliveries] PASSED [ 24%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_relationships] PASSED [ 25%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_explicit_start_compiles_four_independent_lanes_without_external_effect PASSED [ 26%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_start_fails_closed_on_legacy_items_cas_and_lane_coverage PASSED [ 27%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_partial_unknown_is_not_completed_and_receipt_binding_is_exact PASSED [ 29%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_contract_delivery_relationship_share_lineage_and_maturity_window_is_closed PASSED [ 30%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_discovery_normalizer_preserves_originals_and_fails_license_freshness_closed PASSED [ 31%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_match_preliminary_cannot_reject_and_observation_decision_remain_separate PASSED [ 32%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_batch_prepare_freeze_is_conserved_idempotent_and_has_zero_effects PASSED [ 34%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_frequency_capacity_budget_and_tenant_are_fail_closed PASSED [ 35%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result PASSED [ 36%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_PREPARE_TENANT_DRIFT] PASSED [ 37%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_BATCH_NOT_FOUND] PASSED [ 39%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_batch_prepare_requires_exact_decision_lineage_and_disposition PASSED [ 40%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unknown_and_deduplicated_items_remain_conserved[needs_review-unknown-unknown] PASSED [ 41%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unknown_and_deduplicated_items_remain_conserved[accepted-deduplicated-deduplicated] PASSED [ 43%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[analyst] PASSED [ 44%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[content-campaign] PASSED [ 45%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[creator-growth] PASSED [ 46%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[customer] PASSED [ 48%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[media-studio] PASSED [ 49%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[operations] PASSED [ 50%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[price-governance] PASSED [ 51%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[task-cockpit] PASSED [ 53%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/views/customer/contributions] PASSED [ 54%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/views/creator-growth/lifecycle] PASSED [ 55%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/modules/ecommerce.operations/readiness] PASSED [ 56%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes PASSED [ 58%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unknown_query_rejected_before_catalog_call PASSED [ 59%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_contribution_read_denied_before_service_access PASSED [ 60%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_creator_contribution_receives_authenticated_scope PASSED [ 62%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_contribution_query_scope_override_is_rejected PASSED [ 63%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_real_inputs_read_denied_before_business_data_access PASSED [ 64%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_real_inputs_receives_only_authenticated_tenant PASSED [ 65%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_real_inputs_query_cannot_override_authenticated_scope PASSED [ 67%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[analyst] PASSED [ 68%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[content-campaign] PASSED [ 69%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[creator-growth] PASSED [ 70%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[customer] PASSED [ 72%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[media-studio] PASSED [ 73%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[operations] PASSED [ 74%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[price-governance] PASSED [ 75%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[task-cockpit] PASSED [ 77%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_legacy_success_does_not_build_installed_configuration PASSED [ 78%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_installed_factory_is_deferred_until_legacy_not_found PASSED [ 79%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_exact_granted_installed_asset_can_pass_read_gate_without_runtime_promotion PASSED [ 81%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_declared_scope_without_current_lock_grant_is_rejected PASSED [ 82%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_cross_tenant_denied_before_candidate_source_access[changes0] PASSED [ 83%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_cross_tenant_denied_before_candidate_source_access[changes1] PASSED [ 84%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installation_revocation_is_checked_each_time PASSED [ 86%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_legacy_success_is_preserved_without_reading_candidate PASSED [ 87%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_legacy_integrity_error_never_falls_back PASSED [ 88%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_reference_must_match_current_exact_lock PASSED [ 89%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_from_another_revision_or_authority_is_rejected[revision-installation:4/lock:1] PASSED [ 91%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_from_another_revision_or_authority_is_rejected[authority-client:declaration] PASSED [ 92%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_candidate_bundle_content_drift_is_not_hidden_by_fallback PASSED [ 93%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_original_role_and_marking_filter_still_denies_installed_candidate[changes0] PASSED [ 94%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_original_role_and_marking_filter_still_denies_installed_candidate[changes1] PASSED [ 96%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_metadata_projection_with_registry_blocker_cannot_open_business_read PASSED [ 97%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installed_only_does_not_accept_legacy_success PASSED [ 98%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installed_only_keeps_disabled_result_and_does_not_call_legacy PASSED [100%]
+
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 79 passed, 7 warnings in 4.84s ========================

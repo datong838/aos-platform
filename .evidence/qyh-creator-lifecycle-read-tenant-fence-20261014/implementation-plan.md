@@ -1,0 +1,11 @@
+# 生命周期view读取JSON租户失配拒绝
+
+Rules：用户先方案/最小改动/保护正常数据；231唯一m1写者/逐波Loop/独立Prime。Task/base2029/sameowner/14:00UTC已登记精确Store与新安全测试范围，与router和维护Scope不重叠。原DB只读、HostworkerProvider OFF。
+
+现状：Store.latest_start_for_tenant_or_none、list_lane_observations、_list返回严格DTO但没有调用已存在_assert_tenant，因而SQL行的org/project与authority_data内部tenant失配时会输出其他租户payload。写入_append已有_assert；SQL/RLS与JSON一致性是不同防线，不能只用WHERE推断payload正确。正常同租户不变，跨org/workspace或坏payload必须失败关闭。
+
+唯一产品文件services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_store.py：在三个view读路径解析后的item/items返回前逐个调用既有_assert_tenant；latest无row仍None，各list空仍[]。不用全局默认、不吞TENANT_DRIFT、不把错误改成功空态；保持连接readfactory/SQL/参数/排序/其他生产读写方法不变。
+
+新增services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py：真实Pydantic完整DTO序列化为假行、Spy只读连接捕获实际SQL/参数；5公开view读方法分别覆盖foreign org/workspace必拒、合法scope保持完整对象、空无row保持语义。Spy写/commit必须失败。只是隔离安全逻辑，不声称真实用户/native业务，也不创建原记录。先独立方案门，再RED/minimal/专项+既有w6_04/lifecycle/store及读取相邻、完整源代码Prime合法消费；生命周期GET仍legacy，原正常只读native可以核库/已关闭执行门，不制造坏原数据。准确Delivery仅JSONtenant防线，不能勾掉限额/隐私/截面一致性与GET接线。
+
+另发现_lane与三类_list没有数量限额且多事务无统一cutoff；不在本修复偷偷截断、分页或改变统计，不以此声称全量可安全暴露。原routerTask保留这些审计门，再设计兼容的有界读取及unknown状态后接线。其余helpers、完整C/真实用户预算审批/原部署、新自然首链、安装全生命周期、八场景/视觉/观察发布全部保留。无DDL/Role/预算/Source/旧Run/disabledSchedule/外部动作，保护全部userdirty。

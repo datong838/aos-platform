@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-lifecycle-read-tenant-fence-20261014-code-r3",
+  "task_id": "qyh-creator-lifecycle-read-tenant-fence-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "d3e9e44bdb77015570d67c7fcb2131ca26efd0a5",
+    "authority_revision": "AOS-002029",
+    "files": {
+      ".evidence/qyh-creator-lifecycle-read-tenant-fence-20261014/code-review-package-r2.txt": "72712c00cd79178710667edb809dda46f2cfbf40bd54d65b9289362367447d9d"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "373245a3f866c953f6363e4c21a3986a98be7634871ca98cd3731448cec88c96",
+  "transport_sha256": "eb621b1c8d654ee9a29235a9addafab2a782d95537fe4b7ce4ac670b7081c678"
+}

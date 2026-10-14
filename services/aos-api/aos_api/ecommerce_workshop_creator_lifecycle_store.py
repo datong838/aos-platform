@@ -88,7 +88,11 @@ class EcommerceWorkshopCreatorLifecycleStore:
                 ).fetchone()
         except psycopg.Error as exc:
             raise CreatorLifecycleBlocked("CREATOR_LIFECYCLE_AUTHORITY_UNAVAILABLE") from exc
-        return None if row is None else CreatorBatchStartDecisionRevision.model_validate(row["authority_data"])
+        if row is None:
+            return None
+        item = CreatorBatchStartDecisionRevision.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
 
     def require_start(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorBatchStartDecisionRevision:
         with self._read_connect(scope) as conn:
@@ -128,7 +132,10 @@ class EcommerceWorkshopCreatorLifecycleStore:
                 "SELECT authority_data FROM ecommerce_creator_lane_observation WHERE org_id=%s AND project_id=%s AND decision_id=%s ORDER BY observed_at,observation_id",
                 (*scope.key, decision_id),
             ).fetchall()
-        return [CreatorLaneObservation.model_validate(row["authority_data"]) for row in rows]
+        items = [CreatorLaneObservation.model_validate(row["authority_data"]) for row in rows]
+        for item in items:
+            self._assert_tenant(scope, item)
+        return items
 
     def append_contract(self, scope: TenantScope, item: CreatorContractRevision) -> CreatorContractRevision:
         receipt_id = authority_receipt_id(*scope.key, "CreatorContractRevision", item.collaboration_id, item.revision, item.content_hash)
@@ -173,7 +180,10 @@ class EcommerceWorkshopCreatorLifecycleStore:
     def _list(self, scope: TenantScope, table: str, model: type[Any]) -> list[Any]:
         with self._read_connect(scope) as conn:
             rows = conn.execute(f"SELECT authority_data FROM {table} WHERE org_id=%s AND project_id=%s ORDER BY created_at", scope.key).fetchall()
-        return [model.model_validate(row["authority_data"]) for row in rows]
+        items = [model.model_validate(row["authority_data"]) for row in rows]
+        for item in items:
+            self._assert_tenant(scope, item)
+        return items
 
     def list_contracts(self, scope: TenantScope) -> list[CreatorContractRevision]:
         return self._list(scope, "ecommerce_creator_contract_revision", CreatorContractRevision)

@@ -1,0 +1,13 @@
+{
+  "requestedScope": [
+    "org-org",
+    "dev-project"
+  ],
+  "returnedPayloadScope": [
+    "dev-org",
+    "dev-project"
+  ],
+  "fakeRowUnderTenantCorrectSQL": true,
+  "noDatabaseOrProducerOpened": true,
+  "defectConfirmed": true
+}
