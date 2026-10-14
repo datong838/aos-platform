@@ -1,0 +1,141 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0 -- /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python
+rootdir: /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collecting ... collected 102 items
+
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_empty_is_complete_single_readonly_snapshot_with_database_cutoff PASSED [  0%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_complete_typed_view_and_lane_projection_without_producer_calls PASSED [  1%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[org_id-dev-org] PASSED [  2%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[project_id-other] PASSED [  3%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[entity_id-wrong] PASSED [  4%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[revision-9] PASSED [  5%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb] PASSED [  6%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[created_at-value5] PASSED [  7%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_inner_json_tenant_drift_is_rejected[orgId-dev-org] PASSED [  8%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_inner_json_tenant_drift_is_rejected[projectId-other] PASSED [  9%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_non_readonly_or_non_repeatable_connection_is_denied[False-3] PASSED [ 10%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_non_readonly_or_non_repeatable_connection_is_denied[True-2] PASSED [ 11%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_database_failure_is_unavailable_not_empty_success PASSED [ 12%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_clock_without_timezone_is_denied PASSED [ 13%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_row_limit_sentinel_rejects_instead_of_truncating PASSED [ 14%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_exact_row_limit_can_be_read_when_total_bytes_fit PASSED [ 15%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_sql_suppressed_large_json_is_rejected_before_parse PASSED [ 16%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_total_byte_limit_is_not_treated_as_partial_or_empty PASSED [ 17%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_lane_exact_lineage_drift_is_rejected[decision] PASSED [ 18%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_lane_exact_lineage_drift_is_rejected[hash] PASSED [ 19%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_lane_exact_lineage_drift_is_rejected[lane] PASSED [ 20%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_bad_json_shape_fails_closed PASSED [ 21%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_delivery_observation_without_dto_revision_requires_stored_v1 PASSED [ 22%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-latest_start_for_tenant_or_none] PASSED [ 23%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_lane_observations] PASSED [ 24%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_contracts] PASSED [ 25%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_deliveries] PASSED [ 26%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_relationships] PASSED [ 27%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-latest_start_for_tenant_or_none] PASSED [ 28%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_lane_observations] PASSED [ 29%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_contracts] PASSED [ 30%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_deliveries] PASSED [ 31%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_relationships] PASSED [ 32%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[latest_start_for_tenant_or_none] PASSED [ 33%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_lane_observations] PASSED [ 34%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_contracts] PASSED [ 35%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_deliveries] PASSED [ 36%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_relationships] PASSED [ 37%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[latest_start_for_tenant_or_none] PASSED [ 38%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_lane_observations] PASSED [ 39%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_contracts] PASSED [ 40%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_deliveries] PASSED [ 41%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_relationships] PASSED [ 42%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_explicit_start_compiles_four_independent_lanes_without_external_effect PASSED [ 43%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_start_fails_closed_on_legacy_items_cas_and_lane_coverage PASSED [ 44%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_partial_unknown_is_not_completed_and_receipt_binding_is_exact PASSED [ 45%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_contract_delivery_relationship_share_lineage_and_maturity_window_is_closed PASSED [ 46%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_discovery_normalizer_preserves_originals_and_fails_license_freshness_closed PASSED [ 47%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_match_preliminary_cannot_reject_and_observation_decision_remain_separate PASSED [ 48%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_batch_prepare_freeze_is_conserved_idempotent_and_has_zero_effects PASSED [ 49%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_frequency_capacity_budget_and_tenant_are_fail_closed PASSED [ 50%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result PASSED [ 50%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_PREPARE_TENANT_DRIFT] PASSED [ 51%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_BATCH_NOT_FOUND] PASSED [ 52%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_batch_prepare_requires_exact_decision_lineage_and_disposition PASSED [ 53%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unknown_and_deduplicated_items_remain_conserved[needs_review-unknown-unknown] PASSED [ 54%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unknown_and_deduplicated_items_remain_conserved[accepted-deduplicated-deduplicated] PASSED [ 55%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[analyst] PASSED [ 56%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[content-campaign] PASSED [ 57%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[creator-growth] PASSED [ 58%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[customer] PASSED [ 59%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[media-studio] PASSED [ 60%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[operations] PASSED [ 61%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[price-governance] PASSED [ 62%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[task-cockpit] PASSED [ 63%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/views/customer/contributions] PASSED [ 64%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/views/creator-growth/lifecycle] PASSED [ 65%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/modules/ecommerce.operations/readiness] PASSED [ 66%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes PASSED [ 67%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unknown_query_rejected_before_catalog_call PASSED [ 68%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_contribution_read_denied_before_service_access PASSED [ 69%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_creator_contribution_receives_authenticated_scope PASSED [ 70%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_contribution_query_scope_override_is_rejected PASSED [ 71%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_real_inputs_read_denied_before_business_data_access PASSED [ 72%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_real_inputs_receives_only_authenticated_tenant PASSED [ 73%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_real_inputs_query_cannot_override_authenticated_scope PASSED [ 74%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[analyst] PASSED [ 75%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[content-campaign] PASSED [ 76%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[creator-growth] PASSED [ 77%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[customer] PASSED [ 78%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[media-studio] PASSED [ 79%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[operations] PASSED [ 80%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[price-governance] PASSED [ 81%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[task-cockpit] PASSED [ 82%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_legacy_success_does_not_build_installed_configuration PASSED [ 83%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_installed_factory_is_deferred_until_legacy_not_found PASSED [ 84%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_exact_granted_installed_asset_can_pass_read_gate_without_runtime_promotion PASSED [ 85%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_declared_scope_without_current_lock_grant_is_rejected PASSED [ 86%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_cross_tenant_denied_before_candidate_source_access[changes0] PASSED [ 87%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_cross_tenant_denied_before_candidate_source_access[changes1] PASSED [ 88%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installation_revocation_is_checked_each_time PASSED [ 89%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_legacy_success_is_preserved_without_reading_candidate PASSED [ 90%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_legacy_integrity_error_never_falls_back PASSED [ 91%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_reference_must_match_current_exact_lock PASSED [ 92%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_from_another_revision_or_authority_is_rejected[revision-installation:4/lock:1] PASSED [ 93%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_from_another_revision_or_authority_is_rejected[authority-client:declaration] PASSED [ 94%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_candidate_bundle_content_drift_is_not_hidden_by_fallback PASSED [ 95%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_original_role_and_marking_filter_still_denies_installed_candidate[changes0] PASSED [ 96%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_original_role_and_marking_filter_still_denies_installed_candidate[changes1] PASSED [ 97%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_metadata_projection_with_registry_blocker_cannot_open_business_read PASSED [ 98%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installed_only_does_not_accept_legacy_success PASSED [ 99%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installed_only_keeps_disabled_result_and_does_not_call_legacy PASSED [100%]
+
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 102 passed, 7 warnings in 4.94s ========================

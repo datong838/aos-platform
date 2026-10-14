@@ -1,0 +1,10 @@
+{
+  "containerId": "12daa903953018ee9f933721791e5f0885f8627519def55b269da2c1528ac183",
+  "sameOwner": true,
+  "runningFinalPG": true,
+  "scopeRolesBeforeBootstrap": 0,
+  "scopeTablesBeforeBootstrap": 0,
+  "initialFailureBeforeAnySQL": true,
+  "noContainerReplay": true,
+  "originalVolumeTouched": false
+}

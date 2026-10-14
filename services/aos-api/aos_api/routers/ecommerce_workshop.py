@@ -147,6 +147,10 @@ from aos_api.ecommerce_workshop_creator_lifecycle import (
     StartCreatorBatchRequest,
 )
 from aos_api.ecommerce_workshop_creator_lifecycle_store import EcommerceWorkshopCreatorLifecycleStore
+from aos_api.ecommerce_workshop_creator_lifecycle_readonly import (
+    CreatorLifecycleReadonlyReader,
+    CreatorLifecycleReadonlyError,
+)
 from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
 from aos_api.ecommerce_media_internal_workflow import (
     EcommerceMediaInternalWorkflow,
@@ -637,6 +641,16 @@ def get_ecommerce_operation_command_observation_service() -> EcommerceOperationC
     )
 
 
+@lru_cache(maxsize=1)
+def get_creator_lifecycle_readonly() -> CreatorLifecycleReadonlyReader:
+    return CreatorLifecycleReadonlyReader()
+
+
+CreatorLifecycleReadonlyDependency = Annotated[
+    CreatorLifecycleReadonlyReader, Depends(get_creator_lifecycle_readonly)
+]
+
+
 CatalogDependency = Annotated[
     EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)
 ]
@@ -1005,8 +1019,8 @@ def _require_content_campaign_installation(
 
 def _require_creator_growth_installation(
     *, principal: Principal, catalog: EcommerceWorkshopCatalog
-) -> None:
-    _invoke(
+) -> EcommerceWorkshopModuleReadinessResponse:
+    return _invoke(
         lambda: catalog.get_readiness(
             module_id="ecommerce.creator-growth",
             org_id=principal.org_id,
@@ -1804,12 +1818,29 @@ def start_creator_batch(
 def get_creator_lifecycle_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     service: CreatorLifecycleDependency,
+    readonly: CreatorLifecycleReadonlyDependency,
 ) -> CreatorLifecycleView:
     _reject_query_parameters(request)
-    _require_creator_growth_installation(principal=principal, catalog=catalog)
-    return service.view(TenantScope(principal.org_id, principal.project_id))
+    admission = _require_creator_growth_installation(principal=principal, catalog=catalog)
+    if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+        raise ApiError(
+            code="CREATOR_LIFECYCLE_READ_ADMISSION_UNAVAILABLE",
+            message="当前生命周期读取准入不可核验。",
+            status_code=503,
+        )
+    scope = TenantScope(principal.org_id, principal.project_id)
+    if any(blocker.reason_code == "INSTALLED_ASSET_READONLY" for blocker in admission.item.blockers):
+        try:
+            return readonly.read(scope)
+        except CreatorLifecycleReadonlyError as exc:
+            raise ApiError(
+                code=exc.code,
+                message="当前生命周期数据暂不可读，请核对数据或读取范围。",
+                status_code=503,
+            ) from exc
+    return service.view(scope)
 
 
 @router.get(

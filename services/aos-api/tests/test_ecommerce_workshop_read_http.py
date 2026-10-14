@@ -51,7 +51,7 @@ def test_root_get_uses_scoped_read_admission_before_business_reader(module):
 
 
 @pytest.mark.parametrize('path', [
-    '/views/customer/contributions', '/views/creator-growth/lifecycle',
+    '/views/customer/contributions', '/views/creator-growth/workflow/drafts',
     '/modules/ecommerce.operations/readiness',
 ])
 def test_unreviewed_get_still_uses_legacy_admission(path):
@@ -82,6 +82,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
         '/v1/ecommerce-workshop/views/analyst/learning-scenario',
         '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
         '/v1/ecommerce-workshop/views/creator-growth/contributions',
+        '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
     }
 
 
@@ -213,3 +214,121 @@ def test_installed_factory_is_deferred_until_legacy_not_found(monkeypatch):
     with pytest.raises(ValueError, match='configuration sentinel'):
         catalog.get_readiness(module_id='ecommerce.operations')
     assert calls == ['selected']
+
+
+LIFECYCLE_PATH = '/v1/ecommerce-workshop/views/creator-growth/lifecycle'
+
+
+def lifecycle_admission(*, readonly=True):
+    from tests.test_ecommerce_workshop_read_catalog import make, ARGS
+    catalog, _ = make()
+    result = catalog.get_readiness(**{**ARGS, 'module_id': 'ecommerce.creator-growth'})
+    if not readonly:
+        result = result.model_copy(update={'item': result.item.model_copy(update={
+            'blockers': [b for b in result.item.blockers if b.reason_code != 'INSTALLED_ASSET_READONLY'],
+        })})
+    return result
+
+
+def lifecycle_probes(client, *, failure=None):
+    calls = []
+    class Legacy:
+        def view(self, scope):
+            calls.append(('legacy', scope.key))
+            raise ReadReached('legacy-lifecycle')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key))
+            if failure:
+                from aos_api.ecommerce_workshop_creator_lifecycle_readonly import CreatorLifecycleReadonlyError
+                raise CreatorLifecycleReadonlyError(failure)
+            raise ReadReached('readonly-lifecycle')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_lifecycle] = lambda: Legacy()
+    client.app.dependency_overrides[routes.get_creator_lifecycle_readonly] = lambda: Readonly()
+    return calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_lifecycle_admission_selects_only_correct_reader(readonly):
+    client, legacy, reader = client_with_catalogs()
+    calls = lifecycle_probes(client)
+    def admit(**scope):
+        reader.calls.append(scope)
+        return lifecycle_admission(readonly=readonly)
+    reader.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-lifecycle'):
+        client.get(LIFECYCLE_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'))]
+    assert not legacy.calls
+    assert reader.calls == [dict(module_id='ecommerce.creator-growth', org_id='org-org',
+        project_id='dev-project', roles=['admin'], markings=[])]
+
+
+def test_lifecycle_catalog_denial_precedes_both_readers():
+    client, legacy, reader = client_with_catalogs()
+    calls = lifecycle_probes(client)
+    response = client.get(LIFECYCLE_PATH)
+    assert response.status_code == 404
+    assert calls == [] and not legacy.calls and len(reader.calls) == 1
+
+
+@pytest.mark.parametrize('query', ['orgId=dev-org', 'projectId=other', 'limit=1', 'mode=legacy'])
+def test_lifecycle_query_cannot_select_scope_reader_or_limit(query):
+    client, legacy, reader = client_with_catalogs()
+    calls = lifecycle_probes(client)
+    response = client.get(LIFECYCLE_PATH + '?' + query)
+    assert response.status_code == 400
+    assert calls == [] and not legacy.calls and not reader.calls
+
+
+@pytest.mark.parametrize('admission', [None, object()])
+def test_unknown_lifecycle_admission_is_unavailable_not_empty(admission):
+    client, legacy, reader = client_with_catalogs()
+    calls = lifecycle_probes(client)
+    reader.get_readiness = lambda **scope: admission
+    response = client.get(LIFECYCLE_PATH)
+    assert response.status_code == 503
+    assert 'CREATOR_LIFECYCLE_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert 'latestStart' not in response.text
+    assert calls == [] and not legacy.calls
+
+
+@pytest.mark.parametrize('code', ['CREATOR_LIFECYCLE_READ_UNAVAILABLE',
+    'CREATOR_LIFECYCLE_READ_AUTHORITY_DRIFT', 'CREATOR_LIFECYCLE_READ_LIMIT_EXCEEDED'])
+def test_lifecycle_bounded_failure_stays_explicit_503(code):
+    client, legacy, reader = client_with_catalogs()
+    calls = lifecycle_probes(client, failure=code)
+    reader.get_readiness = lambda **scope: lifecycle_admission()
+    response = client.get(LIFECYCLE_PATH)
+    assert response.status_code == 503 and code in response.text
+    assert 'latestStart' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
+
+
+def test_lifecycle_readonly_serializes_genuine_empty_without_commands():
+    from datetime import datetime, timezone
+    from aos_api.ecommerce_workshop_creator_lifecycle import CreatorLifecycleView, _ledger
+    client, legacy, reader = client_with_catalogs()
+    reader.get_readiness = lambda **scope: lifecycle_admission()
+    class Readonly:
+        def read(self, scope):
+            return CreatorLifecycleView(
+                tenant=dict(orgId=scope.org_id, projectId=scope.project_id),
+                evaluatedAt=datetime(2026, 10, 14, tzinfo=timezone.utc),
+                latestStart=None, ledger=_ledger([], 0), contracts=[], deliveries=[],
+                relationships=[], blockers=['CREATOR_BATCH_START_NOT_AVAILABLE'],
+                allowedCommands=[], externalEffectsAllowed=False,
+            )
+    class Legacy:
+        def view(self, scope):
+            pytest.fail('installed readonly must never invoke legacy view')
+    client.app.dependency_overrides[routes.get_creator_lifecycle_readonly] = lambda: Readonly()
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_lifecycle] = lambda: Legacy()
+    response = client.get(LIFECYCLE_PATH)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['tenant'] == dict(orgId='org-org', projectId='dev-project')
+    assert data['latestStart'] is None and data['contracts'] == []
+    assert data['allowedCommands'] == [] and data['externalEffectsAllowed'] is False
+    assert not legacy.calls

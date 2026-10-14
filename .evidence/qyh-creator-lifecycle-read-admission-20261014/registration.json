@@ -1,0 +1,25 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-lifecycle-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002029",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    "aos-platform/.evidence/qyh-creator-lifecycle-read-admission-20261014",
+    "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md"
+  ],
+  "excluded_scope": [
+    "aos-platform/apps/web",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py"
+  ],
+  "expected_outputs": [
+    "Audit complete creator lifecycle GET→defaultservice/store/methods/nestedDTO/fieldprivacy/readonly connection before exact admission; preserve POST/start/observations/freeze/producer/budget gates and unavailable/empty truth. Plan/Prime/RED/minimal/adjacent/true nativebrowser/Prime/accurateDelivery fullLoop. No runtimeGoal completion.",
+    "If audit needs additionalfile fix register separate exactscope/plan beforecoding; preserve other8helpers/fullC/trueuserbudget/deployment/naturalbusiness/install/visual/release Goal."
+  ],
+  "lease_expires_at": "2026-10-14T14:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-14T18:31:08+08:00"
+}

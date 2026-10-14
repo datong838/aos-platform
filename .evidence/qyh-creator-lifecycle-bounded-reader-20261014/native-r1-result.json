@@ -1,0 +1,37 @@
+{
+  "containerId": "12daa903953018ee9f933721791e5f0885f8627519def55b269da2c1528ac183",
+  "name": "qyh-creator-lifecycle-bounded-native-20261014-r1",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "tmpfs": true,
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "snapshotFirst": 1,
+  "snapshotAfterConcurrentCommit": 2,
+  "forceRlsForeignRowInvisible": true,
+  "writeDeniedSqlstate": "25006",
+  "badPayloadRejected": "CREATOR_LIFECYCLE_READ_AUTHORITY_DRIFT",
+  "normalCompleteSnapshot": true,
+  "originalVolumeTouched": false,
+  "originalUserOrBudgetApproval": false,
+  "currentSourceSha256": "95cacb071c8f9b10ad4ba3277c1a2820db076ba527c53d6d964b801fd01b7780"
+}

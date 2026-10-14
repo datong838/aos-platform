@@ -1,0 +1,37 @@
+{
+  "head": "0d4ad4f422ec318f1ea9528336e64f0ad4947f87",
+  "startedAt": "2026-10-14T12:25:25.541044+00:00",
+  "finishedAt": "2026-10-14T12:25:41.972464+00:00",
+  "sourceBefore": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "71eb6e6169def936cb023c3a800355847ae45370d9cc68dad2d4266b4fb0c66c",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "3f7190e63d8843747ceb5f8e00baa1f336224160f54df03761cef72d3de5ec5e",
+    "services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_readonly.py": "95cacb071c8f9b10ad4ba3277c1a2820db076ba527c53d6d964b801fd01b7780",
+    "services/aos-api/tests/aip/test_creator_lifecycle_readonly.py": "84b7eefe943649b83b1e22ea9e1c8b7ac0e5ea0693a40f40c705e78dd3d8e91d"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "71eb6e6169def936cb023c3a800355847ae45370d9cc68dad2d4266b4fb0c66c",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "3f7190e63d8843747ceb5f8e00baa1f336224160f54df03761cef72d3de5ec5e",
+    "services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_readonly.py": "95cacb071c8f9b10ad4ba3277c1a2820db076ba527c53d6d964b801fd01b7780",
+    "services/aos-api/tests/aip/test_creator_lifecycle_readonly.py": "84b7eefe943649b83b1e22ea9e1c8b7ac0e5ea0693a40f40c705e78dd3d8e91d"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-p",
+    "no:cacheprovider",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_catalog.py",
+    "services/aos-api/tests/aip/test_creator_lifecycle_readonly.py",
+    "services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py",
+    "services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py",
+    "services/aos-api/tests/aip/test_w6_04_creator_lifecycle_migration.py",
+    "services/aos-api/tests/asset_registry/test_ecommerce_installed_readonly_catalog.py",
+    "services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py"
+  ],
+  "logSha256": "933291b633d379fb9833e91bdea81c685cb2a308c021c9ec0e3a118cc50dc2d6",
+  "uncommittedCandidate": true,
+  "originalRuntimeTouched": false,
+  "redLogHistoricalPreimplementation": true
+}

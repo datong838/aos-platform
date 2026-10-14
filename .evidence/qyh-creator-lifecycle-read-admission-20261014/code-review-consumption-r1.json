@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-lifecycle-read-admission-20261014-code-r1",
+  "task_id": "qyh-creator-lifecycle-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "0d4ad4f422ec318f1ea9528336e64f0ad4947f87",
+    "authority_revision": "AOS-002029",
+    "files": {
+      ".evidence/qyh-creator-lifecycle-read-admission-20261014/code-review-package-r1.txt": "b138f019556875ed522c4b03262e90355136f10061515767e575f24e9bc204ea"
+    }
+  },
+  "status": "REWORK",
+  "execution_authorized": false,
+  "result_sha256": "5268f8e793799eea4d8ac636fd3d340f1860b53d79a4b73813d99d389fb91659",
+  "transport_sha256": "bd60019905fa27d50f01863c78f489b92b28b58546f1f67a629725c96289ef02"
+}

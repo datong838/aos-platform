@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-lifecycle-bounded-reader-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002029",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_readonly.py",
+    "aos-platform/services/aos-api/tests/aip/test_creator_lifecycle_readonly.py",
+    "aos-platform/.evidence/qyh-creator-lifecycle-bounded-reader-20261014"
+  ],
+  "excluded_scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_store.py",
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle.py",
+    "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Dedicated tenant/readOnly single repeatable-read snapshot/cutoff fixed5table reader, row and byte limits+sentinel failclosed, complete typedJSON/outertenant/hash validation, no contacts dereference or producers; explicit503-ready errors notzero success. RED/code/tests/nativeisolated/Prime, then joint originalGET with existing routerTask; legacy service/store behavior remains. FullGoal not complete."
+  ],
+  "lease_expires_at": "2026-10-14T14:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-14T19:18:46+08:00"
+}

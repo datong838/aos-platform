@@ -1,0 +1,9 @@
+# 生命周期GET兼容接线精确方案
+
+Rules/base2029/sameowner/14:00UTC及原Scope不变。专用bounded-reader Task另持有新模块/测试，codequality仍待；routerTask只持有router/read_http/evidence/D-wave。完整Goal和原边界持续。
+
+修改router：import新Reader/Error，新增lazy factory与Annotated dependency；现_require_creator_growth_installation仅return原_invoke结果、注解改原EcommerceWorkshopModuleReadinessResponse，其余既有调用者仍忽略，不重复scope/hash算法。只有本GET改ReadCatalogDependency并接readonly reader。先query参数拒绝再原安装/role/markings/dataScope校验；admission须为原类型，其item.blockers含server INSTALLED_ASSET_READONLY才调用newReader.read(scope)，没有marker的合法legacy仍调用原service.view(scope)；错型None不回退，以503显式READ_ADMISSION_UNAVAILABLE失败关闭。新Reader固定错误code映射503固定中文message，不回0DTO。不能HTTP传mode、limits、SQL、installation或Role判运行权限。所有POST/start/observations/freeze/别的GET完全不改。
+
+测试read_http：原未知GET样例lifecycle换到creator workflow/drafts、精确readGET白名单加此一项；新增admitted readonly只调用新reader、legacy合法旧view保持、query400/denybeforeanyread、错型admission503、newReaderError503且无empty成功、全部其他POST/GET型式门保持。完整prospective diff在freeze材料；尚未实施，不拿计划当GREEN。
+
+先独立plan合法消费，再RED/minimal/read_http/read_catalog/bounded-reader/lifecycle/store/tenant相邻与typechecks。bounded模块完整native fixture/quality必须已合法覆盖同source，四source整体复核，最新已提交gitarchive/API只读正常场景验证；原真人同受控认证/metadata真实GET/root菜单及按原稿1440/1280/1920、503和原650指纹。legacy行为不测试真实写，原所有业务命令不点击。然后代码/现场Prime准确各slice Delivery/Authority/Prime，不能跨基线复用。原schema161/650/HostworkerProviderOFF，原Budget C、人最后批准、Source/自然链/安装/八场景/visualP1/观察发布仍未完成。

@@ -1,0 +1,17 @@
+# 安装只读生命周期单事务有界reader
+
+Rules：用户方案先行/最小改动/保护数据及dirty；231唯一m1写者/完整Loop/冻结独立Prime合法消费。Task新模块+精确测试/sameowner/base2029/14:00UTC，和Store租户候选、router、maintenance不重叠。原DB161/650只读，HostworkerProvider OFF，完整Goal不变。
+
+已复习w6_004权威DDL：五表都有org_id/project_id、稳定identity/revision/content_hash/authority_data/created_at，lane没有observed_at列。旧Store list_lane ORDER BY observed_at是独立遗留缺陷，未在本模块偷偷修旧代码；新reader按created_at/revision/identity稳定排序。租户防线候选0d4已提交、尚未原API加载，不当成已接线。
+
+新增services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_readonly.py与services/aos-api/tests/aip/test_creator_lifecycle_readonly.py。默认connect_read_only(scope)（原库只读REPEATABLE_READ及SET LOCAL租户），一连接一事务，先读DB transaction_timestamp cutoff，再固定五表参数化SELECT。latestStart按created_at/revision/decision_id DESC LIMIT1；匹配该start的lane及三类contract/delivery/relationship均created_at<=cutoff、固定稳定顺序，服务器常量MAX_ROWS=1000、SQL LIMIT1001哨兵。没有start时不用查无关lane，其他三类仍同快照读取。
+
+每条最大64KiB、总响应事实材料1MiB，SQL先octet_length(authority_data::text)及CASE大于64KiB则NULL以免拷出巨型JSON；获取集合最多1001固定行，逐条及总bytes都严格验证。超过row/item/total限额失败关闭，不截断/不回0DTO。Query没有自由表/列/用户where/HTTP limit。完整DTO解析并核outer org/project、JSON tenant、identity/revision/content_hash与列一致；字段createdAt/observedAt/startedAt须有时区且与权威created_at一致。所有row时间<=DBcutoff；lane的decisionId/typedstart exactref/hash/revision与选中的start一致、lane ID在其lanes中，否则AUTHORITY_DRIFT而非忽略。refs只metadata，不解引用candidate/联系人/monetaryterms或SourceConnector。
+
+同快照投影沿用现有CreatorLifecycleView与_ledger；复用现有latest_by_lane折叠与lane结果字段，不复制新的业务状态机，不声称ref证明运行或外部成功。readonly allowedCommands=[]、externalEffectsAllowed=false。实际表全空返回真实empty ledger，任一表/角色/clock/坏JSON/tenant/hash/bytes/limit错误抛CreatorLifecycleReadonlyError(code)，不返回success/empty；代码错误消息只固定码，不泄露SQL/行/连接信息。router后续映射明确503错误信封，客户端现有失败关闭会显示不可用诊断；不能声称所有前端unknown/数字表现或视觉已通过。
+
+legacy service/store/写方法和global DTO完全不改。routerTask另行方案：现_require_creator_growth_installation返回现有readiness envelope（其余调用者忽略返回不改变检验），该GET改ReadCatalogDependency；仅服务端返回INSTALLED_ASSET_READONLY标记选择专用reader，合法无该marker保持原service.view；错型/缺admission不接受，不能由HTTPmode/Principal role推导能力。先query拒绝+原安装/Role/Markings/DataScope门，后选readpath；所有POST/其他GET仍legacy。该接线尚未编码与独立门，不能本模块代码PASS替代接线审查。
+
+先独立plan→RED（missing模块）、最小实现：单conn/cutoff/SQL固定上限/合法空与非空完整DTO/foreignorg/project/列JSON身份hash漂移/角色失败/坏clock/row1000与1001/单条64KiB及总1MiB/largeJSON NULL等反证、lane latest解析和精确lineage。相邻legacy/lifecycle/tenant/read_http/read_catalog；实际PG隔离fixture还须证单transaction/REPEATABLE_READ/FORCE RLS/低权角色及并发snapshot稳定，不用mock伪称native。后codePrime/精确提交，并与router新Scope源加载、原真人真实DTO/原菜单/503/原650fingerprint/原稿视觉及独立现场后准确Delivery与Authority/Prime，全部步骤保留。
+
+原库不seed、撤权、删表或改坏数据；native坏payload/超限等只能在owner隔离fixture。原Actor唯一用户/原安装授权持续但不是预算批准；完整C/用户最后exact预算/部署、新自然CaseRun建议评审内容能力人工续跑复盘Wiki、安装生命周期/八场景/视觉P1/观察发布都未完成。private credentials/DTO不打Git，旧Run/unknown/disabledSchedule/Source/外部动作不放开。

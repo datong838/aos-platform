@@ -1,0 +1,848 @@
+ACTUAL code quality only. No deployment/business permission. HEAD0d4 Authority2029 unique owner. Full Goal retained. Root Task only router/http tests. Bounded source reviewed separately, unchanged matching legal consumption; all original DB read only. Initial add-test script naming assertion prevented edits; http-red-r1 is old29 baseline, NOT RED evidence. Actual http-red-r2:13failed28pass. Minimumimplementation specialized100PASS; successfulDTO extra and cumulative134PASS.
+
+
+FILE .evidence/qyh-creator-lifecycle-read-admission-20261014/routing-implementation-plan.md SHA256 3674c9cdd4f8497dd1b3749aea75659d19d67cbbe44b766810967e7b3209efe9
+# 生命周期GET兼容接线精确方案
+
+Rules/base2029/sameowner/14:00UTC及原Scope不变。专用bounded-reader Task另持有新模块/测试，codequality仍待；routerTask只持有router/read_http/evidence/D-wave。完整Goal和原边界持续。
+
+修改router：import新Reader/Error，新增lazy factory与Annotated dependency；现_require_creator_growth_installation仅return原_invoke结果、注解改原EcommerceWorkshopModuleReadinessResponse，其余既有调用者仍忽略，不重复scope/hash算法。只有本GET改ReadCatalogDependency并接readonly reader。先query参数拒绝再原安装/role/markings/dataScope校验；admission须为原类型，其item.blockers含server INSTALLED_ASSET_READONLY才调用newReader.read(scope)，没有marker的合法legacy仍调用原service.view(scope)；错型None不回退，以503显式READ_ADMISSION_UNAVAILABLE失败关闭。新Reader固定错误code映射503固定中文message，不回0DTO。不能HTTP传mode、limits、SQL、installation或Role判运行权限。所有POST/start/observations/freeze/别的GET完全不改。
+
+测试read_http：原未知GET样例lifecycle换到creator workflow/drafts、精确readGET白名单加此一项；新增admitted readonly只调用新reader、legacy合法旧view保持、query400/denybeforeanyread、错型admission503、newReaderError503且无empty成功、全部其他POST/GET型式门保持。完整prospective diff在freeze材料；尚未实施，不拿计划当GREEN。
+
+先独立plan合法消费，再RED/minimal/read_http/read_catalog/bounded-reader/lifecycle/store/tenant相邻与typechecks。bounded模块完整native fixture/quality必须已合法覆盖同source，四source整体复核，最新已提交gitarchive/API只读正常场景验证；原真人同受控认证/metadata真实GET/root菜单及按原稿1440/1280/1920、503和原650指纹。legacy行为不测试真实写，原所有业务命令不点击。然后代码/现场Prime准确各slice Delivery/Authority/Prime，不能跨基线复用。原schema161/650/HostworkerProviderOFF，原Budget C、人最后批准、Source/自然链/安装/八场景/visualP1/观察发布仍未完成。
+
+
+FILE .evidence/qyh-creator-lifecycle-read-admission-20261014/plan-review-consumption-r3.json SHA256 98d5f1e951921cbd4dcf76d622a6982a62c56c656f9ac25eed9805255c248f62
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-lifecycle-read-admission-20261014-plan-r3",
+  "task_id": "qyh-creator-lifecycle-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "0d4ad4f422ec318f1ea9528336e64f0ad4947f87",
+    "authority_revision": "AOS-002029",
+    "files": {
+      ".evidence/qyh-creator-lifecycle-read-admission-20261014/plan-review-package-r3.txt": "e91994563cfb15a134d4b4356b249ba13eb4e9ac1f82489daf5c29000cd69163"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "f264091a09012711a958acab72c0797e271abef5f699735e827c44924de51e83",
+  "transport_sha256": "f53c172e0a02e9ac63cdc893c9afcfe53de531f4c5490afb2447fe0fcb1208c3"
+}
+
+FILE services/aos-api/tests/test_ecommerce_workshop_read_http.py SHA256 3f7190e63d8843747ceb5f8e00baa1f336224160f54df03761cef72d3de5ec5e
+"""HTTP scope fence: only explicitly audited GETs use installed read admission."""
+from __future__ import annotations
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from aos_api.asset_registry.errors import AssetNotFoundError
+from aos_api.auth import Principal, require_principal
+from aos_api.errors import register_exception_handlers
+from aos_api.routers import ecommerce_workshop as routes
+
+ROOTS = {
+    'task-cockpit', 'operations', 'content-campaign', 'creator-growth',
+    'media-studio', 'analyst', 'price-governance', 'customer',
+}
+
+
+class RejectingCatalog:
+    def __init__(self):
+        self.calls = []
+
+    def get_readiness(self, **scope):
+        self.calls.append(scope)
+        raise AssetNotFoundError('not installed in current scoped catalog')
+
+
+def client_with_catalogs():
+    app = FastAPI()
+    register_exception_handlers(app)
+    app.include_router(routes.router)
+    legacy, reader = RejectingCatalog(), RejectingCatalog()
+    app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+    app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+    app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='scope-test', org_id='org-org', project_id='dev-project',
+        roles=['admin'], markings=[],
+    )
+    return TestClient(app), legacy, reader
+
+
+@pytest.mark.parametrize('module', sorted(ROOTS))
+def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+    client, legacy, reader = client_with_catalogs()
+    response = client.get(f'/v1/ecommerce-workshop/views/{module}')
+    assert response.status_code == 404
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+    assert reader.calls[0] == dict(module_id=f'ecommerce.{module}',
+        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+
+
+@pytest.mark.parametrize('path', [
+    '/views/customer/contributions', '/views/creator-growth/workflow/drafts',
+    '/modules/ecommerce.operations/readiness',
+])
+def test_unreviewed_get_still_uses_legacy_admission(path):
+    client, legacy, reader = client_with_catalogs()
+    response = client.get('/v1/ecommerce-workshop' + path)
+    assert response.status_code == 404
+    assert legacy.calls
+    assert not reader.calls
+
+
+def test_read_dependency_only_reaches_explicit_audited_get_routes():
+    actual = set()
+    for route in routes.router.routes:
+        uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                        for d in route.dependant.dependencies)
+        if uses_read:
+            assert route.methods == {'GET'}
+            actual.add(route.path)
+    assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+        '/v1/ecommerce-workshop/source-readiness',
+        '/v1/ecommerce-workshop/views/operations/cases',
+        '/v1/ecommerce-workshop/commands/operations/readiness',
+        '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+        '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+        '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+        '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+        '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+        '/v1/ecommerce-workshop/views/creator-growth/contributions',
+        '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+    }
+
+
+def test_unknown_query_rejected_before_catalog_call():
+    client, legacy, reader = client_with_catalogs()
+    assert client.get('/v1/ecommerce-workshop/views/operations?orgId=dev-org').status_code == 400
+    assert not legacy.calls and not reader.calls
+
+
+class ReadReached(RuntimeError):
+    pass
+
+
+def test_creator_contribution_read_denied_before_service_access():
+    client, legacy, reader = client_with_catalogs()
+    class Service:
+        def contribution_view(self, scope):
+            pytest.fail('denied read must not access creator preparation')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_prepare] = lambda: Service()
+    response = client.get('/v1/ecommerce-workshop/views/creator-growth/contributions')
+    assert response.status_code == 404
+    assert not legacy.calls
+    assert reader.calls == [dict(module_id='ecommerce.creator-growth',
+        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])]
+
+
+def test_admitted_creator_contribution_receives_authenticated_scope():
+    client, legacy, reader = client_with_catalogs()
+    def admit(**scope):
+        reader.calls.append(scope)
+    reader.get_readiness = admit
+    class Service:
+        def contribution_view(self, scope):
+            assert scope.key == ('org-org', 'dev-project')
+            raise ReadReached('creator-contribution')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_prepare] = lambda: Service()
+    with pytest.raises(ReadReached, match='creator-contribution'):
+        client.get('/v1/ecommerce-workshop/views/creator-growth/contributions')
+    assert not legacy.calls and len(reader.calls) == 1
+
+
+def test_creator_contribution_query_scope_override_is_rejected():
+    client, legacy, reader = client_with_catalogs()
+    response = client.get('/v1/ecommerce-workshop/views/creator-growth/contributions?projectId=other')
+    assert response.status_code == 400
+    assert not legacy.calls and not reader.calls
+
+
+def test_real_inputs_read_denied_before_business_data_access():
+    client, legacy, reader = client_with_catalogs()
+    def forbidden_inputs():
+        class Inputs:
+            def read(self, **scope):
+                pytest.fail('denied installed read must not read business inputs')
+        return Inputs()
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_content_campaign_inputs] = forbidden_inputs
+    response = client.get('/v1/ecommerce-workshop/views/content-campaign/real-inputs')
+    assert response.status_code == 404
+    assert not legacy.calls
+    assert reader.calls == [dict(module_id='ecommerce.content-campaign',
+        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])]
+
+
+def test_admitted_real_inputs_receives_only_authenticated_tenant():
+    client, legacy, reader = client_with_catalogs()
+    def admit(**scope):
+        reader.calls.append(scope)
+    reader.get_readiness = admit
+    class Inputs:
+        def read(self, **scope):
+            assert scope == dict(org_id='org-org', project_id='dev-project')
+            raise ReadReached('real-inputs')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_content_campaign_inputs] = lambda: Inputs()
+    with pytest.raises(ReadReached, match='real-inputs'):
+        client.get('/v1/ecommerce-workshop/views/content-campaign/real-inputs')
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+
+
+def test_real_inputs_query_cannot_override_authenticated_scope():
+    client, legacy, reader = client_with_catalogs()
+    response = client.get('/v1/ecommerce-workshop/views/content-campaign/real-inputs?orgId=dev-org')
+    assert response.status_code == 400
+    assert not legacy.calls and not reader.calls
+
+
+@pytest.mark.parametrize('module', sorted(ROOTS))
+def test_admitted_root_reaches_reader_with_authenticated_tenant(module):
+    client, legacy, reader = client_with_catalogs()
+    def admit(**scope):
+        reader.calls.append(scope)
+    reader.get_readiness = admit
+    factory = getattr(routes, 'get_ecommerce_workshop_' + module.replace('-', '_'))
+    class ProbeReader:
+        def read(self, **scope):
+            assert scope['org_id'] == 'org-org'
+            assert scope['project_id'] == 'dev-project'
+            raise ReadReached(module)
+        read_core = read
+    client.app.dependency_overrides[factory] = lambda: ProbeReader()
+    with pytest.raises(ReadReached, match=module):
+        client.get('/v1/ecommerce-workshop/views/' + module)
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+
+
+def test_legacy_success_does_not_build_installed_configuration(monkeypatch):
+    from aos_api import ecommerce_installed_readonly_catalog as installed
+    sentinel = object()
+    class Legacy:
+        def get_readiness(self, **scope):
+            return sentinel
+    def forbidden():
+        pytest.fail('successful legacy must not inspect selected configuration')
+    monkeypatch.setattr(installed, 'build_installed_readonly_catalog', forbidden)
+    catalog = routes.get_ecommerce_workshop_read_catalog(Legacy())
+    assert catalog.get_readiness(module_id='ecommerce.operations') is sentinel
+
+
+def test_installed_factory_is_deferred_until_legacy_not_found(monkeypatch):
+    from aos_api import ecommerce_installed_readonly_catalog as installed
+    calls = []
+    def selected():
+        calls.append('selected')
+        raise ValueError('configuration sentinel')
+    monkeypatch.setattr(installed, 'build_installed_readonly_catalog', selected)
+    catalog = routes.get_ecommerce_workshop_read_catalog(RejectingCatalog())
+    assert not calls
+    with pytest.raises(ValueError, match='configuration sentinel'):
+        catalog.get_readiness(module_id='ecommerce.operations')
+    assert calls == ['selected']
+
+
+LIFECYCLE_PATH = '/v1/ecommerce-workshop/views/creator-growth/lifecycle'
+
+
+def lifecycle_admission(*, readonly=True):
+    from tests.test_ecommerce_workshop_read_catalog import make, ARGS
+    catalog, _ = make()
+    result = catalog.get_readiness(**{**ARGS, 'module_id': 'ecommerce.creator-growth'})
+    if not readonly:
+        result = result.model_copy(update={'item': result.item.model_copy(update={
+            'blockers': [b for b in result.item.blockers if b.reason_code != 'INSTALLED_ASSET_READONLY'],
+        })})
+    return result
+
+
+def lifecycle_probes(client, *, failure=None):
+    calls = []
+    class Legacy:
+        def view(self, scope):
+            calls.append(('legacy', scope.key))
+            raise ReadReached('legacy-lifecycle')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key))
+            if failure:
+                from aos_api.ecommerce_workshop_creator_lifecycle_readonly import CreatorLifecycleReadonlyError
+                raise CreatorLifecycleReadonlyError(failure)
+            raise ReadReached('readonly-lifecycle')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_lifecycle] = lambda: Legacy()
+    client.app.dependency_overrides[routes.get_creator_lifecycle_readonly] = lambda: Readonly()
+    return calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_lifecycle_admission_selects_only_correct_reader(readonly):
+    client, legacy, reader = client_with_catalogs()
+    calls = lifecycle_probes(client)
+    def admit(**scope):
+        reader.calls.append(scope)
+        return lifecycle_admission(readonly=readonly)
+    reader.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-lifecycle'):
+        client.get(LIFECYCLE_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'))]
+    assert not legacy.calls
+    assert reader.calls == [dict(module_id='ecommerce.creator-growth', org_id='org-org',
+        project_id='dev-project', roles=['admin'], markings=[])]
+
+
+def test_lifecycle_catalog_denial_precedes_both_readers():
+    client, legacy, reader = client_with_catalogs()
+    calls = lifecycle_probes(client)
+    response = client.get(LIFECYCLE_PATH)
+    assert response.status_code == 404
+    assert calls == [] and not legacy.calls and len(reader.calls) == 1
+
+
+@pytest.mark.parametrize('query', ['orgId=dev-org', 'projectId=other', 'limit=1', 'mode=legacy'])
+def test_lifecycle_query_cannot_select_scope_reader_or_limit(query):
+    client, legacy, reader = client_with_catalogs()
+    calls = lifecycle_probes(client)
+    response = client.get(LIFECYCLE_PATH + '?' + query)
+    assert response.status_code == 400
+    assert calls == [] and not legacy.calls and not reader.calls
+
+
+@pytest.mark.parametrize('admission', [None, object()])
+def test_unknown_lifecycle_admission_is_unavailable_not_empty(admission):
+    client, legacy, reader = client_with_catalogs()
+    calls = lifecycle_probes(client)
+    reader.get_readiness = lambda **scope: admission
+    response = client.get(LIFECYCLE_PATH)
+    assert response.status_code == 503
+    assert 'CREATOR_LIFECYCLE_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert 'latestStart' not in response.text
+    assert calls == [] and not legacy.calls
+
+
+@pytest.mark.parametrize('code', ['CREATOR_LIFECYCLE_READ_UNAVAILABLE',
+    'CREATOR_LIFECYCLE_READ_AUTHORITY_DRIFT', 'CREATOR_LIFECYCLE_READ_LIMIT_EXCEEDED'])
+def test_lifecycle_bounded_failure_stays_explicit_503(code):
+    client, legacy, reader = client_with_catalogs()
+    calls = lifecycle_probes(client, failure=code)
+    reader.get_readiness = lambda **scope: lifecycle_admission()
+    response = client.get(LIFECYCLE_PATH)
+    assert response.status_code == 503 and code in response.text
+    assert 'latestStart' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
+
+
+def test_lifecycle_readonly_serializes_genuine_empty_without_commands():
+    from datetime import datetime, timezone
+    from aos_api.ecommerce_workshop_creator_lifecycle import CreatorLifecycleView, _ledger
+    client, legacy, reader = client_with_catalogs()
+    reader.get_readiness = lambda **scope: lifecycle_admission()
+    class Readonly:
+        def read(self, scope):
+            return CreatorLifecycleView(
+                tenant=dict(orgId=scope.org_id, projectId=scope.project_id),
+                evaluatedAt=datetime(2026, 10, 14, tzinfo=timezone.utc),
+                latestStart=None, ledger=_ledger([], 0), contracts=[], deliveries=[],
+                relationships=[], blockers=['CREATOR_BATCH_START_NOT_AVAILABLE'],
+                allowedCommands=[], externalEffectsAllowed=False,
+            )
+    class Legacy:
+        def view(self, scope):
+            pytest.fail('installed readonly must never invoke legacy view')
+    client.app.dependency_overrides[routes.get_creator_lifecycle_readonly] = lambda: Readonly()
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_lifecycle] = lambda: Legacy()
+    response = client.get(LIFECYCLE_PATH)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['tenant'] == dict(orgId='org-org', projectId='dev-project')
+    assert data['latestStart'] is None and data['contracts'] == []
+    assert data['allowedCommands'] == [] and data['externalEffectsAllowed'] is False
+    assert not legacy.calls
+
+
+FILE .evidence/qyh-creator-lifecycle-read-admission-20261014/http-red-r2.log SHA256 ec3a2dca7f6405932bdb67095e1f974e9ffcaee04965209d7ed01ecb3bbfba92
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_lifecycle_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:247: AttributeError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_lifecycle_admission_selects_only_correct_reader[True]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_lifecycle_admission_selects_only_correct_reader[False]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_lifecycle_catalog_denial_precedes_both_readers
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_lifecycle_query_cannot_select_scope_reader_or_limit[orgId=dev-org]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_lifecycle_query_cannot_select_scope_reader_or_limit[projectId=other]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_lifecycle_query_cannot_select_scope_reader_or_limit[limit=1]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_lifecycle_query_cannot_select_scope_reader_or_limit[mode=legacy]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unknown_lifecycle_admission_is_unavailable_not_empty[None]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unknown_lifecycle_admission_is_unavailable_not_empty[admission1]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_lifecycle_bounded_failure_stays_explicit_503[CREATOR_LIFECYCLE_READ_UNAVAILABLE]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_lifecycle_bounded_failure_stays_explicit_503[CREATOR_LIFECYCLE_READ_AUTHORITY_DRIFT]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_lifecycle_bounded_failure_stays_explicit_503[CREATOR_LIFECYCLE_READ_LIMIT_EXCEEDED]
+================== 13 failed, 28 passed, 7 warnings in 3.70s ===================
+
+
+FILE .evidence/qyh-creator-lifecycle-read-admission-20261014/cumulative-green-r1.log SHA256 97ae7374d4b44b4339c821e7e706424d776a778babd838b084bc95684c30e64e
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collected 134 items
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py ............ [  8%]
+..............................                                           [ 31%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py ......... [ 38%]
+.......                                                                  [ 43%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py .......... [ 50%]
+.............                                                            [ 60%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py ....... [ 65%]
+.............                                                            [ 75%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py ....          [ 78%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle_migration.py ..  [ 79%]
+services/aos-api/tests/asset_registry/test_ecommerce_installed_readonly_catalog.py . [ 80%]
+............                                                             [ 89%]
+services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py . [ 90%]
+.............                                                            [100%]
+
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 134 passed, 7 warnings in 8.33s ========================
+
+
+FILE .evidence/qyh-creator-lifecycle-bounded-reader-20261014/code-review-consumption-r1.json SHA256 c45f90bd815d5e0d8cc8f3d18f17c248f6b8628b13737cb29b35fbfe802b6bdf
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-lifecycle-bounded-reader-20261014-code-r1",
+  "task_id": "qyh-creator-lifecycle-bounded-reader-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "0d4ad4f422ec318f1ea9528336e64f0ad4947f87",
+    "authority_revision": "AOS-002029",
+    "files": {
+      ".evidence/qyh-creator-lifecycle-bounded-reader-20261014/code-review-package-r1.txt": "4442adcac30489f0e717b336ab784737514e68f5e1421ac1500e014945787f21"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "e4e95c36ce2c245e7718b0a08f32649168d143bd1022f3f9072f953bb6d975be",
+  "transport_sha256": "da47ce54ea98582d2d6d0d557c6710be3c673818299e1be0297c5b081710288a"
+}
+
+FILE .evidence/qyh-creator-lifecycle-bounded-reader-20261014/native-r1-result.json SHA256 f8d985ec387357305215b97173115c43d28f614d149bbbed2e2c24c71232e876
+{
+  "containerId": "12daa903953018ee9f933721791e5f0885f8627519def55b269da2c1528ac183",
+  "name": "qyh-creator-lifecycle-bounded-native-20261014-r1",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "tmpfs": true,
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "snapshotFirst": 1,
+  "snapshotAfterConcurrentCommit": 2,
+  "forceRlsForeignRowInvisible": true,
+  "writeDeniedSqlstate": "25006",
+  "badPayloadRejected": "CREATOR_LIFECYCLE_READ_AUTHORITY_DRIFT",
+  "normalCompleteSnapshot": true,
+  "originalVolumeTouched": false,
+  "originalUserOrBudgetApproval": false,
+  "currentSourceSha256": "95cacb071c8f9b10ad4ba3277c1a2820db076ba527c53d6d964b801fd01b7780"
+}
+
+
+FILE .evidence/qyh-creator-lifecycle-read-admission-20261014/routing-current-matrix.json SHA256 162cef39c7105ca5d1373369a00826225e3d2261e7ca27c245505f40666bcef2
+{"before":[["GET","/installed-readonly-modules",[]],["GET","/modules",["CatalogDependency"]],["GET","/modules/{module_id}/readiness",["CatalogDependency"]],["GET","/aip-features",[]],["POST","/aip-features/{feature_id}/activate",[]],["POST","/aip-features/{feature_id}/revoke",[]],["POST","/modules/{module_id}/commands/prepare",[]],["POST","/modules/{module_id}/commands/build-evidence",[]],["POST","/modules/{module_id}/commands/freeze",[]],["GET","/source-readiness",["CatalogDependency","ReadCatalogDependency"]],["GET","/views/operations",["ReadCatalogDependency"]],["GET","/views/operations/cases",["ReadCatalogDependency"]],["GET","/views/content-campaign",["ReadCatalogDependency"]],["GET","/views/content-campaign/real-inputs",["ReadCatalogDependency"]],["POST","/views/content-campaign/workflow/commands",["CatalogDependency"]],["POST","/views/content-campaign/workflow/approval-preview",["CatalogDependency"]],["GET","/views/creator-growth",["ReadCatalogDependency"]],["POST","/views/creator-growth/workflow/commands",["CatalogDependency"]],["GET","/views/creator-growth/workflow/drafts",["CatalogDependency"]],["GET","/views/creator-growth/workflow/drafts/{brief_id}/history",["CatalogDependency"]],["POST","/creator-growth/discovery-profiles",["CatalogDependency"]],["POST","/creator-growth/normalize",["CatalogDependency"]],["POST","/creator-growth/match-observations",["CatalogDependency"]],["POST","/creator-growth/match-decisions",["CatalogDependency"]],["POST","/creator-growth/batches/prepare",["CatalogDependency"]],["POST","/creator-growth/batches/{batch_id}/freeze",["CatalogDependency"]],["GET","/views/creator-growth/contributions",["ReadCatalogDependency"]],["POST","/creator-growth/batches/{batch_id}/start",["CatalogDependency"]],["GET","/views/creator-growth/lifecycle",["CatalogDependency"]],["GET","/views/media-studio",["ReadCatalogDependency"]],["POST","/views/media-studio/workflow/commands",["CatalogDependency"]],["GET","/views/media-studio/workflow/drafts",["ReadCatalogDependency"]],["GET","/views/media-studio/workflow/drafts/{brief_id}/history",["CatalogDependency"]],["GET","/views/media-studio/workflow/drafts/{brief_id}/delivery",["CatalogDependency"]],["POST","/views/media-studio/workflow/drafts/{brief_id}/exports",["CatalogDependency"]],["POST","/views/media-studio/workflow/drafts/{brief_id}/publish-proposals",["CatalogDependency"]],["GET","/views/media-studio/full-production-scenario",["ReadCatalogDependency"]],["GET","/views/analyst",["ReadCatalogDependency"]],["GET","/views/analyst/learning-scenario",["ReadCatalogDependency"]],["GET","/views/price-governance",["ReadCatalogDependency"]],["POST","/price-governance/research-profiles",["CatalogDependency"]],["POST","/price-governance/observations/normalize",["CatalogDependency"]],["POST","/price-governance/match-observations",["CatalogDependency"]],["POST","/price-governance/match-decisions",["CatalogDependency"]],["POST","/price-governance/monitoring-policies",["CatalogDependency"]],["POST","/price-governance/batches/prepare",["CatalogDependency"]],["POST","/price-governance/batches/{batch_id}/freeze",["CatalogDependency"]],["GET","/views/price-governance/contributions",["CatalogDependency"]],["POST","/price-governance/cases",["CatalogDependency"]],["POST","/price-governance/disposition-contracts",["CatalogDependency"]],["POST","/price-governance/dispositions/prepare",["CatalogDependency"]],["POST","/price-governance/dispositions/{disposition_id}/freeze",["CatalogDependency"]],["POST","/price-governance/disposition-observations",["CatalogDependency"]],["GET","/views/price-governance/dispositions",["CatalogDependency"]],["GET","/views/customer",["ReadCatalogDependency"]],["POST","/customer/consent-policies",["CatalogDependency"]],["POST","/customer/segments",["CatalogDependency"]],["POST","/customer/journeys",["CatalogDependency"]],["POST","/customer/dialogues",["CatalogDependency"]],["POST","/customer/dialogue-batches/prepare",["CatalogDependency"]],["POST","/customer/dialogue-batches/{batch_id}/freeze",["CatalogDependency"]],["GET","/views/customer/contributions",["CatalogDependency"]],["POST","/customer/frequency-policies",["CatalogDependency"]],["POST","/customer/consent-withdrawals",["CatalogDependency"]],["POST","/customer/dialogue-batches/{batch_id}/start-governance",["CatalogDependency"]],["POST","/customer/dispatch-observations",["CatalogDependency"]],["GET","/views/customer/contact-contributions",["CatalogDependency"]],["POST","/three-module-closures",["CatalogDependency"]],["POST","/three-module-closures/usage-bindings",["CatalogDependency"]],["POST","/three-module-closures/effect-bindings",["CatalogDependency"]],["POST","/three-module-closures/handoff-bindings",["CatalogDependency"]],["GET","/views/{module}/closure-contributions",["CatalogDependency"]],["GET","/contexts/{context_id}",[]],["GET","/commands/operations/readiness",["ReadCatalogDependency"]],["GET","/commands/operations/observations/{proposal_id}/leases/{lease_id}",["CatalogDependency"]],["POST","/commands/operations/previews",["CatalogDependency"]],["POST","/commands/operations/classify",["CatalogDependency"]],["POST","/commands/operations/create-case",["CatalogDependency"]],["POST","/commands/operations/change-membership",["CatalogDependency"]],["POST","/commands/operations/manage-sla",["CatalogDependency"]],["POST","/commands/operations/automation-kill",["CatalogDependency"]],["GET","/views/task-cockpit",["ReadCatalogDependency"]],["GET","/views/task-cockpit/feedback",["ReadCatalogDependency"]],["GET","/views/task-cockpit/dispatch-scenario",["ReadCatalogDependency"]],["GET","/views/task-cockpit/batch-scenario",["ReadCatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/production-context",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/skill-contributions",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/responsibility-handoffs",["CatalogDependency"]],["POST","/views/task-cockpit/runs/{run_id}/handoffs/compile",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/approval-review-issues",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/action-receipts",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/steps",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/checkpoints",["CatalogDependency"]]],"after":[["GET","/installed-readonly-modules",[]],["GET","/modules",["CatalogDependency"]],["GET","/modules/{module_id}/readiness",["CatalogDependency"]],["GET","/aip-features",[]],["POST","/aip-features/{feature_id}/activate",[]],["POST","/aip-features/{feature_id}/revoke",[]],["POST","/modules/{module_id}/commands/prepare",[]],["POST","/modules/{module_id}/commands/build-evidence",[]],["POST","/modules/{module_id}/commands/freeze",[]],["GET","/source-readiness",["CatalogDependency","ReadCatalogDependency"]],["GET","/views/operations",["ReadCatalogDependency"]],["GET","/views/operations/cases",["ReadCatalogDependency"]],["GET","/views/content-campaign",["ReadCatalogDependency"]],["GET","/views/content-campaign/real-inputs",["ReadCatalogDependency"]],["POST","/views/content-campaign/workflow/commands",["CatalogDependency"]],["POST","/views/content-campaign/workflow/approval-preview",["CatalogDependency"]],["GET","/views/creator-growth",["ReadCatalogDependency"]],["POST","/views/creator-growth/workflow/commands",["CatalogDependency"]],["GET","/views/creator-growth/workflow/drafts",["CatalogDependency"]],["GET","/views/creator-growth/workflow/drafts/{brief_id}/history",["CatalogDependency"]],["POST","/creator-growth/discovery-profiles",["CatalogDependency"]],["POST","/creator-growth/normalize",["CatalogDependency"]],["POST","/creator-growth/match-observations",["CatalogDependency"]],["POST","/creator-growth/match-decisions",["CatalogDependency"]],["POST","/creator-growth/batches/prepare",["CatalogDependency"]],["POST","/creator-growth/batches/{batch_id}/freeze",["CatalogDependency"]],["GET","/views/creator-growth/contributions",["ReadCatalogDependency"]],["POST","/creator-growth/batches/{batch_id}/start",["CatalogDependency"]],["GET","/views/creator-growth/lifecycle",["ReadCatalogDependency"]],["GET","/views/media-studio",["ReadCatalogDependency"]],["POST","/views/media-studio/workflow/commands",["CatalogDependency"]],["GET","/views/media-studio/workflow/drafts",["ReadCatalogDependency"]],["GET","/views/media-studio/workflow/drafts/{brief_id}/history",["CatalogDependency"]],["GET","/views/media-studio/workflow/drafts/{brief_id}/delivery",["CatalogDependency"]],["POST","/views/media-studio/workflow/drafts/{brief_id}/exports",["CatalogDependency"]],["POST","/views/media-studio/workflow/drafts/{brief_id}/publish-proposals",["CatalogDependency"]],["GET","/views/media-studio/full-production-scenario",["ReadCatalogDependency"]],["GET","/views/analyst",["ReadCatalogDependency"]],["GET","/views/analyst/learning-scenario",["ReadCatalogDependency"]],["GET","/views/price-governance",["ReadCatalogDependency"]],["POST","/price-governance/research-profiles",["CatalogDependency"]],["POST","/price-governance/observations/normalize",["CatalogDependency"]],["POST","/price-governance/match-observations",["CatalogDependency"]],["POST","/price-governance/match-decisions",["CatalogDependency"]],["POST","/price-governance/monitoring-policies",["CatalogDependency"]],["POST","/price-governance/batches/prepare",["CatalogDependency"]],["POST","/price-governance/batches/{batch_id}/freeze",["CatalogDependency"]],["GET","/views/price-governance/contributions",["CatalogDependency"]],["POST","/price-governance/cases",["CatalogDependency"]],["POST","/price-governance/disposition-contracts",["CatalogDependency"]],["POST","/price-governance/dispositions/prepare",["CatalogDependency"]],["POST","/price-governance/dispositions/{disposition_id}/freeze",["CatalogDependency"]],["POST","/price-governance/disposition-observations",["CatalogDependency"]],["GET","/views/price-governance/dispositions",["CatalogDependency"]],["GET","/views/customer",["ReadCatalogDependency"]],["POST","/customer/consent-policies",["CatalogDependency"]],["POST","/customer/segments",["CatalogDependency"]],["POST","/customer/journeys",["CatalogDependency"]],["POST","/customer/dialogues",["CatalogDependency"]],["POST","/customer/dialogue-batches/prepare",["CatalogDependency"]],["POST","/customer/dialogue-batches/{batch_id}/freeze",["CatalogDependency"]],["GET","/views/customer/contributions",["CatalogDependency"]],["POST","/customer/frequency-policies",["CatalogDependency"]],["POST","/customer/consent-withdrawals",["CatalogDependency"]],["POST","/customer/dialogue-batches/{batch_id}/start-governance",["CatalogDependency"]],["POST","/customer/dispatch-observations",["CatalogDependency"]],["GET","/views/customer/contact-contributions",["CatalogDependency"]],["POST","/three-module-closures",["CatalogDependency"]],["POST","/three-module-closures/usage-bindings",["CatalogDependency"]],["POST","/three-module-closures/effect-bindings",["CatalogDependency"]],["POST","/three-module-closures/handoff-bindings",["CatalogDependency"]],["GET","/views/{module}/closure-contributions",["CatalogDependency"]],["GET","/contexts/{context_id}",[]],["GET","/commands/operations/readiness",["ReadCatalogDependency"]],["GET","/commands/operations/observations/{proposal_id}/leases/{lease_id}",["CatalogDependency"]],["POST","/commands/operations/previews",["CatalogDependency"]],["POST","/commands/operations/classify",["CatalogDependency"]],["POST","/commands/operations/create-case",["CatalogDependency"]],["POST","/commands/operations/change-membership",["CatalogDependency"]],["POST","/commands/operations/manage-sla",["CatalogDependency"]],["POST","/commands/operations/automation-kill",["CatalogDependency"]],["GET","/views/task-cockpit",["ReadCatalogDependency"]],["GET","/views/task-cockpit/feedback",["ReadCatalogDependency"]],["GET","/views/task-cockpit/dispatch-scenario",["ReadCatalogDependency"]],["GET","/views/task-cockpit/batch-scenario",["ReadCatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/production-context",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/skill-contributions",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/responsibility-handoffs",["CatalogDependency"]],["POST","/views/task-cockpit/runs/{run_id}/handoffs/compile",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/approval-review-issues",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/action-receipts",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/steps",["CatalogDependency"]],["GET","/views/task-cockpit/runs/{run_id}/checkpoints",["CatalogDependency"]]],"changes":[{"before":["GET","/views/creator-growth/lifecycle",["CatalogDependency"]],"after":["GET","/views/creator-growth/lifecycle",["ReadCatalogDependency"]]}]}
+
+FULL ACTUAL TWO-ROOT-FILE DIFF
+diff --git a/services/aos-api/aos_api/routers/ecommerce_workshop.py b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+index 2ca404953..7090d736a 100644
+--- a/services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+@@ -147,6 +147,10 @@ from aos_api.ecommerce_workshop_creator_lifecycle import (
+     StartCreatorBatchRequest,
+ )
+ from aos_api.ecommerce_workshop_creator_lifecycle_store import EcommerceWorkshopCreatorLifecycleStore
++from aos_api.ecommerce_workshop_creator_lifecycle_readonly import (
++    CreatorLifecycleReadonlyReader,
++    CreatorLifecycleReadonlyError,
++)
+ from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
+ from aos_api.ecommerce_media_internal_workflow import (
+     EcommerceMediaInternalWorkflow,
+@@ -637,6 +641,16 @@ def get_ecommerce_operation_command_observation_service() -> EcommerceOperationC
+     )
+ 
+ 
++@lru_cache(maxsize=1)
++def get_creator_lifecycle_readonly() -> CreatorLifecycleReadonlyReader:
++    return CreatorLifecycleReadonlyReader()
++
++
++CreatorLifecycleReadonlyDependency = Annotated[
++    CreatorLifecycleReadonlyReader, Depends(get_creator_lifecycle_readonly)
++]
++
++
+ CatalogDependency = Annotated[
+     EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)
+ ]
+@@ -1005,8 +1019,8 @@ def _require_content_campaign_installation(
+ 
+ def _require_creator_growth_installation(
+     *, principal: Principal, catalog: EcommerceWorkshopCatalog
+-) -> None:
+-    _invoke(
++) -> EcommerceWorkshopModuleReadinessResponse:
++    return _invoke(
+         lambda: catalog.get_readiness(
+             module_id="ecommerce.creator-growth",
+             org_id=principal.org_id,
+@@ -1804,12 +1818,29 @@ def start_creator_batch(
+ def get_creator_lifecycle_view(
+     request: Request,
+     principal: PrincipalDependency,
+-    catalog: CatalogDependency,
++    catalog: ReadCatalogDependency,
+     service: CreatorLifecycleDependency,
++    readonly: CreatorLifecycleReadonlyDependency,
+ ) -> CreatorLifecycleView:
+     _reject_query_parameters(request)
+-    _require_creator_growth_installation(principal=principal, catalog=catalog)
+-    return service.view(TenantScope(principal.org_id, principal.project_id))
++    admission = _require_creator_growth_installation(principal=principal, catalog=catalog)
++    if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
++        raise ApiError(
++            code="CREATOR_LIFECYCLE_READ_ADMISSION_UNAVAILABLE",
++            message="当前生命周期读取准入不可核验。",
++            status_code=503,
++        )
++    scope = TenantScope(principal.org_id, principal.project_id)
++    if any(blocker.reason_code == "INSTALLED_ASSET_READONLY" for blocker in admission.item.blockers):
++        try:
++            return readonly.read(scope)
++        except CreatorLifecycleReadonlyError as exc:
++            raise ApiError(
++                code=exc.code,
++                message="当前生命周期数据暂不可读，请核对数据或读取范围。",
++                status_code=503,
++            ) from exc
++    return service.view(scope)
+ 
+ 
+ @router.get(
+diff --git a/services/aos-api/tests/test_ecommerce_workshop_read_http.py b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+index b97b1e8d1..1f300d687 100644
+--- a/services/aos-api/tests/test_ecommerce_workshop_read_http.py
++++ b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+@@ -51,7 +51,7 @@ def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+ 
+ 
+ @pytest.mark.parametrize('path', [
+-    '/views/customer/contributions', '/views/creator-growth/lifecycle',
++    '/views/customer/contributions', '/views/creator-growth/workflow/drafts',
+     '/modules/ecommerce.operations/readiness',
+ ])
+ def test_unreviewed_get_still_uses_legacy_admission(path):
+@@ -82,6 +82,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
+         '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+         '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+         '/v1/ecommerce-workshop/views/creator-growth/contributions',
++        '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+     }
+ 
+ 
+@@ -213,3 +214,121 @@ def test_installed_factory_is_deferred_until_legacy_not_found(monkeypatch):
+     with pytest.raises(ValueError, match='configuration sentinel'):
+         catalog.get_readiness(module_id='ecommerce.operations')
+     assert calls == ['selected']
++
++
++LIFECYCLE_PATH = '/v1/ecommerce-workshop/views/creator-growth/lifecycle'
++
++
++def lifecycle_admission(*, readonly=True):
++    from tests.test_ecommerce_workshop_read_catalog import make, ARGS
++    catalog, _ = make()
++    result = catalog.get_readiness(**{**ARGS, 'module_id': 'ecommerce.creator-growth'})
++    if not readonly:
++        result = result.model_copy(update={'item': result.item.model_copy(update={
++            'blockers': [b for b in result.item.blockers if b.reason_code != 'INSTALLED_ASSET_READONLY'],
++        })})
++    return result
++
++
++def lifecycle_probes(client, *, failure=None):
++    calls = []
++    class Legacy:
++        def view(self, scope):
++            calls.append(('legacy', scope.key))
++            raise ReadReached('legacy-lifecycle')
++    class Readonly:
++        def read(self, scope):
++            calls.append(('readonly', scope.key))
++            if failure:
++                from aos_api.ecommerce_workshop_creator_lifecycle_readonly import CreatorLifecycleReadonlyError
++                raise CreatorLifecycleReadonlyError(failure)
++            raise ReadReached('readonly-lifecycle')
++    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_lifecycle] = lambda: Legacy()
++    client.app.dependency_overrides[routes.get_creator_lifecycle_readonly] = lambda: Readonly()
++    return calls
++
++
++@pytest.mark.parametrize('readonly', [True, False])
++def test_lifecycle_admission_selects_only_correct_reader(readonly):
++    client, legacy, reader = client_with_catalogs()
++    calls = lifecycle_probes(client)
++    def admit(**scope):
++        reader.calls.append(scope)
++        return lifecycle_admission(readonly=readonly)
++    reader.get_readiness = admit
++    kind = 'readonly' if readonly else 'legacy'
++    with pytest.raises(ReadReached, match=kind + '-lifecycle'):
++        client.get(LIFECYCLE_PATH)
++    assert calls == [(kind, ('org-org', 'dev-project'))]
++    assert not legacy.calls
++    assert reader.calls == [dict(module_id='ecommerce.creator-growth', org_id='org-org',
++        project_id='dev-project', roles=['admin'], markings=[])]
++
++
++def test_lifecycle_catalog_denial_precedes_both_readers():
++    client, legacy, reader = client_with_catalogs()
++    calls = lifecycle_probes(client)
++    response = client.get(LIFECYCLE_PATH)
++    assert response.status_code == 404
++    assert calls == [] and not legacy.calls and len(reader.calls) == 1
++
++
++@pytest.mark.parametrize('query', ['orgId=dev-org', 'projectId=other', 'limit=1', 'mode=legacy'])
++def test_lifecycle_query_cannot_select_scope_reader_or_limit(query):
++    client, legacy, reader = client_with_catalogs()
++    calls = lifecycle_probes(client)
++    response = client.get(LIFECYCLE_PATH + '?' + query)
++    assert response.status_code == 400
++    assert calls == [] and not legacy.calls and not reader.calls
++
++
++@pytest.mark.parametrize('admission', [None, object()])
++def test_unknown_lifecycle_admission_is_unavailable_not_empty(admission):
++    client, legacy, reader = client_with_catalogs()
++    calls = lifecycle_probes(client)
++    reader.get_readiness = lambda **scope: admission
++    response = client.get(LIFECYCLE_PATH)
++    assert response.status_code == 503
++    assert 'CREATOR_LIFECYCLE_READ_ADMISSION_UNAVAILABLE' in response.text
++    assert 'latestStart' not in response.text
++    assert calls == [] and not legacy.calls
++
++
++@pytest.mark.parametrize('code', ['CREATOR_LIFECYCLE_READ_UNAVAILABLE',
++    'CREATOR_LIFECYCLE_READ_AUTHORITY_DRIFT', 'CREATOR_LIFECYCLE_READ_LIMIT_EXCEEDED'])
++def test_lifecycle_bounded_failure_stays_explicit_503(code):
++    client, legacy, reader = client_with_catalogs()
++    calls = lifecycle_probes(client, failure=code)
++    reader.get_readiness = lambda **scope: lifecycle_admission()
++    response = client.get(LIFECYCLE_PATH)
++    assert response.status_code == 503 and code in response.text
++    assert 'latestStart' not in response.text
++    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
++
++
++def test_lifecycle_readonly_serializes_genuine_empty_without_commands():
++    from datetime import datetime, timezone
++    from aos_api.ecommerce_workshop_creator_lifecycle import CreatorLifecycleView, _ledger
++    client, legacy, reader = client_with_catalogs()
++    reader.get_readiness = lambda **scope: lifecycle_admission()
++    class Readonly:
++        def read(self, scope):
++            return CreatorLifecycleView(
++                tenant=dict(orgId=scope.org_id, projectId=scope.project_id),
++                evaluatedAt=datetime(2026, 10, 14, tzinfo=timezone.utc),
++                latestStart=None, ledger=_ledger([], 0), contracts=[], deliveries=[],
++                relationships=[], blockers=['CREATOR_BATCH_START_NOT_AVAILABLE'],
++                allowedCommands=[], externalEffectsAllowed=False,
++            )
++    class Legacy:
++        def view(self, scope):
++            pytest.fail('installed readonly must never invoke legacy view')
++    client.app.dependency_overrides[routes.get_creator_lifecycle_readonly] = lambda: Readonly()
++    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_lifecycle] = lambda: Legacy()
++    response = client.get(LIFECYCLE_PATH)
++    assert response.status_code == 200
++    data = response.json()
++    assert data['tenant'] == dict(orgId='org-org', projectId='dev-project')
++    assert data['latestStart'] is None and data['contracts'] == []
++    assert data['allowedCommands'] == [] and data['externalEffectsAllowed'] is False
++    assert not legacy.calls
+
+
+ACTUAL FUNCTION get_ecommerce_workshop_read_catalog
+def get_ecommerce_workshop_read_catalog(
+    legacy: Annotated[EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)],
+) -> EcommerceWorkshopReadCatalog:
+    from aos_api.ecommerce_installed_readonly_catalog import build_installed_readonly_catalog
+
+    return EcommerceWorkshopReadCatalog(
+        legacy=legacy,
+        installed_factory=build_installed_readonly_catalog,
+    )
+
+ACTUAL FUNCTION get_creator_lifecycle_readonly
+def get_creator_lifecycle_readonly() -> CreatorLifecycleReadonlyReader:
+    return CreatorLifecycleReadonlyReader()
+
+ACTUAL FUNCTION _reject_query_parameters
+def _reject_query_parameters(request: Request) -> None:
+    if request.query_params:
+        raise ApiError(
+            code="VALIDATION",
+            message="ecommerce Workshop reads do not accept query parameters",
+            status_code=400,
+        )
+
+ACTUAL FUNCTION _invoke
+def _invoke(operation: Callable[[], ResultT]) -> ResultT:
+    try:
+        return operation()
+    except AssetRegistryError as exc:
+        raise ApiError(
+            code=exc.code.value,
+            message=str(exc),
+            status_code=exc.http_status,
+            details=exc.details,
+        ) from exc
+
+ACTUAL FUNCTION _require_creator_growth_installation
+def _require_creator_growth_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> EcommerceWorkshopModuleReadinessResponse:
+    return _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.creator-growth",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+
+ACTUAL FUNCTION get_creator_lifecycle_view
+def get_creator_lifecycle_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    service: CreatorLifecycleDependency,
+    readonly: CreatorLifecycleReadonlyDependency,
+) -> CreatorLifecycleView:
+    _reject_query_parameters(request)
+    admission = _require_creator_growth_installation(principal=principal, catalog=catalog)
+    if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+        raise ApiError(
+            code="CREATOR_LIFECYCLE_READ_ADMISSION_UNAVAILABLE",
+            message="当前生命周期读取准入不可核验。",
+            status_code=503,
+        )
+    scope = TenantScope(principal.org_id, principal.project_id)
+    if any(blocker.reason_code == "INSTALLED_ASSET_READONLY" for blocker in admission.item.blockers):
+        try:
+            return readonly.read(scope)
+        except CreatorLifecycleReadonlyError as exc:
+            raise ApiError(
+                code=exc.code,
+                message="当前生命周期数据暂不可读，请核对数据或读取范围。",
+                status_code=503,
+            ) from exc
+    return service.view(scope)
+
+PRODUCT/TEST SOURCE SHA services/aos-api/aos_api/routers/ecommerce_workshop.py 71eb6e6169def936cb023c3a800355847ae45370d9cc68dad2d4266b4fb0c66c
+
+PRODUCT/TEST SOURCE SHA services/aos-api/tests/test_ecommerce_workshop_read_http.py 3f7190e63d8843747ceb5f8e00baa1f336224160f54df03761cef72d3de5ec5e
+
+PRODUCT/TEST SOURCE SHA services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_readonly.py 95cacb071c8f9b10ad4ba3277c1a2820db076ba527c53d6d964b801fd01b7780
+
+PRODUCT/TEST SOURCE SHA services/aos-api/tests/aip/test_creator_lifecycle_readonly.py 84b7eefe943649b83b1e22ea9e1c8b7ac0e5ea0693a40f40c705e78dd3d8e91d

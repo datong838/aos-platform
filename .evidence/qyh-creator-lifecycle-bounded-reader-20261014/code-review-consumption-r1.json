@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-lifecycle-bounded-reader-20261014-code-r1",
+  "task_id": "qyh-creator-lifecycle-bounded-reader-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "0d4ad4f422ec318f1ea9528336e64f0ad4947f87",
+    "authority_revision": "AOS-002029",
+    "files": {
+      ".evidence/qyh-creator-lifecycle-bounded-reader-20261014/code-review-package-r1.txt": "4442adcac30489f0e717b336ab784737514e68f5e1421ac1500e014945787f21"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "e4e95c36ce2c245e7718b0a08f32649168d143bd1022f3f9072f953bb6d975be",
+  "transport_sha256": "da47ce54ea98582d2d6d0d557c6710be3c673818299e1be0297c5b081710288a"
+}

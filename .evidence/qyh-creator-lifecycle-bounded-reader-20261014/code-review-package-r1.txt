@@ -1,0 +1,799 @@
+CURRENT COMPLETE dedicated reader QUALITY. Productmodule/testnew; originalAPI still23e76/7645, originalGET remainslegacy, no operating or customerSource/naturalGoal completion. Current102PASS; initialmissingmoduleRED then initial1failure21pass was realDeliveryDTO no-revision assumption, correctedexplicitv1 test now23tests. Native sameowned tmpfs5tablefixture only, init-tempPG firstconnectfailure beforeSQL -> readOnly roles0/tables0 reconciliation -> sameCID continuation from firstunexecutedSQL, notcontainer replay. LowprivPG readonly/repeatable, realconcurrent snapshot1then2, rawforeignRLS denial and JSONbadtenant denial, write25006, ownfixturestopped; no originaldata/realuser/budgetapproval.
+FILE .evidence/qyh-creator-lifecycle-bounded-reader-20261014/implementation-plan.md SHA 1fa1d22e72932fdf4ca9dafe21ceb17a45b56ed2c5728837f118e0cdd4aa5f0d
+# 安装只读生命周期单事务有界reader
+
+Rules：用户方案先行/最小改动/保护数据及dirty；231唯一m1写者/完整Loop/冻结独立Prime合法消费。Task新模块+精确测试/sameowner/base2029/14:00UTC，和Store租户候选、router、maintenance不重叠。原DB161/650只读，HostworkerProvider OFF，完整Goal不变。
+
+已复习w6_004权威DDL：五表都有org_id/project_id、稳定identity/revision/content_hash/authority_data/created_at，lane没有observed_at列。旧Store list_lane ORDER BY observed_at是独立遗留缺陷，未在本模块偷偷修旧代码；新reader按created_at/revision/identity稳定排序。租户防线候选0d4已提交、尚未原API加载，不当成已接线。
+
+新增services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_readonly.py与services/aos-api/tests/aip/test_creator_lifecycle_readonly.py。默认connect_read_only(scope)（原库只读REPEATABLE_READ及SET LOCAL租户），一连接一事务，先读DB transaction_timestamp cutoff，再固定五表参数化SELECT。latestStart按created_at/revision/decision_id DESC LIMIT1；匹配该start的lane及三类contract/delivery/relationship均created_at<=cutoff、固定稳定顺序，服务器常量MAX_ROWS=1000、SQL LIMIT1001哨兵。没有start时不用查无关lane，其他三类仍同快照读取。
+
+每条最大64KiB、总响应事实材料1MiB，SQL先octet_length(authority_data::text)及CASE大于64KiB则NULL以免拷出巨型JSON；获取集合最多1001固定行，逐条及总bytes都严格验证。超过row/item/total限额失败关闭，不截断/不回0DTO。Query没有自由表/列/用户where/HTTP limit。完整DTO解析并核outer org/project、JSON tenant、identity/revision/content_hash与列一致；字段createdAt/observedAt/startedAt须有时区且与权威created_at一致。所有row时间<=DBcutoff；lane的decisionId/typedstart exactref/hash/revision与选中的start一致、lane ID在其lanes中，否则AUTHORITY_DRIFT而非忽略。refs只metadata，不解引用candidate/联系人/monetaryterms或SourceConnector。
+
+同快照投影沿用现有CreatorLifecycleView与_ledger；复用现有latest_by_lane折叠与lane结果字段，不复制新的业务状态机，不声称ref证明运行或外部成功。readonly allowedCommands=[]、externalEffectsAllowed=false。实际表全空返回真实empty ledger，任一表/角色/clock/坏JSON/tenant/hash/bytes/limit错误抛CreatorLifecycleReadonlyError(code)，不返回success/empty；代码错误消息只固定码，不泄露SQL/行/连接信息。router后续映射明确503错误信封，客户端现有失败关闭会显示不可用诊断；不能声称所有前端unknown/数字表现或视觉已通过。
+
+legacy service/store/写方法和global DTO完全不改。routerTask另行方案：现_require_creator_growth_installation返回现有readiness envelope（其余调用者忽略返回不改变检验），该GET改ReadCatalogDependency；仅服务端返回INSTALLED_ASSET_READONLY标记选择专用reader，合法无该marker保持原service.view；错型/缺admission不接受，不能由HTTPmode/Principal role推导能力。先query拒绝+原安装/Role/Markings/DataScope门，后选readpath；所有POST/其他GET仍legacy。该接线尚未编码与独立门，不能本模块代码PASS替代接线审查。
+
+先独立plan→RED（missing模块）、最小实现：单conn/cutoff/SQL固定上限/合法空与非空完整DTO/foreignorg/project/列JSON身份hash漂移/角色失败/坏clock/row1000与1001/单条64KiB及总1MiB/largeJSON NULL等反证、lane latest解析和精确lineage。相邻legacy/lifecycle/tenant/read_http/read_catalog；实际PG隔离fixture还须证单transaction/REPEATABLE_READ/FORCE RLS/低权角色及并发snapshot稳定，不用mock伪称native。后codePrime/精确提交，并与router新Scope源加载、原真人真实DTO/原菜单/503/原650fingerprint/原稿视觉及独立现场后准确Delivery与Authority/Prime，全部步骤保留。
+
+原库不seed、撤权、删表或改坏数据；native坏payload/超限等只能在owner隔离fixture。原Actor唯一用户/原安装授权持续但不是预算批准；完整C/用户最后exact预算/部署、新自然CaseRun建议评审内容能力人工续跑复盘Wiki、安装生命周期/八场景/视觉P1/观察发布都未完成。private credentials/DTO不打Git，旧Run/unknown/disabledSchedule/Source/外部动作不放开。
+
+FILE .evidence/qyh-creator-lifecycle-bounded-reader-20261014/plan-review-consumption-r1.json SHA bca2b8d4d73abb0862c70c0507a6262491742c386f82c3835d24e03dcaeb929a
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-lifecycle-bounded-reader-20261014-plan-r1",
+  "task_id": "qyh-creator-lifecycle-bounded-reader-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "0d4ad4f422ec318f1ea9528336e64f0ad4947f87",
+    "authority_revision": "AOS-002029",
+    "files": {
+      ".evidence/qyh-creator-lifecycle-bounded-reader-20261014/plan-review-package-r1.txt": "1615ac0c336c5bd6f29b25c660dcb050b72e68c80c986741ff23267f55ce4964"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "b071832856aac03b63c54942084b4732f61bfcb2fea889623b17710c82438f24",
+  "transport_sha256": "934791fb2b5e1eef45accb91a90d62121f966294a13c715347947161ead927f9"
+}
+FILE services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_readonly.py SHA 95cacb071c8f9b10ad4ba3277c1a2820db076ba527c53d6d964b801fd01b7780
+"""Bounded saved-authority projection; never admits creator operations."""
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any
+
+import psycopg
+from psycopg import IsolationLevel
+
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_workshop_creator_lifecycle import (
+    CreatorBatchStartDecisionRevision, CreatorContractRevision,
+    CreatorDeliveryObservation, CreatorLaneObservation, CreatorLifecycleView,
+    CreatorRelationshipRevision, _ledger,
+)
+from aos_api.tenant_scope import TenantScope
+
+MAX_ROWS = 1000
+MAX_ITEM_BYTES = 64 * 1024
+MAX_TOTAL_BYTES = 1024 * 1024
+
+# Server-owned identifiers. Neither requests nor stored JSON choose a query.
+_SPECS = {
+    'start': ('ecommerce_creator_batch_start_decision_revision', 'decision_id',
+              CreatorBatchStartDecisionRevision, 'started_at'),
+    'lane': ('ecommerce_creator_lane_observation', 'observation_id',
+             CreatorLaneObservation, 'observed_at'),
+    'contract': ('ecommerce_creator_contract_revision', 'collaboration_id',
+                 CreatorContractRevision, 'created_at'),
+    'delivery': ('ecommerce_creator_delivery_observation', 'observation_id',
+                 CreatorDeliveryObservation, 'observed_at'),
+    'relationship': ('ecommerce_creator_relationship_revision', 'relationship_id',
+                     CreatorRelationshipRevision, 'created_at'),
+}
+
+
+class CreatorLifecycleReadonlyError(RuntimeError):
+    def __init__(self, code: str):
+        self.code = code
+        super().__init__(code)
+
+
+def _deny(suffix: str):
+    raise CreatorLifecycleReadonlyError('CREATOR_LIFECYCLE_READ_' + suffix)
+
+
+class CreatorLifecycleReadonlyReader:
+    def __init__(self, *, connect_factory=None):
+        self._connect = connect_factory or connect_read_only
+
+    @staticmethod
+    def _rows(conn, scope, cutoff, kind, decision_id=None):
+        table, identity, _, _ = _SPECS[kind]
+        extra_column = 'decision_id,' if kind == 'lane' else ''
+        extra_filter = ' AND decision_id=%s' if kind == 'lane' else ''
+        direction = ' DESC' if kind == 'start' else ''
+        limit = 1 if kind == 'start' else MAX_ROWS + 1
+        sql = (
+            f'SELECT org_id,project_id,{identity} AS entity_id,revision,content_hash,created_at,'
+            f'{extra_column}octet_length(authority_data::text) AS authority_bytes,'
+            f'CASE WHEN octet_length(authority_data::text)<={MAX_ITEM_BYTES} '
+            'THEN authority_data ELSE NULL END AS authority_data '
+            f'FROM {table} WHERE org_id=%s AND project_id=%s AND created_at<=%s'
+            f'{extra_filter} ORDER BY created_at{direction},revision{direction},{identity}{direction} LIMIT %s'
+        )
+        params = (*scope.key, cutoff)
+        if kind == 'lane':
+            params = (*params, decision_id)
+        rows = conn.execute(sql, (*params, limit)).fetchall()
+        if len(rows) > MAX_ROWS or kind == 'start' and len(rows) > 1:
+            _deny('LIMIT_EXCEEDED')
+        return rows
+
+    @staticmethod
+    def _decode(row, kind, scope, cutoff, total):
+        _, _, model, timestamp = _SPECS[kind]
+        size = row['authority_bytes']
+        if type(size) is not int or size < 1:
+            _deny('AUTHORITY_DRIFT')
+        if size > MAX_ITEM_BYTES or total + size > MAX_TOTAL_BYTES:
+            _deny('LIMIT_EXCEEDED')
+        value = model.model_validate(row['authority_data'])
+        # Delivery observations are append-only v1; their DTO has no revision.
+        revision = 1 if kind == 'delivery' else value.revision
+        if ((row['org_id'], row['project_id']) != scope.key
+                or (value.tenant.org_id, value.tenant.project_id) != scope.key
+                or value.content_hash != row['content_hash']
+                or type(row['revision']) is not int or revision != row['revision']):
+            _deny('AUTHORITY_DRIFT')
+        identity = {
+            'start': 'decision_id', 'lane': 'observation_id',
+            'contract': 'collaboration_id', 'delivery': 'observation_id',
+            'relationship': 'relationship_id',
+        }[kind]
+        created = row['created_at']
+        observed = getattr(value, timestamp)
+        if (getattr(value, identity) != row['entity_id']
+                or not isinstance(created, datetime) or created.utcoffset() is None
+                or observed.utcoffset() is None or observed != created or created > cutoff):
+            _deny('AUTHORITY_DRIFT')
+        return value, total + size
+
+    def read(self, scope: TenantScope) -> CreatorLifecycleView:
+        try:
+            with self._connect(scope) as conn:
+                if (conn.read_only is not True or conn.autocommit is not False
+                        or conn.isolation_level != IsolationLevel.REPEATABLE_READ):
+                    _deny('CONNECTION_INVALID')
+                cutoff = conn.execute('SELECT transaction_timestamp() AS cutoff').fetchone()['cutoff']
+                if not isinstance(cutoff, datetime) or cutoff.utcoffset() is None:
+                    _deny('AUTHORITY_DRIFT')
+                total = 0
+                values: dict[str, list[Any]] = {}
+                for kind in _SPECS:
+                    start = values.get('start', [])
+                    rows = ([] if kind == 'lane' and not start else
+                            self._rows(conn, scope, cutoff, kind,
+                                       start[0].decision_id if kind == 'lane' else None))
+                    values[kind] = []
+                    for row in rows:
+                        value, total = self._decode(row, kind, scope, cutoff, total)
+                        if kind == 'lane':
+                            current = start[0]
+                            ref = value.start_decision_ref
+                            if (row['decision_id'] != current.decision_id
+                                    or ref.resource_type != 'CreatorBatchStartDecisionRevision'
+                                    or ref.resource_id != current.decision_id
+                                    or ref.revision != current.revision
+                                    or ref.content_hash != current.content_hash
+                                    or value.lane_id not in {lane.lane_id for lane in current.lanes}):
+                                _deny('AUTHORITY_DRIFT')
+                        values[kind].append(value)
+                start = values['start'][0] if values['start'] else None
+                lanes = list(start.lanes) if start else []
+                latest = {observation.lane_id: observation for observation in values['lane']}
+                if start:
+                    lanes = [lane.model_copy(update={
+                        'outcome': latest[lane.lane_id].outcome,
+                        'resolved_outcome': latest[lane.lane_id].resolved_outcome,
+                        'action_receipt_ref': latest[lane.lane_id].action_receipt_ref,
+                    }) if lane.lane_id in latest else lane for lane in lanes]
+                    start = start.model_copy(update={
+                        'lanes': lanes, 'ledger': _ledger(lanes, start.ledger.eligible_items),
+                    })
+                result = CreatorLifecycleView(
+                    tenant=dict(orgId=scope.org_id, projectId=scope.project_id),
+                    evaluatedAt=cutoff, latestStart=start,
+                    ledger=_ledger(lanes, start.ledger.eligible_items if start else 0),
+                    contracts=values['contract'], deliveries=values['delivery'],
+                    relationships=values['relationship'],
+                    blockers=list(start.operational_blockers) if start else ['CREATOR_BATCH_START_NOT_AVAILABLE'],
+                    allowedCommands=[], externalEffectsAllowed=False,
+                )
+                if len(result.model_dump_json(by_alias=True).encode('utf-8')) > MAX_TOTAL_BYTES:
+                    _deny('LIMIT_EXCEEDED')
+                return result
+        except CreatorLifecycleReadonlyError:
+            raise
+        except psycopg.Error:
+            _deny('UNAVAILABLE')
+        except (ValueError, KeyError, TypeError, AttributeError):
+            _deny('AUTHORITY_DRIFT')
+
+FILE services/aos-api/tests/aip/test_creator_lifecycle_readonly.py SHA 84b7eefe943649b83b1e22ea9e1c8b7ac0e5ea0693a40f40c705e78dd3d8e91d
+"""Dedicated read-only snapshot tests; fixture rows are not human approvals."""
+import copy
+import json
+from contextlib import contextmanager
+from datetime import timedelta
+
+import psycopg
+import pytest
+from psycopg import IsolationLevel
+
+from aos_api.ecommerce_workshop_creator_lifecycle import CreatorActionLaneBinding
+from aos_api.ecommerce_workshop_creator_lifecycle_readonly import (
+    CreatorLifecycleReadonlyReader, CreatorLifecycleReadonlyError,
+    MAX_ROWS, MAX_ITEM_BYTES, MAX_TOTAL_BYTES,
+)
+from test_creator_lifecycle_read_tenant import SCOPE, NOW, HASH, item, ref
+
+TABLES = {
+    'start': 'ecommerce_creator_batch_start_decision_revision',
+    'lane': 'ecommerce_creator_lane_observation',
+    'contract': 'ecommerce_creator_contract_revision',
+    'delivery': 'ecommerce_creator_delivery_observation',
+    'relationship': 'ecommerce_creator_relationship_revision',
+}
+METHODS = {
+    'start': 'latest_start_for_tenant_or_none', 'lane': 'list_lane_observations',
+    'contract': 'list_contracts', 'delivery': 'list_deliveries', 'relationship': 'list_relationships',
+}
+
+
+def row(kind, value=None):
+    value = value or item(METHODS[kind])
+    data = value.model_dump(mode='json', by_alias=True)
+    identities = {'start': 'decisionId', 'lane': 'observationId', 'contract': 'collaborationId',
+                  'delivery': 'observationId', 'relationship': 'relationshipId'}
+    result = dict(org_id=SCOPE.org_id, project_id=SCOPE.project_id,
+                  entity_id=data[identities[kind]], revision=data.get('revision', 1),
+                  content_hash=data['contentHash'], created_at=NOW,
+                  authority_bytes=len(json.dumps(data).encode()), authority_data=data)
+    if kind == 'lane':
+        result['decision_id'] = data['startDecisionRef']['resourceId']
+    return result
+
+
+def snapshot(rows=None, *, fail=None, readonly=True, isolation=IsolationLevel.REPEATABLE_READ, cutoff=NOW):
+    rows = rows or {}
+    calls, connections = [], []
+    class Result:
+        def __init__(self, values): self.values = values
+        def fetchone(self): return self.values[0] if self.values else None
+        def fetchall(self): return self.values
+    class Connection:
+        read_only = readonly
+        isolation_level = isolation
+        autocommit = False
+        def execute(self, sql, params=()):
+            assert sql.startswith('SELECT ')
+            calls.append((sql, params))
+            if 'transaction_timestamp()' in sql:
+                return Result([dict(cutoff=cutoff)])
+            assert tuple(params[:2]) == SCOPE.key
+            assert cutoff in params
+            kind = next(k for k, table in TABLES.items() if f'FROM {table} ' in sql)
+            assert 'LIMIT %s' in sql
+            assert params[-1] == (1 if kind == 'start' else MAX_ROWS + 1)
+            assert 'created_at<=%s' in sql
+            assert 'observed_at' not in sql
+            assert 'CASE WHEN octet_length' in sql
+            if fail == kind: raise psycopg.OperationalError('fixture unavailable')
+            return Result(rows.get(kind, []))
+        def commit(self): pytest.fail('reader must not commit a mutation')
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        connections.append(scope)
+        yield Connection()
+    return CreatorLifecycleReadonlyReader(connect_factory=connect), calls, connections
+
+
+def started_rows():
+    start = item(METHODS['start'])
+    lane = CreatorActionLaneBinding(
+        candidateRef=ref('CreatorCandidateRevision'), actionKind='outreach-message',
+        actionTypeRef={**ref('ActionTypeRevision'), 'resourceId': 'ecommerce.creator.outreach-message'},
+        impactPreviewRef=ref('ImpactPreviewRevision'), adapterCapabilityRef=ref('AdapterCapabilityRevision'),
+        accountBindingRef=ref('AccountBindingRevision'), budgetReservationRef=ref('ActionBudgetReservationRevision'),
+        approvalPolicyRef=ref('ApprovalPolicyRevision'), laneId='fixture-lane', bindingHash=HASH)
+    start = start.model_copy(update={'lanes': [lane], 'ledger': start.ledger.model_copy(update={
+        'eligible_items': 1, 'lanes': 1, 'prepared': 1})})
+    observation = item(METHODS['lane']).model_copy(update={
+        'start_decision_ref': type(lane.candidate_ref)(**dict(
+            resourceType='CreatorBatchStartDecisionRevision', resourceId=start.decision_id,
+            revision=start.revision, contentHash=start.content_hash))})
+    return dict(start=[row('start', start)], lane=[row('lane', observation)])
+
+
+def test_empty_is_complete_single_readonly_snapshot_with_database_cutoff():
+    reader, calls, connections = snapshot()
+    view = reader.read(SCOPE)
+    assert len(connections) == 1 and len(calls) == 5
+    assert view.evaluated_at == NOW and view.latest_start is None
+    assert view.contracts == view.deliveries == view.relationships == []
+    assert view.ledger.lanes == 0 and view.allowed_commands == []
+    assert view.external_effects_allowed is False
+    assert view.blockers == ['CREATOR_BATCH_START_NOT_AVAILABLE']
+
+
+def test_complete_typed_view_and_lane_projection_without_producer_calls():
+    rows = started_rows()
+    rows.update({k: [row(k)] for k in ['contract', 'delivery', 'relationship']})
+    reader, calls, connections = snapshot(rows)
+    view = reader.read(SCOPE)
+    assert len(connections) == 1 and len(calls) == 6
+    assert view.latest_start.lanes[0].lane_id == 'fixture-lane'
+    assert view.ledger.lanes == view.ledger.prepared == 1
+    assert len(view.contracts) == len(view.deliveries) == len(view.relationships) == 1
+    assert view.allowed_commands == [] and view.external_effects_allowed is False
+
+
+@pytest.mark.parametrize('field,value', [
+    ('org_id', 'dev-org'), ('project_id', 'other'), ('entity_id', 'wrong'),
+    ('revision', 9), ('content_hash', 'b' * 64), ('created_at', NOW + timedelta(seconds=1)),
+])
+def test_outer_row_integrity_drift_is_rejected(field, value):
+    bad = row('contract'); bad[field] = value
+    reader, _, _ = snapshot(dict(contract=[bad]))
+    with pytest.raises(CreatorLifecycleReadonlyError, match='AUTHORITY_DRIFT'):
+        reader.read(SCOPE)
+
+
+@pytest.mark.parametrize('field,value', [('orgId', 'dev-org'), ('projectId', 'other')])
+def test_inner_json_tenant_drift_is_rejected(field, value):
+    bad = row('contract'); bad['authority_data']['tenant'][field] = value
+    reader, _, _ = snapshot(dict(contract=[bad]))
+    with pytest.raises(CreatorLifecycleReadonlyError, match='AUTHORITY_DRIFT'):
+        reader.read(SCOPE)
+
+
+@pytest.mark.parametrize('readonly,isolation', [(False, IsolationLevel.REPEATABLE_READ),
+                                               (True, IsolationLevel.READ_COMMITTED)])
+def test_non_readonly_or_non_repeatable_connection_is_denied(readonly, isolation):
+    reader, calls, _ = snapshot(readonly=readonly, isolation=isolation)
+    with pytest.raises(CreatorLifecycleReadonlyError, match='CONNECTION_INVALID'):
+        reader.read(SCOPE)
+    assert calls == []
+
+
+def test_database_failure_is_unavailable_not_empty_success():
+    reader, _, _ = snapshot(fail='contract')
+    with pytest.raises(CreatorLifecycleReadonlyError, match='UNAVAILABLE'):
+        reader.read(SCOPE)
+
+
+def test_clock_without_timezone_is_denied():
+    reader, _, _ = snapshot(cutoff=NOW.replace(tzinfo=None))
+    with pytest.raises(CreatorLifecycleReadonlyError, match='AUTHORITY_DRIFT'):
+        reader.read(SCOPE)
+
+
+def test_row_limit_sentinel_rejects_instead_of_truncating():
+    reader, _, _ = snapshot(dict(contract=[row('contract')] * (MAX_ROWS + 1)))
+    with pytest.raises(CreatorLifecycleReadonlyError, match='LIMIT_EXCEEDED'):
+        reader.read(SCOPE)
+
+
+def test_exact_row_limit_can_be_read_when_total_bytes_fit():
+    reader, _, _ = snapshot(dict(contract=[row('contract')] * MAX_ROWS))
+    assert len(reader.read(SCOPE).contracts) == MAX_ROWS
+
+
+def test_sql_suppressed_large_json_is_rejected_before_parse():
+    bad = row('contract'); bad.update(authority_bytes=MAX_ITEM_BYTES + 1, authority_data=None)
+    reader, _, _ = snapshot(dict(contract=[bad]))
+    with pytest.raises(CreatorLifecycleReadonlyError, match='LIMIT_EXCEEDED'):
+        reader.read(SCOPE)
+
+
+def test_total_byte_limit_is_not_treated_as_partial_or_empty():
+    rows = [row('contract') for _ in range(MAX_TOTAL_BYTES // MAX_ITEM_BYTES + 1)]
+    for value in rows: value['authority_bytes'] = MAX_ITEM_BYTES
+    reader, _, _ = snapshot(dict(contract=rows))
+    with pytest.raises(CreatorLifecycleReadonlyError, match='LIMIT_EXCEEDED'):
+        reader.read(SCOPE)
+
+
+@pytest.mark.parametrize('mutation', ['decision', 'hash', 'lane'])
+def test_lane_exact_lineage_drift_is_rejected(mutation):
+    rows = copy.deepcopy(started_rows()); bad = rows['lane'][0]
+    if mutation == 'decision': bad['decision_id'] = 'other'
+    if mutation == 'hash': bad['authority_data']['startDecisionRef']['contentHash'] = 'b' * 64
+    if mutation == 'lane': bad['authority_data']['laneId'] = 'other'
+    reader, _, _ = snapshot(rows)
+    with pytest.raises(CreatorLifecycleReadonlyError, match='AUTHORITY_DRIFT'):
+        reader.read(SCOPE)
+
+
+def test_bad_json_shape_fails_closed():
+    bad = row('contract'); bad['authority_data'] = {'tenant': {'orgId': 'org-org'}}
+    reader, _, _ = snapshot(dict(contract=[bad]))
+    with pytest.raises(CreatorLifecycleReadonlyError, match='AUTHORITY_DRIFT'):
+        reader.read(SCOPE)
+
+
+def test_delivery_observation_without_dto_revision_requires_stored_v1():
+    bad = row('delivery'); bad['revision'] = 2
+    reader, _, _ = snapshot(dict(delivery=[bad]))
+    with pytest.raises(CreatorLifecycleReadonlyError, match='AUTHORITY_DRIFT'):
+        reader.read(SCOPE)
+
+FILE .evidence/qyh-creator-lifecycle-bounded-reader-20261014/native_snapshot.py SHA 0759aaa03cbeba25179d1cddf4dc690e6d7a1e2364926092383fe70e9a7d6bd3
+"""One owned tmpfs PG fixture: no original volume, users, tokens or data."""
+from pathlib import Path
+import contextlib, datetime, hashlib, json, secrets, subprocess, sys, time
+
+import psycopg
+from psycopg import IsolationLevel, sql
+from psycopg.rows import dict_row
+
+R = Path(__file__).resolve().parents[2]
+E = Path(__file__).resolve().parent
+sys.path.insert(0, str(R / 'services/aos-api'))
+sys.path.insert(0, str(R / 'services/aos-api/tests/aip'))
+from aos_api.ecommerce_workshop_creator_lifecycle_readonly import CreatorLifecycleReadonlyReader, CreatorLifecycleReadonlyError
+from aos_api.tenant_scope import TenantScope
+from test_creator_lifecycle_read_tenant import item
+
+NAME = 'qyh-creator-lifecycle-bounded-native-20261014-r1'
+OWNER = 'codex-01a13484-f019-7d82-94ce-812396db9124'
+IMAGE = 'sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd'
+SCOPE = TenantScope('org-org', 'dev-project')
+TABLES = (
+    ('ecommerce_creator_batch_start_decision_revision', 'decision_id', 'batch_id TEXT', 'latest_start_for_tenant_or_none'),
+    ('ecommerce_creator_lane_observation', 'observation_id', 'decision_id TEXT,lane_id TEXT', 'list_lane_observations'),
+    ('ecommerce_creator_contract_revision', 'collaboration_id', '', 'list_contracts'),
+    ('ecommerce_creator_delivery_observation', 'observation_id', '', 'list_deliveries'),
+    ('ecommerce_creator_relationship_revision', 'relationship_id', '', 'list_relationships'),
+)
+
+def docker(*args):
+    return subprocess.run(['docker', '--context', 'colima-aos-extension', *args], capture_output=True, text=True)
+
+def save(name, value):
+    with (E / name).open('x') as f:
+        json.dump(value, f, indent=2); f.write('\n'); f.flush()
+
+assert not (E / 'native-r1-intent.json').exists(), 'existing fixture: readonly reconcile, no replay'
+lease = json.loads((R.parent / 'docs/palantier/AOS项目开发上下文/memory/receipts/tasks' / (E.name + '.json')).read_text())
+assert lease['owner'] == OWNER and datetime.datetime.fromisoformat(lease['lease_expires_at']) > datetime.datetime.now(datetime.timezone.utc)
+assert not docker('inspect', NAME).returncode == 0, 'existing named fixture: reconcile'
+port_probe = subprocess.run(['lsof', '-t', '-iTCP:18571', '-sTCP:LISTEN'], capture_output=True, text=True)
+assert not port_probe.stdout.strip(), 'fixture port already owned'
+password = secrets.token_hex(24)
+save('native-r1-intent.json', dict(name=NAME, owner=OWNER, port=18571, tmpfs=True, originalVolumeTouched=False))
+created = docker('run', '-d', '--name', NAME, '--label', 'aos.task=' + E.name, '--label', 'aos.owner=' + OWNER,
+                 '--tmpfs', '/var/lib/postgresql/data:rw,size=512m', '-p', '127.0.0.1:18571:5432',
+                 '-e', 'POSTGRES_PASSWORD=' + password, IMAGE)
+assert created.returncode == 0, 'fixture creation failed; inspect known name before next action'
+cid = created.stdout.strip()
+save('native-r1-created.json', dict(name=NAME, containerId=cid, owner=OWNER))
+for _ in range(100):
+    ready = docker('exec', NAME, 'pg_isready', '-U', 'postgres')
+    if ready.returncode == 0: break
+    time.sleep(.1)
+assert ready.returncode == 0, 'fixture startup pending; reconcile known CID'
+connect_args = dict(host='127.0.0.1', port=18571, dbname='postgres', password=password, row_factory=dict_row)
+with psycopg.connect(user='postgres', **connect_args) as admin:
+    admin.execute('CREATE ROLE aos_runtime NOLOGIN NOSUPERUSER NOBYPASSRLS')
+    admin.execute(sql.SQL('CREATE ROLE fixture_reader LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS PASSWORD {}').format(sql.Literal(password)))
+    admin.execute('GRANT aos_runtime TO fixture_reader')
+    for table, identity, extra, _ in TABLES:
+        ddl = sql.SQL('CREATE TABLE {} (org_id TEXT NOT NULL,project_id TEXT NOT NULL,{} TEXT NOT NULL,revision INTEGER NOT NULL,content_hash TEXT NOT NULL,authority_data JSONB NOT NULL,created_at TIMESTAMPTZ NOT NULL' + (',' + extra if extra else '') + ',PRIMARY KEY(org_id,project_id,{},revision))').format(sql.Identifier(table), sql.Identifier(identity), sql.Identifier(identity))
+        admin.execute(ddl)
+        admin.execute(sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(sql.Identifier(table)))
+        admin.execute(sql.SQL('ALTER TABLE {} FORCE ROW LEVEL SECURITY').format(sql.Identifier(table)))
+        admin.execute(sql.SQL("CREATE POLICY tenant_scope ON {} USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))").format(sql.Identifier(table)))
+        admin.execute(sql.SQL('GRANT SELECT ON {} TO aos_runtime').format(sql.Identifier(table)))
+
+def insert_contract(identity, scope=SCOPE, json_scope=None):
+    value = item('list_contracts', json_scope or scope).model_copy(update={'collaboration_id': identity})
+    with psycopg.connect(user='postgres', **connect_args) as admin:
+        admin.execute('INSERT INTO ecommerce_creator_contract_revision(org_id,project_id,collaboration_id,revision,content_hash,authority_data,created_at) VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s)',
+                      (*scope.key, identity, value.revision, value.content_hash, json.dumps(value.model_dump(mode='json', by_alias=True)), value.created_at))
+
+insert_contract('original')
+insert_contract('foreign', TenantScope('dev-org', 'dev-project'))
+observations = []
+@contextlib.contextmanager
+def factory(scope, *, concurrent=False):
+    with psycopg.connect(user='fixture_reader', **connect_args) as conn:
+        conn.read_only = True; conn.isolation_level = IsolationLevel.REPEATABLE_READ
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", scope.key)
+        state = conn.execute("SELECT current_user AS role,current_setting('transaction_read_only') AS readonly,current_setting('transaction_isolation') AS isolation").fetchone()
+        observations.append(state)
+        class Proxy:
+            read_only = True; autocommit = False; isolation_level = IsolationLevel.REPEATABLE_READ
+            def execute(self, statement, params=()):
+                cursor = conn.execute(statement, params)
+                if concurrent and 'transaction_timestamp()' in statement:
+                    insert_contract('concurrent')
+                return cursor
+        yield Proxy()
+
+first = CreatorLifecycleReadonlyReader(connect_factory=lambda scope: factory(scope, concurrent=True)).read(SCOPE)
+second = CreatorLifecycleReadonlyReader(connect_factory=factory).read(SCOPE)
+assert [x.collaboration_id for x in first.contracts] == ['original']
+assert sorted(x.collaboration_id for x in second.contracts) == ['concurrent', 'original']
+with factory(SCOPE) as conn:
+    visible = conn.execute('SELECT count(*) AS n FROM ecommerce_creator_contract_revision').fetchone()['n']
+    assert visible == 2
+    try: conn.execute("UPDATE ecommerce_creator_contract_revision SET revision=revision+1")
+    except psycopg.Error as error:
+        assert error.sqlstate in {'25006', '42501'}
+        write_denied = error.sqlstate
+    else: raise AssertionError('fixture readonly role unexpectedly wrote')
+insert_contract('bad-json-tenant', json_scope=TenantScope('dev-org', 'dev-project'))
+try: CreatorLifecycleReadonlyReader(connect_factory=factory).read(SCOPE)
+except CreatorLifecycleReadonlyError as error:
+    assert error.code == 'CREATOR_LIFECYCLE_READ_AUTHORITY_DRIFT'
+    rejected = error.code
+else: raise AssertionError('native serialized tenant drift not rejected')
+details = json.loads(docker('inspect', NAME).stdout)[0]
+assert details['Id'] == cid and details['Config']['Labels']['aos.owner'] == OWNER
+assert all(m.get('Name') != 'aos-qyh-history159-prepared-data-20261011' for m in details['Mounts'])
+report = dict(containerId=cid, name=NAME, owner=OWNER, tmpfs=True,
+              observations=observations, snapshotFirst=1, snapshotAfterConcurrentCommit=2,
+              forceRlsForeignRowInvisible=True, writeDeniedSqlstate=write_denied,
+              badPayloadRejected=rejected, normalCompleteSnapshot=True,
+              originalVolumeTouched=False, originalUserOrBudgetApproval=False,
+              currentSourceSha256=hashlib.sha256((R/'services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_readonly.py').read_bytes()).hexdigest())
+save('native-r1-result.json', report)
+stopped = docker('stop', '--time', '10', NAME)
+assert stopped.returncode == 0, 'fixture stop pending; reconcile known CID'
+after = json.loads(docker('inspect', NAME).stdout)[0]
+assert after['Id'] == cid and not after['State']['Running']
+save('native-r1-stopped.json', dict(containerId=cid, stopped=True, originalVolumeTouched=False))
+print(json.dumps(report))
+
+FILE .evidence/qyh-creator-lifecycle-bounded-reader-20261014/native_continue_r2.py SHA 395fab542b091aa4919f5a72f1e10d3a02a29f280ea9cf3f6e1af9c9b9863978
+from pathlib import Path
+import contextlib,datetime,hashlib,json,subprocess,sys
+import psycopg
+from psycopg import IsolationLevel,sql
+from psycopg.rows import dict_row
+R=Path(__file__).resolve().parents[2];E=Path(__file__).resolve().parent
+sys.path.insert(0,str(R/'services/aos-api'));sys.path.insert(0,str(R/'services/aos-api/tests/aip'))
+from aos_api.ecommerce_workshop_creator_lifecycle_readonly import CreatorLifecycleReadonlyReader,CreatorLifecycleReadonlyError
+from aos_api.tenant_scope import TenantScope
+from test_creator_lifecycle_read_tenant import item
+NAME='qyh-creator-lifecycle-bounded-native-20261014-r1';OWNER='codex-01a13484-f019-7d82-94ce-812396db9124';SCOPE=TenantScope('org-org','dev-project')
+def docker(*args):return subprocess.run(['docker','--context','colima-aos-extension',*args],capture_output=True,text=True)
+def save(name,value):
+ with (E/name).open('x') as f:json.dump(value,f,indent=2);f.write('\n');f.flush()
+assert not (E/'native-r2-bootstrap-intent.json').exists(),'existing bootstrap: reconcile only'
+recon=json.loads((E/'native-r1-readonly-reconciliation.json').read_text());created=json.loads((E/'native-r1-created.json').read_text());cid=created['containerId'];d=json.loads(docker('inspect',NAME).stdout)[0]
+assert d['Id']==cid==recon['containerId'] and d['Config']['Labels']['aos.owner']==OWNER and d['State']['Running'] and recon['scopeRolesBeforeBootstrap']==recon['scopeTablesBeforeBootstrap']==0
+assert hashlib.sha256((E/'native_snapshot.py').read_bytes()).hexdigest()=='0759aaa03cbeba25179d1cddf4dc690e6d7a1e2364926092383fe70e9a7d6bd3'
+password=next(x.split('=',1)[1] for x in d['Config']['Env'] if x.startswith('POSTGRES_PASSWORD='))
+TABLES=(('ecommerce_creator_batch_start_decision_revision', 'decision_id', 'batch_id TEXT', 'latest_start_for_tenant_or_none'), ('ecommerce_creator_lane_observation', 'observation_id', 'decision_id TEXT,lane_id TEXT', 'list_lane_observations'), ('ecommerce_creator_contract_revision', 'collaboration_id', '', 'list_contracts'), ('ecommerce_creator_delivery_observation', 'observation_id', '', 'list_deliveries'), ('ecommerce_creator_relationship_revision', 'relationship_id', '', 'list_relationships'))
+save('native-r2-bootstrap-intent.json',{'containerId':cid,'noCreateOrRestart':True,'priorNativeSQLZero':True,'originalVolumeTouched':False})
+connect_args = dict(host='127.0.0.1', port=18571, dbname='postgres', password=password, row_factory=dict_row)
+with psycopg.connect(user='postgres', **connect_args) as admin:
+    admin.execute('CREATE ROLE aos_runtime NOLOGIN NOSUPERUSER NOBYPASSRLS')
+    admin.execute(sql.SQL('CREATE ROLE fixture_reader LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS PASSWORD {}').format(sql.Literal(password)))
+    admin.execute('GRANT aos_runtime TO fixture_reader')
+    for table, identity, extra, _ in TABLES:
+        ddl = sql.SQL('CREATE TABLE {} (org_id TEXT NOT NULL,project_id TEXT NOT NULL,{} TEXT NOT NULL,revision INTEGER NOT NULL,content_hash TEXT NOT NULL,authority_data JSONB NOT NULL,created_at TIMESTAMPTZ NOT NULL' + (',' + extra if extra else '') + ',PRIMARY KEY(org_id,project_id,{},revision))').format(sql.Identifier(table), sql.Identifier(identity), sql.Identifier(identity))
+        admin.execute(ddl)
+        admin.execute(sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(sql.Identifier(table)))
+        admin.execute(sql.SQL('ALTER TABLE {} FORCE ROW LEVEL SECURITY').format(sql.Identifier(table)))
+        admin.execute(sql.SQL("CREATE POLICY tenant_scope ON {} USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))").format(sql.Identifier(table)))
+        admin.execute(sql.SQL('GRANT SELECT ON {} TO aos_runtime').format(sql.Identifier(table)))
+
+def insert_contract(identity, scope=SCOPE, json_scope=None):
+    value = item('list_contracts', json_scope or scope).model_copy(update={'collaboration_id': identity})
+    with psycopg.connect(user='postgres', **connect_args) as admin:
+        admin.execute('INSERT INTO ecommerce_creator_contract_revision(org_id,project_id,collaboration_id,revision,content_hash,authority_data,created_at) VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s)',
+                      (*scope.key, identity, value.revision, value.content_hash, json.dumps(value.model_dump(mode='json', by_alias=True)), value.created_at))
+
+insert_contract('original')
+insert_contract('foreign', TenantScope('dev-org', 'dev-project'))
+observations = []
+@contextlib.contextmanager
+def factory(scope, *, concurrent=False):
+    with psycopg.connect(user='fixture_reader', **connect_args) as conn:
+        conn.read_only = True; conn.isolation_level = IsolationLevel.REPEATABLE_READ
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", scope.key)
+        state = conn.execute("SELECT current_user AS role,current_setting('transaction_read_only') AS readonly,current_setting('transaction_isolation') AS isolation").fetchone()
+        observations.append(state)
+        class Proxy:
+            read_only = True; autocommit = False; isolation_level = IsolationLevel.REPEATABLE_READ
+            def execute(self, statement, params=()):
+                cursor = conn.execute(statement, params)
+                if concurrent and 'transaction_timestamp()' in statement:
+                    insert_contract('concurrent')
+                return cursor
+        yield Proxy()
+
+first = CreatorLifecycleReadonlyReader(connect_factory=lambda scope: factory(scope, concurrent=True)).read(SCOPE)
+second = CreatorLifecycleReadonlyReader(connect_factory=factory).read(SCOPE)
+assert [x.collaboration_id for x in first.contracts] == ['original']
+assert sorted(x.collaboration_id for x in second.contracts) == ['concurrent', 'original']
+with factory(SCOPE) as conn:
+    visible = conn.execute('SELECT count(*) AS n FROM ecommerce_creator_contract_revision').fetchone()['n']
+    assert visible == 2
+    try: conn.execute("UPDATE ecommerce_creator_contract_revision SET revision=revision+1")
+    except psycopg.Error as error:
+        assert error.sqlstate in {'25006', '42501'}
+        write_denied = error.sqlstate
+    else: raise AssertionError('fixture readonly role unexpectedly wrote')
+insert_contract('bad-json-tenant', json_scope=TenantScope('dev-org', 'dev-project'))
+try: CreatorLifecycleReadonlyReader(connect_factory=factory).read(SCOPE)
+except CreatorLifecycleReadonlyError as error:
+    assert error.code == 'CREATOR_LIFECYCLE_READ_AUTHORITY_DRIFT'
+    rejected = error.code
+else: raise AssertionError('native serialized tenant drift not rejected')
+details = json.loads(docker('inspect', NAME).stdout)[0]
+assert details['Id'] == cid and details['Config']['Labels']['aos.owner'] == OWNER
+assert all(m.get('Name') != 'aos-qyh-history159-prepared-data-20261011' for m in details['Mounts'])
+report = dict(containerId=cid, name=NAME, owner=OWNER, tmpfs=True,
+              observations=observations, snapshotFirst=1, snapshotAfterConcurrentCommit=2,
+              forceRlsForeignRowInvisible=True, writeDeniedSqlstate=write_denied,
+              badPayloadRejected=rejected, normalCompleteSnapshot=True,
+              originalVolumeTouched=False, originalUserOrBudgetApproval=False,
+              currentSourceSha256=hashlib.sha256((R/'services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_readonly.py').read_bytes()).hexdigest())
+save('native-r1-result.json', report)
+stopped = docker('stop', '--time', '10', NAME)
+assert stopped.returncode == 0, 'fixture stop pending; reconcile known CID'
+after = json.loads(docker('inspect', NAME).stdout)[0]
+assert after['Id'] == cid and not after['State']['Running']
+save('native-r1-stopped.json', dict(containerId=cid, stopped=True, originalVolumeTouched=False))
+print(json.dumps(report))
+
+FILE .evidence/qyh-creator-lifecycle-bounded-reader-20261014/native-r1-readonly-reconciliation.json SHA 39858864137648e6afce27809d16e18b599ad80c1fa55d48d1c3aa699002ded3
+{
+  "containerId": "12daa903953018ee9f933721791e5f0885f8627519def55b269da2c1528ac183",
+  "sameOwner": true,
+  "runningFinalPG": true,
+  "scopeRolesBeforeBootstrap": 0,
+  "scopeTablesBeforeBootstrap": 0,
+  "initialFailureBeforeAnySQL": true,
+  "noContainerReplay": true,
+  "originalVolumeTouched": false
+}
+
+FILE .evidence/qyh-creator-lifecycle-bounded-reader-20261014/native-r1-result.json SHA f8d985ec387357305215b97173115c43d28f614d149bbbed2e2c24c71232e876
+{
+  "containerId": "12daa903953018ee9f933721791e5f0885f8627519def55b269da2c1528ac183",
+  "name": "qyh-creator-lifecycle-bounded-native-20261014-r1",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "tmpfs": true,
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "snapshotFirst": 1,
+  "snapshotAfterConcurrentCommit": 2,
+  "forceRlsForeignRowInvisible": true,
+  "writeDeniedSqlstate": "25006",
+  "badPayloadRejected": "CREATOR_LIFECYCLE_READ_AUTHORITY_DRIFT",
+  "normalCompleteSnapshot": true,
+  "originalVolumeTouched": false,
+  "originalUserOrBudgetApproval": false,
+  "currentSourceSha256": "95cacb071c8f9b10ad4ba3277c1a2820db076ba527c53d6d964b801fd01b7780"
+}
+
+FILE .evidence/qyh-creator-lifecycle-bounded-reader-20261014/native-r1-stopped.json SHA bae7390560104307f943b6f320fb44f8db3cdaf9be5615a9ac0a5f05d332aa67
+{
+  "containerId": "12daa903953018ee9f933721791e5f0885f8627519def55b269da2c1528ac183",
+  "stopped": true,
+  "originalVolumeTouched": false
+}
+
+ACTUAL COMPLETE CURRENT TEST STATUS LINES SOURCE SHA 8a02830ed496358d4bf7a2cf0308ca990f348707aa505a643d702c92afd88557
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_empty_is_complete_single_readonly_snapshot_with_database_cutoff PASSED [  0%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_complete_typed_view_and_lane_projection_without_producer_calls PASSED [  1%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[org_id-dev-org] PASSED [  2%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[project_id-other] PASSED [  3%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[entity_id-wrong] PASSED [  4%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[revision-9] PASSED [  5%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb] PASSED [  6%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_outer_row_integrity_drift_is_rejected[created_at-value5] PASSED [  7%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_inner_json_tenant_drift_is_rejected[orgId-dev-org] PASSED [  8%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_inner_json_tenant_drift_is_rejected[projectId-other] PASSED [  9%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_non_readonly_or_non_repeatable_connection_is_denied[False-3] PASSED [ 10%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_non_readonly_or_non_repeatable_connection_is_denied[True-2] PASSED [ 11%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_database_failure_is_unavailable_not_empty_success PASSED [ 12%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_clock_without_timezone_is_denied PASSED [ 13%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_row_limit_sentinel_rejects_instead_of_truncating PASSED [ 14%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_exact_row_limit_can_be_read_when_total_bytes_fit PASSED [ 15%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_sql_suppressed_large_json_is_rejected_before_parse PASSED [ 16%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_total_byte_limit_is_not_treated_as_partial_or_empty PASSED [ 17%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_lane_exact_lineage_drift_is_rejected[decision] PASSED [ 18%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_lane_exact_lineage_drift_is_rejected[hash] PASSED [ 19%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_lane_exact_lineage_drift_is_rejected[lane] PASSED [ 20%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_bad_json_shape_fails_closed PASSED [ 21%]
+services/aos-api/tests/aip/test_creator_lifecycle_readonly.py::test_delivery_observation_without_dto_revision_requires_stored_v1 PASSED [ 22%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-latest_start_for_tenant_or_none] PASSED [ 23%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_lane_observations] PASSED [ 24%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_contracts] PASSED [ 25%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_deliveries] PASSED [ 26%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign0-list_relationships] PASSED [ 27%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-latest_start_for_tenant_or_none] PASSED [ 28%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_lane_observations] PASSED [ 29%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_contracts] PASSED [ 30%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_deliveries] PASSED [ 31%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_foreign_serialized_tenant_is_rejected_even_under_correct_sql[foreign1-list_relationships] PASSED [ 32%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[latest_start_for_tenant_or_none] PASSED [ 33%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_lane_observations] PASSED [ 34%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_contracts] PASSED [ 35%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_deliveries] PASSED [ 36%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_valid_serialized_tenant_preserves_complete_item[list_relationships] PASSED [ 37%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[latest_start_for_tenant_or_none] PASSED [ 38%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_lane_observations] PASSED [ 39%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_contracts] PASSED [ 40%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_deliveries] PASSED [ 41%]
+services/aos-api/tests/aip/test_creator_lifecycle_read_tenant.py::test_empty_reader_retains_existing_none_or_empty_semantics[list_relationships] PASSED [ 42%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_explicit_start_compiles_four_independent_lanes_without_external_effect PASSED [ 43%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_start_fails_closed_on_legacy_items_cas_and_lane_coverage PASSED [ 44%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_partial_unknown_is_not_completed_and_receipt_binding_is_exact PASSED [ 45%]
+services/aos-api/tests/aip/test_w6_04_creator_lifecycle.py::test_contract_delivery_relationship_share_lineage_and_maturity_window_is_closed PASSED [ 46%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_discovery_normalizer_preserves_originals_and_fails_license_freshness_closed PASSED [ 47%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_match_preliminary_cannot_reject_and_observation_decision_remain_separate PASSED [ 48%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_batch_prepare_freeze_is_conserved_idempotent_and_has_zero_effects PASSED [ 49%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_frequency_capacity_budget_and_tenant_are_fail_closed PASSED [ 50%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result PASSED [ 50%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_PREPARE_TENANT_DRIFT] PASSED [ 51%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_BATCH_NOT_FOUND] PASSED [ 52%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_batch_prepare_requires_exact_decision_lineage_and_disposition PASSED [ 53%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unknown_and_deduplicated_items_remain_conserved[needs_review-unknown-unknown] PASSED [ 54%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unknown_and_deduplicated_items_remain_conserved[accepted-deduplicated-deduplicated] PASSED [ 55%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[analyst] PASSED [ 56%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[content-campaign] PASSED [ 57%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[creator-growth] PASSED [ 58%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[customer] PASSED [ 59%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[media-studio] PASSED [ 60%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[operations] PASSED [ 61%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[price-governance] PASSED [ 62%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[task-cockpit] PASSED [ 63%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/views/customer/contributions] PASSED [ 64%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/views/creator-growth/lifecycle] PASSED [ 65%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/modules/ecommerce.operations/readiness] PASSED [ 66%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes PASSED [ 67%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unknown_query_rejected_before_catalog_call PASSED [ 68%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_contribution_read_denied_before_service_access PASSED [ 69%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_creator_contribution_receives_authenticated_scope PASSED [ 70%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_contribution_query_scope_override_is_rejected PASSED [ 71%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_real_inputs_read_denied_before_business_data_access PASSED [ 72%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_real_inputs_receives_only_authenticated_tenant PASSED [ 73%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_real_inputs_query_cannot_override_authenticated_scope PASSED [ 74%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[analyst] PASSED [ 75%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[content-campaign] PASSED [ 76%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[creator-growth] PASSED [ 77%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[customer] PASSED [ 78%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[media-studio] PASSED [ 79%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[operations] PASSED [ 80%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[price-governance] PASSED [ 81%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[task-cockpit] PASSED [ 82%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_legacy_success_does_not_build_installed_configuration PASSED [ 83%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_installed_factory_is_deferred_until_legacy_not_found PASSED [ 84%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_exact_granted_installed_asset_can_pass_read_gate_without_runtime_promotion PASSED [ 85%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_declared_scope_without_current_lock_grant_is_rejected PASSED [ 86%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_cross_tenant_denied_before_candidate_source_access[changes0] PASSED [ 87%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_cross_tenant_denied_before_candidate_source_access[changes1] PASSED [ 88%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installation_revocation_is_checked_each_time PASSED [ 89%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_legacy_success_is_preserved_without_reading_candidate PASSED [ 90%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_legacy_integrity_error_never_falls_back PASSED [ 91%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_reference_must_match_current_exact_lock PASSED [ 92%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_from_another_revision_or_authority_is_rejected[revision-installation:4/lock:1] PASSED [ 93%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_from_another_revision_or_authority_is_rejected[authority-client:declaration] PASSED [ 94%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_candidate_bundle_content_drift_is_not_hidden_by_fallback PASSED [ 95%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_original_role_and_marking_filter_still_denies_installed_candidate[changes0] PASSED [ 96%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_original_role_and_marking_filter_still_denies_installed_candidate[changes1] PASSED [ 97%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_metadata_projection_with_registry_blocker_cannot_open_business_read PASSED [ 98%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installed_only_does_not_accept_legacy_success PASSED [ 99%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installed_only_keeps_disabled_result_and_does_not_call_legacy PASSED [100%]
+======================= 102 passed, 7 warnings in 4.94s ========================
