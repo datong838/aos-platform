@@ -484,6 +484,9 @@ class EcommerceWorkshopCreatorPrepareService:
             return CreatorContributionView(
                 tenant=self._tenant(scope),
                 evaluatedAt=at,
+                atomicSkillRefs=[],
+                logicRef=None,
+                latestBatch=None,
                 blockers=[
                     "CREATOR_PREPARE_AUTHORITY_UNAVAILABLE",
                     "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE",

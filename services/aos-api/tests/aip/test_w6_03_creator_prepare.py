@@ -192,6 +192,35 @@ def test_frequency_capacity_budget_and_tenant_are_fail_closed():
     assert "START" not in " ".join(view.allowed_commands)
 
 
+def test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result():
+    class UnavailableStore:
+        def latest_batch_or_none(self, scope):
+            assert scope == SCOPE
+            raise CreatorPrepareBlocked("CREATOR_PREPARE_AUTHORITY_UNAVAILABLE")
+
+    view = EcommerceWorkshopCreatorPrepareService(UnavailableStore()).contribution_view(SCOPE, now=NOW)
+    empty = EcommerceWorkshopCreatorPrepareService(MemoryStore()).contribution_view(SCOPE, now=NOW)
+    assert view.tenant.org_id == SCOPE.org_id
+    assert view.tenant.project_id == SCOPE.project_id
+    assert view.evaluated_at == NOW
+    assert view.atomic_skill_refs == [] and view.logic_ref is None and view.latest_batch is None
+    assert view.blockers == ["CREATOR_PREPARE_AUTHORITY_UNAVAILABLE", "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
+    assert empty.blockers == ["CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
+    assert view.external_effects_allowed is False
+    assert view.model_dump(mode="json", by_alias=True)["latestBatch"] is None
+
+
+@pytest.mark.parametrize("code", ["CREATOR_PREPARE_TENANT_DRIFT", "CREATOR_BATCH_NOT_FOUND"])
+def test_unrelated_contribution_errors_are_not_hidden_as_unavailable(code):
+    class FailingStore:
+        def latest_batch_or_none(self, scope):
+            assert scope == SCOPE
+            raise CreatorPrepareBlocked(code)
+
+    with pytest.raises(CreatorPrepareBlocked, match=code):
+        EcommerceWorkshopCreatorPrepareService(FailingStore()).contribution_view(SCOPE, now=NOW)
+
+
 def test_batch_prepare_requires_exact_decision_lineage_and_disposition():
     store = MemoryStore(); service = EcommerceWorkshopCreatorPrepareService(store)
     observed = observation(service, "candidate-1")

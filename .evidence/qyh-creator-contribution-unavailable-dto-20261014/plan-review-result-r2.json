@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "4f3702f6b43b0eed4a97ad8e99ed028db9dd2b26bac9e7b6010bb1bcc8c38f1c",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-contribution-unavailable-dto-20261014-plan-r2",
+    "task_id": "qyh-creator-contribution-unavailable-dto-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "78bcff996ea87da6f7609669c9edc255234d7344",
+      "authority_revision": "AOS-002028",
+      "files": {
+        ".evidence/qyh-creator-contribution-unavailable-dto-20261014/plan-review-package-r1.txt": "7830dfdab2d32ed25d79e25fd22f7a30c8c735e849bd3f8ecf349ff330846024"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Current explicit reproduction and strict DTO fields identify missing atomicSkillRefs/logicRef/latestBatch as the known unavailable-branch defect, while true empty and unrelated errors must retain their distinct behavior.",
+        "evidence": "service ecommerce_workshop_creator_prepare.py:contribution_view catches CREATOR_PREPARE_AUTHORITY_UNAVAILABLE but calls CreatorContributionView(tenant=...,evaluatedAt=...,blockers=[...]) without atomicSkillRefs/logicRef/latestBatch; DTO class declares these as required (no defaults). test reproduction unavailable-red-reproduction.json records ValidationError with missingFields atomicSkillRefs/logicRef/latestBatch. store latest_batch_or_none raises for psycopg.Error (authority unavailable) but returns None only for no-row (empty branch), which is distinct.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The prospective registered plan adds exactly three required response fields to that error branch plus semantic regression tests, preserving two blockers/tenant/time/no-effects and every producer/read-store or global contract path; no code is claimed implemented yet.",
+        "evidence": "registration.json scope lists only ecommerce_workshop_creator_prepare.py, test_w6_03_creator_prepare.py, and evidence dir; excluded_scope excludes router/store/maintenance. implementation-plan.md states proposed add only those 3 fields to unavailable branch; do not change DTO class global defaults; all other errors/producer paths unchanged. Current SHA 0a2d7cacf... confirms no fields added yet. plan-review-package-r1.txt header says No product changes yet.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The proposal keeps the failure repair within its registered scope and explicitly treats implementation/tests/native/browser/Delivery as future steps, preserving readonly database and withholding budget or operational authorization.",
+        "evidence": "implementation-plan.md: 'Proposed add only... Separate disjoint task from pending GET-admissionTask... Both later native/browser/Delivery/Authority remain required; no operationauthorization.' registration.json lease_expires_at is 2026-10-14T08:00:00+00:00; current time exceeds lease but status remains ACTIVE in the static material and baseline head unchanged, so this is a documentation/registration artifact, not an operational override. Plan explicitly withholds DDL/role/budget/source/HostworkerProvider.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Proceed to implement exactly the three-field fix in ecommerce_workshop_creator_prepare.py contribution_view AUTHORITY_UNAVAILABLE branch and adjacent semantic regression tests in test_w6_03_creator_prepare.py under base AOS-002028; preserve current lease/exclusion boundaries and keep database read-only."
+  }
+}

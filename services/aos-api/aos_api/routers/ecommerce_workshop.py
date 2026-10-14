@@ -1759,7 +1759,7 @@ def freeze_creator_batch(
 def get_creator_contribution_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     service: CreatorPrepareDependency,
 ) -> CreatorContributionView:
     _reject_query_parameters(request)

@@ -1,0 +1,11 @@
+# 达人贡献不可用分支DTO修复
+
+Rules：231/用户方案先行与最小改动、当前原库只读、唯一m1写者、原数据保护、完整Loop与独立Prime。属已登记达人贡献波的前置确定性缺陷，另受支持登记service/test精确不重叠Task，不直接扩大原routerTask Scope。base AOS-002028/同owner/08:00UTC；不推进Authority到其他活跃Task失去基线后再复用review。
+
+复现无数据库：Store.latest_batch_or_none明确CreatorPrepareBlocked(CREATOR_PREPARE_AUTHORITY_UNAVAILABLE)，contribution_view错误分支构造CreatorContributionView时缺required atomicSkillRefs/logicRef/latestBatch，Pydantic ValidationError，原预定阻断DTO并未返回。现有真空None分支提供三字段正常；新装/缺权限/缺table错误不能靠frontendcatch掩盖。
+
+产品仅services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py该catch分支显式atomicSkillRefs=[]、logicRef=None、latestBatch=None；不把缺authority当成功，保留两个blockers/tenant/evaluatedAt、externalEffectsAllowed=false，不加0计数、不生成candidate。所有producer/freeze/原数据/模型默认/其他错误传播不改。不给共享AipContractModel或DTO类增加全局默认以吞掉缺字段。
+
+测试services/aos-api/tests/aip/test_w6_03_creator_prepare.py：known unavailable时字段/两blockers/无效果与tenant/cutoff正确；非该error（tenant drift等）必须继续抛；真空已有case保持单BATCH_NOT_AVAILABLE，与不可用不同。先独立方案门，后RED/3字段minimal/专项+store+read_catalog/http相邻；单独代码Prime覆盖两源码及RED→GREEN。在同owner原maintenance最新gitarchive/API更新与routerTask一起适用真native/browser后准确交付，不能fixture PASS当真实输出。当前无DDL/角色/预算/Source/HostworkerProvider或原业务写。
+
+与原read-admissionTask联合顺序：两个scope都已登记且不交叠；先本failure path修复并验证，再一处GET接线/HTTP专项；同一最新source全覆盖审阅与真实原OIDC数据回读，再分别准确Delivery、一次Authority/Prime同步，不遗漏任一八步或伪称经营闭环。完整C/唯一用户预算批准/部署/自然CaseRun链、八场景、视觉与安装生命周期/观察发布继续。

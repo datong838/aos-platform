@@ -1,0 +1,93 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0 -- /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python
+rootdir: /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collecting ... collected 54 items
+
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_discovery_normalizer_preserves_originals_and_fails_license_freshness_closed PASSED [  1%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_match_preliminary_cannot_reject_and_observation_decision_remain_separate PASSED [  3%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_batch_prepare_freeze_is_conserved_idempotent_and_has_zero_effects PASSED [  5%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_frequency_capacity_budget_and_tenant_are_fail_closed PASSED [  7%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result PASSED [  9%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_PREPARE_TENANT_DRIFT] PASSED [ 11%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_BATCH_NOT_FOUND] PASSED [ 12%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_batch_prepare_requires_exact_decision_lineage_and_disposition PASSED [ 14%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unknown_and_deduplicated_items_remain_conserved[needs_review-unknown-unknown] PASSED [ 16%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unknown_and_deduplicated_items_remain_conserved[accepted-deduplicated-deduplicated] PASSED [ 18%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare_store.py::test_append_is_tenant_scoped_idempotent_and_conflict_closed PASSED [ 20%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare_store.py::test_contribution_read_reports_authority_unavailable_without_fallback PASSED [ 22%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[analyst] PASSED [ 24%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[content-campaign] PASSED [ 25%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[creator-growth] PASSED [ 27%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[customer] PASSED [ 29%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[media-studio] PASSED [ 31%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[operations] PASSED [ 33%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[price-governance] PASSED [ 35%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_root_get_uses_scoped_read_admission_before_business_reader[task-cockpit] PASSED [ 37%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/views/customer/contributions] PASSED [ 38%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/views/creator-growth/contributions] PASSED [ 40%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unreviewed_get_still_uses_legacy_admission[/modules/ecommerce.operations/readiness] PASSED [ 42%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes PASSED [ 44%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_unknown_query_rejected_before_catalog_call PASSED [ 46%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_real_inputs_read_denied_before_business_data_access PASSED [ 48%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_real_inputs_receives_only_authenticated_tenant PASSED [ 50%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_real_inputs_query_cannot_override_authenticated_scope PASSED [ 51%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[analyst] PASSED [ 53%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[content-campaign] PASSED [ 55%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[creator-growth] PASSED [ 57%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[customer] PASSED [ 59%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[media-studio] PASSED [ 61%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[operations] PASSED [ 62%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[price-governance] PASSED [ 64%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_root_reaches_reader_with_authenticated_tenant[task-cockpit] PASSED [ 66%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_legacy_success_does_not_build_installed_configuration PASSED [ 68%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_installed_factory_is_deferred_until_legacy_not_found PASSED [ 70%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_exact_granted_installed_asset_can_pass_read_gate_without_runtime_promotion PASSED [ 72%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_declared_scope_without_current_lock_grant_is_rejected PASSED [ 74%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_cross_tenant_denied_before_candidate_source_access[changes0] PASSED [ 75%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_cross_tenant_denied_before_candidate_source_access[changes1] PASSED [ 77%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installation_revocation_is_checked_each_time PASSED [ 79%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_legacy_success_is_preserved_without_reading_candidate PASSED [ 81%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_legacy_integrity_error_never_falls_back PASSED [ 83%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_reference_must_match_current_exact_lock PASSED [ 85%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_from_another_revision_or_authority_is_rejected[revision-installation:4/lock:1] PASSED [ 87%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_grant_from_another_revision_or_authority_is_rejected[authority-client:declaration] PASSED [ 88%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_candidate_bundle_content_drift_is_not_hidden_by_fallback PASSED [ 90%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_original_role_and_marking_filter_still_denies_installed_candidate[changes0] PASSED [ 92%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_original_role_and_marking_filter_still_denies_installed_candidate[changes1] PASSED [ 94%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_metadata_projection_with_registry_blocker_cannot_open_business_read PASSED [ 96%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installed_only_does_not_accept_legacy_success PASSED [ 98%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py::test_installed_only_keeps_disabled_result_and_does_not_call_legacy PASSED [100%]
+
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 54 passed, 7 warnings in 4.13s ========================

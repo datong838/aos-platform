@@ -1,0 +1,25 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-contribution-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002028",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    "aos-platform/.evidence/qyh-creator-contribution-read-admission-20261014",
+    "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md"
+  ],
+  "excluded_scope": [
+    "aos-platform/apps/web",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Audit complete creator-contributions GET→defaultservice→Store latestbatch/connection/RLS/transitive helper readonly and statuses before deciding admission; preserve all POST/start/freeze/budget/source/runtime gates. If safe: plan/Prime/RED/minimal scope GET only/adjacent/native/browser/Prime/accurateDelivery; otherwise retain exact blocker and continue another authorized safe step.",
+    "Do not fake Creator candidates/contributions or runtime available; retain other9aux and fullC realintent/userconsent/deployment/naturalbusiness chain/install/visual/release Goal"
+  ],
+  "lease_expires_at": "2026-10-14T08:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-14T13:01:46+08:00"
+}

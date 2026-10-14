@@ -1,0 +1,17 @@
+{
+  "case": "readonly authority unavailable",
+  "exception": "ValidationError",
+  "missingFields": [
+    [
+      "atomicSkillRefs"
+    ],
+    [
+      "logicRef"
+    ],
+    [
+      "latestBatch"
+    ]
+  ],
+  "noDatabaseOpened": true,
+  "noBusinessEffects": true
+}

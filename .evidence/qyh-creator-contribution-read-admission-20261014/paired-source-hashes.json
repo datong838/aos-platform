@@ -1,0 +1,6 @@
+{
+  "services/aos-api/aos_api/routers/ecommerce_workshop.py": "b5e9087ff769415fb7aca5cce820043b83b4b1edd2edabec3957ff0a9bfdead9",
+  "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "a75585bac5c1b4bd1895340e3567de62089da350ecae3216e54fe7e52a4bfef3",
+  "services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py": "be30948e17a6ccc2c032531d2b295e7df5c6982ffadd1140cd10a71975ce2a61",
+  "services/aos-api/tests/aip/test_w6_03_creator_prepare.py": "6f679a2cd496d88d3b267c04ee0e6d81bc45f73d5befd807070a234e57d58972"
+}

@@ -1,0 +1,889 @@
+CURRENT SCOPED QUALITY: productdiff only3 response fields. Previous code package oversize was refused before any request/attempt; no modelreview claimed. Chronology is pre-change RED1/9pass versus actual current54 PASS below with specifiednodePASSED. Native/browser/Delivery pending with pairedrouter task, no operational or wholeGoal completion claim.
+FILE .evidence/qyh-creator-contribution-unavailable-dto-20261014/implementation-plan.md SHA c0339a0c4af674061b33fe660487a2ec8b8f1abf8e820e15b005599e77c2c639
+# 达人贡献不可用分支DTO修复
+
+Rules：231/用户方案先行与最小改动、当前原库只读、唯一m1写者、原数据保护、完整Loop与独立Prime。属已登记达人贡献波的前置确定性缺陷，另受支持登记service/test精确不重叠Task，不直接扩大原routerTask Scope。base AOS-002028/同owner/08:00UTC；不推进Authority到其他活跃Task失去基线后再复用review。
+
+复现无数据库：Store.latest_batch_or_none明确CreatorPrepareBlocked(CREATOR_PREPARE_AUTHORITY_UNAVAILABLE)，contribution_view错误分支构造CreatorContributionView时缺required atomicSkillRefs/logicRef/latestBatch，Pydantic ValidationError，原预定阻断DTO并未返回。现有真空None分支提供三字段正常；新装/缺权限/缺table错误不能靠frontendcatch掩盖。
+
+产品仅services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py该catch分支显式atomicSkillRefs=[]、logicRef=None、latestBatch=None；不把缺authority当成功，保留两个blockers/tenant/evaluatedAt、externalEffectsAllowed=false，不加0计数、不生成candidate。所有producer/freeze/原数据/模型默认/其他错误传播不改。不给共享AipContractModel或DTO类增加全局默认以吞掉缺字段。
+
+测试services/aos-api/tests/aip/test_w6_03_creator_prepare.py：known unavailable时字段/两blockers/无效果与tenant/cutoff正确；非该error（tenant drift等）必须继续抛；真空已有case保持单BATCH_NOT_AVAILABLE，与不可用不同。先独立方案门，后RED/3字段minimal/专项+store+read_catalog/http相邻；单独代码Prime覆盖两源码及RED→GREEN。在同owner原maintenance最新gitarchive/API更新与routerTask一起适用真native/browser后准确交付，不能fixture PASS当真实输出。当前无DDL/角色/预算/Source/HostworkerProvider或原业务写。
+
+与原read-admissionTask联合顺序：两个scope都已登记且不交叠；先本failure path修复并验证，再一处GET接线/HTTP专项；同一最新source全覆盖审阅与真实原OIDC数据回读，再分别准确Delivery、一次Authority/Prime同步，不遗漏任一八步或伪称经营闭环。完整C/唯一用户预算批准/部署/自然CaseRun链、八场景、视觉与安装生命周期/观察发布继续。
+
+FILE .evidence/qyh-creator-contribution-unavailable-dto-20261014/plan-review-consumption-r2.json SHA fe0aaaeafe30c960c5db1b5c86d7a109a7c656f9ec5865d64f5289735369826a
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-contribution-unavailable-dto-20261014-plan-r2",
+  "task_id": "qyh-creator-contribution-unavailable-dto-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "78bcff996ea87da6f7609669c9edc255234d7344",
+    "authority_revision": "AOS-002028",
+    "files": {
+      ".evidence/qyh-creator-contribution-unavailable-dto-20261014/plan-review-package-r1.txt": "7830dfdab2d32ed25d79e25fd22f7a30c8c735e849bd3f8ecf349ff330846024"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "3d54d897dad0b0cddab954ab5c8de0664a98180057e053dc3691dbb59daf1516",
+  "transport_sha256": "aedb633df8b659f4a1b81f9f8a641aaa6b5ff1de76e88dc95cac33248d7ec510"
+}
+FILE services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py SHA be30948e17a6ccc2c032531d2b295e7df5c6982ffadd1140cd10a71975ce2a61
+"""W6-03 canonical creator discovery, matching and batch-prepare contracts/service.
+
+This module deliberately stops at a frozen, side-effect-free batch.  It does not
+create ActionProposal, ExecutionLease, provider calls, outreach, samples,
+contracts or commission changes.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
+
+from pydantic import Field, field_validator, model_validator
+
+from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorExactRef
+from aos_api.tenant_scope import TenantScope
+
+
+CREATOR_PREPARE_SCHEMA_VERSION = "aos.ecommerce-workshop.creator-prepare/v1"
+CREATOR_LOGIC_ID = "ecommerce-creator-match"
+CREATOR_SKILL_IDS = (
+    "frame-recruitment-brief",
+    "build-evidence-pack",
+    "segment-entities",
+    CREATOR_LOGIC_ID,
+    "compare-alternatives",
+    "plan-responsibilities",
+)
+
+
+def canonical_hash(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+class CreatorPrepareBlocked(RuntimeError):
+    code = "CREATOR_PREPARE_BLOCKED"
+
+
+class CreatorPrepareConflict(CreatorPrepareBlocked):
+    code = "CREATOR_PREPARE_CONFLICT"
+
+
+class CreatorSourceLicense(StrEnum):
+    ALLOWED = "allowed"
+    DENIED = "denied"
+    UNKNOWN = "unknown"
+
+
+class IdentityResolutionStatus(StrEnum):
+    RESOLVED = "resolved"
+    CONFLICT = "conflict"
+
+
+class MatchConfidence(StrEnum):
+    PRELIMINARY = "preliminary"
+    CONFIRMED = "confirmed"
+
+
+class BatchItemDisposition(StrEnum):
+    ELIGIBLE = "eligible"
+    EXCLUDED = "excluded"
+    NEEDS_REVIEW = "needs_review"
+    UNKNOWN = "unknown"
+    DEDUPLICATED = "deduplicated"
+
+
+class CreatorDiscoveryProfileRequest(AipContractModel):
+    profile_id: str = Field(min_length=1, max_length=160)
+    revision: int = Field(ge=1)
+    allowed_source_kinds: list[str] = Field(min_length=1, max_length=32)
+    required_fact_keys: list[str] = Field(min_length=1, max_length=64)
+    output_schema_ref: CreatorExactRef
+    freshness_seconds: int = Field(ge=60, le=2_592_000)
+    retention_days: int = Field(ge=1, le=3650)
+    minimum_disclosure: list[str] = Field(default_factory=list, max_length=64)
+
+    @model_validator(mode="after")
+    def _canonical_profile(self) -> CreatorDiscoveryProfileRequest:
+        for values in (self.allowed_source_kinds, self.required_fact_keys, self.minimum_disclosure):
+            if len(values) != len(set(values)) or any(not value.strip() for value in values):
+                raise ValueError("creator discovery profile lists must be unique and non-empty")
+        if self.output_schema_ref.resource_type != "SchemaRevision":
+            raise ValueError("outputSchemaRef must reference SchemaRevision")
+        return self
+
+
+class CreatorDiscoveryProfileRevision(CreatorDiscoveryProfileRequest):
+    tenant: TenantContext
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class NormalizeCreatorArtifactRequest(AipContractModel):
+    profile_ref: CreatorExactRef
+    research_artifact_ref: CreatorExactRef
+    source_kind: str = Field(min_length=1, max_length=120)
+    source_license: CreatorSourceLicense
+    source_fresh_at: datetime
+    artifact_schema_ref: CreatorExactRef
+    artifact_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    original_record_refs: list[CreatorExactRef] = Field(min_length=1, max_length=100)
+    stable_identity_keys: list[str] = Field(min_length=1, max_length=20)
+    conflicting_identity_keys: list[str] = Field(default_factory=list, max_length=20)
+    fact_keys: list[str] = Field(min_length=1, max_length=100)
+    pii_refs: list[str] = Field(default_factory=list, max_length=20)
+
+    @field_validator("source_fresh_at")
+    @classmethod
+    def _aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("sourceFreshAt must include timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _normalizer_input(self) -> NormalizeCreatorArtifactRequest:
+        if self.profile_ref.resource_type != "CreatorDiscoveryProfileRevision":
+            raise ValueError("profileRef must reference CreatorDiscoveryProfileRevision")
+        if self.research_artifact_ref.resource_type != "ResearchArtifactRevision":
+            raise ValueError("researchArtifactRef must reference ResearchArtifactRevision")
+        if self.artifact_schema_ref.resource_type != "SchemaRevision":
+            raise ValueError("artifactSchemaRef must reference SchemaRevision")
+        if len(self.original_record_refs) != len({(x.resource_type, x.resource_id, x.revision, x.content_hash) for x in self.original_record_refs}):
+            raise ValueError("originalRecordRefs must be unique")
+        for values in (self.stable_identity_keys, self.conflicting_identity_keys, self.fact_keys, self.pii_refs):
+            if len(values) != len(set(values)) or any(not value.strip() for value in values):
+                raise ValueError("normalizer lists must be unique and non-empty")
+        return self
+
+
+class CreatorNormalizerReceipt(AipContractModel):
+    tenant: TenantContext
+    receipt_id: str
+    candidate_id: str
+    revision: int = 1
+    profile_ref: CreatorExactRef
+    research_artifact_ref: CreatorExactRef
+    original_record_refs: list[CreatorExactRef]
+    identity_status: IdentityResolutionStatus
+    identity_key_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    conflict_codes: list[str]
+    fact_keys: list[str]
+    pii_refs: list[str]
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class CreateCreatorMatchObservationRequest(AipContractModel):
+    candidate_ref: CreatorExactRef
+    evidence_bundle_ref: CreatorExactRef
+    feature_schema_ref: CreatorExactRef
+    logic_ref: CreatorExactRef
+    policy_ref: CreatorExactRef
+    score: float = Field(ge=0, le=1)
+    policy_threshold: float = Field(ge=0, le=1)
+    feature_summaries: dict[str, float] = Field(min_length=1, max_length=64)
+    missing_fact_keys: list[str] = Field(default_factory=list, max_length=64)
+    identity_status: IdentityResolutionStatus
+
+    @model_validator(mode="after")
+    def _typed_refs(self) -> CreateCreatorMatchObservationRequest:
+        expected = {
+            "candidate_ref": "CreatorCandidateRevision",
+            "evidence_bundle_ref": "EvidenceBundleRevision",
+            "feature_schema_ref": "FeatureSchemaRevision",
+            "logic_ref": "LogicPublicationRevision",
+            "policy_ref": "CreatorMatchPolicyRevision",
+        }
+        for field, resource_type in expected.items():
+            if getattr(self, field).resource_type != resource_type:
+                raise ValueError(f"{field} must reference {resource_type}")
+        if len(self.missing_fact_keys) != len(set(self.missing_fact_keys)):
+            raise ValueError("missingFactKeys must be unique")
+        return self
+
+
+class CreatorPreparedMatchObservation(AipContractModel):
+    tenant: TenantContext
+    observation_id: str
+    revision: int = 1
+    candidate_ref: CreatorExactRef
+    evidence_bundle_ref: CreatorExactRef
+    feature_schema_ref: CreatorExactRef
+    logic_ref: CreatorExactRef
+    policy_ref: CreatorExactRef
+    score: float
+    policy_threshold: float
+    confidence: MatchConfidence
+    feature_summaries: dict[str, float]
+    missing_fact_keys: list[str]
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_at: datetime
+
+
+class DecideCreatorMatchRequest(AipContractModel):
+    observation_ref: CreatorExactRef
+    decision: str = Field(pattern=r"^(accepted|rejected|needs_review)$")
+    reason_code: str = Field(pattern=r"^[A-Z][A-Z0-9_]{1,119}$")
+
+    @model_validator(mode="after")
+    def _observation_ref(self) -> DecideCreatorMatchRequest:
+        if self.observation_ref.resource_type != "CreatorPreparedMatchObservation":
+            raise ValueError("observationRef must reference CreatorPreparedMatchObservation")
+        return self
+
+
+class CreatorPreparedMatchDecision(AipContractModel):
+    tenant: TenantContext
+    decision_id: str
+    revision: int = 1
+    observation_ref: CreatorExactRef
+    disposition: str
+    reason_code: str
+    decided_by: str
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    decided_at: datetime
+
+
+class PrepareCreatorBatchItem(AipContractModel):
+    candidate_ref: CreatorExactRef
+    evidence_bundle_ref: CreatorExactRef
+    match_observation_ref: CreatorExactRef
+    match_decision_ref: CreatorExactRef
+    disposition: BatchItemDisposition
+    reason_codes: list[str] = Field(default_factory=list, max_length=32)
+    frequency_eligible: bool
+    capacity_eligible: bool
+    budget_eligible: bool
+
+    @model_validator(mode="after")
+    def _item_refs(self) -> PrepareCreatorBatchItem:
+        expected = (
+            (self.candidate_ref, "CreatorCandidateRevision"),
+            (self.evidence_bundle_ref, "EvidenceBundleRevision"),
+            (self.match_observation_ref, "CreatorPreparedMatchObservation"),
+            (self.match_decision_ref, "CreatorPreparedMatchDecision"),
+        )
+        if any(ref.resource_type != kind for ref, kind in expected):
+            raise ValueError("batch item exact refs have invalid resourceType")
+        gates = self.frequency_eligible and self.capacity_eligible and self.budget_eligible
+        if self.disposition is BatchItemDisposition.ELIGIBLE and not gates:
+            raise ValueError("eligible batch item requires frequency/capacity/budget")
+        if self.disposition is not BatchItemDisposition.ELIGIBLE and not self.reason_codes:
+            raise ValueError("non-eligible batch item requires reasonCodes")
+        return self
+
+
+class PrepareCreatorBatchRequest(AipContractModel):
+    batch_id: str = Field(min_length=1, max_length=200)
+    brief_ref: CreatorExactRef
+    eval_ref: CreatorExactRef
+    responsibility_plan_ref: CreatorExactRef
+    frequency_policy_ref: CreatorExactRef
+    capacity_snapshot_ref: CreatorExactRef
+    budget_snapshot_ref: CreatorExactRef
+    skill_refs: list[CreatorExactRef] = Field(min_length=6, max_length=16)
+    logic_ref: CreatorExactRef
+    agent_binding_ref: CreatorExactRef
+    items: list[PrepareCreatorBatchItem] = Field(min_length=1, max_length=100)
+
+    @model_validator(mode="after")
+    def _exact_composition(self) -> PrepareCreatorBatchRequest:
+        refs = {
+            "brief_ref": "TaskBriefRevision", "eval_ref": "EvalContractRevision",
+            "responsibility_plan_ref": "ResponsibilityPlanRevision",
+            "frequency_policy_ref": "FrequencyPolicyRevision",
+            "capacity_snapshot_ref": "CapacitySnapshotRevision",
+            "budget_snapshot_ref": "BudgetSnapshotRevision",
+            "logic_ref": "LogicPublicationRevision", "agent_binding_ref": "AgentBindingRevision",
+        }
+        for field, resource_type in refs.items():
+            if getattr(self, field).resource_type != resource_type:
+                raise ValueError(f"{field} must reference {resource_type}")
+        if {ref.resource_id for ref in self.skill_refs} != set(CREATOR_SKILL_IDS):
+            raise ValueError("skillRefs must cover the canonical creator composition")
+        if any(ref.resource_type != "SkillRevision" for ref in self.skill_refs):
+            raise ValueError("skillRefs must reference SkillRevision")
+        if self.logic_ref.resource_id != CREATOR_LOGIC_ID:
+            raise ValueError("logicRef must be ecommerce-creator-match")
+        candidates = [item.candidate_ref.resource_id for item in self.items]
+        if len(candidates) != len(set(candidates)):
+            raise ValueError("duplicate candidates must be represented as deduplicated items, not repeated rows")
+        return self
+
+
+class CreatorBatchCountLedger(AipContractModel):
+    input: int = Field(ge=0)
+    eligible: int = Field(ge=0)
+    excluded: int = Field(ge=0)
+    needs_review: int = Field(ge=0)
+    unknown: int = Field(ge=0)
+    deduplicated: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _conserved(self) -> CreatorBatchCountLedger:
+        if self.input != self.eligible + self.excluded + self.needs_review + self.unknown + self.deduplicated:
+            raise ValueError("creator batch item ledger must conserve input")
+        return self
+
+
+class CreatorBatchPreparationRevision(AipContractModel):
+    tenant: TenantContext
+    batch_id: str
+    revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    lifecycle: str = Field(pattern=r"^(prepared|frozen|stale)$")
+    exact_refs: dict[str, CreatorExactRef]
+    skill_refs: list[CreatorExactRef]
+    items: list[PrepareCreatorBatchItem] = Field(default_factory=list, max_length=100)
+    item_hashes: list[str]
+    ledger: CreatorBatchCountLedger
+    external_effect_count: int = Field(default=0, ge=0, le=0)
+    action_proposal_count: int = Field(default=0, ge=0, le=0)
+    execution_lease_count: int = Field(default=0, ge=0, le=0)
+    prior_content_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class FreezeCreatorBatchRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    exact_refs: dict[str, CreatorExactRef]
+
+
+class CreatorContributionView(AipContractModel):
+    schema_version: str = CREATOR_PREPARE_SCHEMA_VERSION
+    tenant: TenantContext
+    evaluated_at: datetime
+    atomic_skill_refs: list[CreatorExactRef]
+    logic_ref: CreatorExactRef | None
+    primary_colleague: str = "导购顾问"
+    collaborator_colleagues: list[str] = Field(default_factory=lambda: ["数据参谋", "内容官", "活动策划师"])
+    latest_batch: CreatorBatchPreparationRevision | None
+    blockers: list[str]
+    allowed_commands: list[str] = Field(default_factory=lambda: ["PREPARE_CREATOR_BATCH", "FREEZE_CREATOR_BATCH"])
+    external_effects_allowed: bool = False
+
+
+class EcommerceWorkshopCreatorPrepareService:
+    def __init__(self, store: Any) -> None:
+        self.store = store
+
+    @staticmethod
+    def _tenant(scope: TenantScope) -> TenantContext:
+        return TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+
+    def create_profile(self, scope: TenantScope, request: CreatorDiscoveryProfileRequest, actor: str, *, now: datetime | None = None) -> CreatorDiscoveryProfileRevision:
+        at = now or datetime.now(UTC)
+        payload = request.model_dump(mode="json", by_alias=True)
+        item = CreatorDiscoveryProfileRevision(tenant=self._tenant(scope), **payload, contentHash=canonical_hash(payload), createdBy=actor, createdAt=at)
+        return self.store.append_profile(scope, item)
+
+    def normalize(self, scope: TenantScope, request: NormalizeCreatorArtifactRequest, actor: str, *, now: datetime | None = None) -> CreatorNormalizerReceipt:
+        at = now or datetime.now(UTC)
+        profile = self.store.require_profile(scope, request.profile_ref)
+        if request.source_license is not CreatorSourceLicense.ALLOWED:
+            raise CreatorPrepareBlocked("CREATOR_SOURCE_LICENSE_NOT_ALLOWED")
+        if request.source_kind not in profile.allowed_source_kinds:
+            raise CreatorPrepareBlocked("CREATOR_SOURCE_KIND_NOT_ALLOWED")
+        if request.artifact_schema_ref != profile.output_schema_ref:
+            raise CreatorPrepareBlocked("CREATOR_ARTIFACT_SCHEMA_DRIFTED")
+        age = (at - request.source_fresh_at).total_seconds()
+        if age < 0 or age > profile.freshness_seconds:
+            raise CreatorPrepareBlocked("CREATOR_SOURCE_STALE")
+        missing = sorted(set(profile.required_fact_keys) - set(request.fact_keys))
+        if missing:
+            raise CreatorPrepareBlocked("CREATOR_REQUIRED_FACTS_MISSING:" + ",".join(missing))
+        identity_status = IdentityResolutionStatus.CONFLICT if request.conflicting_identity_keys else IdentityResolutionStatus.RESOLVED
+        identity_hash = canonical_hash(sorted(request.stable_identity_keys))
+        base = request.model_dump(mode="json", by_alias=True)
+        receipt_id = f"creator-normalize-{canonical_hash([*scope.key, base])[:24]}"
+        candidate_id = f"creator-{identity_hash[:24]}"
+        item = CreatorNormalizerReceipt(
+            tenant=self._tenant(scope), receiptId=receipt_id, candidateId=candidate_id,
+            profileRef=request.profile_ref, researchArtifactRef=request.research_artifact_ref,
+            originalRecordRefs=request.original_record_refs, identityStatus=identity_status,
+            identityKeyHash=identity_hash,
+            conflictCodes=["CREATOR_IDENTITY_CONFLICT"] if request.conflicting_identity_keys else [],
+            factKeys=sorted(request.fact_keys), piiRefs=request.pii_refs,
+            contentHash=canonical_hash({**base, "candidateId": candidate_id, "identityStatus": identity_status}),
+            createdBy=actor, createdAt=at,
+        )
+        return self.store.append_normalizer_receipt(scope, item)
+
+    def observe_match(self, scope: TenantScope, request: CreateCreatorMatchObservationRequest, *, now: datetime | None = None) -> CreatorPreparedMatchObservation:
+        at = now or datetime.now(UTC)
+        preliminary = request.identity_status is IdentityResolutionStatus.CONFLICT or bool(request.missing_fact_keys) or request.score < request.policy_threshold
+        payload = request.model_dump(mode="json", by_alias=True)
+        payload.pop("identityStatus", None)
+        item = CreatorPreparedMatchObservation(
+            tenant=self._tenant(scope), observationId=f"creator-match-{canonical_hash([*scope.key, payload])[:24]}",
+            **payload, confidence=MatchConfidence.PRELIMINARY if preliminary else MatchConfidence.CONFIRMED,
+            contentHash=canonical_hash({**payload, "confidence": "preliminary" if preliminary else "confirmed"}), createdAt=at,
+        )
+        return self.store.append_match_observation(scope, item)
+
+    def decide_match(self, scope: TenantScope, request: DecideCreatorMatchRequest, actor: str, *, now: datetime | None = None) -> CreatorPreparedMatchDecision:
+        at = now or datetime.now(UTC)
+        observation = self.store.require_match_observation(scope, request.observation_ref)
+        if request.decision == "rejected" and observation.confidence is MatchConfidence.PRELIMINARY:
+            raise CreatorPrepareBlocked("PRELIMINARY_MATCH_CANNOT_AUTO_REJECT")
+        payload = request.model_dump(mode="json", by_alias=True)
+        item = CreatorPreparedMatchDecision(
+            tenant=self._tenant(scope), decisionId=f"creator-decision-{canonical_hash([*scope.key, payload, actor])[:24]}",
+            observationRef=request.observation_ref, disposition=request.decision, reasonCode=request.reason_code,
+            decidedBy=actor, contentHash=canonical_hash({**payload, "actor": actor}), decidedAt=at,
+        )
+        return self.store.append_match_decision(scope, item)
+
+    def prepare_batch(self, scope: TenantScope, request: PrepareCreatorBatchRequest, actor: str, *, now: datetime | None = None) -> CreatorBatchPreparationRevision:
+        at = now or datetime.now(UTC)
+        counts = {item.value: 0 for item in BatchItemDisposition}
+        for item in request.items:
+            decision = self.store.require_match_decision(scope, item.match_decision_ref)
+            if decision.observation_ref != item.match_observation_ref:
+                raise CreatorPrepareBlocked("CREATOR_BATCH_MATCH_LINEAGE_DRIFTED")
+            required_disposition = {
+                BatchItemDisposition.ELIGIBLE: "accepted",
+                BatchItemDisposition.NEEDS_REVIEW: "needs_review",
+                BatchItemDisposition.EXCLUDED: "rejected",
+                BatchItemDisposition.UNKNOWN: "needs_review",
+                BatchItemDisposition.DEDUPLICATED: "accepted",
+            }[item.disposition]
+            if decision.disposition != required_disposition:
+                raise CreatorPrepareBlocked("CREATOR_BATCH_DECISION_DISPOSITION_DRIFTED")
+            counts[item.disposition.value] += 1
+        exact_refs = {
+            "brief": request.brief_ref, "eval": request.eval_ref,
+            "responsibilityPlan": request.responsibility_plan_ref,
+            "frequencyPolicy": request.frequency_policy_ref,
+            "capacitySnapshot": request.capacity_snapshot_ref,
+            "budgetSnapshot": request.budget_snapshot_ref,
+            "logic": request.logic_ref, "agentBinding": request.agent_binding_ref,
+        }
+        payload = request.model_dump(mode="json", by_alias=True)
+        item_hashes = [canonical_hash(item.model_dump(mode="json", by_alias=True)) for item in request.items]
+        content_hash = canonical_hash({**payload, "itemHashes": item_hashes})
+        existing = self.store.latest_batch_or_none_by_id(scope, request.batch_id)
+        if existing is not None:
+            if existing.lifecycle == "prepared" and existing.content_hash == content_hash:
+                return existing
+            raise CreatorPrepareConflict("CREATOR_BATCH_IDEMPOTENCY_CONFLICT")
+        item = CreatorBatchPreparationRevision(
+            tenant=self._tenant(scope), batchId=request.batch_id, revision=1,
+            version=1, lifecycle="prepared", exactRefs=exact_refs, skillRefs=request.skill_refs,
+            items=request.items,
+            itemHashes=item_hashes,
+            ledger=CreatorBatchCountLedger(input=len(request.items), **counts),
+            contentHash=content_hash, createdBy=actor, createdAt=at,
+        )
+        return self.store.append_batch(scope, item)
+
+    def freeze_batch(self, scope: TenantScope, batch_id: str, request: FreezeCreatorBatchRequest, actor: str, *, now: datetime | None = None) -> CreatorBatchPreparationRevision:
+        at = now or datetime.now(UTC)
+        current = self.store.latest_batch(scope, batch_id)
+        if current.lifecycle == "frozen" and current.prior_content_hash == request.expected_content_hash:
+            return current
+        if current.version != request.expected_version or current.content_hash != request.expected_content_hash:
+            raise CreatorPrepareConflict("CREATOR_BATCH_EXPECTED_VERSION_OR_HASH_DRIFTED")
+        expected = {key: value.model_dump(mode="json", by_alias=True) for key, value in current.exact_refs.items()}
+        actual = {key: value.model_dump(mode="json", by_alias=True) for key, value in request.exact_refs.items()}
+        if actual != expected:
+            raise CreatorPrepareBlocked("CREATOR_BATCH_EXACT_REFS_DRIFTED")
+        if current.lifecycle != "prepared":
+            raise CreatorPrepareConflict("CREATOR_BATCH_NOT_PREPARED")
+        payload = current.model_dump(mode="json", by_alias=True)
+        payload.update({"revision": current.revision + 1, "version": current.version + 1, "lifecycle": "frozen", "priorContentHash": current.content_hash, "createdBy": actor, "createdAt": at, "contentHash": canonical_hash({"prior": current.content_hash, "exactRefs": actual, "lifecycle": "frozen"})})
+        return self.store.append_batch(scope, CreatorBatchPreparationRevision.model_validate(payload))
+
+    def contribution_view(self, scope: TenantScope, *, now: datetime | None = None) -> CreatorContributionView:
+        at = now or datetime.now(UTC)
+        try:
+            latest = self.store.latest_batch_or_none(scope)
+        except CreatorPrepareBlocked as exc:
+            if str(exc) != "CREATOR_PREPARE_AUTHORITY_UNAVAILABLE":
+                raise
+            return CreatorContributionView(
+                tenant=self._tenant(scope),
+                evaluatedAt=at,
+                atomicSkillRefs=[],
+                logicRef=None,
+                latestBatch=None,
+                blockers=[
+                    "CREATOR_PREPARE_AUTHORITY_UNAVAILABLE",
+                    "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE",
+                ],
+            )
+        skill_refs = latest.skill_refs if latest else []
+        logic_ref = latest.exact_refs.get("logic") if latest else None
+        blockers = [] if latest else ["CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
+        if latest and latest.lifecycle != "frozen":
+            blockers.append("CREATOR_BATCH_NOT_FROZEN")
+        return CreatorContributionView(tenant=self._tenant(scope), evaluatedAt=at, atomicSkillRefs=skill_refs, logicRef=logic_ref, latestBatch=latest, blockers=blockers)
+
+
+__all__ = [name for name in globals() if name.startswith("Creator") or name.startswith("Prepare") or name.startswith("Freeze") or name.startswith("Normalize") or name in {"BatchItemDisposition", "MatchConfidence", "IdentityResolutionStatus", "EcommerceWorkshopCreatorPrepareService", "canonical_hash"}]
+
+FILE services/aos-api/tests/aip/test_w6_03_creator_prepare.py SHA 6f679a2cd496d88d3b267c04ee0e6d81bc45f73d5befd807070a234e57d58972
+from __future__ import annotations
+
+from datetime import UTC, datetime, timedelta
+
+import pytest
+
+from aos_api.ecommerce_workshop_creator_prepare import (
+    CREATOR_SKILL_IDS,
+    CreateCreatorMatchObservationRequest,
+    CreatorDiscoveryProfileRequest,
+    CreatorPrepareBlocked,
+    CreatorPrepareConflict,
+    DecideCreatorMatchRequest,
+    EcommerceWorkshopCreatorPrepareService,
+    FreezeCreatorBatchRequest,
+    NormalizeCreatorArtifactRequest,
+    PrepareCreatorBatchRequest,
+)
+from aos_api.tenant_scope import TenantScope
+
+NOW = datetime(2026, 8, 25, 5, 0, tzinfo=UTC)
+SCOPE = TenantScope("org-org", "dev-project")
+OTHER = TenantScope("dev-org", "dev-project")
+HASH = "a" * 64
+
+
+def ref(kind: str, identity: str, content_hash: str = HASH):
+    return {"resourceType": kind, "resourceId": identity, "revision": 1, "contentHash": content_hash}
+
+
+class MemoryStore:
+    def __init__(self) -> None:
+        self.profiles = {}
+        self.normalized = {}
+        self.observations = {}
+        self.decisions = {}
+        self.batches = {}
+
+    @staticmethod
+    def _key(scope, identity): return (*scope.key, identity)
+
+    def append_profile(self, scope, item): self.profiles[self._key(scope, item.profile_id)] = item; return item
+    def append_normalizer_receipt(self, scope, item): self.normalized[self._key(scope, item.receipt_id)] = item; return item
+    def append_match_observation(self, scope, item): self.observations[self._key(scope, item.observation_id)] = item; return item
+    def append_match_decision(self, scope, item): self.decisions[self._key(scope, item.decision_id)] = item; return item
+    def append_batch(self, scope, item): self.batches.setdefault(self._key(scope, item.batch_id), []).append(item); return item
+
+    def require_profile(self, scope, exact): return self._require(self.profiles, scope, exact)
+    def require_match_observation(self, scope, exact): return self._require(self.observations, scope, exact)
+    def require_match_decision(self, scope, exact): return self._require(self.decisions, scope, exact)
+    def _require(self, source, scope, exact):
+        item = source.get(self._key(scope, exact.resource_id))
+        if item is None or item.content_hash != exact.content_hash:
+            raise CreatorPrepareBlocked("MISSING_OR_DRIFTED")
+        return item
+
+    def latest_batch(self, scope, batch_id):
+        values = self.batches.get(self._key(scope, batch_id), [])
+        if not values: raise CreatorPrepareBlocked("CREATOR_BATCH_NOT_FOUND")
+        return values[-1]
+    def latest_batch_or_none_by_id(self, scope, batch_id):
+        values = self.batches.get(self._key(scope, batch_id), [])
+        return values[-1] if values else None
+    def latest_batch_or_none(self, scope):
+        values = [rows[-1] for key, rows in self.batches.items() if key[:2] == scope.key]
+        return values[-1] if values else None
+
+
+def profile(service):
+    return service.create_profile(
+        SCOPE,
+        CreatorDiscoveryProfileRequest(
+            profileId="creator-profile", revision=1, allowedSourceKinds=["platform-public"],
+            requiredFactKeys=["audience", "contentHistory"], outputSchemaRef=ref("SchemaRevision", "creator-output"),
+            freshnessSeconds=3600, retentionDays=30, minimumDisclosure=["publicProfile"],
+        ),
+        "user:maker", now=NOW,
+    )
+
+
+def normalize(service, profile_item, *, conflict=False, license="allowed", source_at=NOW):
+    return service.normalize(
+        SCOPE,
+        NormalizeCreatorArtifactRequest(
+            profileRef=ref("CreatorDiscoveryProfileRevision", profile_item.profile_id, profile_item.content_hash),
+            researchArtifactRef=ref("ResearchArtifactRevision", "artifact-1"), sourceKind="platform-public",
+            sourceLicense=license, sourceFreshAt=source_at, artifactSchemaRef=ref("SchemaRevision", "creator-output"),
+            artifactHash="b" * 64, originalRecordRefs=[ref("SourceRecordRevision", "source-1"), ref("SourceRecordRevision", "source-2")],
+            stableIdentityKeys=["platform:opaque-1"], conflictingIdentityKeys=["alias:conflict"] if conflict else [],
+            factKeys=["audience", "contentHistory"], piiRefs=["vault://creator/opaque-1"],
+        ),
+        "user:maker", now=NOW,
+    )
+
+
+def observation(service, candidate_id, *, conflict=False, score=0.8, threshold=0.7, missing=None):
+    return service.observe_match(
+        SCOPE,
+        CreateCreatorMatchObservationRequest(
+            candidateRef=ref("CreatorCandidateRevision", candidate_id), evidenceBundleRef=ref("EvidenceBundleRevision", "evidence-1"),
+            featureSchemaRef=ref("FeatureSchemaRevision", "features-1"), logicRef=ref("LogicPublicationRevision", "ecommerce-creator-match"),
+            policyRef=ref("CreatorMatchPolicyRevision", "policy-1"), score=score, policyThreshold=threshold,
+            featureSummaries={"audienceFit": score}, missingFactKeys=missing or [], identityStatus="conflict" if conflict else "resolved",
+        ),
+        now=NOW,
+    )
+
+
+def decision(service, observation_item, disposition="accepted"):
+    return service.decide_match(
+        SCOPE,
+        DecideCreatorMatchRequest(
+            observationRef=ref("CreatorPreparedMatchObservation", observation_item.observation_id, observation_item.content_hash),
+            decision=disposition, reasonCode="HUMAN_POLICY_REVIEWED",
+        ),
+        "user:checker", now=NOW,
+    )
+
+
+def batch_request(observation_item, decision_item, *, disposition="eligible", frequency=True, capacity=True, budget=True):
+    return PrepareCreatorBatchRequest(
+        batchId="batch-1", briefRef=ref("TaskBriefRevision", "brief-1"), evalRef=ref("EvalContractRevision", "eval-1"),
+        responsibilityPlanRef=ref("ResponsibilityPlanRevision", "plan-1"), frequencyPolicyRef=ref("FrequencyPolicyRevision", "frequency-1"),
+        capacitySnapshotRef=ref("CapacitySnapshotRevision", "capacity-1"), budgetSnapshotRef=ref("BudgetSnapshotRevision", "budget-1"),
+        skillRefs=[ref("SkillRevision", identity) for identity in CREATOR_SKILL_IDS],
+        logicRef=ref("LogicPublicationRevision", "ecommerce-creator-match"), agentBindingRef=ref("AgentBindingRevision", "shopping-advisor-creator"),
+        items=[{
+            "candidateRef": ref("CreatorCandidateRevision", "candidate-1"), "evidenceBundleRef": ref("EvidenceBundleRevision", "evidence-1"),
+            "matchObservationRef": ref("CreatorPreparedMatchObservation", observation_item.observation_id, observation_item.content_hash),
+            "matchDecisionRef": ref("CreatorPreparedMatchDecision", decision_item.decision_id, decision_item.content_hash),
+            "disposition": disposition, "reasonCodes": [] if disposition == "eligible" else ["POLICY_REVIEW_REQUIRED"],
+            "frequencyEligible": frequency, "capacityEligible": capacity, "budgetEligible": budget,
+        }],
+    )
+
+
+def test_discovery_normalizer_preserves_originals_and_fails_license_freshness_closed():
+    service = EcommerceWorkshopCreatorPrepareService(MemoryStore())
+    profile_item = profile(service)
+    receipt = normalize(service, profile_item, conflict=True)
+    assert receipt.identity_status.value == "conflict"
+    assert len(receipt.original_record_refs) == 2
+    assert receipt.pii_refs == ["vault://creator/opaque-1"]
+    with pytest.raises(CreatorPrepareBlocked, match="LICENSE"):
+        normalize(service, profile_item, license="unknown")
+    with pytest.raises(CreatorPrepareBlocked, match="STALE"):
+        normalize(service, profile_item, source_at=NOW - timedelta(hours=2))
+
+
+def test_match_preliminary_cannot_reject_and_observation_decision_remain_separate():
+    service = EcommerceWorkshopCreatorPrepareService(MemoryStore())
+    observed = observation(service, "candidate-1", conflict=True, score=0.2)
+    assert observed.confidence.value == "preliminary"
+    with pytest.raises(CreatorPrepareBlocked, match="PRELIMINARY"):
+        decision(service, observed, "rejected")
+    decided = decision(service, observed, "needs_review")
+    assert decided.observation_ref.resource_id == observed.observation_id
+    assert "contract" not in decided.model_dump_json().lower()
+
+
+def test_batch_prepare_freeze_is_conserved_idempotent_and_has_zero_effects():
+    store = MemoryStore(); service = EcommerceWorkshopCreatorPrepareService(store)
+    observed = observation(service, "candidate-1")
+    decided = decision(service, observed)
+    request = batch_request(observed, decided)
+    prepared = service.prepare_batch(SCOPE, request, "user:maker", now=NOW)
+    replay = service.prepare_batch(SCOPE, request, "user:maker", now=NOW)
+    assert replay.content_hash == prepared.content_hash
+    assert prepared.ledger.input == prepared.ledger.eligible == 1
+    assert len(prepared.items) == 1 and prepared.items[0].candidate_ref.resource_id == "candidate-1"
+    assert prepared.external_effect_count == prepared.action_proposal_count == prepared.execution_lease_count == 0
+    frozen = service.freeze_batch(
+        SCOPE, prepared.batch_id,
+        FreezeCreatorBatchRequest(expectedVersion=1, expectedContentHash=prepared.content_hash, exactRefs=prepared.exact_refs),
+        "user:checker", now=NOW,
+    )
+    assert frozen.lifecycle == "frozen" and frozen.revision == 2 and frozen.version == 2
+    assert service.freeze_batch(SCOPE, prepared.batch_id, FreezeCreatorBatchRequest(expectedVersion=1, expectedContentHash=prepared.content_hash, exactRefs=prepared.exact_refs), "user:checker", now=NOW) == frozen
+    with pytest.raises(CreatorPrepareConflict, match="IDEMPOTENCY"):
+        service.prepare_batch(SCOPE, request.model_copy(update={"budget_snapshot_ref": request.budget_snapshot_ref.model_copy(update={"content_hash": "c" * 64})}), "user:maker", now=NOW)
+
+
+def test_frequency_capacity_budget_and_tenant_are_fail_closed():
+    service = EcommerceWorkshopCreatorPrepareService(MemoryStore())
+    observed = observation(service, "candidate-1"); decided = decision(service, observed)
+    with pytest.raises(ValueError, match="frequency/capacity/budget"):
+        batch_request(observed, decided, frequency=False)
+    assert service.contribution_view(OTHER, now=NOW).blockers == ["CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
+    view = service.contribution_view(SCOPE, now=NOW)
+    assert view.primary_colleague == "导购顾问"
+    assert view.external_effects_allowed is False
+    assert "START" not in " ".join(view.allowed_commands)
+
+
+def test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result():
+    class UnavailableStore:
+        def latest_batch_or_none(self, scope):
+            assert scope == SCOPE
+            raise CreatorPrepareBlocked("CREATOR_PREPARE_AUTHORITY_UNAVAILABLE")
+
+    view = EcommerceWorkshopCreatorPrepareService(UnavailableStore()).contribution_view(SCOPE, now=NOW)
+    empty = EcommerceWorkshopCreatorPrepareService(MemoryStore()).contribution_view(SCOPE, now=NOW)
+    assert view.tenant.org_id == SCOPE.org_id
+    assert view.tenant.project_id == SCOPE.project_id
+    assert view.evaluated_at == NOW
+    assert view.atomic_skill_refs == [] and view.logic_ref is None and view.latest_batch is None
+    assert view.blockers == ["CREATOR_PREPARE_AUTHORITY_UNAVAILABLE", "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
+    assert empty.blockers == ["CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
+    assert view.external_effects_allowed is False
+    assert view.model_dump(mode="json", by_alias=True)["latestBatch"] is None
+
+
+@pytest.mark.parametrize("code", ["CREATOR_PREPARE_TENANT_DRIFT", "CREATOR_BATCH_NOT_FOUND"])
+def test_unrelated_contribution_errors_are_not_hidden_as_unavailable(code):
+    class FailingStore:
+        def latest_batch_or_none(self, scope):
+            assert scope == SCOPE
+            raise CreatorPrepareBlocked(code)
+
+    with pytest.raises(CreatorPrepareBlocked, match=code):
+        EcommerceWorkshopCreatorPrepareService(FailingStore()).contribution_view(SCOPE, now=NOW)
+
+
+def test_batch_prepare_requires_exact_decision_lineage_and_disposition():
+    store = MemoryStore(); service = EcommerceWorkshopCreatorPrepareService(store)
+    observed = observation(service, "candidate-1")
+    accepted = decision(service, observed, "accepted")
+    with pytest.raises(CreatorPrepareBlocked, match="DISPOSITION_DRIFTED"):
+        service.prepare_batch(SCOPE, batch_request(observed, accepted, disposition="needs_review"), "user:maker", now=NOW)
+
+    drifted = accepted.model_copy(update={"observation_ref": accepted.observation_ref.model_copy(update={"resource_id": "other-observation"})})
+    store.decisions[store._key(SCOPE, accepted.decision_id)] = drifted
+    with pytest.raises(CreatorPrepareBlocked, match="LINEAGE_DRIFTED"):
+        service.prepare_batch(SCOPE, batch_request(observed, drifted), "user:maker", now=NOW)
+
+
+@pytest.mark.parametrize(
+    ("decision_disposition", "batch_disposition", "ledger_field"),
+    [("needs_review", "unknown", "unknown"), ("accepted", "deduplicated", "deduplicated")],
+)
+def test_unknown_and_deduplicated_items_remain_conserved(decision_disposition, batch_disposition, ledger_field):
+    service = EcommerceWorkshopCreatorPrepareService(MemoryStore())
+    observed = observation(service, "candidate-1")
+    decided = decision(service, observed, decision_disposition)
+    prepared = service.prepare_batch(SCOPE, batch_request(observed, decided, disposition=batch_disposition), "user:maker", now=NOW)
+    assert prepared.ledger.input == 1
+    assert getattr(prepared.ledger, ledger_field) == 1
+
+UNCHANGED STORE SHA 1d0b0e4748d2b406320e7f745af1f8e6c1bd20600676d75b28893a3751234c07
+def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
+        self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
+def _assert_tenant(scope: TenantScope, item: Any) -> None:
+        if (item.tenant.org_id, item.tenant.project_id) != scope.key:
+            raise CreatorPrepareBlocked("CREATOR_PREPARE_TENANT_DRIFT")
+def latest_batch_or_none(self, scope: TenantScope) -> CreatorBatchPreparationRevision | None:
+        try:
+            with self._read_connect(scope) as conn:
+                row = conn.execute(
+                    "SELECT authority_data FROM ecommerce_creator_batch_preparation_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,revision DESC LIMIT 1",
+                    scope.key,
+                ).fetchone()
+        except psycopg.Error as exc:
+            raise CreatorPrepareBlocked("CREATOR_PREPARE_AUTHORITY_UNAVAILABLE") from exc
+        if row is None:
+            return None
+        item = CreatorBatchPreparationRevision.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+ACTUAL red.log FULL LOG SHA f22456aae0a7707a88e14538da15c2c59c136f7083407a89007acc3d9286d077; exact status/diagnostic line extract
+E           pydantic_core._pydantic_core.ValidationError: 3 validation errors for CreatorContributionView
+E             Field required [type=missing, input_value={'tenant': TenantContext(...ARATION_NOT_AVAILABLE']}, input_type=dict]
+E             Field required [type=missing, input_value={'tenant': TenantContext(...ARATION_NOT_AVAILABLE']}, input_type=dict]
+E             Field required [type=missing, input_value={'tenant': TenantContext(...ARATION_NOT_AVAILABLE']}, input_type=dict]
+FAILED services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result
+1 failed, 9 passed, 7 warnings in 0.39s
+ACTUAL green-adjacent.log FULL LOG SHA 53303b5305afbf5c016c5846943704ba1fcc3a39c657c96a63e21e621964f282; exact status/diagnostic line extract
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_discovery_normalizer_preserves_originals_and_fails_license_freshness_closed PASSED [  1%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_match_preliminary_cannot_reject_and_observation_decision_remain_separate PASSED [  3%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_batch_prepare_freeze_is_conserved_idempotent_and_has_zero_effects PASSED [  5%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_frequency_capacity_budget_and_tenant_are_fail_closed PASSED [  7%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result PASSED [  9%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_PREPARE_TENANT_DRIFT] PASSED [ 11%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_BATCH_NOT_FOUND] PASSED [ 12%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_batch_prepare_requires_exact_decision_lineage_and_disposition PASSED [ 14%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unknown_and_deduplicated_items_remain_conserved[needs_review-unknown-unknown] PASSED [ 16%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unknown_and_deduplicated_items_remain_conserved[accepted-deduplicated-deduplicated] PASSED [ 18%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare_store.py::test_append_is_tenant_scoped_idempotent_and_conflict_closed PASSED [ 20%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare_store.py::test_contribution_read_reports_authority_unavailable_without_fallback PASSED [ 22%]
+======================== 54 passed, 7 warnings in 4.13s ========================
+EXACT CURRENT DIFF
+diff --git a/services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py b/services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py
+index 37ee55dcd..640ef4b51 100644
+--- a/services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py
++++ b/services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py
+@@ -484,6 +484,9 @@ class EcommerceWorkshopCreatorPrepareService:
+             return CreatorContributionView(
+                 tenant=self._tenant(scope),
+                 evaluatedAt=at,
++                atomicSkillRefs=[],
++                logicRef=None,
++                latestBatch=None,
+                 blockers=[
+                     "CREATOR_PREPARE_AUTHORITY_UNAVAILABLE",
+                     "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE",
+diff --git a/services/aos-api/tests/aip/test_w6_03_creator_prepare.py b/services/aos-api/tests/aip/test_w6_03_creator_prepare.py
+index edd49d054..868e41da3 100644
+--- a/services/aos-api/tests/aip/test_w6_03_creator_prepare.py
++++ b/services/aos-api/tests/aip/test_w6_03_creator_prepare.py
+@@ -192,6 +192,35 @@ def test_frequency_capacity_budget_and_tenant_are_fail_closed():
+     assert "START" not in " ".join(view.allowed_commands)
+ 
+ 
++def test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result():
++    class UnavailableStore:
++        def latest_batch_or_none(self, scope):
++            assert scope == SCOPE
++            raise CreatorPrepareBlocked("CREATOR_PREPARE_AUTHORITY_UNAVAILABLE")
++
++    view = EcommerceWorkshopCreatorPrepareService(UnavailableStore()).contribution_view(SCOPE, now=NOW)
++    empty = EcommerceWorkshopCreatorPrepareService(MemoryStore()).contribution_view(SCOPE, now=NOW)
++    assert view.tenant.org_id == SCOPE.org_id
++    assert view.tenant.project_id == SCOPE.project_id
++    assert view.evaluated_at == NOW
++    assert view.atomic_skill_refs == [] and view.logic_ref is None and view.latest_batch is None
++    assert view.blockers == ["CREATOR_PREPARE_AUTHORITY_UNAVAILABLE", "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
++    assert empty.blockers == ["CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
++    assert view.external_effects_allowed is False
++    assert view.model_dump(mode="json", by_alias=True)["latestBatch"] is None
++
++
++@pytest.mark.parametrize("code", ["CREATOR_PREPARE_TENANT_DRIFT", "CREATOR_BATCH_NOT_FOUND"])
++def test_unrelated_contribution_errors_are_not_hidden_as_unavailable(code):
++    class FailingStore:
++        def latest_batch_or_none(self, scope):
++            assert scope == SCOPE
++            raise CreatorPrepareBlocked(code)
++
++    with pytest.raises(CreatorPrepareBlocked, match=code):
++        EcommerceWorkshopCreatorPrepareService(FailingStore()).contribution_view(SCOPE, now=NOW)
++
++
+ def test_batch_prepare_requires_exact_decision_lineage_and_disposition():
+     store = MemoryStore(); service = EcommerceWorkshopCreatorPrepareService(store)
+     observed = observation(service, "candidate-1")

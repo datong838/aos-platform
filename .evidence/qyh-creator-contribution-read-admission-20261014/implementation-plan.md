@@ -1,0 +1,19 @@
+# 达人贡献GET传递审计与接线方案（待独立方案门）
+
+Rules：用户方案先行、最小修改、保护dirty/历史数据；231唯一m1写者、八步Loop、当前真实租户org-org/dev-project、逐GET传递审计、Prime精确冻结合法消费。完整Goal与每日最新原卷PG→API→Web、aos-2不重启、唯一真人审批均持续。
+
+已实际登记Task qyh-creator-contribution-read-admission-20261014/base AOS-002028/owner codex-01a13484-f019-7d82-94ce-812396db9124/Lease08:00UTC。原维护Task已准确handoff至qyh-restoration-readonly-continuation-20261014，同owner、scope不重叠；原Goal/提醒未另建或改私有存储。项目/Prime七强CURRENT，个人note eventualSTALE未写。
+
+本波第1/8已开始源码审计，未改产品：router /views/creator-growth/contributions → get_ecommerce_workshop_creator_prepare默认Service(Store()) → contribution_view → latest_batch_or_none → _read_connect(scope) → 参数化tenant SELECT ecommerce_creator_batch_preparation_revision ORDER BY created_at/revision LIMIT1。Store默认readfactory为connect_read_only，不调用_append/append_batch/next_batch_revision/freeze/start/SourceConnector；模型解析后_assert_tenant拒绝漂移。service缺表错误保留CREATOR_PREPARE_AUTHORITY_UNAVAILABLE和BATCH_NOT_AVAILABLE；真实空表latestBatch=None，不生成demo达人或Producer成果。
+
+仍须完整CreatorContributionView/CreatorBatchPreparationRevision及其嵌套DTO、_tenant和只读DB/RLS的逐层核对，检查是否意外展示私有联系方式、未获准refs或将frozen当可运行。不能因GET/SELECT/actoradmin推断字段权限合格。未完成这些审计不得接线。现有共享Service有写方法，但此GET只能走已核对的read路径。
+
+后续实际嵌套核对：ContributionView仅BatchPreparationRevision/CreatorExactRef/同事名/阻断码等既存DTO；Batch嵌套PrepareCreatorBatchItem仅四类exact ref、枚举disposition、reasonCodes和三个eligibility布尔，Ledger守恒验证。没有CandidateRevision.pii_refs、手机号、联系方式、原profile/evidence内容或Bearer字段；不会解引用这些refs。AipContractModel extra=forbid，未知附加字段解析拒绝。createdBy/opaque IDs是既存租户内审计引用，不冒充真人审批。默认allowedCommands两项是历史内建命令目录，不是本次授予准备/freeze权；外部效果false且Batch效果/Proposal/Lease计数均限0。前端贡献结果用于auditCodes，未依据allowedCommands放开新写；所有producer POST仍legacy Catalog。最终正常/空/不可用读取状态需真native确认，不能从模型默认或截图推演运行可用。完整DTO与调用源将冻结给独立Prime判断是否足够，不凭此自行放过方案门。
+
+进一步直接复现发现known authority-unavailable分支缺三个required字段，会ValidationError而不是阻断DTO（unavailable-red-reproduction.json，未开DB）。必须先修，不能仅接GET。新增同owner不重叠前置Task qyh-creator-contribution-unavailable-dto-20261014持有creator_prepare.py与test_w6_03_creator_prepare.py及其evidence；原本Task继续仅router/read_http。先联合方案冻结审阅，前置RED/最小三字段/相邻，再原GET RED/接线，代码/真native/browser联合验证，各scope分别准确Delivery、一次Authority/Prime收口。新服务文件不是隐式越过原Task的扩大范围。
+
+若传递链安全，最小修改仅services/aos-api/aos_api/routers/ecommerce_workshop.py该函数CatalogDependency→ReadCatalogDependency；services/aos-api/tests/test_ecommerce_workshop_read_http.py白名单增一GET/先禁入后reader/受信tenant/非法query/未审计GET仍legacy/全部POST不得ReadCatalog。不修改Store/DTO或审批/预算/实际运行边界；若发现需要下层修复，先补精确文件方案和受支持Scope，不临时扩写。
+
+计划复审后RED、最小实现与read_http/read_catalog/creator_prepare/creator_prepare_store相邻；正常原角色READ ONLY native及原已有9244 ownedtarget菜单实点、真DTO/错误/空态/tenant核对，再与原稿workshop-creator-outreach.html按同窗口主题页签对照；空数据不伪造147人，不点邀约/批次/freeze/start。原OIDC短时有效，最近交付后的附加GET明确token过期；此为已知只读401，不是未知业务结果，后续按既有授权正常登录及me回读，绝不缓存/保存/输出token或凭据、不会将登录当预算同意。
+
+独立代码/真实现场复核、精确m1提交/准确slice Delivery、受支持Authority/Prime同步、立即下一登记GET。当前原库161/650只读、Host/worker/Provider OFF，原12Run/disabledSchedule/商城源/外部发布不动。最近已交付content-inputs GET57商品62库存0计划仅持久化读取；原SourceReadiness blocked与预算C/真正用户最后exact批准/部署、自然首链、安装全生命周期/八真实场景/完整视觉/连续观察发布全部未完成。此方案不缩为parser、页面或测试目标。

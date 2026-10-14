@@ -1,0 +1,919 @@
+CURRENT ROOT GET QUALITY WITH WHOLE PAIRED COVERAGE. Exact getterdiff1annotation/read_http testscope only; failurefix service+test previously fullsource reviewed PASScode3/legallyconsumed and current2SHA unchanged as recorded; full joint4source evidence coverage uses those preserved full reviews. This request reviews newroutingcode and tests and their full readonly call chain, plus verifies unchangedprereq quality. Historical GETRED3fail26pass, currentjoint60PASS explicitnodes. OriginalAPI87013 stillold110 and nativeaftercandidatepending; no Delivery/originalDB/budget/producer/wholeGoal completion yet.
+FILE .evidence/qyh-creator-contribution-read-admission-20261014/implementation-plan.md SHA 1e53b2ff5c89ea160175776269825f107f4f3b30a589c96f414ecea897df0b04
+# 达人贡献GET传递审计与接线方案（待独立方案门）
+
+Rules：用户方案先行、最小修改、保护dirty/历史数据；231唯一m1写者、八步Loop、当前真实租户org-org/dev-project、逐GET传递审计、Prime精确冻结合法消费。完整Goal与每日最新原卷PG→API→Web、aos-2不重启、唯一真人审批均持续。
+
+已实际登记Task qyh-creator-contribution-read-admission-20261014/base AOS-002028/owner codex-01a13484-f019-7d82-94ce-812396db9124/Lease08:00UTC。原维护Task已准确handoff至qyh-restoration-readonly-continuation-20261014，同owner、scope不重叠；原Goal/提醒未另建或改私有存储。项目/Prime七强CURRENT，个人note eventualSTALE未写。
+
+本波第1/8已开始源码审计，未改产品：router /views/creator-growth/contributions → get_ecommerce_workshop_creator_prepare默认Service(Store()) → contribution_view → latest_batch_or_none → _read_connect(scope) → 参数化tenant SELECT ecommerce_creator_batch_preparation_revision ORDER BY created_at/revision LIMIT1。Store默认readfactory为connect_read_only，不调用_append/append_batch/next_batch_revision/freeze/start/SourceConnector；模型解析后_assert_tenant拒绝漂移。service缺表错误保留CREATOR_PREPARE_AUTHORITY_UNAVAILABLE和BATCH_NOT_AVAILABLE；真实空表latestBatch=None，不生成demo达人或Producer成果。
+
+仍须完整CreatorContributionView/CreatorBatchPreparationRevision及其嵌套DTO、_tenant和只读DB/RLS的逐层核对，检查是否意外展示私有联系方式、未获准refs或将frozen当可运行。不能因GET/SELECT/actoradmin推断字段权限合格。未完成这些审计不得接线。现有共享Service有写方法，但此GET只能走已核对的read路径。
+
+后续实际嵌套核对：ContributionView仅BatchPreparationRevision/CreatorExactRef/同事名/阻断码等既存DTO；Batch嵌套PrepareCreatorBatchItem仅四类exact ref、枚举disposition、reasonCodes和三个eligibility布尔，Ledger守恒验证。没有CandidateRevision.pii_refs、手机号、联系方式、原profile/evidence内容或Bearer字段；不会解引用这些refs。AipContractModel extra=forbid，未知附加字段解析拒绝。createdBy/opaque IDs是既存租户内审计引用，不冒充真人审批。默认allowedCommands两项是历史内建命令目录，不是本次授予准备/freeze权；外部效果false且Batch效果/Proposal/Lease计数均限0。前端贡献结果用于auditCodes，未依据allowedCommands放开新写；所有producer POST仍legacy Catalog。最终正常/空/不可用读取状态需真native确认，不能从模型默认或截图推演运行可用。完整DTO与调用源将冻结给独立Prime判断是否足够，不凭此自行放过方案门。
+
+进一步直接复现发现known authority-unavailable分支缺三个required字段，会ValidationError而不是阻断DTO（unavailable-red-reproduction.json，未开DB）。必须先修，不能仅接GET。新增同owner不重叠前置Task qyh-creator-contribution-unavailable-dto-20261014持有creator_prepare.py与test_w6_03_creator_prepare.py及其evidence；原本Task继续仅router/read_http。先联合方案冻结审阅，前置RED/最小三字段/相邻，再原GET RED/接线，代码/真native/browser联合验证，各scope分别准确Delivery、一次Authority/Prime收口。新服务文件不是隐式越过原Task的扩大范围。
+
+若传递链安全，最小修改仅services/aos-api/aos_api/routers/ecommerce_workshop.py该函数CatalogDependency→ReadCatalogDependency；services/aos-api/tests/test_ecommerce_workshop_read_http.py白名单增一GET/先禁入后reader/受信tenant/非法query/未审计GET仍legacy/全部POST不得ReadCatalog。不修改Store/DTO或审批/预算/实际运行边界；若发现需要下层修复，先补精确文件方案和受支持Scope，不临时扩写。
+
+计划复审后RED、最小实现与read_http/read_catalog/creator_prepare/creator_prepare_store相邻；正常原角色READ ONLY native及原已有9244 ownedtarget菜单实点、真DTO/错误/空态/tenant核对，再与原稿workshop-creator-outreach.html按同窗口主题页签对照；空数据不伪造147人，不点邀约/批次/freeze/start。原OIDC短时有效，最近交付后的附加GET明确token过期；此为已知只读401，不是未知业务结果，后续按既有授权正常登录及me回读，绝不缓存/保存/输出token或凭据、不会将登录当预算同意。
+
+独立代码/真实现场复核、精确m1提交/准确slice Delivery、受支持Authority/Prime同步、立即下一登记GET。当前原库161/650只读、Host/worker/Provider OFF，原12Run/disabledSchedule/商城源/外部发布不动。最近已交付content-inputs GET57商品62库存0计划仅持久化读取；原SourceReadiness blocked与预算C/真正用户最后exact批准/部署、自然首链、安装全生命周期/八真实场景/完整视觉/连续观察发布全部未完成。此方案不缩为parser、页面或测试目标。
+
+FILE .evidence/qyh-creator-contribution-read-admission-20261014/plan-review-consumption-r5.json SHA 1c5acbedb05e8e657a343ff52aa7d67196790242aa25a5b0b20d71b00cc17da0
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-contribution-read-admission-20261014-plan-r5",
+  "task_id": "qyh-creator-contribution-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "78bcff996ea87da6f7609669c9edc255234d7344",
+    "authority_revision": "AOS-002028",
+    "files": {
+      ".evidence/qyh-creator-contribution-read-admission-20261014/plan-review-package-r5.txt": "ba6594baa4f0c9f9006b657b3d413a0641d5f3357c866b4fcb58d2fd2960c365"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "2e147bbe5bba26e5e2b11aabdc7f6e08a5f4288d9e1e45caf18c4937f978d1e7",
+  "transport_sha256": "b1487ba444c2848b5330ca525cd652c85a22d3153c69154fe2f4bbd0720eb0c7"
+}
+FILE services/aos-api/tests/test_ecommerce_workshop_read_http.py SHA a75585bac5c1b4bd1895340e3567de62089da350ecae3216e54fe7e52a4bfef3
+"""HTTP scope fence: only explicitly audited GETs use installed read admission."""
+from __future__ import annotations
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from aos_api.asset_registry.errors import AssetNotFoundError
+from aos_api.auth import Principal, require_principal
+from aos_api.errors import register_exception_handlers
+from aos_api.routers import ecommerce_workshop as routes
+
+ROOTS = {
+    'task-cockpit', 'operations', 'content-campaign', 'creator-growth',
+    'media-studio', 'analyst', 'price-governance', 'customer',
+}
+
+
+class RejectingCatalog:
+    def __init__(self):
+        self.calls = []
+
+    def get_readiness(self, **scope):
+        self.calls.append(scope)
+        raise AssetNotFoundError('not installed in current scoped catalog')
+
+
+def client_with_catalogs():
+    app = FastAPI()
+    register_exception_handlers(app)
+    app.include_router(routes.router)
+    legacy, reader = RejectingCatalog(), RejectingCatalog()
+    app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+    app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+    app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='scope-test', org_id='org-org', project_id='dev-project',
+        roles=['admin'], markings=[],
+    )
+    return TestClient(app), legacy, reader
+
+
+@pytest.mark.parametrize('module', sorted(ROOTS))
+def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+    client, legacy, reader = client_with_catalogs()
+    response = client.get(f'/v1/ecommerce-workshop/views/{module}')
+    assert response.status_code == 404
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+    assert reader.calls[0] == dict(module_id=f'ecommerce.{module}',
+        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+
+
+@pytest.mark.parametrize('path', [
+    '/views/customer/contributions', '/views/creator-growth/lifecycle',
+    '/modules/ecommerce.operations/readiness',
+])
+def test_unreviewed_get_still_uses_legacy_admission(path):
+    client, legacy, reader = client_with_catalogs()
+    response = client.get('/v1/ecommerce-workshop' + path)
+    assert response.status_code == 404
+    assert legacy.calls
+    assert not reader.calls
+
+
+def test_read_dependency_only_reaches_explicit_audited_get_routes():
+    actual = set()
+    for route in routes.router.routes:
+        uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                        for d in route.dependant.dependencies)
+        if uses_read:
+            assert route.methods == {'GET'}
+            actual.add(route.path)
+    assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+        '/v1/ecommerce-workshop/source-readiness',
+        '/v1/ecommerce-workshop/views/operations/cases',
+        '/v1/ecommerce-workshop/commands/operations/readiness',
+        '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+        '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+        '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+        '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+        '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+        '/v1/ecommerce-workshop/views/creator-growth/contributions',
+    }
+
+
+def test_unknown_query_rejected_before_catalog_call():
+    client, legacy, reader = client_with_catalogs()
+    assert client.get('/v1/ecommerce-workshop/views/operations?orgId=dev-org').status_code == 400
+    assert not legacy.calls and not reader.calls
+
+
+class ReadReached(RuntimeError):
+    pass
+
+
+def test_creator_contribution_read_denied_before_service_access():
+    client, legacy, reader = client_with_catalogs()
+    class Service:
+        def contribution_view(self, scope):
+            pytest.fail('denied read must not access creator preparation')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_prepare] = lambda: Service()
+    response = client.get('/v1/ecommerce-workshop/views/creator-growth/contributions')
+    assert response.status_code == 404
+    assert not legacy.calls
+    assert reader.calls == [dict(module_id='ecommerce.creator-growth',
+        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])]
+
+
+def test_admitted_creator_contribution_receives_authenticated_scope():
+    client, legacy, reader = client_with_catalogs()
+    def admit(**scope):
+        reader.calls.append(scope)
+    reader.get_readiness = admit
+    class Service:
+        def contribution_view(self, scope):
+            assert scope.key == ('org-org', 'dev-project')
+            raise ReadReached('creator-contribution')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_prepare] = lambda: Service()
+    with pytest.raises(ReadReached, match='creator-contribution'):
+        client.get('/v1/ecommerce-workshop/views/creator-growth/contributions')
+    assert not legacy.calls and len(reader.calls) == 1
+
+
+def test_creator_contribution_query_scope_override_is_rejected():
+    client, legacy, reader = client_with_catalogs()
+    response = client.get('/v1/ecommerce-workshop/views/creator-growth/contributions?projectId=other')
+    assert response.status_code == 400
+    assert not legacy.calls and not reader.calls
+
+
+def test_real_inputs_read_denied_before_business_data_access():
+    client, legacy, reader = client_with_catalogs()
+    def forbidden_inputs():
+        class Inputs:
+            def read(self, **scope):
+                pytest.fail('denied installed read must not read business inputs')
+        return Inputs()
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_content_campaign_inputs] = forbidden_inputs
+    response = client.get('/v1/ecommerce-workshop/views/content-campaign/real-inputs')
+    assert response.status_code == 404
+    assert not legacy.calls
+    assert reader.calls == [dict(module_id='ecommerce.content-campaign',
+        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])]
+
+
+def test_admitted_real_inputs_receives_only_authenticated_tenant():
+    client, legacy, reader = client_with_catalogs()
+    def admit(**scope):
+        reader.calls.append(scope)
+    reader.get_readiness = admit
+    class Inputs:
+        def read(self, **scope):
+            assert scope == dict(org_id='org-org', project_id='dev-project')
+            raise ReadReached('real-inputs')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_content_campaign_inputs] = lambda: Inputs()
+    with pytest.raises(ReadReached, match='real-inputs'):
+        client.get('/v1/ecommerce-workshop/views/content-campaign/real-inputs')
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+
+
+def test_real_inputs_query_cannot_override_authenticated_scope():
+    client, legacy, reader = client_with_catalogs()
+    response = client.get('/v1/ecommerce-workshop/views/content-campaign/real-inputs?orgId=dev-org')
+    assert response.status_code == 400
+    assert not legacy.calls and not reader.calls
+
+
+@pytest.mark.parametrize('module', sorted(ROOTS))
+def test_admitted_root_reaches_reader_with_authenticated_tenant(module):
+    client, legacy, reader = client_with_catalogs()
+    def admit(**scope):
+        reader.calls.append(scope)
+    reader.get_readiness = admit
+    factory = getattr(routes, 'get_ecommerce_workshop_' + module.replace('-', '_'))
+    class ProbeReader:
+        def read(self, **scope):
+            assert scope['org_id'] == 'org-org'
+            assert scope['project_id'] == 'dev-project'
+            raise ReadReached(module)
+        read_core = read
+    client.app.dependency_overrides[factory] = lambda: ProbeReader()
+    with pytest.raises(ReadReached, match=module):
+        client.get('/v1/ecommerce-workshop/views/' + module)
+    assert not legacy.calls
+    assert len(reader.calls) == 1
+
+
+def test_legacy_success_does_not_build_installed_configuration(monkeypatch):
+    from aos_api import ecommerce_installed_readonly_catalog as installed
+    sentinel = object()
+    class Legacy:
+        def get_readiness(self, **scope):
+            return sentinel
+    def forbidden():
+        pytest.fail('successful legacy must not inspect selected configuration')
+    monkeypatch.setattr(installed, 'build_installed_readonly_catalog', forbidden)
+    catalog = routes.get_ecommerce_workshop_read_catalog(Legacy())
+    assert catalog.get_readiness(module_id='ecommerce.operations') is sentinel
+
+
+def test_installed_factory_is_deferred_until_legacy_not_found(monkeypatch):
+    from aos_api import ecommerce_installed_readonly_catalog as installed
+    calls = []
+    def selected():
+        calls.append('selected')
+        raise ValueError('configuration sentinel')
+    monkeypatch.setattr(installed, 'build_installed_readonly_catalog', selected)
+    catalog = routes.get_ecommerce_workshop_read_catalog(RejectingCatalog())
+    assert not calls
+    with pytest.raises(ValueError, match='configuration sentinel'):
+        catalog.get_readiness(module_id='ecommerce.operations')
+    assert calls == ['selected']
+
+FILE services/aos-api/aos_api/ecommerce_workshop_read_catalog.py SHA 041b25f128c8c458890a54a7631751038d8bb9ee238134c35b590d5a59b9d77d
+"""GET admission candidate over a current, signed, explicitly selected installation.
+
+This adapter does not activate HTTP routes or grant runtime readiness. Legacy
+admission is preserved; selected installed assets require actual exact scope grants.
+"""
+from __future__ import annotations
+
+from aos_api.asset_registry.errors import AssetNotFoundError
+from aos_api.ecommerce_workshop_contracts import WorkshopDependencyType
+
+
+class EcommerceWorkshopReadCatalog:
+    def __init__(self, *, legacy, installed=None, installed_factory=None) -> None:
+        self._legacy = legacy
+        self._installed = installed
+        self._installed_factory = installed_factory
+
+    def get_readiness(self, **scope):
+        try:
+            return self._legacy.get_readiness(**scope)
+        except AssetNotFoundError:
+            # Integrity, signature and availability errors never permit fallback.
+            pass
+        return self.get_installed_readiness(**scope)
+
+    def get_installed_readiness(self, **scope):
+        """Check only the selected installation with the existing exact read gate."""
+        installed = (
+            self._installed_factory() if self._installed_factory is not None
+            else self._installed
+        )
+        result = installed.get_readiness(**scope)
+        item = result.item
+        installation = item.installation_ref
+        required = set(item.permissions.data_scopes)
+        expected_revision = (
+            f'installation:{installation.revision}/lock:{installation.lock_revision}'
+        )
+        granted = {
+            ref.resource_id for ref in item.dependency_refs
+            if ref.resource_type == 'DataScopeGrant'
+            and ref.revision == expected_revision
+            and ref.content_hash == installation.lock_hash
+            and ref.authority == 'postgres:bundle_composition_lock'
+        }
+        permitted_gap_types = {
+            WorkshopDependencyType.OBJECT,
+            WorkshopDependencyType.CAPABILITY,
+            WorkshopDependencyType.AIP_FEATURE,
+        }
+        disallowed = any(
+            blocker.dependency_type not in permitted_gap_types
+            and not (
+                blocker.dependency_type == WorkshopDependencyType.INSTALLATION
+                and blocker.reason_code == 'INSTALLED_ASSET_READONLY'
+                and blocker.dependency_id == installation.installation_id
+            )
+            for blocker in item.blockers
+        )
+        if 'ecommerce.workshop.read' not in required or not required <= granted or disallowed:
+            raise AssetNotFoundError('Workshop module is not installed for scoped reading')
+        # Keep the original disabled state and every runtime/authority gap intact.
+        return result
+
+FILE services/aos-api/aos_api/ecommerce_workshop_creator_prepare_store.py SHA 1d0b0e4748d2b406320e7f745af1f8e6c1bd20600676d75b28893a3751234c07
+"""Tenant-scoped append-only persistence for W6-03 creator preparation."""
+from __future__ import annotations
+
+import json
+from collections.abc import Callable
+from typing import Any
+
+import psycopg
+
+from aos_api.db import connect
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorExactRef
+from aos_api.ecommerce_workshop_creator_growth_store import authority_receipt_id
+from aos_api.ecommerce_workshop_creator_prepare import (
+    CreatorBatchPreparationRevision,
+    CreatorDiscoveryProfileRevision,
+    CreatorNormalizerReceipt,
+    CreatorPreparedMatchDecision,
+    CreatorPreparedMatchObservation,
+    CreatorPrepareBlocked,
+)
+from aos_api.tenant_scope import TenantScope
+
+
+class EcommerceWorkshopCreatorPrepareStore:
+    def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
+        self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
+
+    @staticmethod
+    def _json(value: Any) -> str:
+        return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+
+    @staticmethod
+    def _assert_tenant(scope: TenantScope, item: Any) -> None:
+        if (item.tenant.org_id, item.tenant.project_id) != scope.key:
+            raise CreatorPrepareBlocked("CREATOR_PREPARE_TENANT_DRIFT")
+
+    def _append(self, scope: TenantScope, table: str, identity_column: str, identity: str, revision: int, content_hash: str, item: Any, created_at: Any, *, receipt_id: str | None = None) -> Any:
+        self._assert_tenant(scope, item)
+        payload = item.model_dump(mode="json", by_alias=True)
+        receipt_column = ",authority_receipt_id" if receipt_id is not None else ""
+        receipt_value = ",%s" if receipt_id is not None else ""
+        params = (*scope.key, identity, revision, content_hash, self._json(payload), created_at)
+        if receipt_id is not None:
+            params = (*params, receipt_id)
+        with self._connect(scope) as conn:
+            conn.execute(
+                f"INSERT INTO {table}(org_id,project_id,{identity_column},revision,content_hash,authority_data,created_at{receipt_column}) "
+                f"VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s{receipt_value}) ON CONFLICT DO NOTHING",
+                params,
+            )
+            row = conn.execute(
+                f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",
+                (*scope.key, identity, revision),
+            ).fetchone()
+            if row is None or row["content_hash"] != content_hash:
+                raise CreatorPrepareBlocked("CREATOR_PREPARE_IDEMPOTENCY_CONFLICT")
+            conn.commit()
+        return type(item).model_validate(row["authority_data"])
+
+    def append_profile(self, scope: TenantScope, item: CreatorDiscoveryProfileRevision) -> CreatorDiscoveryProfileRevision:
+        return self._append(scope, "ecommerce_creator_discovery_profile_revision", "profile_id", item.profile_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_normalizer_receipt(self, scope: TenantScope, item: CreatorNormalizerReceipt) -> CreatorNormalizerReceipt:
+        return self._append(scope, "ecommerce_creator_normalizer_receipt", "receipt_id", item.receipt_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_match_observation(self, scope: TenantScope, item: CreatorPreparedMatchObservation) -> CreatorPreparedMatchObservation:
+        return self._append(scope, "ecommerce_creator_prepared_match_observation", "observation_id", item.observation_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_match_decision(self, scope: TenantScope, item: CreatorPreparedMatchDecision) -> CreatorPreparedMatchDecision:
+        return self._append(scope, "ecommerce_creator_prepared_match_decision", "decision_id", item.decision_id, item.revision, item.content_hash, item, item.decided_at)
+
+    def append_batch(self, scope: TenantScope, item: CreatorBatchPreparationRevision) -> CreatorBatchPreparationRevision:
+        receipt_id = authority_receipt_id(*scope.key, "CreatorBatchPreparationRevision", item.batch_id, item.revision, item.content_hash)
+        return self._append(scope, "ecommerce_creator_batch_preparation_revision", "batch_id", item.batch_id, item.revision, item.content_hash, item, item.created_at, receipt_id=receipt_id)
+
+    def _require(self, scope: TenantScope, table: str, identity_column: str, ref: CreatorExactRef, model: type[Any]) -> Any:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",
+                (*scope.key, ref.resource_id, ref.revision),
+            ).fetchone()
+        if row is None or row["content_hash"] != ref.content_hash:
+            raise CreatorPrepareBlocked(f"{ref.resource_type.upper()}_MISSING_OR_DRIFTED")
+        item = model.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+
+    def require_profile(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorDiscoveryProfileRevision:
+        return self._require(scope, "ecommerce_creator_discovery_profile_revision", "profile_id", ref, CreatorDiscoveryProfileRevision)
+
+    def require_match_observation(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorPreparedMatchObservation:
+        return self._require(scope, "ecommerce_creator_prepared_match_observation", "observation_id", ref, CreatorPreparedMatchObservation)
+
+    def require_match_decision(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorPreparedMatchDecision:
+        return self._require(scope, "ecommerce_creator_prepared_match_decision", "decision_id", ref, CreatorPreparedMatchDecision)
+
+    def next_batch_revision(self, scope: TenantScope, batch_id: str) -> int:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                "SELECT COALESCE(MAX(revision),0) AS revision FROM ecommerce_creator_batch_preparation_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s",
+                (*scope.key, batch_id),
+            ).fetchone()
+        return int(row["revision"]) + 1
+
+    def latest_batch(self, scope: TenantScope, batch_id: str) -> CreatorBatchPreparationRevision:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                "SELECT authority_data FROM ecommerce_creator_batch_preparation_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s ORDER BY revision DESC LIMIT 1",
+                (*scope.key, batch_id),
+            ).fetchone()
+        if row is None:
+            raise CreatorPrepareBlocked("CREATOR_BATCH_NOT_FOUND")
+        item = CreatorBatchPreparationRevision.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+
+    def latest_batch_or_none_by_id(self, scope: TenantScope, batch_id: str) -> CreatorBatchPreparationRevision | None:
+        try:
+            return self.latest_batch(scope, batch_id)
+        except CreatorPrepareBlocked as exc:
+            if str(exc) == "CREATOR_BATCH_NOT_FOUND":
+                return None
+            raise
+
+    def latest_batch_or_none(self, scope: TenantScope) -> CreatorBatchPreparationRevision | None:
+        try:
+            with self._read_connect(scope) as conn:
+                row = conn.execute(
+                    "SELECT authority_data FROM ecommerce_creator_batch_preparation_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,revision DESC LIMIT 1",
+                    scope.key,
+                ).fetchone()
+        except psycopg.Error as exc:
+            raise CreatorPrepareBlocked("CREATOR_PREPARE_AUTHORITY_UNAVAILABLE") from exc
+        if row is None:
+            return None
+        item = CreatorBatchPreparationRevision.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+
+
+__all__ = ["EcommerceWorkshopCreatorPrepareStore"]
+
+FILE .evidence/qyh-creator-contribution-unavailable-dto-20261014/code-review-result-r3.json SHA 00162bf36f7fcc1840b16c57de9c3d074568dd34a896ec708018b8277eb2b36c
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "4f3702f6b43b0eed4a97ad8e99ed028db9dd2b26bac9e7b6010bb1bcc8c38f1c",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-contribution-unavailable-dto-20261014-code-r3",
+    "task_id": "qyh-creator-contribution-unavailable-dto-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "78bcff996ea87da6f7609669c9edc255234d7344",
+      "authority_revision": "AOS-002028",
+      "files": {
+        ".evidence/qyh-creator-contribution-unavailable-dto-20261014/code-review-package-r2.txt": "3c94ade13a18a32dddd6fab1a0beeaffbaa438d7813e754c7a84e7e00c1b03e1"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Only three required fields were added to the known unavailable DTO branch; all other production paths are unchanged.",
+        "evidence": "FILE services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py, EXACT CURRENT DIFF shows exactly three added lines: atomicSkillRefs=[], logicRef=None, latestBatch=None inside the CreatorPrepareBlocked('CREATOR_PREPARE_AUTHORITY_UNAVAILABLE') except branch of contribution_view(). No other production path code changed.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Current54 passing tests prove blocked-unavailable versus true-empty distinction and unrelated error propagation; priorRED is historical.",
+        "evidence": "FILE services/aos-api/tests/aip/test_w6_03_creator_prepare.py SHA 6f679a2c...; ACTUAL green-adjacent.log shows 54 passed in 4.13s including new test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result and parametrized test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_PREPARE_TENANT_DRIFT/BATCH_NOT_FOUND]. ACTUAL red.log is historical with 1 failed/9 passed before the fix.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The implemented response-only fix matches the consumed plan and adds no database, source, budget or producer operation.",
+        "evidence": "FILE .evidence/qyh-creator-contribution-unavailable-dto-20261014/plan-review-consumption-r2.json status=CONSUMED_MATERIAL_REVIEW execution_authorized=false; implementation-plan.md states product only changes the catch branch and '所有producer/freeze/原数据/模型默认/其他错误传播不改'. Diff confirms no DB/source/budget/producer calls added.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "等待同owner的paired router/task完成native/browser端GET接线与HTTP专项验证；本review结果纳入完整交付审阅，不单独触发部署或业务闭环。"
+  }
+}
+FILE .evidence/qyh-creator-contribution-unavailable-dto-20261014/code-review-consumption-r3.json SHA 7045f5831d03af1af3f737932f9728be90fa0038b63fa501c9bbbe69b09f6a2e
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-contribution-unavailable-dto-20261014-code-r3",
+  "task_id": "qyh-creator-contribution-unavailable-dto-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "78bcff996ea87da6f7609669c9edc255234d7344",
+    "authority_revision": "AOS-002028",
+    "files": {
+      ".evidence/qyh-creator-contribution-unavailable-dto-20261014/code-review-package-r2.txt": "3c94ade13a18a32dddd6fab1a0beeaffbaa438d7813e754c7a84e7e00c1b03e1"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "6a7fbbced7870e8bf40e50b9b8b67c339c433884bd45a785ce1f8aa37101a511",
+  "transport_sha256": "3322d04f126de60a4e0218ce01eafb254e00225e6f6df9a7fdc6bfb7f9ca2e0e"
+}
+FILE .evidence/qyh-creator-contribution-unavailable-dto-20261014/reviewed-source-hashes.json SHA 3e3135959715a034169dd0bfbc0a0deb032b517faf83fc904c00ccfd16e52b87
+{
+  "services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py": "be30948e17a6ccc2c032531d2b295e7df5c6982ffadd1140cd10a71975ce2a61",
+  "services/aos-api/tests/aip/test_w6_03_creator_prepare.py": "6f679a2cd496d88d3b267c04ee0e6d81bc45f73d5befd807070a234e57d58972"
+}
+
+FULL CURRENT NAMED DEFINITIONS services/aos-api/aos_api/routers/ecommerce_workshop.py SHA b5e9087ff769415fb7aca5cce820043b83b4b1edd2edabec3957ff0a9bfdead9
+def get_ecommerce_workshop_read_catalog(
+    legacy: Annotated[EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)],
+) -> EcommerceWorkshopReadCatalog:
+    from aos_api.ecommerce_installed_readonly_catalog import build_installed_readonly_catalog
+
+    return EcommerceWorkshopReadCatalog(
+        legacy=legacy,
+        installed_factory=build_installed_readonly_catalog,
+    )
+def get_ecommerce_workshop_creator_prepare() -> EcommerceWorkshopCreatorPrepareService:
+    return EcommerceWorkshopCreatorPrepareService(EcommerceWorkshopCreatorPrepareStore())
+def _reject_query_parameters(request: Request) -> None:
+    if request.query_params:
+        raise ApiError(
+            code="VALIDATION",
+            message="ecommerce Workshop reads do not accept query parameters",
+            status_code=400,
+        )
+def _require_creator_growth_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.creator-growth",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+def get_creator_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    service: CreatorPrepareDependency,
+) -> CreatorContributionView:
+    _reject_query_parameters(request)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+FULL CURRENT NAMED DEFINITIONS services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py SHA be30948e17a6ccc2c032531d2b295e7df5c6982ffadd1140cd10a71975ce2a61
+class BatchItemDisposition(StrEnum):
+    ELIGIBLE = "eligible"
+    EXCLUDED = "excluded"
+    NEEDS_REVIEW = "needs_review"
+    UNKNOWN = "unknown"
+    DEDUPLICATED = "deduplicated"
+class PrepareCreatorBatchItem(AipContractModel):
+    candidate_ref: CreatorExactRef
+    evidence_bundle_ref: CreatorExactRef
+    match_observation_ref: CreatorExactRef
+    match_decision_ref: CreatorExactRef
+    disposition: BatchItemDisposition
+    reason_codes: list[str] = Field(default_factory=list, max_length=32)
+    frequency_eligible: bool
+    capacity_eligible: bool
+    budget_eligible: bool
+
+    @model_validator(mode="after")
+    def _item_refs(self) -> PrepareCreatorBatchItem:
+        expected = (
+            (self.candidate_ref, "CreatorCandidateRevision"),
+            (self.evidence_bundle_ref, "EvidenceBundleRevision"),
+            (self.match_observation_ref, "CreatorPreparedMatchObservation"),
+            (self.match_decision_ref, "CreatorPreparedMatchDecision"),
+        )
+        if any(ref.resource_type != kind for ref, kind in expected):
+            raise ValueError("batch item exact refs have invalid resourceType")
+        gates = self.frequency_eligible and self.capacity_eligible and self.budget_eligible
+        if self.disposition is BatchItemDisposition.ELIGIBLE and not gates:
+            raise ValueError("eligible batch item requires frequency/capacity/budget")
+        if self.disposition is not BatchItemDisposition.ELIGIBLE and not self.reason_codes:
+            raise ValueError("non-eligible batch item requires reasonCodes")
+        return self
+class CreatorBatchCountLedger(AipContractModel):
+    input: int = Field(ge=0)
+    eligible: int = Field(ge=0)
+    excluded: int = Field(ge=0)
+    needs_review: int = Field(ge=0)
+    unknown: int = Field(ge=0)
+    deduplicated: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _conserved(self) -> CreatorBatchCountLedger:
+        if self.input != self.eligible + self.excluded + self.needs_review + self.unknown + self.deduplicated:
+            raise ValueError("creator batch item ledger must conserve input")
+        return self
+class CreatorBatchPreparationRevision(AipContractModel):
+    tenant: TenantContext
+    batch_id: str
+    revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    lifecycle: str = Field(pattern=r"^(prepared|frozen|stale)$")
+    exact_refs: dict[str, CreatorExactRef]
+    skill_refs: list[CreatorExactRef]
+    items: list[PrepareCreatorBatchItem] = Field(default_factory=list, max_length=100)
+    item_hashes: list[str]
+    ledger: CreatorBatchCountLedger
+    external_effect_count: int = Field(default=0, ge=0, le=0)
+    action_proposal_count: int = Field(default=0, ge=0, le=0)
+    execution_lease_count: int = Field(default=0, ge=0, le=0)
+    prior_content_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+class CreatorContributionView(AipContractModel):
+    schema_version: str = CREATOR_PREPARE_SCHEMA_VERSION
+    tenant: TenantContext
+    evaluated_at: datetime
+    atomic_skill_refs: list[CreatorExactRef]
+    logic_ref: CreatorExactRef | None
+    primary_colleague: str = "导购顾问"
+    collaborator_colleagues: list[str] = Field(default_factory=lambda: ["数据参谋", "内容官", "活动策划师"])
+    latest_batch: CreatorBatchPreparationRevision | None
+    blockers: list[str]
+    allowed_commands: list[str] = Field(default_factory=lambda: ["PREPARE_CREATOR_BATCH", "FREEZE_CREATOR_BATCH"])
+    external_effects_allowed: bool = False
+def __init__(self, store: Any) -> None:
+        self.store = store
+def _tenant(scope: TenantScope) -> TenantContext:
+        return TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+def contribution_view(self, scope: TenantScope, *, now: datetime | None = None) -> CreatorContributionView:
+        at = now or datetime.now(UTC)
+        try:
+            latest = self.store.latest_batch_or_none(scope)
+        except CreatorPrepareBlocked as exc:
+            if str(exc) != "CREATOR_PREPARE_AUTHORITY_UNAVAILABLE":
+                raise
+            return CreatorContributionView(
+                tenant=self._tenant(scope),
+                evaluatedAt=at,
+                atomicSkillRefs=[],
+                logicRef=None,
+                latestBatch=None,
+                blockers=[
+                    "CREATOR_PREPARE_AUTHORITY_UNAVAILABLE",
+                    "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE",
+                ],
+            )
+        skill_refs = latest.skill_refs if latest else []
+        logic_ref = latest.exact_refs.get("logic") if latest else None
+        blockers = [] if latest else ["CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
+        if latest and latest.lifecycle != "frozen":
+            blockers.append("CREATOR_BATCH_NOT_FROZEN")
+        return CreatorContributionView(tenant=self._tenant(scope), evaluatedAt=at, atomicSkillRefs=skill_refs, logicRef=logic_ref, latestBatch=latest, blockers=blockers)
+FULL CURRENT NAMED DEFINITIONS services/aos-api/aos_api/ecommerce_workshop_creator_growth_authorities.py SHA db88444393f0fbec05ec5d7cebd26885442b1b1e50280cbdfae4efb0f43cc317
+class CreatorExactRef(AipContractModel):
+    resource_type: str = Field(min_length=1, max_length=100)
+    resource_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+FULL CURRENT NAMED DEFINITIONS services/aos-api/aos_api/db.py SHA a028af42c86a71426c7e3c165c50f87bddcf8cc17da8a6bb8972c4da70d93010
+def _connect(
+    scope: TenantScope | None = None,
+    *,
+    inherit_scope: bool = True,
+    read_only: bool = False,
+    isolation_level: IsolationLevel | None = None,
+    platform_role: bool = False,
+) -> Iterator[psycopg.Connection]:
+    dsn = get_dsn()
+    log.debug("db_connect host_port_from_env=%s", "AOS_DATABASE_URL" in os.environ)
+    with psycopg.connect(dsn, row_factory=dict_row) as conn:
+        # psycopg applies these characteristics when the transaction starts.
+        # They must be configured before client encoding or tenant RLS executes
+        # the first SQL statement; issuing SET TRANSACTION afterwards fails.
+        if isolation_level is not None:
+            conn.isolation_level = isolation_level
+        if read_only:
+            conn.read_only = True
+        # 强制 UTF-8，避免客户端/驱动默认编码把中文写成 ???
+        conn.execute("SET client_encoding TO 'UTF8'")
+        effective_scope = (
+            scope
+            if scope is not None
+            else (current_tenant_scope() if inherit_scope else None)
+        )
+        if effective_scope is not None:
+            apply_transaction_scope(conn, effective_scope)
+        elif platform_role:
+            # Scope-less but still authenticated as the runtime role: needed on
+            # a NOINHERIT login where omitting SET ROLE means "no privileges at
+            # all". Never grants tenant visibility — the GUCs stay unset.
+            apply_platform_role(conn)
+        else:
+            # Scope-less AND no platform role: on a NOINHERIT login this
+            # connection can read nothing at all, and the failure surfaces as
+            # "permission denied" deep inside whichever statement runs first.
+            # Attribute the caller so the residual offenders can be census'd
+            # instead of guessed (see W6 connection-plane debt work).
+            try:
+                frame = sys._getframe(2)
+                caller = f"{frame.f_code.co_filename.rsplit('/', 1)[-1]}:{frame.f_lineno}"
+            except ValueError:  # shallow stack — never let diagnostics break a connect
+                caller = "unknown"
+            log.debug("db_connect_without_scope caller=%s", caller)
+        yield conn
+def connect_read_only(
+    scope: TenantScope | None = None,
+    *,
+    inherit_scope: bool = True,
+    platform_role: bool = False,
+) -> Iterator[psycopg.Connection]:
+    """Open a repeatable-read, read-only transaction before applying RLS scope.
+
+    Pass ``scope=None, inherit_scope=False, platform_role=True`` to read
+    platform-level assets (no tenant RLS) with the runtime identity: a
+    scope-less connection performs no SET ROLE, which on a NOINHERIT login
+    leaves the session with no privileges at all.
+    """
+    return _connect(
+        scope,
+        inherit_scope=inherit_scope,
+        read_only=True,
+        isolation_level=IsolationLevel.REPEATABLE_READ,
+        platform_role=platform_role,
+    )
+FULL CURRENT NAMED DEFINITIONS services/aos-api/aos_api/tenant_scope.py SHA 4c727d12810e6e2e9f1bba218d5fed6277afcaf4ddb7eb2ae4f67c73fc532fa6
+def apply_transaction_scope(conn: Any, scope: TenantScope) -> None:
+    """Set transaction-local role and GUCs.
+
+    Both the role and the tenant GUCs are transaction-local on purpose: a
+    session-scoped setting would leak the previous caller's tenant into the
+    next statement. The cost is the inverse discipline — any intermediate
+    ``commit()``/``rollback()`` discards them, after which ``current_user``
+    reverts to the NOINHERIT login (every table denies) and the RLS policy sees
+    no ``aos.org_id`` (every row is filtered out). Do the whole unit of work in
+    one transaction; use :func:`apply_platform_role` for cross-tenant paths.
+    """
+    conn.execute(f"SET LOCAL ROLE {RUNTIME_DB_ROLE}")
+    conn.execute(
+        """
+        SELECT set_config('aos.org_id', %s, true),
+               set_config('aos.project_id', %s, true)
+        """,
+        scope.key,
+    )
+ACTUAL red.log SHA f96edbf687355a3c1d97dccdeb286a9e924e305d58a86093014e47b483555879
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_contribution_read_denied_before_service_access
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_creator_contribution_receives_authenticated_scope
+3 failed, 26 passed, 7 warnings in 3.53s
+ACTUAL green-adjacent.log SHA cdd1ba84d46b7d677972881e4d08915a52dbab9756519bd59152f46a323c1e35
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes PASSED [ 20%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_contribution_read_denied_before_service_access PASSED [ 23%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_admitted_creator_contribution_receives_authenticated_scope PASSED [ 25%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_creator_contribution_query_scope_override_is_rejected PASSED [ 26%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result PASSED [ 83%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_PREPARE_TENANT_DRIFT] PASSED [ 85%]
+services/aos-api/tests/aip/test_w6_03_creator_prepare.py::test_unrelated_contribution_errors_are_not_hidden_as_unavailable[CREATOR_BATCH_NOT_FOUND] PASSED [ 86%]
+======================== 60 passed, 7 warnings in 4.42s ========================
+EXACT CURRENT PAIRED4FILE DIFF
+diff --git a/services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py b/services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py
+index 37ee55dcd..640ef4b51 100644
+--- a/services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py
++++ b/services/aos-api/aos_api/ecommerce_workshop_creator_prepare.py
+@@ -484,6 +484,9 @@ class EcommerceWorkshopCreatorPrepareService:
+             return CreatorContributionView(
+                 tenant=self._tenant(scope),
+                 evaluatedAt=at,
++                atomicSkillRefs=[],
++                logicRef=None,
++                latestBatch=None,
+                 blockers=[
+                     "CREATOR_PREPARE_AUTHORITY_UNAVAILABLE",
+                     "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE",
+diff --git a/services/aos-api/aos_api/routers/ecommerce_workshop.py b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+index 599c56220..2ca404953 100644
+--- a/services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+@@ -1759,7 +1759,7 @@ def freeze_creator_batch(
+ def get_creator_contribution_view(
+     request: Request,
+     principal: PrincipalDependency,
+-    catalog: CatalogDependency,
++    catalog: ReadCatalogDependency,
+     service: CreatorPrepareDependency,
+ ) -> CreatorContributionView:
+     _reject_query_parameters(request)
+diff --git a/services/aos-api/tests/aip/test_w6_03_creator_prepare.py b/services/aos-api/tests/aip/test_w6_03_creator_prepare.py
+index edd49d054..868e41da3 100644
+--- a/services/aos-api/tests/aip/test_w6_03_creator_prepare.py
++++ b/services/aos-api/tests/aip/test_w6_03_creator_prepare.py
+@@ -192,6 +192,35 @@ def test_frequency_capacity_budget_and_tenant_are_fail_closed():
+     assert "START" not in " ".join(view.allowed_commands)
+ 
+ 
++def test_unavailable_contribution_is_a_blocked_view_not_a_true_empty_result():
++    class UnavailableStore:
++        def latest_batch_or_none(self, scope):
++            assert scope == SCOPE
++            raise CreatorPrepareBlocked("CREATOR_PREPARE_AUTHORITY_UNAVAILABLE")
++
++    view = EcommerceWorkshopCreatorPrepareService(UnavailableStore()).contribution_view(SCOPE, now=NOW)
++    empty = EcommerceWorkshopCreatorPrepareService(MemoryStore()).contribution_view(SCOPE, now=NOW)
++    assert view.tenant.org_id == SCOPE.org_id
++    assert view.tenant.project_id == SCOPE.project_id
++    assert view.evaluated_at == NOW
++    assert view.atomic_skill_refs == [] and view.logic_ref is None and view.latest_batch is None
++    assert view.blockers == ["CREATOR_PREPARE_AUTHORITY_UNAVAILABLE", "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
++    assert empty.blockers == ["CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"]
++    assert view.external_effects_allowed is False
++    assert view.model_dump(mode="json", by_alias=True)["latestBatch"] is None
++
++
++@pytest.mark.parametrize("code", ["CREATOR_PREPARE_TENANT_DRIFT", "CREATOR_BATCH_NOT_FOUND"])
++def test_unrelated_contribution_errors_are_not_hidden_as_unavailable(code):
++    class FailingStore:
++        def latest_batch_or_none(self, scope):
++            assert scope == SCOPE
++            raise CreatorPrepareBlocked(code)
++
++    with pytest.raises(CreatorPrepareBlocked, match=code):
++        EcommerceWorkshopCreatorPrepareService(FailingStore()).contribution_view(SCOPE, now=NOW)
++
++
+ def test_batch_prepare_requires_exact_decision_lineage_and_disposition():
+     store = MemoryStore(); service = EcommerceWorkshopCreatorPrepareService(store)
+     observed = observation(service, "candidate-1")
+diff --git a/services/aos-api/tests/test_ecommerce_workshop_read_http.py b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+index db738c720..b97b1e8d1 100644
+--- a/services/aos-api/tests/test_ecommerce_workshop_read_http.py
++++ b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+@@ -51,7 +51,7 @@ def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+ 
+ 
+ @pytest.mark.parametrize('path', [
+-    '/views/customer/contributions', '/views/creator-growth/contributions',
++    '/views/customer/contributions', '/views/creator-growth/lifecycle',
+     '/modules/ecommerce.operations/readiness',
+ ])
+ def test_unreviewed_get_still_uses_legacy_admission(path):
+@@ -81,6 +81,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
+         '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+         '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+         '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
++        '/v1/ecommerce-workshop/views/creator-growth/contributions',
+     }
+ 
+ 
+@@ -94,6 +95,41 @@ class ReadReached(RuntimeError):
+     pass
+ 
+ 
++def test_creator_contribution_read_denied_before_service_access():
++    client, legacy, reader = client_with_catalogs()
++    class Service:
++        def contribution_view(self, scope):
++            pytest.fail('denied read must not access creator preparation')
++    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_prepare] = lambda: Service()
++    response = client.get('/v1/ecommerce-workshop/views/creator-growth/contributions')
++    assert response.status_code == 404
++    assert not legacy.calls
++    assert reader.calls == [dict(module_id='ecommerce.creator-growth',
++        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])]
++
++
++def test_admitted_creator_contribution_receives_authenticated_scope():
++    client, legacy, reader = client_with_catalogs()
++    def admit(**scope):
++        reader.calls.append(scope)
++    reader.get_readiness = admit
++    class Service:
++        def contribution_view(self, scope):
++            assert scope.key == ('org-org', 'dev-project')
++            raise ReadReached('creator-contribution')
++    client.app.dependency_overrides[routes.get_ecommerce_workshop_creator_prepare] = lambda: Service()
++    with pytest.raises(ReadReached, match='creator-contribution'):
++        client.get('/v1/ecommerce-workshop/views/creator-growth/contributions')
++    assert not legacy.calls and len(reader.calls) == 1
++
++
++def test_creator_contribution_query_scope_override_is_rejected():
++    client, legacy, reader = client_with_catalogs()
++    response = client.get('/v1/ecommerce-workshop/views/creator-growth/contributions?projectId=other')
++    assert response.status_code == 400
++    assert not legacy.calls and not reader.calls
++
++
+ def test_real_inputs_read_denied_before_business_data_access():
+     client, legacy, reader = client_with_catalogs()
+     def forbidden_inputs():
