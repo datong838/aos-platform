@@ -1,0 +1,292 @@
+...........F............................................................ [ 84%]
+FFFFFFFFF....                                                            [100%]
+=================================== FAILURES ===================================
+________ test_read_dependency_only_reaches_explicit_audited_get_routes _________
+
+    def test_read_dependency_only_reaches_explicit_audited_get_routes():
+        actual = set()
+        for route in routes.router.routes:
+            uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                            for d in route.dependant.dependencies)
+            if uses_read:
+                assert route.methods == {'GET'}
+                actual.add(route.path)
+>       assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+            '/v1/ecommerce-workshop/source-readiness',
+            '/v1/ecommerce-workshop/views/operations/cases',
+            '/v1/ecommerce-workshop/commands/operations/readiness',
+            '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+            '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+            '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+            '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+            '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+            '/v1/ecommerce-workshop/views/creator-growth/contributions',
+            '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+            '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
+            '/v1/ecommerce-workshop/views/{module}/closure-contributions',
+            '/v1/ecommerce-workshop/views/price-governance/contributions',
+        }
+E       AssertionError: assert {'/v1/ecommer...-inputs', ...} == {'/v1/ecommer...-inputs', ...}
+E         
+E         Extra items in the right set:
+E         '/v1/ecommerce-workshop/views/price-governance/contributions'
+E         Use -v to get more diff
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:73: AssertionError
+____________ test_price_research_selects_admitted_reader_only[True] ____________
+
+readonly = True
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_price_research_selects_admitted_reader_only(readonly):
+        client, legacy, catalog = client_with_catalogs()
+        calls = price_research_probes(client)
+        def admit(**scope):
+            assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org',
+                                 project_id='dev-project', roles=['admin'], markings=[])
+            return price_admission(readonly)
+        catalog.get_readiness = admit
+        kind = 'readonly' if readonly else 'legacy'
+>       with pytest.raises(ReadReached, match=kind + '-price-research'):
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:558: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T23:15:25.880625+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:25.992042+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:25.992516+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions "HTTP/1.1 404 Not Found"
+___________ test_price_research_selects_admitted_reader_only[False] ____________
+
+readonly = False
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_price_research_selects_admitted_reader_only(readonly):
+        client, legacy, catalog = client_with_catalogs()
+        calls = price_research_probes(client)
+        def admit(**scope):
+            assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org',
+                                 project_id='dev-project', roles=['admin'], markings=[])
+            return price_admission(readonly)
+        catalog.get_readiness = admit
+        kind = 'readonly' if readonly else 'legacy'
+>       with pytest.raises(ReadReached, match=kind + '-price-research'):
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:558: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T23:15:25.998854+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.108852+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.109324+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions "HTTP/1.1 404 Not Found"
+_______________ test_price_research_denied_before_business_read ________________
+
+    def test_price_research_denied_before_business_read():
+        client, legacy, catalog = client_with_catalogs()
+        calls = price_research_probes(client)
+        assert client.get(PRICE_RESEARCH_PATH).status_code == 404
+>       assert not calls and not legacy.calls and len(catalog.calls) == 1
+E       AssertionError: assert (not [] and not [{'module_id': 'ecommerce.price-governance', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}])
+E        +  where [{'module_id': 'ecommerce.price-governance', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x11cb8e0d0>.calls
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:567: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T23:15:26.114665+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.223710+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.224159+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions "HTTP/1.1 404 Not Found"
+__________ test_price_research_unknown_admission_is_unavailable[None] __________
+
+admission = None
+
+    @pytest.mark.parametrize('admission', [None, object()])
+    def test_price_research_unknown_admission_is_unavailable(admission):
+        client, legacy, catalog = client_with_catalogs()
+        calls = price_research_probes(client)
+        catalog.get_readiness = lambda **scope: admission
+        response = client.get(PRICE_RESEARCH_PATH)
+>       assert response.status_code == 503 and 'PRICE_RESEARCH_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:576: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T23:15:26.229567+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.339883+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.340340+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions "HTTP/1.1 404 Not Found"
+_______ test_price_research_unknown_admission_is_unavailable[admission1] _______
+
+admission = <object object at 0x11b409c40>
+
+    @pytest.mark.parametrize('admission', [None, object()])
+    def test_price_research_unknown_admission_is_unavailable(admission):
+        client, legacy, catalog = client_with_catalogs()
+        calls = price_research_probes(client)
+        catalog.get_readiness = lambda **scope: admission
+        response = client.get(PRICE_RESEARCH_PATH)
+>       assert response.status_code == 503 and 'PRICE_RESEARCH_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:576: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T23:15:26.345593+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.461331+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.461749+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions "HTTP/1.1 404 Not Found"
+_ test_price_research_invalid_snapshot_does_not_become_empty[PRICE_RESEARCH_READ_UNAVAILABLE] _
+
+code = 'PRICE_RESEARCH_READ_UNAVAILABLE'
+
+    @pytest.mark.parametrize('code', ['PRICE_RESEARCH_READ_UNAVAILABLE', 'PRICE_RESEARCH_READ_AUTHORITY_DRIFT',
+                                     'PRICE_RESEARCH_READ_LIMIT_EXCEEDED', 'PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE'])
+    def test_price_research_invalid_snapshot_does_not_become_empty(code):
+        client, legacy, catalog = client_with_catalogs()
+        calls = price_research_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_RESEARCH_PATH)
+>       assert response.status_code == 503 and code in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:587: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T23:15:26.467074+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.577192+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.577694+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions "HTTP/1.1 404 Not Found"
+_ test_price_research_invalid_snapshot_does_not_become_empty[PRICE_RESEARCH_READ_AUTHORITY_DRIFT] _
+
+code = 'PRICE_RESEARCH_READ_AUTHORITY_DRIFT'
+
+    @pytest.mark.parametrize('code', ['PRICE_RESEARCH_READ_UNAVAILABLE', 'PRICE_RESEARCH_READ_AUTHORITY_DRIFT',
+                                     'PRICE_RESEARCH_READ_LIMIT_EXCEEDED', 'PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE'])
+    def test_price_research_invalid_snapshot_does_not_become_empty(code):
+        client, legacy, catalog = client_with_catalogs()
+        calls = price_research_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_RESEARCH_PATH)
+>       assert response.status_code == 503 and code in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:587: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T23:15:26.582919+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.692653+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.693080+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions "HTTP/1.1 404 Not Found"
+_ test_price_research_invalid_snapshot_does_not_become_empty[PRICE_RESEARCH_READ_LIMIT_EXCEEDED] _
+
+code = 'PRICE_RESEARCH_READ_LIMIT_EXCEEDED'
+
+    @pytest.mark.parametrize('code', ['PRICE_RESEARCH_READ_UNAVAILABLE', 'PRICE_RESEARCH_READ_AUTHORITY_DRIFT',
+                                     'PRICE_RESEARCH_READ_LIMIT_EXCEEDED', 'PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE'])
+    def test_price_research_invalid_snapshot_does_not_become_empty(code):
+        client, legacy, catalog = client_with_catalogs()
+        calls = price_research_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_RESEARCH_PATH)
+>       assert response.status_code == 503 and code in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:587: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T23:15:26.698125+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.808380+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:26.808857+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions "HTTP/1.1 404 Not Found"
+_ test_price_research_invalid_snapshot_does_not_become_empty[PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE] _
+
+code = 'PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE'
+
+    @pytest.mark.parametrize('code', ['PRICE_RESEARCH_READ_UNAVAILABLE', 'PRICE_RESEARCH_READ_AUTHORITY_DRIFT',
+                                     'PRICE_RESEARCH_READ_LIMIT_EXCEEDED', 'PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE'])
+    def test_price_research_invalid_snapshot_does_not_become_empty(code):
+        client, legacy, catalog = client_with_catalogs()
+        calls = price_research_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_RESEARCH_PATH)
+>       assert response.status_code == 503 and code in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:587: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-14T23:15:26.814203+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:27.261867+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-14T23:15:27.262372+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/contributions "HTTP/1.1 404 Not Found"
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_research_selects_admitted_reader_only[True]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_research_selects_admitted_reader_only[False]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_research_denied_before_business_read
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_research_unknown_admission_is_unavailable[None]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_research_unknown_admission_is_unavailable[admission1]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_research_invalid_snapshot_does_not_become_empty[PRICE_RESEARCH_READ_UNAVAILABLE]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_research_invalid_snapshot_does_not_become_empty[PRICE_RESEARCH_READ_AUTHORITY_DRIFT]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_research_invalid_snapshot_does_not_become_empty[PRICE_RESEARCH_READ_LIMIT_EXCEEDED]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_research_invalid_snapshot_does_not_become_empty[PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE]
+10 failed, 75 passed, 7 warnings in 12.53s

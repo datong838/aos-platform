@@ -1,0 +1,58 @@
+{
+  "authority": "AOS-002032",
+  "baseHead": "8374113ae12b615980198f98416611a5e10fc377",
+  "sourceHashes": {
+    "services/aos-api/aos_api/ecommerce_price_research_readonly.py": "cde963845f4c66ff9bd199fea1be4b1130a8af18c28632e8ca9d9aa9b0a0bb26",
+    "services/aos-api/tests/test_ecommerce_price_research_readonly.py": "4f2c722abb00647e18dc4688ea6eb283989e9243a491e78c49b57114efd11bb6",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "b46d7a8134867bf28efb60cd4e90c1895d4ae3634bb74807e3c9a382cef8a562",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "b272ed92d8013ec2b1c9286ddc7a10015e904abe1735d60de0ec7772cddce6bf"
+  },
+  "frozenCumulativePass": 224,
+  "readerPrime": "r1 PASS legal",
+  "rootPrime": "r1 NEED_EVIDENCE legal preserved, r2 PASS legal",
+  "nativeIsolatedPg": {
+    "containerId": "70a6f5af5ed51190a39b5d1e3184eda05c28c95abe416f322234b10891e87bf0",
+    "fixtureOnlyNotOriginalSchema": true,
+    "exactW6DdlSha": "6bc813fc9fe8835cbad28fcae5e426c1b0c3d4b54b55380c2fec6c955179de8f",
+    "sourceSha": "cde963845f4c66ff9bd199fea1be4b1130a8af18c28632e8ca9d9aa9b0a0bb26",
+    "originalProducerUsed": true,
+    "originalVolumeTouched": false,
+    "realUserApproval": false,
+    "snapshotBatchIds": [
+      "price-batch-1",
+      "price-batch-2"
+    ],
+    "nonemptyFrozenWithPreparedAncestor": true,
+    "observations": [
+      {
+        "role": "aos_runtime",
+        "readonly": "on",
+        "isolation": "repeatable read"
+      },
+      {
+        "role": "aos_runtime",
+        "readonly": "on",
+        "isolation": "repeatable read"
+      },
+      {
+        "role": "aos_runtime",
+        "readonly": "on",
+        "isolation": "repeatable read"
+      },
+      {
+        "role": "aos_runtime",
+        "readonly": "on",
+        "isolation": "repeatable read"
+      }
+    ],
+    "foreignRowsHiddenWithoutWhere": true,
+    "writeDeniedSqlstate": "25006",
+    "oversizeSqlCaseError": "PRICE_RESEARCH_READ_LIMIT_EXCEEDED",
+    "privacyError": "PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE",
+    "commandsEmpty": true
+  },
+  "originalRuntimeDeployed": false,
+  "originalDatabaseTouched": false,
+  "wholeGoalComplete": false,
+  "next": "Fresh readonly API maintenance source/controller/preflight/quality before any signal; then original OIDC actual SDK/650/visual/live review and accurate Delivery"
+}

@@ -85,6 +85,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
         '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
         '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
         '/v1/ecommerce-workshop/views/{module}/closure-contributions',
+        '/v1/ecommerce-workshop/views/price-governance/contributions',
     }
 
 
@@ -508,3 +509,131 @@ def test_creator_closure_reader_failure_cannot_be_empty_success(code):
     assert response.status_code == 503 and code in response.text
     assert 'latestClosure' not in response.text
     assert calls == [('readonly', ('org-org', 'dev-project'), 'creator')] and not legacy.calls
+
+
+PRICE_RESEARCH_PATH = '/v1/ecommerce-workshop/views/price-governance/contributions'
+
+
+def price_admission(readonly=True):
+    from tests.test_ecommerce_workshop_read_catalog import make, ARGS
+    catalog, _ = make()
+    result = catalog.get_readiness(**{**ARGS, 'module_id': 'ecommerce.price-governance'})
+    if not readonly:
+        result = result.model_copy(update={'item': result.item.model_copy(update={
+            'blockers': [b for b in result.item.blockers if b.reason_code != 'INSTALLED_ASSET_READONLY'],
+        })})
+    return result
+
+
+def price_research_probes(client, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope):
+            calls.append(('legacy', scope.key))
+            raise ReadReached('legacy-price-research')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key))
+            if failure:
+                from aos_api.ecommerce_price_research_readonly import PriceResearchReadonlyError
+                raise PriceResearchReadonlyError(failure)
+            raise ReadReached('readonly-price-research')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_price_research] = lambda: Legacy()
+    # getattr permits pre-implementation RED to exercise the old Catalog rejection.
+    factory = getattr(routes, 'get_price_research_readonly', Readonly)
+    client.app.dependency_overrides[factory] = lambda: Readonly()
+    return calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_price_research_selects_admitted_reader_only(readonly):
+    client, legacy, catalog = client_with_catalogs()
+    calls = price_research_probes(client)
+    def admit(**scope):
+        assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org',
+                             project_id='dev-project', roles=['admin'], markings=[])
+        return price_admission(readonly)
+    catalog.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-price-research'):
+        client.get(PRICE_RESEARCH_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'))] and not legacy.calls
+
+
+def test_price_research_denied_before_business_read():
+    client, legacy, catalog = client_with_catalogs()
+    calls = price_research_probes(client)
+    assert client.get(PRICE_RESEARCH_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+
+
+@pytest.mark.parametrize('admission', [None, object()])
+def test_price_research_unknown_admission_is_unavailable(admission):
+    client, legacy, catalog = client_with_catalogs()
+    calls = price_research_probes(client)
+    catalog.get_readiness = lambda **scope: admission
+    response = client.get(PRICE_RESEARCH_PATH)
+    assert response.status_code == 503 and 'PRICE_RESEARCH_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls
+
+
+@pytest.mark.parametrize('code', ['PRICE_RESEARCH_READ_UNAVAILABLE', 'PRICE_RESEARCH_READ_AUTHORITY_DRIFT',
+                                 'PRICE_RESEARCH_READ_LIMIT_EXCEEDED', 'PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE'])
+def test_price_research_invalid_snapshot_does_not_become_empty(code):
+    client, legacy, catalog = client_with_catalogs()
+    calls = price_research_probes(client, code)
+    catalog.get_readiness = lambda **scope: price_admission()
+    response = client.get(PRICE_RESEARCH_PATH)
+    assert response.status_code == 503 and code in response.text
+    assert 'latestBatch' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
+
+
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+def test_price_research_query_does_not_change_scope(query):
+    client, legacy, catalog = client_with_catalogs()
+    calls = price_research_probes(client)
+    assert client.get(PRICE_RESEARCH_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_price_research_full_http_dto_preserves_readonly_and_legacy_semantics(readonly):
+    from datetime import UTC, datetime
+    from psycopg import IsolationLevel
+    from aos_api.ecommerce_price_research_readonly import PriceResearchReadonlyReader
+    from aos_api.ecommerce_workshop_price_research import EcommerceWorkshopPriceResearchService
+    client, legacy, catalog = client_with_catalogs()
+    catalog.get_readiness = lambda **scope: price_admission(readonly)
+    calls = []
+    cutoff = datetime(2026, 10, 15, tzinfo=UTC)
+    class EmptyStore:
+        def latest_batch_or_none(self, scope):
+            calls.append(('legacy', scope.key))
+            return None
+    class Result:
+        def __init__(self, value): self.value = value
+        def fetchone(self): return self.value
+    class Connection:
+        read_only = True
+        autocommit = False
+        isolation_level = IsolationLevel.REPEATABLE_READ
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def execute(self, statement, params=()):
+            if 'transaction_timestamp' in statement: return Result({'cutoff': cutoff})
+            assert params == ('org-org', 'dev-project')
+            assert 'CASE WHEN' in statement and 'LIMIT 1' in statement
+            calls.append(('readonly', params))
+            return Result(None)
+    client.app.dependency_overrides[routes.get_price_research_readonly] = lambda: PriceResearchReadonlyReader(connect_factory=lambda scope: Connection())
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_price_research] = lambda: EcommerceWorkshopPriceResearchService(EmptyStore())
+    response = client.get(PRICE_RESEARCH_PATH)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['tenant'] == dict(orgId='org-org', projectId='dev-project')
+    assert body['latestBatch'] is None and body['blockers'] == ['PRICE_RESEARCH_BATCH_NOT_AVAILABLE']
+    assert body['externalEffectsAllowed'] is False
+    assert body['allowedCommands'] == ([] if readonly else ['PREPARE_PRICE_RESEARCH_BATCH', 'FREEZE_PRICE_RESEARCH_BATCH'])
+    assert calls == [('readonly' if readonly else 'legacy', ('org-org', 'dev-project'))]
+    assert not legacy.calls

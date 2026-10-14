@@ -1,0 +1,37 @@
+# 价格保存批次贡献只读接线文件方案
+
+上位231完整目标、产品v2/08价格治理、技术53-W6-05（含实施补记）；基线8374113ae、Authority2032，同owner maintenance-r5/root/独立bounded-reader已登记且不重叠。全部真实业务目标、原用户授权、每日/aos最新同权威卷全面重启和视觉验收保留。
+
+## 文件与准入
+
+root只改routers/ecommerce_workshop.py及test_ecommerce_workshop_read_http.py、D-wave和本E；独立Task只新增ecommerce_price_research_readonly.py与test_ecommerce_price_research_readonly.py。原service/Store/producer/DDL/sharedPOST/AIP/前端不改。构造reader不连接DB。
+
+仅GET /views/price-governance/contributions通过ReadCatalogDependency复用原签名/installation/lock/roles/markings/DataScope exact准入；此GET直接_invoke(read_catalog.get_readiness(module_id='ecommerce.price-governance',org_id/project_id/roles/markings))取得原EcommerceWorkshopModuleReadinessResponse。旧_require_price_governance_installation返回None且共享POST，不改它也不把None当元数据。typed未知metadata503。INSTALLED_ASSET_READONLY选择专用reader；正常legacy走原service且原命令不变。其他price disposition/closure、customer和所有POST不借放行。保留query400/tenantPrincipal/anonymous401；固定错误code/503无底层SQL/秘密。未通过维护控制器及独立质量门前不更新真实API。
+
+## 单表 snapshot 与有界
+
+connect_read_only(scope)，显式检查read_only=True/autocommit=False/REPEATABLE_READ；transaction_timestamp同截止面。固定ecommerce_price_research_batch_revision，仅SELECT。latest顺序created_at DESC,revision DESC,batch_id ASC LIMIT1；按原created_at语义选择，不改成每batch maxrevision聚合。无时间过滤隐藏未来坏行，selected created_at必须aware<=cutoff。
+
+SQL先octet_length(authority_data::text)，CASE在1MiB内才返回payload；最多最新及其exact前版两行、累计2MiB，最终DTO1MiB上限；不截断items或改数量，不把超限/缺表/SQL错误当可信无批次。所有查询带org/project且默认RLS。exact前版以同scope/batch_id/revision读取，不latest查询他人或重放。
+
+## 完整性与原producer兼容
+
+每行outer org/project/batch_id/revision/content_hash/created_at与typed payload核对，raw revision/version/reference revision严格正int（拒绝bool/浮点/字符串）；createdAt与outer完全相等且aware<=cutoff；tenant准确。使用原PriceResearchBatchRevision及PreparePriceResearchBatchRequest与原canonical_hash，不新定义签名算法。
+
+prepared合法producer为revision=version=1、priorContentHash=None。由exactRefs九个原字段映射、skillRefs/items/batchId重建原PreparePriceResearchBatchRequest，利用原validator检验refs种类/Skill顺序/Logic/重复target/eligible门，再用request.model_dump(mode=json,by_alias=True)加逐项原itemHashes重算contentHash。exactRefs必须恰好brief/eval/responsibilityPlan/profile/monitoringPolicy/capacitySnapshot/budgetSnapshot/logic/agentBinding，不接受未知扩展。
+
+items逐项原JSON hash重算、itemHashes同长且相等、ledger按disposition完整计数重算（不仅总和）；六类副作用count全部0。必须raw布尔严格bool，所有公开引用字符串/actor/reason codes遵原公开隐私门；hash字段仅在独立格式/重算通过后从联系方式检测投影视图中排除，不能扩大到任意身份串。敏感载荷拒绝，不能sanitize后保留旧hash。
+
+frozen合法producer为revision=version=2、priorContentHash=prepared.contentHash；same snapshot查询同batch exact revision1并完成prepared全验证。frozen必须除revision/version/lifecycle/priorContentHash/contentHash/createdBy/createdAt外的所有原typed字段与prepared完全一致（包括items/hash/ledger/refs/zero计数），时间不早于prepared且<=cutoff。frozen hash严格原canonical_hash({prior,exactRefs,lifecycle:frozen})。只有短hash相等而继承事实漂移也拒绝。
+
+全源码producer扫描仅prepare/freeze写PriceResearchBatchRevision，未发现stale写入producer。legacy仍允许原合同；installed对缺乏合法producer证明的stale或其他revision状态固定AUTHORITY_DRIFT，不隐藏成null或伪造新hash。后续若找到合法stale writer，先补方案/原hash证据及兼容测试再准入，不删除真实历史或改原Store。
+
+保存capacity/budget/Skill/Logic/Agent refs与item门仅表示保存时事实，本波不解析Secret、不重查外部authority、不运行ResearchJob、不宣称当前引用live approved。先完整验证savedbatch，再以原service.contribution_view+仅提供此已验证latest的适配器复用职责/blocker映射，evaluatedAt用cutoff。DTO显式allowedCommands=[]、externalEffectsAllowed=False，原五Skill角色/空批次blocker保留。
+
+## RED与后续完整门
+
+先独立Prime方案复审合法消费，再先写RED失败测试、后最小实现、再GREEN/回归/独立代码复审与提交；不能代码提交后才补RED。RED：正常原producer prepared/frozen及两版继承、empty/null+blocker+命令空、legacy命令保留；外层/嵌套tenant/id/revision/version/hash/time/refs/Skill/Logic/重复item/ledger/unknown计数/严格bool/privacy漂移；frozen只改items仍短hash相等的反例、缺前版、未来坏行；SQLCASE超限与总上限、连接未知、SQL缺表错误、单snapshot/固定两SELECT/no write/no commit。原price-research/price-disposition/read-http/readcatalog邻近累计。
+
+真实隔离原w6_005 DDL PG验证RLS/FORCE、read25006、snapshot并发及SQLCASE；以原producer生成非空保存事实，不用test Principal作原客户审批。冻结隔离候选不得混入用户dirty，独立代码Prime后精确提交。fresh维护方案/控制器gate后再部署最新只读API、原650指纹不变、原真人OIDC GET+正式SDK验证、query/anon/权限；三视口对原稿且保留现有价格按钮P1。
+
+前端已审计到辅助失败catch→null/假0，尚无修改Lease；本波不隐改Web或借raw200宣称全页面验收。需另登记UI失败语义/unknown方案和独立测试/视觉后才施工；现有Scope正确隔离，不减少完整Goal。最终现场Prime、各slice Delivery/完整维护剩余接续/Authority七强Prime，再下一逐条helper及经营预算主线。页面、测试或PASS不当经营完成。

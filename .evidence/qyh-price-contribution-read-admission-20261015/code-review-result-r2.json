@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "597ced896f1b17d3c866b3f77a3cf51991fb81a615151f4884cf679bdc383d8e",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-root-code-r2-20261015",
+    "task_id": "qyh-price-contribution-read-admission-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "8374113ae12b615980198f98416611a5e10fc377",
+      "authority_revision": "AOS-002032",
+      "files": {
+        ".evidence/qyh-price-contribution-read-admission-20261015/code-review-package-r2.txt": "7439ffd5347b300e291bb0bae5f7dc1686cb2e1c4540abce5a276075da0faba5"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "仅价格贡献 GET 新增只读准入且正常旧路径保持",
+        "evidence": "source: services/aos-api/aos_api/routers/ecommerce_workshop.py; functions: get_price_research_contribution_view、_require_price_governance_installation、get_price_research_readonly。证据: 仅新增 only PriceResearchReadonlyReader 依赖及 get_price_research_readonly() 工厂; get_price_research_contribution_view 改为 ReadCatalogDependency + INSTALLED_ASSET_READONLY 分支调用 readonly.read，其余走 service.contribution_view。_require_price_governance_installation 原签名与原实现保留未改。diff 确认其他 165 个函数 AST 相等、无 POST 变更。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "HTTP 完整返回和失败边界已验证且运营门不放开",
+        "evidence": "source: services/aos-api/tests/test_ecommerce_workshop_read_http.py; functions: test_price_research_selects_admitted_reader_only、test_price_research_denied_before_business_read、test_price_research_unknown_admission_is_unavailable、test_price_research_invalid_snapshot_does_not_become_empty、test_price_research_query_does_not_change_scope、test_price_research_full_http_dto_preserves_readonly_and_legacy_semantics。证据: 覆盖 admitted/legacy 选择、404 拒绝、未知 admission 503、readonly 报错 code 不空返回、非法 query 400 且无调用、readonly/legacy DTO 与 allowedCommands=[]/externalEffectsAllowed=False 保留。累积 log 224 passed; native_r1 验证 foreign rows hidden、INSERT denied(sqlstate=25006)、oversize/privacy 错误码及 allowedCommands/externalEffectsAllowed 门。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "本请求为独立代码复审门; 保持冻结基线与四 overlay, 按方案执行维护控制器 gate 后再部署最新只读 API, 用原真人 OIDC GET 与正式 SDK 做视觉验收。"
+  }
+}

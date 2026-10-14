@@ -1,0 +1,10 @@
+{
+  "request_id": "qyh-price-contribution-plan-r1-20261015",
+  "status": "RAW_RESULT_REJECTED",
+  "reason": "Second claim punctuation changed; unscoped or unsupported finding",
+  "rawTransport": "plan-review-result-r1.transport.json",
+  "acceptedEnvelope": false,
+  "legalConsumption": false,
+  "productCodeWritten": false,
+  "next": "Fresh r2 corrected design and exact short claims; not repairing raw result"
+}

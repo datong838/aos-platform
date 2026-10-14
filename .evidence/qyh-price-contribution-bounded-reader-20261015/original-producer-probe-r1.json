@@ -1,0 +1,357 @@
+{
+  "originalTestSHA256": "305087dca44173b0803fc0ec68d59000d9d3cd24de18b1227cafd3b2e0cd06fc",
+  "originalServiceSHA256": "b92a34c0f242c858f3e8e70c2e7e76d687ed36e517f509f5c25588717f398902",
+  "scope": [
+    "dev-org",
+    "fixture-project"
+  ],
+  "producerPreparedHashVerified": true,
+  "producerFrozenHashVerified": true,
+  "inheritedFieldsEqual": true,
+  "databaseAccess": false,
+  "realApproval": false,
+  "prepared": {
+    "tenant": {
+      "orgId": "dev-org",
+      "projectId": "fixture-project"
+    },
+    "batchId": "price-batch-1",
+    "revision": 1,
+    "version": 1,
+    "lifecycle": "prepared",
+    "exactRefs": {
+      "brief": {
+        "resourceType": "TaskBriefRevision",
+        "resourceId": "brief",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-brief"
+      },
+      "eval": {
+        "resourceType": "EvalContractRevision",
+        "resourceId": "eval",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-eval"
+      },
+      "responsibilityPlan": {
+        "resourceType": "ResponsibilityPlanRevision",
+        "resourceId": "responsibility",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-responsibility"
+      },
+      "profile": {
+        "resourceType": "PriceResearchProfileRevision",
+        "resourceId": "price-profile",
+        "revision": 1,
+        "contentHash": "sha256:bd5e3a13b53455f18746f4f6c3cc611bef25195a66d3e024c8e7998af1b7cd15",
+        "receiptId": "receipt-price-profile"
+      },
+      "monitoringPolicy": {
+        "resourceType": "MonitoringPolicyRevision",
+        "resourceId": "monitoring-policy",
+        "revision": 1,
+        "contentHash": "sha256:9c422e33d3b46720f2998798d9ff0bc8b38d191f1bcaddf2468466e09fe9d4c8",
+        "receiptId": "receipt-monitoring-policy"
+      },
+      "capacitySnapshot": {
+        "resourceType": "CapacitySnapshotRevision",
+        "resourceId": "capacity",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-capacity"
+      },
+      "budgetSnapshot": {
+        "resourceType": "BudgetSnapshotRevision",
+        "resourceId": "budget",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-budget"
+      },
+      "logic": {
+        "resourceType": "LogicPublicationRevision",
+        "resourceId": "ecommerce-price-governance",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-ecommerce-price-governance"
+      },
+      "agentBinding": {
+        "resourceType": "AgentBindingRevision",
+        "resourceId": "data-advisor",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-data-advisor"
+      }
+    },
+    "skillRefs": [
+      {
+        "resourceType": "SkillRevision",
+        "resourceId": "discover-price-sources",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-discover-price-sources"
+      },
+      {
+        "resourceType": "SkillRevision",
+        "resourceId": "normalize-price-observations",
+        "revision": 1,
+        "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "receiptId": "receipt-normalize-price-observations"
+      },
+      {
+        "resourceType": "SkillRevision",
+        "resourceId": "match-comparable-products",
+        "revision": 1,
+        "contentHash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "receiptId": "receipt-match-comparable-products"
+      },
+      {
+        "resourceType": "SkillRevision",
+        "resourceId": "evaluate-price-policy",
+        "revision": 1,
+        "contentHash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "receiptId": "receipt-evaluate-price-policy"
+      },
+      {
+        "resourceType": "SkillRevision",
+        "resourceId": "prepare-price-research-batch",
+        "revision": 1,
+        "contentHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "receiptId": "receipt-prepare-price-research-batch"
+      }
+    ],
+    "items": [
+      {
+        "skuRef": {
+          "resourceType": "ProductSkuRevision",
+          "resourceId": "sku-1",
+          "revision": 1,
+          "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "receiptId": "receipt-sku-1"
+        },
+        "observationRef": {
+          "resourceType": "PriceObservationRevision",
+          "resourceId": "price-observation-8e14a0002f4cdf432c3abb44",
+          "revision": 1,
+          "contentHash": "sha256:56d2237d6f053b4d07f98da80dd7dbe45e1c40caee9c4d0b959dd61803bf68e6",
+          "receiptId": "receipt-price-observation-8e14a0002f4cdf432c3abb44"
+        },
+        "matchObservationRef": {
+          "resourceType": "ProductMatchObservation",
+          "resourceId": "price-match-24381fce8910b2d3351f26ea",
+          "revision": 1,
+          "contentHash": "sha256:bb690b63f0b8bd0685b2b904de99d39eaa2d7a7833425e951e5cc28d4d783fc6",
+          "receiptId": "receipt-price-match-24381fce8910b2d3351f26ea"
+        },
+        "matchDecisionRef": {
+          "resourceType": "ProductMatchDecisionRevision",
+          "resourceId": "price-match-decision-6c4e65bfd449e75d24ac9d1d",
+          "revision": 1,
+          "contentHash": "sha256:12d5fb573393bc5f7b0d6db94f0b7cbc2834c245b96d0aa6d47be63eedcaa599",
+          "receiptId": "receipt-price-match-decision-6c4e65bfd449e75d24ac9d1d"
+        },
+        "disposition": "eligible",
+        "reasonCodes": [],
+        "licenseEligible": true,
+        "freshnessEligible": true,
+        "rateEligible": true,
+        "capacityEligible": true,
+        "budgetEligible": true
+      }
+    ],
+    "itemHashes": [
+      "034b822c0d927e6b355b2f21bb287746b1ca7494395ebfd72d6b3339d835f083"
+    ],
+    "ledger": {
+      "input": 1,
+      "eligible": 1,
+      "excluded": 0,
+      "needsReview": 0,
+      "unknown": 0,
+      "deduplicated": 0
+    },
+    "providerCallCount": 0,
+    "researchJobCount": 0,
+    "notificationCount": 0,
+    "actionProposalCount": 0,
+    "repricingCount": 0,
+    "externalEffectCount": 0,
+    "priorContentHash": null,
+    "contentHash": "70c84144da4568ec351712b33e7a7687620588b302173a8a888cd21810fd180b",
+    "createdBy": "operator",
+    "createdAt": "2026-08-25T07:00:00Z"
+  },
+  "frozen": {
+    "tenant": {
+      "orgId": "dev-org",
+      "projectId": "fixture-project"
+    },
+    "batchId": "price-batch-1",
+    "revision": 2,
+    "version": 2,
+    "lifecycle": "frozen",
+    "exactRefs": {
+      "brief": {
+        "resourceType": "TaskBriefRevision",
+        "resourceId": "brief",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-brief"
+      },
+      "eval": {
+        "resourceType": "EvalContractRevision",
+        "resourceId": "eval",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-eval"
+      },
+      "responsibilityPlan": {
+        "resourceType": "ResponsibilityPlanRevision",
+        "resourceId": "responsibility",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-responsibility"
+      },
+      "profile": {
+        "resourceType": "PriceResearchProfileRevision",
+        "resourceId": "price-profile",
+        "revision": 1,
+        "contentHash": "sha256:bd5e3a13b53455f18746f4f6c3cc611bef25195a66d3e024c8e7998af1b7cd15",
+        "receiptId": "receipt-price-profile"
+      },
+      "monitoringPolicy": {
+        "resourceType": "MonitoringPolicyRevision",
+        "resourceId": "monitoring-policy",
+        "revision": 1,
+        "contentHash": "sha256:9c422e33d3b46720f2998798d9ff0bc8b38d191f1bcaddf2468466e09fe9d4c8",
+        "receiptId": "receipt-monitoring-policy"
+      },
+      "capacitySnapshot": {
+        "resourceType": "CapacitySnapshotRevision",
+        "resourceId": "capacity",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-capacity"
+      },
+      "budgetSnapshot": {
+        "resourceType": "BudgetSnapshotRevision",
+        "resourceId": "budget",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-budget"
+      },
+      "logic": {
+        "resourceType": "LogicPublicationRevision",
+        "resourceId": "ecommerce-price-governance",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-ecommerce-price-governance"
+      },
+      "agentBinding": {
+        "resourceType": "AgentBindingRevision",
+        "resourceId": "data-advisor",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-data-advisor"
+      }
+    },
+    "skillRefs": [
+      {
+        "resourceType": "SkillRevision",
+        "resourceId": "discover-price-sources",
+        "revision": 1,
+        "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptId": "receipt-discover-price-sources"
+      },
+      {
+        "resourceType": "SkillRevision",
+        "resourceId": "normalize-price-observations",
+        "revision": 1,
+        "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "receiptId": "receipt-normalize-price-observations"
+      },
+      {
+        "resourceType": "SkillRevision",
+        "resourceId": "match-comparable-products",
+        "revision": 1,
+        "contentHash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "receiptId": "receipt-match-comparable-products"
+      },
+      {
+        "resourceType": "SkillRevision",
+        "resourceId": "evaluate-price-policy",
+        "revision": 1,
+        "contentHash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "receiptId": "receipt-evaluate-price-policy"
+      },
+      {
+        "resourceType": "SkillRevision",
+        "resourceId": "prepare-price-research-batch",
+        "revision": 1,
+        "contentHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "receiptId": "receipt-prepare-price-research-batch"
+      }
+    ],
+    "items": [
+      {
+        "skuRef": {
+          "resourceType": "ProductSkuRevision",
+          "resourceId": "sku-1",
+          "revision": 1,
+          "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "receiptId": "receipt-sku-1"
+        },
+        "observationRef": {
+          "resourceType": "PriceObservationRevision",
+          "resourceId": "price-observation-8e14a0002f4cdf432c3abb44",
+          "revision": 1,
+          "contentHash": "sha256:56d2237d6f053b4d07f98da80dd7dbe45e1c40caee9c4d0b959dd61803bf68e6",
+          "receiptId": "receipt-price-observation-8e14a0002f4cdf432c3abb44"
+        },
+        "matchObservationRef": {
+          "resourceType": "ProductMatchObservation",
+          "resourceId": "price-match-24381fce8910b2d3351f26ea",
+          "revision": 1,
+          "contentHash": "sha256:bb690b63f0b8bd0685b2b904de99d39eaa2d7a7833425e951e5cc28d4d783fc6",
+          "receiptId": "receipt-price-match-24381fce8910b2d3351f26ea"
+        },
+        "matchDecisionRef": {
+          "resourceType": "ProductMatchDecisionRevision",
+          "resourceId": "price-match-decision-6c4e65bfd449e75d24ac9d1d",
+          "revision": 1,
+          "contentHash": "sha256:12d5fb573393bc5f7b0d6db94f0b7cbc2834c245b96d0aa6d47be63eedcaa599",
+          "receiptId": "receipt-price-match-decision-6c4e65bfd449e75d24ac9d1d"
+        },
+        "disposition": "eligible",
+        "reasonCodes": [],
+        "licenseEligible": true,
+        "freshnessEligible": true,
+        "rateEligible": true,
+        "capacityEligible": true,
+        "budgetEligible": true
+      }
+    ],
+    "itemHashes": [
+      "034b822c0d927e6b355b2f21bb287746b1ca7494395ebfd72d6b3339d835f083"
+    ],
+    "ledger": {
+      "input": 1,
+      "eligible": 1,
+      "excluded": 0,
+      "needsReview": 0,
+      "unknown": 0,
+      "deduplicated": 0
+    },
+    "providerCallCount": 0,
+    "researchJobCount": 0,
+    "notificationCount": 0,
+    "actionProposalCount": 0,
+    "repricingCount": 0,
+    "externalEffectCount": 0,
+    "priorContentHash": "70c84144da4568ec351712b33e7a7687620588b302173a8a888cd21810fd180b",
+    "contentHash": "bd9c9fc9c105bb9bc1dea679f79b3dc2241edbcd708ca12f1fb6d520fe2721be",
+    "createdBy": "operator",
+    "createdAt": "2026-08-25T07:00:00Z"
+  }
+}

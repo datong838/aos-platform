@@ -1,0 +1,14 @@
+{
+  "head": "8374113ae12b615980198f98416611a5e10fc377",
+  "sourceSHA256": "b46d7a8134867bf28efb60cd4e90c1895d4ae3634bb74807e3c9a382cef8a562",
+  "changedExistingFunctions": [
+    "get_price_research_contribution_view"
+  ],
+  "addedFunctions": [
+    "get_price_research_readonly"
+  ],
+  "allOtherOriginalFunctionsASTEqual": 165,
+  "removedFunctions": [],
+  "POSTFunctionsChanged": false,
+  "servicesNotSignaled": true
+}

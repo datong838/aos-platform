@@ -1,0 +1,41 @@
+{
+  "containerId": "70a6f5af5ed51190a39b5d1e3184eda05c28c95abe416f322234b10891e87bf0",
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "6bc813fc9fe8835cbad28fcae5e426c1b0c3d4b54b55380c2fec6c955179de8f",
+  "sourceSha": "cde963845f4c66ff9bd199fea1be4b1130a8af18c28632e8ca9d9aa9b0a0bb26",
+  "originalProducerUsed": true,
+  "originalVolumeTouched": false,
+  "realUserApproval": false,
+  "snapshotBatchIds": [
+    "price-batch-1",
+    "price-batch-2"
+  ],
+  "nonemptyFrozenWithPreparedAncestor": true,
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "foreignRowsHiddenWithoutWhere": true,
+  "writeDeniedSqlstate": "25006",
+  "oversizeSqlCaseError": "PRICE_RESEARCH_READ_LIMIT_EXCEEDED",
+  "privacyError": "PRICE_RESEARCH_READ_PRIVACY_UNAVAILABLE",
+  "commandsEmpty": true
+}

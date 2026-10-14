@@ -1,0 +1,26 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-price-contribution-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002032",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_price_research_readonly.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_price_research_readonly.py",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015"
+  ],
+  "excluded_scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_price_research.py",
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_price_research_store.py",
+    "aos-platform/apps/web",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py"
+  ],
+  "expected_outputs": [
+    "Full231Goal retained; dedicated bounded same-snapshot saved price batch readonly reader/tests only, originalproducer prepared/frozen hash and inheritance verified; tenant/refs/privacy/SQLbytes/ledger/time stable failures; no producer/POST/legacy changes.",
+    "PlanPrime beforeRED/minimal; frozenneighborregression/isolatedoriginalDDL nativePG RLS/read25006/consistentcutoff, then separately reviewed latest management API genuine OIDC SDK and original650 no effect; saved flags are not live budget approval or business completion."
+  ],
+  "lease_expires_at": "2026-10-15T02:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-15T07:09:56+08:00"
+}

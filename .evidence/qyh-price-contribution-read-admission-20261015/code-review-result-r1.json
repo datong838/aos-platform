@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "597ced896f1b17d3c866b3f77a3cf51991fb81a615151f4884cf679bdc383d8e",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-root-code-r1-20261015",
+    "task_id": "qyh-price-contribution-read-admission-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "8374113ae12b615980198f98416611a5e10fc377",
+      "authority_revision": "AOS-002032",
+      "files": {
+        ".evidence/qyh-price-contribution-read-admission-20261015/code-review-package-r1.txt": "f9e682370fa5819786f140921a109d2838621bce3417917784209b9bb83d4034"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "仅价格贡献 GET 新增只读准入且正常旧路径保持",
+        "evidence": "DIFF显示ecommerce_workshop.py中get_price_research_contribution_view新增ReadCatalogDependency和PriceResearchReadonlyDependency；当admission.item.blockers含INSTALLED_ASSET_READONLY时调用readonly.read()，否则仍return service.contribution_view()。POST /price-governance/cases保留原require_price_governance_installation(catalog: CatalogDependency)，未改动。native-r1-result.json确认originalProducerUsed=true、originalVolumeTouched=false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "HTTP 完整返回和失败边界已验证且运营门不放开",
+        "evidence": "test_ecommerce_workshop_read_http.py含test_price_research_selects_admitted_reader_only(readonly参数化)、test_price_research_denied_before_business_read(404阻断)、test_price_research_unknown_admission_is_unavailable(503/UNKNOWN)、test_price_research_invalid_snapshot_does_not_become_empty(各错误code均返回503且latestBatch缺失)、test_price_research_query_does_not_change_scope(query非法返回400)；green-frozen-cumulative-r2.log显示224 passed。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持本轮不更新真实API的承诺，完成独立Prime复审后即可提交原始HEAD。"
+  }
+}

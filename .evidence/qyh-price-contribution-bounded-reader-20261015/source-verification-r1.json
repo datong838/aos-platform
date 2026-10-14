@@ -1,0 +1,37 @@
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_price_research_readonly.py": "cde963845f4c66ff9bd199fea1be4b1130a8af18c28632e8ca9d9aa9b0a0bb26",
+    "services/aos-api/tests/test_ecommerce_price_research_readonly.py": "4f2c722abb00647e18dc4688ea6eb283989e9243a491e78c49b57114efd11bb6",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "b46d7a8134867bf28efb60cd4e90c1895d4ae3634bb74807e3c9a382cef8a562",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "cf1b016c02b15c4aee31f580e9a9b7c5993757baa472cc72074b991ecdb1170e"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_price_research_readonly.py": "cde963845f4c66ff9bd199fea1be4b1130a8af18c28632e8ca9d9aa9b0a0bb26",
+    "services/aos-api/tests/test_ecommerce_price_research_readonly.py": "4f2c722abb00647e18dc4688ea6eb283989e9243a491e78c49b57114efd11bb6",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "b46d7a8134867bf28efb60cd4e90c1895d4ae3634bb74807e3c9a382cef8a562",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "cf1b016c02b15c4aee31f580e9a9b7c5993757baa472cc72074b991ecdb1170e"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/test_w6_009_three_module_closure.py"
+  ],
+  "baseHead": "8374113ae12b615980198f98416611a5e10fc377",
+  "frozenWithOnlyFourOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-14T23:15:58.604172+00:00",
+  "finishedAt": "2026-10-14T23:16:22.282894+00:00",
+  "logSha": "306e113f1ffb20978a3e646f532a70f0ec69e00ede6b7ddc79f345255d34b9a0"
+}

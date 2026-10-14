@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-price-root-code-r1-20261015",
+  "baseline": {
+    "head": "8374113ae12b615980198f98416611a5e10fc377",
+    "authority_revision": "AOS-002032",
+    "files": {
+      ".evidence/qyh-price-contribution-read-admission-20261015/code-review-package-r1.txt": "f9e682370fa5819786f140921a109d2838621bce3417917784209b9bb83d4034"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "597ced896f1b17d3c866b3f77a3cf51991fb81a615151f4884cf679bdc383d8e",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

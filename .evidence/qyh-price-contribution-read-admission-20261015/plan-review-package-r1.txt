@@ -1,0 +1,706 @@
+PRE-CODING ROUTE DESIGN REVIEW. Reader has not been implemented; judge the proposed plan against supplied original contracts/producer. Do not demand already-passing code for this before-code gate; independent code/native/runtime review remains required after implementation. Full231Goal retained.
+
+FILE .evidence/qyh-price-contribution-read-admission-20261015/implementation-plan.md SHA256 7920f359fed0d97172c005eb3564c5c712be2c61bf5784115cf6af72b563426d
+# 价格保存批次贡献只读接线文件方案
+
+上位231完整目标、产品v2/08价格治理、技术53-W6-05（含实施补记）；基线8374113ae、Authority2032，同owner maintenance-r5/root/独立bounded-reader已登记且不重叠。全部真实业务目标、原用户授权、每日/aos最新同权威卷全面重启和视觉验收保留。
+
+## 文件与准入
+
+root只改routers/ecommerce_workshop.py及test_ecommerce_workshop_read_http.py、D-wave和本E；独立Task只新增ecommerce_price_research_readonly.py与test_ecommerce_price_research_readonly.py。原service/Store/producer/DDL/sharedPOST/AIP/前端不改。构造reader不连接DB。
+
+仅GET /views/price-governance/contributions通过ReadCatalogDependency复用原签名/installation/lock/roles/markings/DataScope exact准入；typed readiness须原WorkshopModuleReadinessResponse，未知metadata503。INSTALLED_ASSET_READONLY选择专用reader；正常legacy走原service且原命令不变。其他price disposition/closure、customer和所有POST不借放行。保留query400/tenantPrincipal/anonymous401；固定错误code/503无底层SQL/秘密。未通过维护控制器及独立质量门前不更新真实API。
+
+## 单表 snapshot 与有界
+
+connect_read_only(scope)，显式检查read_only=True/autocommit=False/REPEATABLE_READ；transaction_timestamp同截止面。固定ecommerce_price_research_batch_revision，仅SELECT。latest顺序created_at DESC,revision DESC,batch_id ASC LIMIT1；按原created_at语义选择，不改成每batch maxrevision聚合。无时间过滤隐藏未来坏行，selected created_at必须aware<=cutoff。
+
+SQL先octet_length(authority_data::text)，CASE在1MiB内才返回payload；最多最新及其exact前版两行、累计2MiB，最终DTO1MiB上限；不截断items或改数量，不把超限/缺表/SQL错误当可信无批次。所有查询带org/project且默认RLS。exact前版以同scope/batch_id/revision读取，不latest查询他人或重放。
+
+## 完整性与原producer兼容
+
+每行outer org/project/batch_id/revision/content_hash/created_at与typed payload核对，raw revision/version/reference revision严格正int（拒绝bool/浮点/字符串）；createdAt与outer完全相等且aware<=cutoff；tenant准确。使用原PriceResearchBatchRevision及PreparePriceResearchBatchRequest与原canonical_hash，不新定义签名算法。
+
+prepared合法producer为revision=version=1、priorContentHash=None。由exactRefs九个原字段映射、skillRefs/items/batchId重建原PreparePriceResearchBatchRequest，利用原validator检验refs种类/Skill顺序/Logic/重复target/eligible门，再用request.model_dump(mode=json,by_alias=True)加逐项原itemHashes重算contentHash。exactRefs必须恰好brief/eval/responsibilityPlan/profile/monitoringPolicy/capacitySnapshot/budgetSnapshot/logic/agentBinding，不接受未知扩展。
+
+items逐项原JSON hash重算、itemHashes同长且相等、ledger按disposition完整计数重算（不仅总和）；六类副作用count全部0。必须raw布尔严格bool，所有公开引用字符串/actor/reason codes遵原公开隐私门；hash字段仅在独立格式/重算通过后从联系方式检测投影视图中排除，不能扩大到任意身份串。敏感载荷拒绝，不能sanitize后保留旧hash。
+
+frozen合法producer为revision=version=2、priorContentHash=prepared.contentHash；same snapshot查询同batch exact revision1并完成prepared全验证。frozen必须除revision/version/lifecycle/priorContentHash/contentHash/createdBy/createdAt外的所有原typed字段与prepared完全一致（包括items/hash/ledger/refs/zero计数），时间不早于prepared且<=cutoff。frozen hash严格原canonical_hash({prior,exactRefs,lifecycle:frozen})。只有短hash相等而继承事实漂移也拒绝。
+
+全源码producer扫描仅prepare/freeze写PriceResearchBatchRevision，未发现stale写入producer。legacy仍允许原合同；installed对缺乏合法producer证明的stale或其他revision状态固定AUTHORITY_DRIFT，不隐藏成null或伪造新hash。后续若找到合法stale writer，先补方案/原hash证据及兼容测试再准入，不删除真实历史或改原Store。
+
+保存capacity/budget/Skill/Logic/Agent refs与item门仅表示保存时事实，本波不解析Secret、不重查外部authority、不运行ResearchJob、不宣称当前引用live approved。先完整验证savedbatch，再以原service.contribution_view+仅提供此已验证latest的适配器复用职责/blocker映射，evaluatedAt用cutoff。DTO显式allowedCommands=[]、externalEffectsAllowed=False，原五Skill角色/空批次blocker保留。
+
+## RED与后续完整门
+
+先独立Prime方案复审合法消费，再RED：正常原producer prepared/frozen及两版继承、empty/null+blocker+命令空、legacy命令保留；外层/嵌套tenant/id/revision/version/hash/time/refs/Skill/Logic/重复item/ledger/unknown计数/严格bool/privacy漂移；frozen只改items仍短hash相等的反例、缺前版、未来坏行；SQLCASE超限与总上限、连接未知、SQL缺表错误、单snapshot/固定两SELECT/no write/no commit。原price-research/price-disposition/read-http/readcatalog邻近累计。
+
+真实隔离原w6_005 DDL PG验证RLS/FORCE、read25006、snapshot并发及SQLCASE；以原producer生成非空保存事实，不用test Principal作原客户审批。冻结隔离候选不得混入用户dirty，独立代码Prime后精确提交。fresh维护方案/控制器gate后再部署最新只读API、原650指纹不变、原真人OIDC GET+正式SDK验证、query/anon/权限；三视口对原稿且保留现有价格按钮P1。
+
+前端已审计到辅助失败catch→null/假0，尚无修改Lease；本波不隐改Web或借raw200宣称全页面验收。需另登记UI失败语义/unknown方案和独立测试/视觉后才施工；现有Scope正确隔离，不减少完整Goal。最终现场Prime、各slice Delivery/完整维护剩余接续/Authority七强Prime，再下一逐条helper及经营预算主线。页面、测试或PASS不当经营完成。
+
+
+FILE .evidence/qyh-price-contribution-read-admission-20261015/readonly-audit-r1.md SHA256 e50acb6b3cd406fc39f87f348127641ecf36384b91e8593893877405d9ec9a61
+# 价格贡献辅助 GET 初始只读审计
+
+基线：m1/f1a1f51，Authority AOS-002032；本线程唯一m1写者。已登记Task qyh-price-contribution-read-admission-20261015，未改业务代码或服务。完整231目标、原用户安装/全恢复授权、每日/每次aos最新同卷PG→API→Web和八台真实场景保留。
+
+## 已读方案及真实源码
+
+产品方案v2/08-价格治理驾驶舱.md；技术方案53-W6-05（包括2026-08-25实施封存）；231串行主计划。router get_price_research_contribution_view → 默认get_ecommerce_workshop_price_research → EcommerceWorkshopPriceResearchService.contribution_view → Store.latest_batch_or_none → connect_read_only。辅助GET仍CatalogDependency；root GET既有ReadCatalog接线不自动授权此路由。
+
+默认Store构造不连接数据库。此读取链只SELECT本库ecommerce_price_research_batch_revision一张表，不调用prepare/freeze/Normalizer，不执行Source/ResearchJob/Provider/通知/调价；db.connect_read_only明确REPEATABLE_READ READ ONLY。结论只适用于此默认调用链，不扩展为所有Store方法或price/customer辅助GET都安全。
+
+## 不能直接换Catalog的原因
+
+1. latest_batch_or_none仅SELECT authority_data，ORDER BY created_at DESC,revision DESC LIMIT1；相同时间/版本跨batch不确定。没有选取外层org/project/batch_id/revision/content_hash/created_at进行行内外一致校验，也无SQL octet_length/CASE读取前字节门。
+2. 原BatchRevision验证tenant和items≤100、零效果计数、ledger总和；未验证每项哈希重算、按disposition的台账计数、原prepare请求exact_refs完整种类/原子Skill顺序/Logic身份及item目标唯一性。读取不能仅靠原model_validate宣布完整性通过。
+3. prepared生产hash由原PreparePriceResearchBatchRequest JSON加itemHashes计算；frozen生产hash只包含prior/exactRefs/lifecycle，不能误用整个响应JSON的hash，也不能仅校验frozen短hash却遗漏其继承items被篡改。需按原producer逐状态证明，必要时同只读事务读取exact前版并核继承事实；stale模型允许但此producer未见写入分支，必须继续核对合法来源，不能猜算法。
+4. createdAt与DB transaction_timestamp需一致截止验证；未来坏行不能通过WHERE时间过滤隐藏为无批次。createdBy/reasonCodes/Ref字符串可能有隐私，原Store无输出隐私门；不能先修改签名载荷再声称原hash成立。
+5. contribution_view直接创建默认allowedCommands PREPARE/FREEZE，authority不可读异常也回同默认命令。installed读取只能投影保存事实，必须显式[]，externalEffectsAllowed false，不升级运行/预算/审批/能力状态。缺表或SQL错误应稳定失败，不伪装可信空批次。
+
+## 前端传递边界（仅审计，未登记施工）
+
+当前parsePriceResearchContributionView允许空命令，类型是两命令枚举数组；不像旧达人闭环固定补四命令。但非空批次parser仍要原子Skill/Logic且忽略items详情，因此后端完整性不能依赖它。后续必须用实际正式SDK验收，不能仅rawGET200。
+
+PriceGovernancePage当前Promise.all辅助读catch→null，unavailableContribution填两命令、null批次并显示外部效果0/ResearchJob0；这把辅助读取失败混同可信空态，属于需要另登记UI范围的缺口，不能在本routerTask隐性修改。已有价格高筛选按钮P1也保留；适用UI波先完善方案和Lease，按原稿1280/1440/1920同态比对。真实计数未知不能填演示数字或假0。
+
+## 下一具体施工入口
+
+先补合法producer状态、原hash/typed JSON、当前保存批次及继承链范围证据，并写文件级方案、独立Prime方案复审。预计专用只读reader与专项测试必须另登记明确范围，不改原Store/service/producer/sharedPOST；rootTask仅路由和read HTTP tests。原正常legacy路径保持。
+
+RED应覆盖可信空/正常原producer prepared+frozen、外层与嵌套租户/身份/时间/hash/ledger/refs/重复目标/隐私、超限SQLCASE、并发一致截止、未来选中坏行、缺表稳定失败、legacy不倒退、installed commands[]及query400/anon401/权限禁入。隔离原w6_005 DDL的真实PG验证RLS/write25006/并发快照，fixture不作真人审批。精确冻结代码累计/独立review后才能更新只读API并做原650不变/正式OIDC SDK/三视口现场验收；不读商城源、不写原数据、不开放Provider。
+
+当前只完成默认调用链及缺口审计，不宣称路由接通、完整安全证明、视觉或经营闭环完成。价格dispositions/closure、客户辅助GET、fullC最终真预算/原部署、自然首链、安装全生命周期及观察发布全部继续。
+
+
+FILE .evidence/qyh-price-contribution-bounded-reader-20261015/task-lease-readback.json SHA256 0bf02635f469708a1cebb56ea42c7d6fcfceb2c36f96d8582bffb0a92fea0232
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-price-contribution-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002032",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_price_research_readonly.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_price_research_readonly.py",
+    "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015"
+  ],
+  "excluded_scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_price_research.py",
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_price_research_store.py",
+    "aos-platform/apps/web",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py"
+  ],
+  "expected_outputs": [
+    "Full231Goal retained; dedicated bounded same-snapshot saved price batch readonly reader/tests only, originalproducer prepared/frozen hash and inheritance verified; tenant/refs/privacy/SQLbytes/ledger/time stable failures; no producer/POST/legacy changes.",
+    "PlanPrime beforeRED/minimal; frozenneighborregression/isolatedoriginalDDL nativePG RLS/read25006/consistentcutoff, then separately reviewed latest management API genuine OIDC SDK and original650 no effect; saved flags are not live budget approval or business completion."
+  ],
+  "lease_expires_at": "2026-10-15T02:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-15T07:09:56+08:00"
+}
+
+ORIGINAL price_research.py lines 1-73
+"""W6-05 governed price research authority and side-effect-free batch preparation."""
+from __future__ import annotations
+
+import hashlib
+import json
+from datetime import UTC, datetime
+from enum import StrEnum
+from math import isfinite
+from typing import Any
+
+from pydantic import Field, field_validator, model_validator
+
+from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.ecommerce_workshop_price_governance_contracts import PriceExactRef, PriceQuoteBasis
+from aos_api.tenant_scope import TenantScope
+
+
+PRICE_RESEARCH_SCHEMA_VERSION = "aos.ecommerce-workshop.price-research/v1"
+PRICE_LOGIC_ID = "ecommerce-price-governance"
+PRICE_SKILL_IDS = (
+    "discover-price-sources",
+    "normalize-price-observations",
+    "match-comparable-products",
+    "evaluate-price-policy",
+    "prepare-price-research-batch",
+)
+
+
+def canonical_hash(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+class PriceResearchBlocked(RuntimeError):
+    code = "PRICE_RESEARCH_BLOCKED"
+
+
+class PriceResearchConflict(PriceResearchBlocked):
+    code = "PRICE_RESEARCH_CONFLICT"
+
+
+class PriceSourceLicense(StrEnum):
+    ALLOWED = "allowed"
+    DENIED = "denied"
+    UNKNOWN = "unknown"
+
+
+class PriceComparability(StrEnum):
+    COMPARABLE = "comparable"
+    NOT_COMPARABLE = "not_comparable"
+    UNKNOWN = "unknown"
+
+
+class PriceMatchConfidence(StrEnum):
+    PRELIMINARY = "preliminary"
+    CONFIRMED = "confirmed"
+
+
+class PriceBatchDisposition(StrEnum):
+    ELIGIBLE = "eligible"
+    EXCLUDED = "excluded"
+    NEEDS_REVIEW = "needs_review"
+    UNKNOWN = "unknown"
+    DEDUPLICATED = "deduplicated"
+
+
+def _unique(values: list[str], label: str) -> list[str]:
+    if len(values) != len(set(values)) or any(not value.strip() for value in values):
+        raise ValueError(f"{label} must be unique and non-empty")
+    return values
+
+
+class PriceResearchProfileRequest(AipContractModel):
+
+ORIGINAL price_research.py lines 271-410
+class PreparePriceResearchBatchItem(AipContractModel):
+    sku_ref: PriceExactRef
+    observation_ref: PriceExactRef
+    match_observation_ref: PriceExactRef
+    match_decision_ref: PriceExactRef
+    disposition: PriceBatchDisposition
+    reason_codes: list[str] = Field(default_factory=list, max_length=32)
+    license_eligible: bool
+    freshness_eligible: bool
+    rate_eligible: bool
+    capacity_eligible: bool
+    budget_eligible: bool
+
+    @model_validator(mode="after")
+    def _item(self) -> "PreparePriceResearchBatchItem":
+        expected = ((self.sku_ref, "ProductSkuRevision"), (self.observation_ref, "PriceObservationRevision"), (self.match_observation_ref, "ProductMatchObservation"), (self.match_decision_ref, "ProductMatchDecisionRevision"))
+        if any(ref.resource_type != resource_type for ref, resource_type in expected):
+            raise ValueError("price batch item exact refs have invalid resourceType")
+        gates = self.license_eligible and self.freshness_eligible and self.rate_eligible and self.capacity_eligible and self.budget_eligible
+        if self.disposition is PriceBatchDisposition.ELIGIBLE and not gates:
+            raise ValueError("eligible price item requires every prepare gate")
+        if self.disposition is not PriceBatchDisposition.ELIGIBLE and not self.reason_codes:
+            raise ValueError("non-eligible price item requires reasonCodes")
+        return self
+
+
+class PreparePriceResearchBatchRequest(AipContractModel):
+    batch_id: str = Field(min_length=1, max_length=200)
+    brief_ref: PriceExactRef
+    eval_ref: PriceExactRef
+    responsibility_plan_ref: PriceExactRef
+    profile_ref: PriceExactRef
+    monitoring_policy_ref: PriceExactRef
+    capacity_snapshot_ref: PriceExactRef
+    budget_snapshot_ref: PriceExactRef
+    skill_refs: list[PriceExactRef] = Field(min_length=5, max_length=12)
+    logic_ref: PriceExactRef
+    agent_binding_ref: PriceExactRef
+    items: list[PreparePriceResearchBatchItem] = Field(min_length=1, max_length=100)
+
+    @model_validator(mode="after")
+    def _composition(self) -> "PreparePriceResearchBatchRequest":
+        expected = {
+            "brief_ref": "TaskBriefRevision", "eval_ref": "EvalContractRevision", "responsibility_plan_ref": "ResponsibilityPlanRevision",
+            "profile_ref": "PriceResearchProfileRevision", "monitoring_policy_ref": "MonitoringPolicyRevision",
+            "capacity_snapshot_ref": "CapacitySnapshotRevision", "budget_snapshot_ref": "BudgetSnapshotRevision",
+            "logic_ref": "LogicPublicationRevision", "agent_binding_ref": "AgentBindingRevision",
+        }
+        for field, resource_type in expected.items():
+            if getattr(self, field).resource_type != resource_type:
+                raise ValueError(f"{field} must reference {resource_type}")
+        if any(ref.resource_type != "SkillRevision" for ref in self.skill_refs) or [ref.resource_id for ref in self.skill_refs] != list(PRICE_SKILL_IDS):
+            raise ValueError("skillRefs must follow canonical atomic price skill order")
+        if self.logic_ref.resource_id != PRICE_LOGIC_ID:
+            raise ValueError("logicRef must be ecommerce-price-governance")
+        identities = [(item.sku_ref.resource_id, item.observation_ref.resource_id) for item in self.items]
+        if len(identities) != len(set(identities)):
+            raise ValueError("duplicate price targets must be represented as deduplicated items")
+        return self
+
+
+class PriceResearchBatchLedger(AipContractModel):
+    input: int = Field(ge=0)
+    eligible: int = Field(ge=0)
+    excluded: int = Field(ge=0)
+    needs_review: int = Field(ge=0)
+    unknown: int = Field(ge=0)
+    deduplicated: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _conserved(self) -> "PriceResearchBatchLedger":
+        if self.input != self.eligible + self.excluded + self.needs_review + self.unknown + self.deduplicated:
+            raise ValueError("price research batch ledger must conserve input")
+        return self
+
+
+class PriceResearchBatchRevision(AipContractModel):
+    tenant: TenantContext
+    batch_id: str
+    revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    lifecycle: str = Field(pattern=r"^(prepared|frozen|stale)$")
+    exact_refs: dict[str, PriceExactRef]
+    skill_refs: list[PriceExactRef]
+    items: list[PreparePriceResearchBatchItem] = Field(max_length=100)
+    item_hashes: list[str]
+    ledger: PriceResearchBatchLedger
+    provider_call_count: int = Field(default=0, ge=0, le=0)
+    research_job_count: int = Field(default=0, ge=0, le=0)
+    notification_count: int = Field(default=0, ge=0, le=0)
+    action_proposal_count: int = Field(default=0, ge=0, le=0)
+    repricing_count: int = Field(default=0, ge=0, le=0)
+    external_effect_count: int = Field(default=0, ge=0, le=0)
+    prior_content_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class FreezePriceResearchBatchRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    exact_refs: dict[str, PriceExactRef]
+
+
+class PriceResearchContributionView(AipContractModel):
+    schema_version: str = PRICE_RESEARCH_SCHEMA_VERSION
+    tenant: TenantContext
+    evaluated_at: datetime
+    atomic_skill_refs: list[PriceExactRef]
+    logic_ref: PriceExactRef | None
+    primary_colleague: str = "数据参谋"
+    collaborator_colleagues: list[str] = Field(default_factory=lambda: ["活动策划师", "导购顾问"])
+    latest_batch: PriceResearchBatchRevision | None
+    blockers: list[str]
+    allowed_commands: list[str] = Field(default_factory=lambda: ["PREPARE_PRICE_RESEARCH_BATCH", "FREEZE_PRICE_RESEARCH_BATCH"])
+    external_effects_allowed: bool = False
+
+
+class EcommerceWorkshopPriceResearchService:
+    def __init__(self, store: Any) -> None:
+        self.store = store
+
+    @staticmethod
+    def _tenant(scope: TenantScope) -> TenantContext:
+        return TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+
+    def create_profile(self, scope: TenantScope, request: PriceResearchProfileRequest, actor: str, *, now: datetime | None = None) -> PriceResearchProfileRevision:
+        at = now or datetime.now(UTC)
+        payload = request.model_dump(mode="json", by_alias=True)
+        item = PriceResearchProfileRevision(tenant=self._tenant(scope), **payload, contentHash=canonical_hash(payload), createdBy=actor, createdAt=at)
+        return self.store.append_profile(scope, item)
+
+    def normalize(self, scope: TenantScope, request: NormalizePriceObservationRequest, actor: str, *, now: datetime | None = None) -> PriceObservationRevision:
+        at = now or datetime.now(UTC)
+        profile = self.store.require_profile(scope, request.profile_ref)
+        if request.source_license is not PriceSourceLicense.ALLOWED or request.source_kind not in profile.allowed_source_kinds:
+            raise PriceResearchBlocked("PRICE_SOURCE_NOT_ALLOWED")
+        if request.market not in profile.allowed_markets or request.quote_basis.currency not in profile.allowed_currencies or request.quote_basis.unit not in profile.allowed_units:
+            raise PriceResearchBlocked("PRICE_QUOTE_BASIS_NOT_ALLOWED")
+
+ORIGINAL price_research.py lines 458-532
+        item = MonitoringPolicyRevision(tenant=self._tenant(scope), **payload, contentHash=canonical_hash(payload), createdBy=actor, createdAt=at)
+        return self.store.append_policy(scope, item)
+
+    def prepare_batch(self, scope: TenantScope, request: PreparePriceResearchBatchRequest, actor: str, *, now: datetime | None = None) -> PriceResearchBatchRevision:
+        at = now or datetime.now(UTC)
+        self.store.require_profile(scope, request.profile_ref)
+        self.store.require_policy(scope, request.monitoring_policy_ref)
+        counts = {item.value: 0 for item in PriceBatchDisposition}
+        for item in request.items:
+            observation = self.store.require_observation(scope, item.observation_ref)
+            match_observation = self.store.require_match_observation(scope, item.match_observation_ref)
+            decision = self.store.require_match_decision(scope, item.match_decision_ref)
+            if match_observation.observation_ref != item.observation_ref or match_observation.sku_ref != item.sku_ref or decision.match_observation_ref != item.match_observation_ref:
+                raise PriceResearchBlocked("PRICE_BATCH_MATCH_LINEAGE_DRIFTED")
+            required = {PriceBatchDisposition.ELIGIBLE: "confirmed", PriceBatchDisposition.EXCLUDED: "rejected", PriceBatchDisposition.NEEDS_REVIEW: "needs_review", PriceBatchDisposition.UNKNOWN: "needs_review", PriceBatchDisposition.DEDUPLICATED: "confirmed"}[item.disposition]
+            if decision.disposition != required or (item.disposition is PriceBatchDisposition.ELIGIBLE and observation.comparability is not PriceComparability.COMPARABLE):
+                raise PriceResearchBlocked("PRICE_BATCH_DISPOSITION_DRIFTED")
+            counts[item.disposition.value] += 1
+        exact_refs = {
+            "brief": request.brief_ref, "eval": request.eval_ref, "responsibilityPlan": request.responsibility_plan_ref,
+            "profile": request.profile_ref, "monitoringPolicy": request.monitoring_policy_ref,
+            "capacitySnapshot": request.capacity_snapshot_ref, "budgetSnapshot": request.budget_snapshot_ref,
+            "logic": request.logic_ref, "agentBinding": request.agent_binding_ref,
+        }
+        payload = request.model_dump(mode="json", by_alias=True)
+        item_hashes = [canonical_hash(value.model_dump(mode="json", by_alias=True)) for value in request.items]
+        content_hash = canonical_hash({**payload, "itemHashes": item_hashes})
+        existing = self.store.latest_batch_or_none_by_id(scope, request.batch_id)
+        if existing is not None:
+            if existing.lifecycle == "prepared" and existing.content_hash == content_hash:
+                return existing
+            raise PriceResearchConflict("PRICE_BATCH_IDEMPOTENCY_CONFLICT")
+        item = PriceResearchBatchRevision(
+            tenant=self._tenant(scope), batchId=request.batch_id, revision=1, version=1, lifecycle="prepared",
+            exactRefs=exact_refs, skillRefs=request.skill_refs, items=request.items, itemHashes=item_hashes,
+            ledger=PriceResearchBatchLedger(input=len(request.items), **counts), contentHash=content_hash, createdBy=actor, createdAt=at,
+        )
+        return self.store.append_batch(scope, item)
+
+    def freeze_batch(self, scope: TenantScope, batch_id: str, request: FreezePriceResearchBatchRequest, actor: str, *, now: datetime | None = None) -> PriceResearchBatchRevision:
+        at = now or datetime.now(UTC)
+        current = self.store.latest_batch(scope, batch_id)
+        if current.lifecycle == "frozen" and current.prior_content_hash == request.expected_content_hash:
+            return current
+        if current.version != request.expected_version or current.content_hash != request.expected_content_hash:
+            raise PriceResearchConflict("PRICE_BATCH_EXPECTED_VERSION_OR_HASH_DRIFTED")
+        expected = {key: value.model_dump(mode="json", by_alias=True) for key, value in current.exact_refs.items()}
+        actual = {key: value.model_dump(mode="json", by_alias=True) for key, value in request.exact_refs.items()}
+        if actual != expected or current.lifecycle != "prepared":
+            raise PriceResearchBlocked("PRICE_BATCH_EXACT_REFS_OR_LIFECYCLE_DRIFTED")
+        payload = current.model_dump(mode="json", by_alias=True)
+        payload.update({"revision": current.revision + 1, "version": current.version + 1, "lifecycle": "frozen", "priorContentHash": current.content_hash, "contentHash": canonical_hash({"prior": current.content_hash, "exactRefs": actual, "lifecycle": "frozen"}), "createdBy": actor, "createdAt": at})
+        return self.store.append_batch(scope, PriceResearchBatchRevision.model_validate(payload))
+
+    def contribution_view(self, scope: TenantScope, *, now: datetime | None = None) -> PriceResearchContributionView:
+        at = now or datetime.now(UTC)
+        try:
+            latest = self.store.latest_batch_or_none(scope)
+        except PriceResearchBlocked as exc:
+            if str(exc) != "PRICE_RESEARCH_AUTHORITY_UNAVAILABLE":
+                raise
+            return PriceResearchContributionView(tenant=self._tenant(scope), evaluatedAt=at, blockers=["PRICE_RESEARCH_AUTHORITY_UNAVAILABLE", "PRICE_RESEARCH_BATCH_NOT_AVAILABLE"])
+        blockers = [] if latest else ["PRICE_RESEARCH_BATCH_NOT_AVAILABLE"]
+        if latest and latest.lifecycle != "frozen":
+            blockers.append("PRICE_RESEARCH_BATCH_NOT_FROZEN")
+        return PriceResearchContributionView(
+            tenant=self._tenant(scope), evaluatedAt=at, atomicSkillRefs=latest.skill_refs if latest else [],
+            logicRef=latest.exact_refs.get("logic") if latest else None, latestBatch=latest, blockers=blockers,
+        )
+
+
+__all__ = [name for name in globals() if name.startswith(("Price", "Product", "Monitoring", "Prepare", "Freeze", "Normalize", "Create", "Decide")) or name in {"EcommerceWorkshopPriceResearchService", "canonical_hash", "PRICE_RESEARCH_SCHEMA_VERSION", "PRICE_LOGIC_ID", "PRICE_SKILL_IDS"}]
+
+FILE services/aos-api/aos_api/ecommerce_workshop_price_research_store.py SHA256 c6346f5e09a450fab597a48bac007cb97084102abecc06c6a25780de0340b23e
+"""Tenant-scoped append-only persistence for W6-05 price research authority."""
+from __future__ import annotations
+
+import json
+from collections.abc import Callable
+from typing import Any
+
+import psycopg
+
+from aos_api.db import connect
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_workshop_price_governance_contracts import PriceExactRef
+from aos_api.ecommerce_workshop_price_research import (
+    MonitoringPolicyRevision,
+    PriceObservationRevision,
+    PriceResearchBatchRevision,
+    PriceResearchBlocked,
+    PriceResearchProfileRevision,
+    ProductMatchDecisionRevision,
+    ProductMatchObservation,
+)
+from aos_api.tenant_scope import TenantScope
+
+
+class EcommerceWorkshopPriceResearchStore:
+    def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
+        self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
+
+    @staticmethod
+    def _json(value: Any) -> str:
+        return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+
+    @staticmethod
+    def _assert_tenant(scope: TenantScope, item: Any) -> None:
+        if (item.tenant.org_id, item.tenant.project_id) != scope.key:
+            raise PriceResearchBlocked("PRICE_RESEARCH_TENANT_DRIFT")
+
+    def _append(self, scope: TenantScope, table: str, identity_column: str, identity: str, revision: int, content_hash: str, item: Any, created_at: Any) -> Any:
+        self._assert_tenant(scope, item)
+        payload = item.model_dump(mode="json", by_alias=True)
+        with self._connect(scope) as conn:
+            conn.execute(
+                f"INSERT INTO {table}(org_id,project_id,{identity_column},revision,content_hash,authority_data,created_at) VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s) ON CONFLICT DO NOTHING",
+                (*scope.key, identity, revision, content_hash, self._json(payload), created_at),
+            )
+            row = conn.execute(f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s", (*scope.key, identity, revision)).fetchone()
+            if row is None or row["content_hash"] != content_hash:
+                raise PriceResearchBlocked("PRICE_RESEARCH_IDEMPOTENCY_CONFLICT")
+            conn.commit()
+        return type(item).model_validate(row["authority_data"])
+
+    def _require(self, scope: TenantScope, table: str, identity_column: str, ref: PriceExactRef, model: type[Any]) -> Any:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s", (*scope.key, ref.resource_id, ref.revision)).fetchone()
+        if row is None or f"sha256:{row['content_hash']}" != ref.content_hash:
+            raise PriceResearchBlocked(f"{ref.resource_type.upper()}_MISSING_OR_DRIFTED")
+        item = model.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+
+    def append_profile(self, scope: TenantScope, item: PriceResearchProfileRevision) -> PriceResearchProfileRevision:
+        return self._append(scope, "ecommerce_price_research_profile_revision", "profile_id", item.profile_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_observation(self, scope: TenantScope, item: PriceObservationRevision) -> PriceObservationRevision:
+        return self._append(scope, "ecommerce_price_observation_revision", "observation_id", item.observation_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_match_observation(self, scope: TenantScope, item: ProductMatchObservation) -> ProductMatchObservation:
+        return self._append(scope, "ecommerce_price_product_match_observation", "match_observation_id", item.match_observation_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_match_decision(self, scope: TenantScope, item: ProductMatchDecisionRevision) -> ProductMatchDecisionRevision:
+        return self._append(scope, "ecommerce_price_product_match_decision_revision", "decision_id", item.decision_id, item.revision, item.content_hash, item, item.decided_at)
+
+    def append_policy(self, scope: TenantScope, item: MonitoringPolicyRevision) -> MonitoringPolicyRevision:
+        return self._append(scope, "ecommerce_price_monitoring_policy_revision", "policy_id", item.policy_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_batch(self, scope: TenantScope, item: PriceResearchBatchRevision) -> PriceResearchBatchRevision:
+        return self._append(scope, "ecommerce_price_research_batch_revision", "batch_id", item.batch_id, item.revision, item.content_hash, item, item.created_at)
+
+    def require_profile(self, scope: TenantScope, ref: PriceExactRef) -> PriceResearchProfileRevision:
+        return self._require(scope, "ecommerce_price_research_profile_revision", "profile_id", ref, PriceResearchProfileRevision)
+
+    def require_observation(self, scope: TenantScope, ref: PriceExactRef) -> PriceObservationRevision:
+        return self._require(scope, "ecommerce_price_observation_revision", "observation_id", ref, PriceObservationRevision)
+
+    def require_match_observation(self, scope: TenantScope, ref: PriceExactRef) -> ProductMatchObservation:
+        return self._require(scope, "ecommerce_price_product_match_observation", "match_observation_id", ref, ProductMatchObservation)
+
+    def require_match_decision(self, scope: TenantScope, ref: PriceExactRef) -> ProductMatchDecisionRevision:
+        return self._require(scope, "ecommerce_price_product_match_decision_revision", "decision_id", ref, ProductMatchDecisionRevision)
+
+    def require_policy(self, scope: TenantScope, ref: PriceExactRef) -> MonitoringPolicyRevision:
+        return self._require(scope, "ecommerce_price_monitoring_policy_revision", "policy_id", ref, MonitoringPolicyRevision)
+
+    def latest_batch(self, scope: TenantScope, batch_id: str) -> PriceResearchBatchRevision:
+        with self._read_connect(scope) as conn:
+            row = conn.execute("SELECT authority_data FROM ecommerce_price_research_batch_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s ORDER BY revision DESC LIMIT 1", (*scope.key, batch_id)).fetchone()
+        if row is None:
+            raise PriceResearchBlocked("PRICE_RESEARCH_BATCH_NOT_FOUND")
+        item = PriceResearchBatchRevision.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+
+    def latest_batch_or_none_by_id(self, scope: TenantScope, batch_id: str) -> PriceResearchBatchRevision | None:
+        try:
+            return self.latest_batch(scope, batch_id)
+        except PriceResearchBlocked as exc:
+            if str(exc) == "PRICE_RESEARCH_BATCH_NOT_FOUND":
+                return None
+            raise
+
+    def latest_batch_or_none(self, scope: TenantScope) -> PriceResearchBatchRevision | None:
+        try:
+            with self._read_connect(scope) as conn:
+                row = conn.execute("SELECT authority_data FROM ecommerce_price_research_batch_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,revision DESC LIMIT 1", scope.key).fetchone()
+        except psycopg.Error as exc:
+            raise PriceResearchBlocked("PRICE_RESEARCH_AUTHORITY_UNAVAILABLE") from exc
+        if row is None:
+            return None
+        item = PriceResearchBatchRevision.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+
+
+__all__ = ["EcommerceWorkshopPriceResearchStore"]
+
+
+FILE services/aos-api/alembic/versions/w6_005_price_research.py SHA256 6bc813fc9fe8835cbad28fcae5e426c1b0c3d4b54b55380c2fec6c955179de8f
+"""Price research, match, policy and side-effect-free batch authority (W6-05).
+
+Revision ID: w6_005
+Revises: w6_004
+"""
+from __future__ import annotations
+
+from collections.abc import Sequence
+from alembic import op
+
+revision: str = "w6_005"
+down_revision: str | Sequence[str] | None = "w6_004"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
+
+TABLES = (
+    ("ecommerce_price_research_profile_revision", "profile_id"),
+    ("ecommerce_price_observation_revision", "observation_id"),
+    ("ecommerce_price_product_match_observation", "match_observation_id"),
+    ("ecommerce_price_product_match_decision_revision", "decision_id"),
+    ("ecommerce_price_monitoring_policy_revision", "policy_id"),
+    ("ecommerce_price_research_batch_revision", "batch_id"),
+)
+
+
+def upgrade() -> None:
+    for table, identity in TABLES:
+        op.execute(f"""
+        CREATE TABLE {table} (
+          org_id TEXT NOT NULL, project_id TEXT NOT NULL, {identity} TEXT NOT NULL,
+          revision INTEGER NOT NULL CHECK (revision >= 1),
+          content_hash CHAR(64) NOT NULL CHECK (content_hash ~ '^[0-9a-f]{{64}}$'),
+          authority_data JSONB NOT NULL CHECK (jsonb_typeof(authority_data)='object'),
+          created_at TIMESTAMPTZ NOT NULL,
+          PRIMARY KEY (org_id,project_id,{identity},revision),
+          FOREIGN KEY (org_id,project_id) REFERENCES meta_workspace(org_id,project_id)
+        );
+        ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE {table} FORCE ROW LEVEL SECURITY;
+        CREATE POLICY tenant_scope ON {table}
+          USING (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true));
+        GRANT SELECT, INSERT ON {table} TO aos_runtime;
+        """)
+
+
+def downgrade() -> None:
+    for table, _identity in reversed(TABLES):
+        op.execute(f"DROP TABLE {table}")
+
+
+FILE services/aos-api/aos_api/ecommerce_workshop_read_catalog.py SHA256 041b25f128c8c458890a54a7631751038d8bb9ee238134c35b590d5a59b9d77d
+"""GET admission candidate over a current, signed, explicitly selected installation.
+
+This adapter does not activate HTTP routes or grant runtime readiness. Legacy
+admission is preserved; selected installed assets require actual exact scope grants.
+"""
+from __future__ import annotations
+
+from aos_api.asset_registry.errors import AssetNotFoundError
+from aos_api.ecommerce_workshop_contracts import WorkshopDependencyType
+
+
+class EcommerceWorkshopReadCatalog:
+    def __init__(self, *, legacy, installed=None, installed_factory=None) -> None:
+        self._legacy = legacy
+        self._installed = installed
+        self._installed_factory = installed_factory
+
+    def get_readiness(self, **scope):
+        try:
+            return self._legacy.get_readiness(**scope)
+        except AssetNotFoundError:
+            # Integrity, signature and availability errors never permit fallback.
+            pass
+        return self.get_installed_readiness(**scope)
+
+    def get_installed_readiness(self, **scope):
+        """Check only the selected installation with the existing exact read gate."""
+        installed = (
+            self._installed_factory() if self._installed_factory is not None
+            else self._installed
+        )
+        result = installed.get_readiness(**scope)
+        item = result.item
+        installation = item.installation_ref
+        required = set(item.permissions.data_scopes)
+        expected_revision = (
+            f'installation:{installation.revision}/lock:{installation.lock_revision}'
+        )
+        granted = {
+            ref.resource_id for ref in item.dependency_refs
+            if ref.resource_type == 'DataScopeGrant'
+            and ref.revision == expected_revision
+            and ref.content_hash == installation.lock_hash
+            and ref.authority == 'postgres:bundle_composition_lock'
+        }
+        permitted_gap_types = {
+            WorkshopDependencyType.OBJECT,
+            WorkshopDependencyType.CAPABILITY,
+            WorkshopDependencyType.AIP_FEATURE,
+        }
+        disallowed = any(
+            blocker.dependency_type not in permitted_gap_types
+            and not (
+                blocker.dependency_type == WorkshopDependencyType.INSTALLATION
+                and blocker.reason_code == 'INSTALLED_ASSET_READONLY'
+                and blocker.dependency_id == installation.installation_id
+            )
+            for blocker in item.blockers
+        )
+        if 'ecommerce.workshop.read' not in required or not required <= granted or disallowed:
+            raise AssetNotFoundError('Workshop module is not installed for scoped reading')
+        # Keep the original disabled state and every runtime/authority gap intact.
+        return result
+
+
+ORIGINAL services/aos-api/aos_api/routers/ecommerce_workshop.py lines 518-526
+        EcommerceWorkshopCreatorLifecycleStore(), batch_store
+    )
+
+
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_price_research() -> EcommerceWorkshopPriceResearchService:
+    return EcommerceWorkshopPriceResearchService(EcommerceWorkshopPriceResearchStore())
+
+
+
+ORIGINAL services/aos-api/aos_api/routers/ecommerce_workshop.py lines 2275-2290
+@router.get(
+    "/views/price-governance/contributions",
+    response_model=PriceResearchContributionView,
+    operation_id="ecommerceWorkshopPriceResearchContributionViewGet",
+    responses=_ERRORS,
+)
+def get_price_research_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceResearchDependency,
+) -> PriceResearchContributionView:
+    _reject_query_parameters(request)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+
+
+ORIGINAL services/aos-api/aos_api/db.py lines 97-116
+def connect_read_only(
+    scope: TenantScope | None = None,
+    *,
+    inherit_scope: bool = True,
+    platform_role: bool = False,
+) -> Iterator[psycopg.Connection]:
+    """Open a repeatable-read, read-only transaction before applying RLS scope.
+
+    Pass ``scope=None, inherit_scope=False, platform_role=True`` to read
+    platform-level assets (no tenant RLS) with the runtime identity: a
+    scope-less connection performs no SET ROLE, which on a NOINHERIT login
+    leaves the session with no privileges at all.
+    """
+    return _connect(
+        scope,
+        inherit_scope=inherit_scope,
+        read_only=True,
+        isolation_level=IsolationLevel.REPEATABLE_READ,
+        platform_role=platform_role,
+    )
+
+ORIGINAL services/aos-api/aos_api/ecommerce_workshop_price_governance_contracts.py lines 34-41
+class PriceExactRef(AipContractModel):
+    resource_type: str = Field(min_length=1, max_length=120)
+    resource_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    receipt_id: str = Field(min_length=1, max_length=200)
+

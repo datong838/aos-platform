@@ -1,0 +1,131 @@
+{
+  "head": "8374113ae12b615980198f98416611a5e10fc377",
+  "authority": "AOS-002032",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "tasks": [
+    {
+      "base_revision": "AOS-002032",
+      "created_at": "2026-10-15T07:05:39+08:00",
+      "excluded_scope": [
+        "aos-platform/apps/web",
+        "aos-platform/maintenance/qiyuehui-restored-data-volume",
+        "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+        "aos-platform/services/aos-api/aos_api/aip_action_store.py"
+      ],
+      "expected_outputs": [
+        "Full231Goal and eight step Loop preserved; initial readonly audit price contributions GET defaultproducer/transitiveStore/tenant/nestedDTO/privacy/consistentcutoff/bounds/error/authorization before exact plan and Prime/RED.",
+        "Register extra product files separately before code; no source/businesswrite/budgetapproval/Provider/oldunknown replay or implicit priceclosure/customer admission. Same viewport original visual comparison remains required for applicable UI waves."
+      ],
+      "lease_expires_at": "2026-10-15T02:00:00+00:00",
+      "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+        "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+        "aos-platform/.evidence/qyh-price-contribution-read-admission-20261015",
+        "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md"
+      ],
+      "status": "ACTIVE",
+      "task_id": "qyh-price-contribution-read-admission-20261015"
+    },
+    {
+      "base_revision": "AOS-002032",
+      "created_at": "2026-10-15T07:09:56+08:00",
+      "excluded_scope": [
+        "aos-platform/services/aos-api/aos_api/ecommerce_workshop_price_research.py",
+        "aos-platform/services/aos-api/aos_api/ecommerce_workshop_price_research_store.py",
+        "aos-platform/apps/web",
+        "aos-platform/maintenance/qiyuehui-restored-data-volume",
+        "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+        "aos-platform/services/aos-api/aos_api/aip_action_execution.py"
+      ],
+      "expected_outputs": [
+        "Full231Goal retained; dedicated bounded same-snapshot saved price batch readonly reader/tests only, originalproducer prepared/frozen hash and inheritance verified; tenant/refs/privacy/SQLbytes/ledger/time stable failures; no producer/POST/legacy changes.",
+        "PlanPrime beforeRED/minimal; frozenneighborregression/isolatedoriginalDDL nativePG RLS/read25006/consistentcutoff, then separately reviewed latest management API genuine OIDC SDK and original650 no effect; saved flags are not live budget approval or business completion."
+      ],
+      "lease_expires_at": "2026-10-15T02:00:00+00:00",
+      "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/ecommerce_price_research_readonly.py",
+        "aos-platform/services/aos-api/tests/test_ecommerce_price_research_readonly.py",
+        "aos-platform/.evidence/qyh-price-contribution-bounded-reader-20261015"
+      ],
+      "status": "ACTIVE",
+      "task_id": "qyh-price-contribution-bounded-reader-20261015"
+    },
+    {
+      "base_revision": "AOS-002032",
+      "created_at": "2026-10-15T07:05:39+08:00",
+      "excluded_scope": [
+        "aos-platform/maintenance/current-preview-database",
+        "aos-platform/maintenance/current-preview-api",
+        "aos-platform/maintenance/current-preview-web",
+        "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+        "aos-platform/services/aos-api/aos_api/aip_action_execution.py"
+      ],
+      "expected_outputs": [
+        "Carry all incomplete original restoration requirements and same original data/approval/identity into new-owner maintenance;no whole completion claim",
+        "Latest committed freeze excludes dirty; original role readonly native root8;fresh same-volume PG/API/Web restart, same-cutoff full fingerprint/no-effect/owned real OIDC SPA/browser reads then continue business Loop",
+        "Unknown effects read-only reconcile; keep Host/worker/Provider OFF,no old Run/mall source/manual execution/duplicate scripts or credentials disclosure",
+        "Recover latest management READONLY API for exact161db/162closedcandidate without migration or runtime override;strict runtime/unknownschema deny,fullreview;then latestPG/API/Web real8page/visual/deny-entry",
+        "Carry unchanged entire longGoal/user original install/fullrestore authorization, latest actual API87013/head110 and Web78346/head6c equalcurrenttrees plus originalPG; daily/aos latestoriginalvolume fullPG/API/Web, aos-2 no restart; maintain readonly/HostworkerProviderOFF; do not replay failed/unknown intents.",
+        "All earlier fullrestore pending original requirements remain; no fullrestoration/visual/business completion from previous handoff; sameowner unique m1 writer and supported Goal/reminders preserved",
+        "Carry complete remaining original recovery/daily fullPG/API/Web and sole originaluser authorization; actualAPI7645/head23e76 Web78346/head6c identicalfrontendtrees, schema161/650 originalvolume readonly; prior maintenancehandoff not whole completion; no replay/privateGoal/reminder edits",
+        "Carry ALL original remaining maintenance/currentAPI25389f005 currentWeb78346/6c PGoriginal161650bindings0 and daily latestcommittedfullPG/API/Web; this handoff not whole completion",
+        "Carry ALL original remaining restoration/complete231Goal/daily originalvolume PG/API/Web/aos2 noRestart/soleoriginaluser authorization. CurrentAPI64550 andWeb64614/source6bf codeeq2f latest, originalPGStarted20:36:36/schema161/650/bindings0; today onlymaintenance proof, fullbudget/business/install/8visual/release pending.",
+        "Carry ALL original remaining restoration/user authorization/full231Goal. Current API72678/source53 and Web76677/source1627 trees equal f1a1f51, original PG started20:36:36/schema161/650/bindings0. Future daily/every aos latest committed m1 original-volume fullPG/API/Web preserved; aos2 no restart. Read wave handoff is not full completion."
+      ],
+      "lease_expires_at": "2026-10-15T02:00:00+00:00",
+      "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/.evidence/qyh-full-system-restoration-20261011",
+        "aos-platform/maintenance/qiyuehui-restored-data-volume",
+        "aos-platform/maintenance/qiyuehui-restored-api",
+        "aos-platform/maintenance/qiyuehui-restored-web",
+        "aos-platform/scripts/a0v_qyh_restored_http.py",
+        "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py",
+        "aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013",
+        "aos-platform/.evidence/qyh-daily-readonly-schema-compat-20261014",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-20261014",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r2-20261014",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r4-20261015",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r5-20261015"
+      ],
+      "status": "ACTIVE",
+      "task_id": "qyh-restoration-readonly-continuation-r5-20261015"
+    }
+  ],
+  "sourceHashes": {
+    "services/aos-api/aos_api/ecommerce_price_research_readonly.py": "cde963845f4c66ff9bd199fea1be4b1130a8af18c28632e8ca9d9aa9b0a0bb26",
+    "services/aos-api/tests/test_ecommerce_price_research_readonly.py": "4f2c722abb00647e18dc4688ea6eb283989e9243a491e78c49b57114efd11bb6",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "b46d7a8134867bf28efb60cd4e90c1895d4ae3634bb74807e3c9a382cef8a562",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "cf1b016c02b15c4aee31f580e9a9b7c5993757baa472cc72074b991ecdb1170e"
+  },
+  "planPrime": "r2 PASS legally consumed",
+  "r1RawClaimPunctuationRejected": true,
+  "readerRed": "missing proposed module before implementation",
+  "httpRed": "10 failed 75 passed",
+  "workingReaderFirstGreen": 43,
+  "workingHttpGreen": 85,
+  "frozenCumulativePass": 222,
+  "sourceHashesEqual": true,
+  "codeCommitted": false,
+  "deployed": false,
+  "originalDatabaseTouched": false,
+  "goal": "ACTIVE",
+  "wholeGoalComplete": false,
+  "nextRequired": [
+    "Add successful installed readonly and normal legacy full HTTP DTO serialization tests before next frozen revision",
+    "Real isolated original w6_005 PG: original producer nonempty, RLS/FORCE,25006,SQLCASE and concurrent repeatable snapshot",
+    "Independent frozen code Prime then exact commit; fresh maintenance controller gate before updating readonly API",
+    "Original genuine OIDC GET and formal SDK, original650 equality, applicable same-size visual comparison and independent live review before Delivery"
+  ],
+  "risks": [
+    "Persisted budget/capability refs are historical facts, not current approval",
+    "Original price page helper failure fake-empty/zero semantics and high filter P1 need separate registered UI scope",
+    "All fullC/user final budget/deployment/natural business/install lifecycle/eight real scenarios/observe release requirements remain"
+  ]
+}
