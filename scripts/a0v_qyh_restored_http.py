@@ -105,7 +105,10 @@ class ReadOnlyManagementApp:
             return
         await self.app(scope, receive, send)
 
-def require_identity(observed, *, code_head):
+def require_identity(observed, *, code_head, management_readonly=False,
+                     pending_renewal_absent=False):
+    if type(management_readonly) is not bool or type(pending_renewal_absent) is not bool:
+        raise RestorationBlocked('RESTORED_READONLY_COMPATIBILITY_INVALID')
     if any(observed.get(k) != v for k,v in EXPECTED.items()
            if k not in {'schema', 'tables'}):
         raise RestorationBlocked('RESTORED_IDENTITY_DRIFT')
@@ -113,7 +116,23 @@ def require_identity(observed, *, code_head):
     if tables is None or observed.get('tables') != tables:
         raise RestorationBlocked('RESTORED_IDENTITY_DRIFT')
     if observed['schema'] != code_head:
-        raise RestorationBlocked('RESTORED_CODE_SCHEMA_DRIFT')
+        if not (management_readonly and pending_renewal_absent
+                and observed['schema']=='a0v_161' and code_head=='a0v_162'):
+            raise RestorationBlocked('RESTORED_CODE_SCHEMA_DRIFT')
+        # Only the independently delivered closed candidate may remain pending.
+        # Never infer that a future or modified migration is safe to bypass.
+        pins={
+            'services/aos-api/alembic/versions/a0v_162_budget_policy_renewal.py':
+                '9426ad5bc3b027e02c21f1317fec603576b541200982460e310567e11f32f761',
+            'services/aos-api/aos_api/aip_budget_policy_renewal_authority.sql':
+                'febed109685624c872fbc68d307a81c44b90f405cd8e7d2fefa30503a63cead5',
+        }
+        try:
+            if any((ROOT/name).is_symlink() or hashlib.sha256((ROOT/name).read_bytes()).hexdigest()!=digest
+                   for name,digest in pins.items()):
+                raise OSError()
+        except OSError:
+            raise RestorationBlocked('RESTORED_PENDING_CANDIDATE_SOURCE_DRIFT') from None
 
 def inventory_report(identity, inventory):
     return {'outcome': 'RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY',
@@ -141,7 +160,7 @@ def _identity_parameters(identity_file):
     data['pgpassFile'] = str(_private(Path(data.pop('pgpassfile'))))
     return data
 
-def preflight(identity_file):
+def preflight(identity_file, *, management_readonly=False):
     data = _identity_parameters(identity_file)
     previous._verify_limited_login(data)
     proc = subprocess.run(['docker','--context',CONTEXT,'inspect','--format',
@@ -158,6 +177,10 @@ def preflight(identity_file):
       'database',current_database(),
       'cluster',(SELECT system_identifier::text FROM pg_control_system()),
       'schema',(SELECT version_num FROM alembic_version),
+      'pendingRenewalAbsent',to_regclass('public.aip_budget_policy_renewal_proposal') IS NULL
+        AND to_regclass('public.aip_budget_policy_renewal_decision') IS NULL
+        AND to_regclass('public.aip_budget_policy_renewal_receipt') IS NULL
+        AND NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname LIKE 'aos_budget_renewal_%'),
       'orgId',(SELECT id FROM meta_org WHERE id='org-org'),
       'orgName',(SELECT name FROM meta_org WHERE id='org-org'),
       'projectId',(SELECT project_id FROM meta_workspace WHERE project_id='dev-project' AND org_id='org-org'),
@@ -173,11 +196,16 @@ def preflight(identity_file):
         input=sql.encode(),check=True,capture_output=True,timeout=30)
     observed = json.loads(proc.stdout)
     inventory = observed.pop('inventory')
-    require_identity(observed,code_head=previous._code_schema_head())
+    pending_absent=observed.pop('pendingRenewalAbsent')
+    code_head=previous._code_schema_head()
+    require_identity(observed,code_head=code_head,management_readonly=management_readonly,
+                     pending_renewal_absent=pending_absent)
     report = inventory_report(observed, inventory)
     report['limitedLoginVerified'] = True
     report['volume'] = VOLUME
     report['databaseStartedAt'] = container['State']['StartedAt']
+    report['codeSchema']=code_head
+    report['pendingCodeCandidateNotApplied']=observed['schema']!=code_head
     return report
 
 def require_selected_installation(view, *, installation_id):
@@ -200,8 +228,12 @@ def require_selected_installation(view, *, installation_id):
         'apiStartAuthorized': False, 'runtimeHostEnabled': False,
         'currentConfigurationVerified': False, 'eightWorkbenchesVerified': False}
 
-def select_current_installation(*, identity_file, bundle_root, trust_roots_file, installation_id):
-    report = preflight(identity_file)
+def select_current_installation(*, identity_file, bundle_root, trust_roots_file, installation_id,
+                                management_readonly=False):
+    if type(management_readonly) is not bool:
+        raise RestorationBlocked('RESTORED_READONLY_COMPATIBILITY_INVALID')
+    report = (preflight(identity_file,management_readonly=True) if management_readonly is True
+              else preflight(identity_file))
     parameters = _identity_parameters(identity_file)
     sys.path.insert(0, str(ROOT / 'services/aos-api'))
     from psycopg import connect
@@ -363,8 +395,9 @@ def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, s
         installed_readonly_installation, management_oidc_config=management_oidc_config)
     if installed_readonly_installation is not None:
         select_current_installation(identity_file=identity_file, bundle_root=bundle_root,
-            trust_roots_file=trust_roots_file, installation_id=installed_readonly_installation)
-    preflight(identity_file)
+            trust_roots_file=trust_roots_file, installation_id=installed_readonly_installation,
+            management_readonly=True)
+    preflight(identity_file,management_readonly=True)
     identity = _identity_parameters(identity_file)
     from psycopg import connect
     from psycopg.conninfo import make_conninfo

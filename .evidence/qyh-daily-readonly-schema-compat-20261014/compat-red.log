@@ -1,0 +1,136 @@
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+__________ test_pending_closed_162_only_allows_explicit_readonly_161 ___________
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+
+    def test_pending_closed_162_only_allows_explicit_readonly_161(entry):
+        observed={**baseline(),'schema':'a0v_161','tables':650}
+>       entry.require_identity(observed,code_head='a0v_162',management_readonly=True,
+                               pending_renewal_absent=True)
+E       TypeError: require_identity() got an unexpected keyword argument 'management_readonly'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:23: TypeError
+_______ test_pending_readonly_exception_fails_closed[False-True-a0v_162] _______
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+readonly = False, absent = True, head = 'a0v_162'
+
+    @pytest.mark.parametrize('readonly,absent,head',[(False,True,'a0v_162'),(True,False,'a0v_162'),
+        ('true',True,'a0v_162'),(True,1,'a0v_162'),(True,True,'a0v_163')])
+    def test_pending_readonly_exception_fails_closed(entry,readonly,absent,head):
+        with pytest.raises(entry.RestorationBlocked):
+>           entry.require_identity({**baseline(),'schema':'a0v_161','tables':650},code_head=head,
+                management_readonly=readonly,pending_renewal_absent=absent)
+E           TypeError: require_identity() got an unexpected keyword argument 'management_readonly'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:33: TypeError
+_______ test_pending_readonly_exception_fails_closed[True-False-a0v_162] _______
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+readonly = True, absent = False, head = 'a0v_162'
+
+    @pytest.mark.parametrize('readonly,absent,head',[(False,True,'a0v_162'),(True,False,'a0v_162'),
+        ('true',True,'a0v_162'),(True,1,'a0v_162'),(True,True,'a0v_163')])
+    def test_pending_readonly_exception_fails_closed(entry,readonly,absent,head):
+        with pytest.raises(entry.RestorationBlocked):
+>           entry.require_identity({**baseline(),'schema':'a0v_161','tables':650},code_head=head,
+                management_readonly=readonly,pending_renewal_absent=absent)
+E           TypeError: require_identity() got an unexpected keyword argument 'management_readonly'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:33: TypeError
+_______ test_pending_readonly_exception_fails_closed[true-True-a0v_162] ________
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+readonly = 'true', absent = True, head = 'a0v_162'
+
+    @pytest.mark.parametrize('readonly,absent,head',[(False,True,'a0v_162'),(True,False,'a0v_162'),
+        ('true',True,'a0v_162'),(True,1,'a0v_162'),(True,True,'a0v_163')])
+    def test_pending_readonly_exception_fails_closed(entry,readonly,absent,head):
+        with pytest.raises(entry.RestorationBlocked):
+>           entry.require_identity({**baseline(),'schema':'a0v_161','tables':650},code_head=head,
+                management_readonly=readonly,pending_renewal_absent=absent)
+E           TypeError: require_identity() got an unexpected keyword argument 'management_readonly'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:33: TypeError
+_________ test_pending_readonly_exception_fails_closed[True-1-a0v_162] _________
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+readonly = True, absent = 1, head = 'a0v_162'
+
+    @pytest.mark.parametrize('readonly,absent,head',[(False,True,'a0v_162'),(True,False,'a0v_162'),
+        ('true',True,'a0v_162'),(True,1,'a0v_162'),(True,True,'a0v_163')])
+    def test_pending_readonly_exception_fails_closed(entry,readonly,absent,head):
+        with pytest.raises(entry.RestorationBlocked):
+>           entry.require_identity({**baseline(),'schema':'a0v_161','tables':650},code_head=head,
+                management_readonly=readonly,pending_renewal_absent=absent)
+E           TypeError: require_identity() got an unexpected keyword argument 'management_readonly'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:33: TypeError
+_______ test_pending_readonly_exception_fails_closed[True-True-a0v_163] ________
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+readonly = True, absent = True, head = 'a0v_163'
+
+    @pytest.mark.parametrize('readonly,absent,head',[(False,True,'a0v_162'),(True,False,'a0v_162'),
+        ('true',True,'a0v_162'),(True,1,'a0v_162'),(True,True,'a0v_163')])
+    def test_pending_readonly_exception_fails_closed(entry,readonly,absent,head):
+        with pytest.raises(entry.RestorationBlocked):
+>           entry.require_identity({**baseline(),'schema':'a0v_161','tables':650},code_head=head,
+                management_readonly=readonly,pending_renewal_absent=absent)
+E           TypeError: require_identity() got an unexpected keyword argument 'management_readonly'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:33: TypeError
+____________ test_pending_readonly_requires_delivered_source_hashes ____________
+
+entry = <module 'a0v_qyh_restored_http' from '/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_qyh_restored_http.py'>
+tmp_path = PosixPath('/private/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/pytest-of-ddt/pytest-161/test_pending_readonly_requires0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11da59a10>
+
+    def test_pending_readonly_requires_delivered_source_hashes(entry,tmp_path,monkeypatch):
+        monkeypatch.setattr(entry,'ROOT',tmp_path)
+        with pytest.raises(entry.RestorationBlocked):
+>           entry.require_identity({**baseline(),'schema':'a0v_161','tables':650},code_head='a0v_162',
+                management_readonly=True,pending_renewal_absent=True)
+E           TypeError: require_identity() got an unexpected keyword argument 'management_readonly'
+
+services/aos-api/tests/extension_runtime/test_qyh_restored_http.py:40: TypeError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_pending_closed_162_only_allows_explicit_readonly_161
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_pending_readonly_exception_fails_closed[False-True-a0v_162]
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_pending_readonly_exception_fails_closed[True-False-a0v_162]
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_pending_readonly_exception_fails_closed[true-True-a0v_162]
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_pending_readonly_exception_fails_closed[True-1-a0v_162]
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_pending_readonly_exception_fails_closed[True-True-a0v_163]
+FAILED services/aos-api/tests/extension_runtime/test_qyh_restored_http.py::test_pending_readonly_requires_delivered_source_hashes
+7 failed, 65 deselected, 7 warnings in 0.41s

@@ -1,0 +1,9 @@
+{
+  "query": "BEGIN READ ONLY;SELECT json_build_object('schema',(SELECT version_num FROM alembic_version),'pendingJournalsAbsent',to_regclass('public.aip_budget_policy_renewal_proposal') IS NULL AND to_regclass('public.aip_budget_policy_renewal_decision') IS NULL AND to_regclass('public.aip_budget_policy_renewal_receipt') IS NULL,'pendingRolesAbsent',NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname LIKE 'aos_budget_renewal_%'));ROLLBACK;",
+  "result": {
+    "schema": "a0v_161",
+    "pendingJournalsAbsent": true,
+    "pendingRolesAbsent": true
+  },
+  "readonly": true
+}

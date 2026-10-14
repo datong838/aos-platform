@@ -1,0 +1,34 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "406539f41e2d4a581fc5c2519ca9f8ca2383fc82a3165e5568d8c9f1e605e701",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-daily-readonly-schema-compat-20261014-code-r1",
+    "task_id": "qyh-daily-readonly-schema-compat-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "dd173bc396a7e86f7b10d9ecc053a77f27e4c418",
+      "authority_revision": "AOS-002027",
+      "files": {
+        ".evidence/qyh-daily-readonly-schema-compat-20261014/code-review-package-r1.txt": "f0962bebbc192d5d5eee5b4201299164bdef4e05195ddde842aa47e71ffc9f0b"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The complete scoped code and tests permit only explicit read-only161/162 closed-candidate inspection with pinned source and absent native artifacts, while preserving strict runtime and unknown-schema denial with no migration or budget authority.",
+        "evidence": "文件 scripts/a0v_qyh_restored_http.py 函数 require_identity (SHA c73f72...) 在 management_readonly=True/pending_renewal_absent=True/schema='a0v_161'/code_head='a0v_162' 时仅校验 pins 中两个独立提交 SHA256，禁止推断迁移；ReadOnlyManagementApp 限制 GET/HEAD/OPTIONS+可选 POST /v1/auth/token，其余方法返回 RESTORED_MANAGEMENT_READ_ONLY；native 预检 SQL 使用 BEGIN READ ONLY/无 INSERT/角色核查；测试 services/aos-api/tests/extension_runtime/test_qyh_restored_http.py SHA 074c7f... 含 test_pending_closed_162_only_allows_explicit_readonly_161、test_pending_readonly_exception_fails_closed、test_migrated_preserved_cluster_matches_current_code、test_unknown_or_partial_migration_never_attaches 等验证未知 schema 拒绝与 source pin。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Actual complete tests and original native readonly preflight evidence support safely committing this code before a new latest-source API launch; full daily PG/API/Web/browser and business Goal are not claimed completed.",
+        "evidence": "测试日志 compat-all-green-r2.log 显示 72 passed；native 实际输出 actual native-readonly-compat.json 返回 outcome=RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY、apiStartAuthorized=false、remainingGates 保留三项未闭合；代码 inventory_report 显式设置 apiStartAuthorized/runtimeHostEnabled/eightWorkbenchesVerified=false。计划消费 actual plan-review-consumption-r3.json 已 CONSUMED_MATERIAL_REVIEW，声明 execution_authorized=false；原 daily 基线：PG 650 稳定、API 74445 rejected、Web 7590 unchanged，均为历史状态。本次为修复代码提交审阅，不声称完整目标完成。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "以当前 baseline dd173bc396 合并并提交 scripts/a0v_qyh_restored_http.py 与对应测试；保持只读预检与 source pin 不变，暂不启动 API/Web，等待下一个 latest-source API 正式发布后另行审阅。"
+  }
+}

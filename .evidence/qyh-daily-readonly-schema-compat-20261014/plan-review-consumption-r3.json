@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-daily-readonly-schema-compat-20261014-plan-r3",
+  "task_id": "qyh-daily-readonly-schema-compat-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "dd173bc396a7e86f7b10d9ecc053a77f27e4c418",
+    "authority_revision": "AOS-002027",
+    "files": {
+      ".evidence/qyh-daily-readonly-schema-compat-20261014/plan-review-package-r2.txt": "6638b43ccce6d98bdfaf0cc5fd2cc0dc8872f8ddfba9a08eb6984ec2b056d36b"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "a4886b18c6af0c902d4d8d00ee8f0fe9f2152e76e493f69785d14c71d7a046bb",
+  "transport_sha256": "8317a610a2ff8d150a08b49f3f22f4b97f4c2667b450fb4fc254a1a377db3cf4"
+}

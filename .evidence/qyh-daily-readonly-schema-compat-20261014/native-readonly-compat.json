@@ -1,0 +1,35 @@
+{
+  "report": {
+    "outcome": "RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY",
+    "identity": {
+      "database": "aos_meta_head",
+      "cluster": "7695302940039200809",
+      "schema": "a0v_161",
+      "orgId": "org-org",
+      "orgName": "栖月汇商贸有限公司",
+      "projectId": "dev-project",
+      "tables": 650
+    },
+    "inventory": {
+      "installations": 136,
+      "configurations": 130,
+      "bindings": 127,
+      "enabledBindings": 0
+    },
+    "apiStartAuthorized": false,
+    "eightWorkbenchesVerified": false,
+    "runtimeHostEnabled": false,
+    "remainingGates": [
+      "current signed release and installation",
+      "current configuration and formal identity",
+      "API/Web restart and eight-page browser acceptance"
+    ],
+    "limitedLoginVerified": true,
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "databaseStartedAt": "2026-10-14T02:21:20.479431743Z",
+    "codeSchema": "a0v_162",
+    "pendingCodeCandidateNotApplied": true
+  },
+  "strictRuntimeStillDenied": true,
+  "migrationOrRoleWrite": false
+}

@@ -18,6 +18,29 @@ def baseline():
             'tables': 647}
 
 
+def test_pending_closed_162_only_allows_explicit_readonly_161(entry):
+    observed={**baseline(),'schema':'a0v_161','tables':650}
+    entry.require_identity(observed,code_head='a0v_162',management_readonly=True,
+                           pending_renewal_absent=True)
+    with pytest.raises(entry.RestorationBlocked):
+        entry.require_identity(observed,code_head='a0v_162')
+
+
+@pytest.mark.parametrize('readonly,absent,head',[(False,True,'a0v_162'),(True,False,'a0v_162'),
+    ('true',True,'a0v_162'),(True,1,'a0v_162'),(True,True,'a0v_163')])
+def test_pending_readonly_exception_fails_closed(entry,readonly,absent,head):
+    with pytest.raises(entry.RestorationBlocked):
+        entry.require_identity({**baseline(),'schema':'a0v_161','tables':650},code_head=head,
+            management_readonly=readonly,pending_renewal_absent=absent)
+
+
+def test_pending_readonly_requires_delivered_source_hashes(entry,tmp_path,monkeypatch):
+    monkeypatch.setattr(entry,'ROOT',tmp_path)
+    with pytest.raises(entry.RestorationBlocked):
+        entry.require_identity({**baseline(),'schema':'a0v_161','tables':650},code_head='a0v_162',
+            management_readonly=True,pending_renewal_absent=True)
+
+
 @pytest.mark.parametrize('method', ['POST', 'PUT', 'PATCH', 'DELETE', 'TRACE', 'CONNECT'])
 def test_management_readonly_blocks_mutations_before_product_app(entry, method):
     from starlette.testclient import TestClient
@@ -402,7 +425,9 @@ def test_management_launch_revalidates_selected_installation_and_scrubs_inherite
     monkeypatch.setattr(entry.previous,'_port_free',lambda port:True)
     monkeypatch.setattr(entry,'require_api_source_candidate',lambda path:tmp_path)
     monkeypatch.setattr(entry,'load_management_oidc_config',lambda path:{'AOS_AUTH_ALLOW_DEV':'0'})
-    monkeypatch.setattr(entry,'preflight',lambda path:None)
+    def readonly_preflight(path,*,management_readonly=False):
+        assert management_readonly is True
+    monkeypatch.setattr(entry,'preflight',readonly_preflight)
     monkeypatch.setattr(entry,'select_current_installation',lambda **kw:observed.append(kw['installation_id']))
     monkeypatch.setattr(entry,'_identity_parameters',lambda path:{'host':'127.0.0.1','port':1,'dbname':'fixture','user':'fixture','pgpassFile':'/protected/passfile'})
     class Connection:
