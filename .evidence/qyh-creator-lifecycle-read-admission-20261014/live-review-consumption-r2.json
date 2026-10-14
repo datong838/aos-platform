@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-lifecycle-read-admission-20261014-live-r2",
+  "task_id": "qyh-creator-lifecycle-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "f005a195265f4590d9214a810a24fbec0d15ab32",
+    "authority_revision": "AOS-002029",
+    "files": {
+      ".evidence/qyh-creator-lifecycle-read-admission-20261014/live-review-package-r2.txt": "2726f17896d8bcf99dc87e6779abde292ff83425be1373a3f444f29b9577ed43"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "438788e9b8c243944d7dc132009fe978f8775782e5f1bfe5906cc3af1e0fdbbe",
+  "transport_sha256": "f1e2c7aad1a7e7ab913b0f74b8388ae05eaa247f238c769b3081dafc02e0a787"
+}

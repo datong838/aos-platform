@@ -1,0 +1,29 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "9195a06561236aed7d0a9bddf10e13da85b99bcee45c1a63fd755c7c72bba2ac",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-lifecycle-maintenance-20261014-quality-r2",
+    "task_id": "qyh-restoration-readonly-continuation-r2-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "f005a195265f4590d9214a810a24fbec0d15ab32",
+      "authority_revision": "AOS-002029",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r2-20261014/creator-lifecycle-maintenance-package-r2.txt": "65a2c9dcb91ad9db110b6070a72621e248164c2ef24a0cdeca2f4bb533845ffb"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Fresh exact readonly API-only maintenance controller and plan preserve existing original authorization/same-owner Lease, require committed source/pinned reviewed product hashes/canonical legal review consumption/HEAD/sourceguard/oldPIDcwd-singlelistener before durable one-attempt intent and any signal; no PG/Web/Chrome effects, no original migrations/budget/source/operation grants, no unknown retry, spawn distinct from native acceptance. This is controller quality not operational authorization or completed restoration.",
+        "evidence": "控制器src:.evidence/.../creator_lifecycle_api_reload.py；计划src:.evidence/.../creator-lifecycle-api-reload-plan.md；冻结报告:creator-lifecycle-api-20261014.json(head=f005a195...)；r3 PASS消费:code-review-result-r3.json+consumption-r3.json(CONSUMED_MATERIAL_REVIEW)；source guard预检:ACTUAL READONLY LIVE PREFLIGHT(lease owner/head/oldPid=7645/single listener=7645/prefixStopsBeforeIntentOrSignal=true/serviceEffects=false)。断言覆盖无intent/无started、lease核验、HEAD匹配、source哈希一致性、单listener、fsync后SIGTERM、Popen只spawn/pgWebChromeTouched=false。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续按当前未提交候选只读走质量门；如需上线，请发起独立的commit/部署/经营授权请求，不在此质量复核中推进运行时效果。"
+  }
+}

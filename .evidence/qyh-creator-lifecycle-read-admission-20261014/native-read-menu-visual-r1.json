@@ -1,0 +1,302 @@
+{
+  "at": "2026-10-14T12:36:19.440Z",
+  "apiHead": "f005a195265f4590d9214a810a24fbec0d15ab32",
+  "apiPid": 25389,
+  "webPid": 78346,
+  "webSource": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+  "orgId": "org-org",
+  "projectId": "dev-project",
+  "tokenKind": "oidc",
+  "lifecycle": {
+    "latestStart": null,
+    "contracts": 0,
+    "deliveries": 0,
+    "relationships": 0,
+    "allowedCommands": [],
+    "externalEffectsAllowed": false,
+    "blockers": [
+      "CREATOR_BATCH_START_NOT_AVAILABLE"
+    ]
+  },
+  "menuNetwork": [
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 404,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 404,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "status": 404,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "status": 404,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "status": 200,
+      "method": "GET"
+    }
+  ],
+  "visual": [
+    {
+      "width": 1280,
+      "height": 720,
+      "scrollWidth": 1280,
+      "buttons": [
+        {
+          "text": "候选0达人与品牌、商品和受众的匹配",
+          "disabled": false,
+          "left": 308,
+          "right": 561
+        },
+        {
+          "text": "邀约0候选去重、准备、批准与回复",
+          "disabled": false,
+          "left": 308,
+          "right": 561
+        },
+        {
+          "text": "准备候选条件",
+          "disabled": false,
+          "left": 775,
+          "right": 881
+        },
+        {
+          "text": "补充候选条件",
+          "disabled": false,
+          "left": 1117,
+          "right": 1243.5
+        },
+        {
+          "text": "补充预算权益",
+          "disabled": false,
+          "left": 1249.5,
+          "right": 1376
+        },
+        {
+          "text": "准备候选条件",
+          "disabled": false,
+          "left": 1249.5,
+          "right": 1376
+        },
+        {
+          "text": "重新读取业务数据",
+          "disabled": false,
+          "left": 1117,
+          "right": 1376
+        },
+        {
+          "text": "重新读取",
+          "disabled": false,
+          "left": 1334,
+          "right": 1390
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "buttons": [
+        {
+          "text": "候选0达人与品牌、商品和受众的匹配",
+          "disabled": false,
+          "left": 308,
+          "right": 561
+        },
+        {
+          "text": "邀约0候选去重、准备、批准与回复",
+          "disabled": false,
+          "left": 308,
+          "right": 561
+        },
+        {
+          "text": "准备候选条件",
+          "disabled": false,
+          "left": 791,
+          "right": 897
+        },
+        {
+          "text": "补充候选条件",
+          "disabled": false,
+          "left": 1149,
+          "right": 1278.5
+        },
+        {
+          "text": "补充预算权益",
+          "disabled": false,
+          "left": 1284.5,
+          "right": 1414
+        },
+        {
+          "text": "准备候选条件",
+          "disabled": false,
+          "left": 1284.5,
+          "right": 1414
+        },
+        {
+          "text": "重新读取业务数据",
+          "disabled": false,
+          "left": 1149,
+          "right": 1414
+        },
+        {
+          "text": "重新读取",
+          "disabled": false,
+          "left": 1372,
+          "right": 1428
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "scrollWidth": 1920,
+      "buttons": [
+        {
+          "text": "候选0达人与品牌、商品和受众的匹配",
+          "disabled": false,
+          "left": 308,
+          "right": 567
+        },
+        {
+          "text": "邀约0候选去重、准备、批准与回复",
+          "disabled": false,
+          "left": 308,
+          "right": 567
+        },
+        {
+          "text": "准备候选条件",
+          "disabled": false,
+          "left": 1031,
+          "right": 1137
+        },
+        {
+          "text": "补充候选条件",
+          "disabled": false,
+          "left": 1629,
+          "right": 1758.5
+        },
+        {
+          "text": "补充预算权益",
+          "disabled": false,
+          "left": 1764.5,
+          "right": 1894
+        },
+        {
+          "text": "准备候选条件",
+          "disabled": false,
+          "left": 1764.5,
+          "right": 1894
+        },
+        {
+          "text": "重新读取业务数据",
+          "disabled": false,
+          "left": 1629,
+          "right": 1894
+        },
+        {
+          "text": "重新读取",
+          "disabled": false,
+          "left": 1852,
+          "right": 1908
+        }
+      ]
+    }
+  ],
+  "operationalButtonsClicked": false
+}

@@ -1,0 +1,9 @@
+# 生命周期已提交候选的只读API现场接线方案
+
+Rules AGENTS/231原完整Goal/唯一m1/TaskLease2029同owner14:00UTC。精确当前m1 f005a195265f4590d9214a810a24fbec0d15ab32已提交code候选；不把质量PASS当用户业务授权。用户原已批准安装全恢复及本机真人管理员授权保持，维护Task原允许精确READONLY API修复/接线。
+
+只原API18080，旧PID7645/cwd冻结23e76已经读回，不停PG/Web/Chrome。新源gitarchive8685files/report creator-lifecycle-api-20261014冻结完成；与root4源码累计134PASS、rootcode-r3和boundedcode-r1合法消费同源。tenantStore候选0d4随提交archive，须连同前次已审查租户防线回执保存。无原卷迁移/预算162部署/权限或来源访问/业务命令；HostworkerProviderOFF。
+
+新controller creator_lifecycle_api_reload.py是原支持模式最小具体化：当前Task/Authority2029、旧7645/23、新唯一receipt/intent、产品code-r3原canonical消费SHA和源hash固定，在任何信号前旧PIDcwd/单listener/sourceguard/HEAD/租约核验。一次fsync intent后SIGTERM并等待空listener；失败保留intent仅对账，不再signal。新管理只读wrapper参数、真OIDC配置及同原已安装instance沿用，不复制秘密。Popen只spawn，后独立监听/cwd/正常authme+GET/root原菜单/typedDTO/原稿三视口/原650前后指纹，不制造坏原数据，503反例仅测试/隔离fixture。
+
+每日/aos最新m1原卷全PG→API→Web要求不变；今日6c完整全重启已经记录，本次API-only只是新读取波不能代替daily。全部安装生命周期/预算C用户最后批准/自然经营链/八场景/视觉P1/观察发布未完成。质量门后才单次effect，现场Prime准确Delivery/AuthorityPrime后下一安全波。

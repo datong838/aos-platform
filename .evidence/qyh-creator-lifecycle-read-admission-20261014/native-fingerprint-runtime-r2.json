@@ -1,0 +1,24 @@
+{
+  "beforeFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/creator-lifecycle-before-20261014.json",
+  "afterFile": ".evidence/qyh-restoration-successor-latest-restart-20261013/creator-lifecycle-after-browser-20261014.json",
+  "tableCount": 650,
+  "equal": true,
+  "mismatches": [],
+  "beforeCanonicalHash": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+  "afterCanonicalHash": "b2db143ae46534a3271f48f05fc278e8da925cdfd4a8642730b39e47e2fb2285",
+  "native": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161",
+    "enabledBindings": 0,
+    "otherActiveClients": 0
+  },
+  "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "pgStartedAt": "2026-10-14T02:56:36.001669303Z",
+  "apiPid": 25389,
+  "apiCwd": "p25389\nfcwd\nn/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-f005a195265f4590d9214a810a24fbec0d15ab32\n",
+  "apiListener": "25389\n",
+  "webPid": 78346,
+  "webHead": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "apiHead": "f005a195265f4590d9214a810a24fbec0d15ab32"
+}

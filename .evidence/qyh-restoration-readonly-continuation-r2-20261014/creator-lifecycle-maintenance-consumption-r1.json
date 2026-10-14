@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-lifecycle-maintenance-20261014-quality-r1",
+  "task_id": "qyh-restoration-readonly-continuation-r2-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "f005a195265f4590d9214a810a24fbec0d15ab32",
+    "authority_revision": "AOS-002029",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r2-20261014/creator-lifecycle-maintenance-package-r1.txt": "b5e0612cb213786541e569053e3bf8e0261ecaf1d2369ede4a5a4baeb016a21d"
+    }
+  },
+  "status": "NEED_EVIDENCE",
+  "execution_authorized": false,
+  "result_sha256": "0e8544f134968ffa067643d50a0c41b01919b1b82c2ee18be33c12a3f00126e1",
+  "transport_sha256": "31e0f29fcffed29eed86b4e63c514cbbca9337210c36f6e148ab8dfb6d2a3dc9"
+}

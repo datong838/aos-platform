@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "9195a06561236aed7d0a9bddf10e13da85b99bcee45c1a63fd755c7c72bba2ac",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-lifecycle-maintenance-20261014-quality-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r2-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "f005a195265f4590d9214a810a24fbec0d15ab32",
+      "authority_revision": "AOS-002029",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r2-20261014/creator-lifecycle-maintenance-package-r1.txt": "b5e0612cb213786541e569053e3bf8e0261ecaf1d2369ede4a5a4baeb016a21d"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "Fresh exact readonly API-only maintenance controller and plan preserve existing original authorization/same-owner Lease, require committed source/pinned reviewed product hashes/canonical legal review consumption/HEAD/sourceguard/oldPIDcwd-singlelistener before durable one-attempt intent and any signal; no PG/Web/Chrome effects, no original migrations/budget/source/operation grants, no unknown retry, spawn distinct from native acceptance. This is controller quality not operational authorization or completed restoration.",
+        "evidence": "plan.md描述意图与creator_lifecycle_api_reload.py代码逻辑一致：读取.code-review-result-r3.json和.consumption-r3.json，断言verdict=PASS/status=CONSUMED_MATERIAL_REVIEW/result_sha256匹配；检查leases.json任务ID与owner（codex-01a13484...）、当前时间>lease_expires_at；通过git rev-parse HEAD比对report['head']=='f005a195...'；通过cumulative-source-receipt-r3.json的sourceAfter SHA与冻结候选文件哈希比对；通过lsof校验旧PID 7645 cwd；监听18080仅7645；写入intent.json后SIGTERM并等待监听清空。代码本身是spawn-only Popen，无PG/Web/Chrome命令，无DB迁移开关，无budget操作。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Fresh exact readonly API-only maintenance controller and plan preserve existing original authorization/same-owner Lease, require committed source/pinned reviewed product hashes/canonical legal review consumption/HEAD/sourceguard/oldPIDcwd-singlelistener before durable one-attempt intent and any signal; no PG/Web/Chrome effects, no original migrations/budget/source/operation grants, no unknown retry, spawn distinct from native acceptance. This is controller quality not operational authorization or completed restoration.",
+        "evidence": "计划未提交、未部署、未经营。creator-lifecycle-api-20261014.json中'apiStarted'='false'/'runtimeAuthorized'='false'/'remaining'含'formal OIDC settings and current Owner'等条目。review result为质量'PASS'但明确'execution_authorized'=false，且next_safe_step提示'勿在本质量复核中混入运行时完成断言'。consumption-r3/status=CONSUMED_MATERIAL_REVIEW且execution_authorized=false，仅证明材料被消费而非操作被执行。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Fresh exact readonly API-only maintenance controller and plan preserve existing original authorization/same-owner Lease, require committed source/pinned reviewed product hashes/canonical legal review consumption/HEAD/sourceguard/oldPIDcwd-singlelistener before durable one-attempt intent and any signal; no PG/Web/Chrome effects, no original migrations/budget/source/operation grants, no unknown retry, spawn distinct from native acceptance. This is controller quality not operational authorization or completed restoration.",
+        "evidence": "材料中未发现retry逻辑、不存在PG启动/停止脚本、Web启动器、Chrome命令或预算/迁移操作权限调用。仅引用/a0v_qyh_restored_http.py作为source guard和listener工具。但controller实际执行需要：1) 当前磁盘上存在且SHA匹配的r3 review/consumption结果；2) 当前leases.json中该task存在且owner正确且未过期；3) 当前git HEAD确为f005a195...；4) 当前磁盘上冻结候选源与receipt-r3的sourceAfter SHA完全一致；5) 当前系统进程状态符合预期。这些均未在本次提交材料中作为运行时证明给出，仅给出静态文本和JSON。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "等待现场Prime Agent或独立操作授权请求验证当前磁盘上的review/consumption/lease/git-head/source-hash/lsof实际状态；本次质量审阅确认材料描述与控制器设计一致且不构成运行时授权，但不替代运行时核验。"
+  }
+}

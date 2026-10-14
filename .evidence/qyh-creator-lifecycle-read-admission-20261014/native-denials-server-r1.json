@@ -1,0 +1,78 @@
+{
+  "frontendReceiptFailedAfterRead": "fetch Response.status property was called as function; both readonly requests already terminal and reconciled by exact server trace, no request replay",
+  "requestType": "GET only",
+  "queryOverrideStatus": 400,
+  "unauthenticatedStatus": 401,
+  "serverRows": [
+    {
+      "ts": "2026-10-14T12:38:01.546600+00:00",
+      "level": "info",
+      "service": "aos-api",
+      "logger": "aos-api.auth",
+      "msg": "tenant_bound source=claim org=org-org project=dev-project header_ignored_or_matched=1",
+      "trace_id": "579f4bf1-4343-4079-826b-18ccafd84e60",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-14T12:38:01.546691+00:00",
+      "level": "debug",
+      "service": "aos-api",
+      "logger": "aos-api.db",
+      "msg": "db_connect host_port_from_env=True",
+      "trace_id": "579f4bf1-4343-4079-826b-18ccafd84e60",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-14T12:38:01.559150+00:00",
+      "level": "info",
+      "service": "aos-api",
+      "logger": "aos-api.auth",
+      "msg": "principal_resolved kind=oidc subject=6f31cfdc-a26c-4f1f-ad6b-95a8559cc657 org=org-org project=dev-project",
+      "trace_id": "579f4bf1-4343-4079-826b-18ccafd84e60",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-14T12:38:01.560183+00:00",
+      "level": "warning",
+      "service": "aos-api",
+      "logger": "aos-api.errors",
+      "msg": "api_error code=VALIDATION status=400",
+      "trace_id": "579f4bf1-4343-4079-826b-18ccafd84e60",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-14T12:38:01.560367+00:00",
+      "level": "info",
+      "service": "aos-api",
+      "logger": "aos-api.http",
+      "msg": "request method=GET path=/v1/ecommerce-workshop/views/creator-growth/lifecycle status=400 duration_ms=43.1",
+      "trace_id": "579f4bf1-4343-4079-826b-18ccafd84e60",
+      "org_id": "org-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-14T12:38:01.566521+00:00",
+      "level": "warning",
+      "service": "aos-api",
+      "logger": "aos-api.errors",
+      "msg": "api_error code=AUTH_REQUIRED status=401",
+      "trace_id": "3ce29a03-f51f-497b-99a5-f2e760d4996e",
+      "org_id": "dev-org",
+      "project_id": "dev-project"
+    },
+    {
+      "ts": "2026-10-14T12:38:01.566697+00:00",
+      "level": "info",
+      "service": "aos-api",
+      "logger": "aos-api.http",
+      "msg": "request method=GET path=/v1/ecommerce-workshop/views/creator-growth/lifecycle status=401 duration_ms=3.0",
+      "trace_id": "3ce29a03-f51f-497b-99a5-f2e760d4996e",
+      "org_id": "dev-org",
+      "project_id": "dev-project"
+    }
+  ]
+}

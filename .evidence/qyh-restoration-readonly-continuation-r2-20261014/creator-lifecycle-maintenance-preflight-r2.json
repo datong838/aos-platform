@@ -1,0 +1,59 @@
+{
+  "at": "2026-10-14T12:33:12.528791+00:00",
+  "controllerSha256": "d0b481a353bcbb3fa7560a9030f573390ca8f13cd0627db63152c93b6db7e0eb",
+  "head": "f005a195265f4590d9214a810a24fbec0d15ab32",
+  "authority": "AOS-002029",
+  "lease": {
+    "base_revision": "AOS-002029",
+    "created_at": "2026-10-14T18:31:08+08:00",
+    "excluded_scope": [
+      "aos-platform/maintenance/current-preview-database",
+      "aos-platform/maintenance/current-preview-api",
+      "aos-platform/maintenance/current-preview-web",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py"
+    ],
+    "expected_outputs": [
+      "Carry all incomplete original restoration requirements and same original data/approval/identity into new-owner maintenance;no whole completion claim",
+      "Latest committed freeze excludes dirty; original role readonly native root8;fresh same-volume PG/API/Web restart, same-cutoff full fingerprint/no-effect/owned real OIDC SPA/browser reads then continue business Loop",
+      "Unknown effects read-only reconcile; keep Host/worker/Provider OFF,no old Run/mall source/manual execution/duplicate scripts or credentials disclosure",
+      "Recover latest management READONLY API for exact161db/162closedcandidate without migration or runtime override;strict runtime/unknownschema deny,fullreview;then latestPG/API/Web real8page/visual/deny-entry",
+      "Carry unchanged entire longGoal/user original install/fullrestore authorization, latest actual API87013/head110 and Web78346/head6c equalcurrenttrees plus originalPG; daily/aos latestoriginalvolume fullPG/API/Web, aos-2 no restart; maintain readonly/HostworkerProviderOFF; do not replay failed/unknown intents.",
+      "All earlier fullrestore pending original requirements remain; no fullrestoration/visual/business completion from previous handoff; sameowner unique m1 writer and supported Goal/reminders preserved",
+      "Carry complete remaining original recovery/daily fullPG/API/Web and sole originaluser authorization; actualAPI7645/head23e76 Web78346/head6c identicalfrontendtrees, schema161/650 originalvolume readonly; prior maintenancehandoff not whole completion; no replay/privateGoal/reminder edits"
+    ],
+    "lease_expires_at": "2026-10-14T14:00:00+00:00",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/.evidence/qyh-full-system-restoration-20261011",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/maintenance/qiyuehui-restored-api",
+      "aos-platform/maintenance/qiyuehui-restored-web",
+      "aos-platform/scripts/a0v_qyh_restored_http.py",
+      "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py",
+      "aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013",
+      "aos-platform/.evidence/qyh-daily-readonly-schema-compat-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r2-20261014"
+    ],
+    "status": "ACTIVE",
+    "task_id": "qyh-restoration-readonly-continuation-r2-20261014"
+  },
+  "oldPid": 7645,
+  "oldCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-23e76bcd6bd1f5d8b6bc9a343cc4df75b24d54e3",
+  "listener": [
+    7645
+  ],
+  "frozenSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-f005a195265f4590d9214a810a24fbec0d15ab32",
+  "sourceHashes": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "71eb6e6169def936cb023c3a800355847ae45370d9cc68dad2d4266b4fb0c66c",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "3f7190e63d8843747ceb5f8e00baa1f336224160f54df03761cef72d3de5ec5e",
+    "services/aos-api/aos_api/ecommerce_workshop_creator_lifecycle_readonly.py": "95cacb071c8f9b10ad4ba3277c1a2820db076ba527c53d6d964b801fd01b7780",
+    "services/aos-api/tests/aip/test_creator_lifecycle_readonly.py": "84b7eefe943649b83b1e22ea9e1c8b7ac0e5ea0693a40f40c705e78dd3d8e91d"
+  },
+  "codeReviewCanonicalConsumptionVerified": true,
+  "fullFrozenManifestGuardVerified": true,
+  "prefixStopsBeforeIntentOrSignal": true,
+  "serviceEffects": false
+}
