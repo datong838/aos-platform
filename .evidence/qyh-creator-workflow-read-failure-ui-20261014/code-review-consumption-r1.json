@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-workflow-read-failure-ui-20261014-code-r1",
+  "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "5a1855482e92a2de4f028ffa106b9dfccde89a50",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-creator-workflow-read-failure-ui-20261014/code-review-package-r1.txt": "2ff793aed246b0ce6e145466b477fdbb91b303ba4b048dbe644592b2927bc78a"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "df1f208920619d9269245c10e304d8ba6339bcf7a6d28563f5103caac22249d4",
+  "transport_sha256": "308ccf90eb2f425df5ab067c0ba4417238462eaef8f6987afbb90af1d8febbcf"
+}

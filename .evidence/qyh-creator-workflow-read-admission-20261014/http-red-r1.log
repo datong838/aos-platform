@@ -1,0 +1,597 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collected 57 items
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py ...........F [ 21%]
+..............................FFFFFFFFFFFFFFF                            [100%]
+
+=================================== FAILURES ===================================
+________ test_read_dependency_only_reaches_explicit_audited_get_routes _________
+
+    def test_read_dependency_only_reaches_explicit_audited_get_routes():
+        actual = set()
+        for route in routes.router.routes:
+            uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                            for d in route.dependant.dependencies)
+            if uses_read:
+                assert route.methods == {'GET'}
+                actual.add(route.path)
+>       assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+            '/v1/ecommerce-workshop/source-readiness',
+            '/v1/ecommerce-workshop/views/operations/cases',
+            '/v1/ecommerce-workshop/commands/operations/readiness',
+            '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+            '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+            '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+            '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+            '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+            '/v1/ecommerce-workshop/views/creator-growth/contributions',
+            '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+            '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
+        }
+E       AssertionError: assert {'/v1/ecommer...-inputs', ...} == {'/v1/ecommer...-inputs', ...}
+E         
+E         Extra items in the right set:
+E         '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts'
+E         Use -v to get more diff
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:73: AssertionError
+______ test_workflow_list_selects_exact_installed_or_legacy_reader[True] _______
+
+readonly = True
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_workflow_list_selects_exact_installed_or_legacy_reader(readonly):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:362: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11ea63750>, failure = None
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+______ test_workflow_list_selects_exact_installed_or_legacy_reader[False] ______
+
+readonly = False
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_workflow_list_selects_exact_installed_or_legacy_reader(readonly):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:362: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f997510>, failure = None
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+___________ test_workflow_list_denied_catalog_precedes_every_reader ____________
+
+    def test_workflow_list_denied_catalog_precedes_every_reader():
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:377: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f9c1050>, failure = None
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+_ test_workflow_list_query_never_selects_scope_limits_or_reader[orgId=dev-org] _
+
+query = 'orgId=dev-org'
+
+    @pytest.mark.parametrize('query', ['orgId=dev-org', 'projectId=other', 'limit=1', 'mode=legacy'])
+    def test_workflow_list_query_never_selects_scope_limits_or_reader(query):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:385: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f9b7290>, failure = None
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+_ test_workflow_list_query_never_selects_scope_limits_or_reader[projectId=other] _
+
+query = 'projectId=other'
+
+    @pytest.mark.parametrize('query', ['orgId=dev-org', 'projectId=other', 'limit=1', 'mode=legacy'])
+    def test_workflow_list_query_never_selects_scope_limits_or_reader(query):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:385: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f9f3c10>, failure = None
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+____ test_workflow_list_query_never_selects_scope_limits_or_reader[limit=1] ____
+
+query = 'limit=1'
+
+    @pytest.mark.parametrize('query', ['orgId=dev-org', 'projectId=other', 'limit=1', 'mode=legacy'])
+    def test_workflow_list_query_never_selects_scope_limits_or_reader(query):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:385: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f9ead90>, failure = None
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+__ test_workflow_list_query_never_selects_scope_limits_or_reader[mode=legacy] __
+
+query = 'mode=legacy'
+
+    @pytest.mark.parametrize('query', ['orgId=dev-org', 'projectId=other', 'limit=1', 'mode=legacy'])
+    def test_workflow_list_query_never_selects_scope_limits_or_reader(query):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:385: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f580450>, failure = None
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+_________ test_workflow_list_unknown_admission_is_503_not_empty[None] __________
+
+admission = None
+
+    @pytest.mark.parametrize('admission', [None, object()])
+    def test_workflow_list_unknown_admission_is_503_not_empty(admission):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:393: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f9787d0>, failure = None
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+______ test_workflow_list_unknown_admission_is_503_not_empty[admission1] _______
+
+admission = <object object at 0x11dc41a60>
+
+    @pytest.mark.parametrize('admission', [None, object()])
+    def test_workflow_list_unknown_admission_is_503_not_empty(admission):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:393: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f9a5650>, failure = None
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+_ test_workflow_read_failure_is_explicit_and_not_empty_success[CREATOR_WORKFLOW_READ_UNAVAILABLE] _
+
+code = 'CREATOR_WORKFLOW_READ_UNAVAILABLE'
+
+    @pytest.mark.parametrize('code', ['CREATOR_WORKFLOW_READ_UNAVAILABLE',
+        'CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT', 'CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE',
+        'CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED', 'CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'])
+    def test_workflow_read_failure_is_explicit_and_not_empty_success(code):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client, failure=code)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:405: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f9c1150>
+failure = 'CREATOR_WORKFLOW_READ_UNAVAILABLE'
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+_ test_workflow_read_failure_is_explicit_and_not_empty_success[CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT] _
+
+code = 'CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT'
+
+    @pytest.mark.parametrize('code', ['CREATOR_WORKFLOW_READ_UNAVAILABLE',
+        'CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT', 'CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE',
+        'CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED', 'CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'])
+    def test_workflow_read_failure_is_explicit_and_not_empty_success(code):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client, failure=code)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:405: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11ead4450>
+failure = 'CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT'
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+_ test_workflow_read_failure_is_explicit_and_not_empty_success[CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE] _
+
+code = 'CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE'
+
+    @pytest.mark.parametrize('code', ['CREATOR_WORKFLOW_READ_UNAVAILABLE',
+        'CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT', 'CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE',
+        'CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED', 'CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'])
+    def test_workflow_read_failure_is_explicit_and_not_empty_success(code):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client, failure=code)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:405: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f578490>
+failure = 'CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE'
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+_ test_workflow_read_failure_is_explicit_and_not_empty_success[CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED] _
+
+code = 'CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED'
+
+    @pytest.mark.parametrize('code', ['CREATOR_WORKFLOW_READ_UNAVAILABLE',
+        'CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT', 'CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE',
+        'CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED', 'CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'])
+    def test_workflow_read_failure_is_explicit_and_not_empty_success(code):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client, failure=code)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:405: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11f9d7990>
+failure = 'CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED'
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+_ test_workflow_read_failure_is_explicit_and_not_empty_success[CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED] _
+
+code = 'CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'
+
+    @pytest.mark.parametrize('code', ['CREATOR_WORKFLOW_READ_UNAVAILABLE',
+        'CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT', 'CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE',
+        'CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED', 'CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'])
+    def test_workflow_read_failure_is_explicit_and_not_empty_success(code):
+        client, legacy, reader = client_with_catalogs()
+>       calls = workflow_probes(client, failure=code)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:405: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+client = <starlette.testclient.TestClient object at 0x11ea40390>
+failure = 'CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'
+
+    def workflow_probes(client, *, failure=None):
+        calls = []
+        class Legacy:
+            def list(self, scope):
+                calls.append(('legacy', scope.key))
+                raise ReadReached('legacy-workflow')
+        class Readonly:
+            def list(self, scope):
+                calls.append(('readonly', scope.key))
+                if failure:
+                    from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                    raise CreatorWorkflowReadonlyError(failure)
+                raise ReadReached('readonly-workflow')
+        client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:355: AttributeError
+________ test_workflow_successful_empty_has_current_authenticated_scope ________
+
+    def test_workflow_successful_empty_has_current_authenticated_scope():
+        from aos_api.ecommerce_creator_internal_workflow_contracts import CreatorInternalWorkflowListResponse
+        client, legacy, reader = client_with_catalogs()
+        reader.get_readiness = lambda **scope: lifecycle_admission()
+        class Readonly:
+            def list(self, scope):
+                assert scope.key == ('org-org', 'dev-project')
+                return CreatorInternalWorkflowListResponse(tenant=dict(orgId=scope.org_id, projectId=scope.project_id), items=[], count=0)
+        class Legacy:
+            def list(self, scope):
+                pytest.fail('installed readonly cannot invoke legacy workflow list')
+>       client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_creator_workflow_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:424: AttributeError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_list_selects_exact_installed_or_legacy_reader[True]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_list_selects_exact_installed_or_legacy_reader[False]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_list_denied_catalog_precedes_every_reader
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_list_query_never_selects_scope_limits_or_reader[orgId=dev-org]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_list_query_never_selects_scope_limits_or_reader[projectId=other]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_list_query_never_selects_scope_limits_or_reader[limit=1]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_list_query_never_selects_scope_limits_or_reader[mode=legacy]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_list_unknown_admission_is_503_not_empty[None]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_list_unknown_admission_is_503_not_empty[admission1]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_read_failure_is_explicit_and_not_empty_success[CREATOR_WORKFLOW_READ_UNAVAILABLE]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_read_failure_is_explicit_and_not_empty_success[CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_read_failure_is_explicit_and_not_empty_success[CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_read_failure_is_explicit_and_not_empty_success[CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_read_failure_is_explicit_and_not_empty_success[CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_workflow_successful_empty_has_current_authenticated_scope
+================== 16 failed, 41 passed, 7 warnings in 6.31s ===================

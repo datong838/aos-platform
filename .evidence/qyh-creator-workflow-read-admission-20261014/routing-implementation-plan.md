@@ -1,0 +1,9 @@
+# 达人内部草稿list GET精确接线方案
+
+Rules/231完整Goal/unique m1/原数据只读；rootTask/base2030/16:00UTC scope router/read_http/evidence/D-wave，boundedreader另exactTask。同源bounded实现/114PASS/nativeRLS25006/concurrency/private/limits已具，code独立quality仍等待，未取得合法PASS前不加载。
+
+现helper已在上一波返回原typedreadiness；复用不重复scope/hash/roles算法。仅list_creator_internal_workflows GET改ReadCatalog+新lazy readonlydep，先query拒绝、原creator安装/roles/markings/dataScope准入，必须原typedresponse；UNKNOWN503READ_ADMISSION_UNAVAILABLE，不把None当空列表。只有服务端INSTALLED_ASSET_READONLY marker选择专用bounded.list(scope)，新reader错误固定503中文消息/code，不返回空200、不附私密/SQL。合法无marker保留原workflow.list(scope)和CreatorInternalWorkflowError旧映射。historyGET/所有executePOST/其他root/helper门完整不改，runtimeMode/limit/owner/query不能选择权限和读取。状态approved仅旧保存事实不操作许可。
+
+read_http先RED：原unreviewed workflowlist样例替换到其history；只加一GET白名单。新readiness合法fixture readonly→只新list、无marker→只旧list；catalog拒绝/query覆盖/None错型/四类reader503不空、typed成功六purpose或真正empty、HTTP所有其他GETPOST矩阵不变。root变更后专用/旧workflow/目录/HTTP累计及native现有同源fixture、独立quality合并证明。
+
+只候选代码，提交前冻结准确4sources和现有Store不改证明；之后最新已提交sourcefreeze/fresh维护控制器独立gate/一次API-only新label（不替代daily完整PG→API→Web），原真人正常GET/root菜单及threeviewport原稿/原650fingerprints/独立现场Prime后准确Delivery/AuthorityPrime。不能原DB造坏/新增草稿或真人假批准；原budgetC最终用户/自然经营链/安装生命周期/八场景/视觉P1/观察发布保持完整。

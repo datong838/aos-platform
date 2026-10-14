@@ -1,0 +1,13 @@
+# 达人内部工作流GET第一阶段只读审计
+
+Rules/231完整Goal/唯一m1写者，同owner Task/base2030/16:00UTC已受支持登记，无产品修改。原数据161/650/绑定0只读，HostworkerProviderOFF/旧unknown12Run/禁用Schedule/Source/noPush全部持续。上一lifecycle读取波精确Delivery完成，仅帮助读取，不是业务链或全Goal完成。
+
+实际路径：router list_creator_internal_workflows `/views/creator-growth/workflow/drafts` 当前CatalogDependency→原creator安装门→workflow.list(scope)。default EcommerceCreatorInternalWorkflow实际实例化AipTaskStore及AipProductionContractStore。list未调用create_task/execute/receipt或TaskStore读取；直接 `_briefs.list_briefs(scope).items`，随后Python按brief_type过滤、精确CreatorSchemaRef及externalfalse/六purpose/四status/title/summary/details校验，按purpose仅保留已排序第一项。DTO包含exactRef/version/purpose/title/summary/details/status；没有allowedCommands字段，不能解释approved为当前真人许可或自动运行。
+
+实际Store list_briefs单个conn SELECT当前head+revision同org/project/briefId/revisionJOIN，WHEREheadtenant，ORDERcreated_atDESC/briefId。但先SELECT revision.*读所有业务类型、无LIMIT和spec字节上限，然后才Python过滤creator。这是确定性准入缺口：不能仅将本GET改ReadCatalog白名单。`_brief`用参数scope生成DTO tenant，未额外检查rowoutertenant/head字段一致；SQLtenant正面防线存在但还需严格decode验证。返回spec.details任意JSON，需明确只给授权内部业务所需字段、禁止凭其命令/凭据/ref产生调用。
+
+需后续审计：固定CreatorSchemaRef/type在SQL筛选与Python严格复核、outertenant/headrevision+version/taskID一致、canonical_hash原briefType/schemaRef/spec完整重算（create_brief已有原canonical规则，复用不另invent）；是否任务type需要匹配creator_internal_task必须据产品/技术方案裁决；spec字段/嵌套details大小与隐私授权、索引/limit+1/rows及total超限503不截断假零；同事务一致性、真实空/unknown故障/非法content、typed响应对version/status/canonicalhead语义不能伪造；合法无readonlymarker旧list/history和所有execute写门保持。
+
+下一安全步骤：补齐DDL/RLS/原hash与前端details输入输出/产品技术方案及权限数据范围，形成专用有界内部工作流读取方案并独立Prime。需要新模块/test或Store修复另登记精确文件Task/Lease，当前Scope只router/http/evidence/D-wave，不得擅自修改共享AIP生产Store。未完成审计与门之前不开放该GET，不把原当前404换成假空200。完整C最终真人人预算/原部署/自然CaseRun→建议评审内容能力人审续跑总控Wiki/安装生命周期/八场景/全视觉/连续发布Goal继续。
+
+进一步确定的关键缺口：AipProductionContractStore默认 `_connect_factory=connect_factory or db_connect`，其中db_connect明确为 `aos_api.db.connect`（read_only=False），不是connect_read_only；原wrapper的整体只读边界不能替代该reader本身的事务约束。新读取方案必须明确使用现有connect_read_only(scope)/REPEATABLE_READ及role/tenant验证，不可拿SQL只有SELECT当成连接只读保证。此项与无LIMIT/读取所有brief类型共同阻止机械放开ReadCatalog。

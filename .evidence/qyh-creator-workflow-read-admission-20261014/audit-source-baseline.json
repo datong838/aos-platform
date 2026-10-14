@@ -1,0 +1,14 @@
+{
+  "head": "90ca032b60071cb0f2c84294e21018f13d99f150",
+  "authority": "AOS-002030",
+  "sourceHashes": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "71eb6e6169def936cb023c3a800355847ae45370d9cc68dad2d4266b4fb0c66c",
+    "services/aos-api/aos_api/ecommerce_creator_internal_workflow.py": "0b5067fdffcf84448065798ef8c85e7349a757ab517a3b305d6de003554d13ad",
+    "services/aos-api/aos_api/ecommerce_creator_internal_workflow_contracts.py": "560a8da03e75ab1bdad351ce5918d60cd3f48a1dfa8e5140cf06432f8571e33c",
+    "services/aos-api/aos_api/aip_production_contract_store.py": "731e7d278dde3c19f95f08b032df77a12ff6871d050e4f24af9e4eb5425b47b8",
+    "services/aos-api/aos_api/aip_production_contracts.py": "af1720d4b40b95200e2dd6bbd1c00a98e2d8657527b2f3ac9b99d63635cb6029"
+  },
+  "runtimeAPI": "25389/f005",
+  "web": "78346/6c",
+  "codeChanged": false
+}

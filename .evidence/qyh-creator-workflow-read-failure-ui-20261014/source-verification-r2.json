@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-14T13:48:03.217211+00:00",
+  "finishedAt": "2026-10-14T13:48:18.329459+00:00",
+  "sourceBefore": {
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "d7582295e43e72d9a13351af37b81f0e30ecd3072d1c5e203028edebcdbc67da",
+    "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "f8d656d06acbfebd31364662446bee5f24659290afc70a6bbab7fd94af0511a7"
+  },
+  "sourceAfter": {
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "d7582295e43e72d9a13351af37b81f0e30ecd3072d1c5e203028edebcdbc67da",
+    "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "f8d656d06acbfebd31364662446bee5f24659290afc70a6bbab7fd94af0511a7"
+  },
+  "results": {
+    "cumulative-r2": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/components/workshop",
+        "src/api/ecommerceWorkshop/creatorWorkflowClient.test.ts"
+      ],
+      "logSha256": "df9c24241888e472e738fc297726eae9330829d7aa707779e7aa41ad2c6b6bdc"
+    },
+    "typecheck-r2": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "tsconfig.json"
+      ],
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "originalRuntimeTouched": false
+}

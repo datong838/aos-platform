@@ -1,0 +1,34 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "302c338593b63d14494d5eab7182a51e24fad567397839271a969b32b7011f5c",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-workflow-read-admission-20261014-code-r1",
+    "task_id": "qyh-creator-workflow-read-admission-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "5a1855482e92a2de4f028ffa106b9dfccde89a50",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-creator-workflow-read-admission-20261014/code-review-package-r1.txt": "a0487ddc2362e46d6f173c61f5fd386b236b3e0c14c07b887b1c4314b283496c"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "实际仅草稿listGET接线：原query/安装scope及权限在先，typed未知准入503，只读marker用有界reader，无marker保留旧list及错误映射。",
+        "evidence": "文件services/aos-api/aos_api/routers/ecommerce_workshop.py函数list_creator_internal_workflows（SHA256 70305b0d...）。证据：1）_reject_query_parameters(request)最先调用，拒绝非空query；2）_require_creator_growth_installation(principal,catalog)使用ReadCatalogDependency读取安装scope/权限；3）admission非EcommerceWorkshopModuleReadinessResponse时返回CREATOR_WORKFLOW_READ_ADMISSION_UNAVAILABLE 503（typed未知准入）；4）blockers含INSTALLED_ASSET_READONLY时调用readonly.list(scope)，CreatorWorkflowReadonlyError映射为503；5）否则调用workflow.list(scope)，CreatorInternalWorkflowError经_map_creator_internal_workflow_error映射旧错误码（409/503）。129测试GREEN包括test_workflow_list_unknown_admission_is_503_not_empty、test_lifecycle_bounded_failure_stays_explicit_503、test_legacy_success_does_not_build_installed_configuration等。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "完整HTTP矩阵仅一GET变化，其他GET和POST门未改；129项验证和同源有界reader独立证据支持代码候选，不宣称原客户或整Goal完成。",
+        "evidence": "文件.route-matrix-current-r1.json（SHA256 bf40659f...）changes数组仅一项：GET /views/creator-growth/workflow/drafts由[CatalogDependency]改为[ReadCatalogDependency]。所有其他GET/POST条目before/after相同。同源有界reader独立证据见.task_id qyh-creator-workflow-bounded-reader-20261014的native-r1-result.json（SHA256 748f31ba...）和code-review-consumption-r2.json，显示baae1ede同源reader已通过RLS隔离/隐私/超限503验证。package-r1.txt头声明'CodeRootRED16fail41pass->129jointPASS'且'No original service switch'，不宣称原客户或整Goal完成。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前冻结状态，暂不提交或加载到生产；等待AOS-002030 Authority下一步指令或人工冻结确认后再进入Delivery流程。"
+  }
+}

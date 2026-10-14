@@ -1,0 +1,34 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a00fa9562178204ec7a10c8aa8972b7366db4d3168fb3b72fb8d0f0cf20c7c13",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-workflow-read-failure-ui-20261014-code-r2",
+    "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "5a1855482e92a2de4f028ffa106b9dfccde89a50",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-creator-workflow-read-failure-ui-20261014/code-review-package-r2.txt": "0bc852acb55beca1ddb13f477fe14d8b252da87c40050ca3b4bbbf79b34abfba"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "完整前端测试覆盖读取失败禁入、合法空、暂存/编辑/Receipt保留、迟到响应和同批次旧闭包阻断，且旧13流程保留。",
+        "evidence": "CreatorGrowthPage.test.tsx (SHA f8d656d06acbfebd31364662446bee5f24659290afc70a6bbab7fd94af0511a7) 包含：'首次草稿读取失败明确禁入'（mockRejectedValue -> save.disabled true, command未调用）、'合法空列表保留既有准备入口'（items=[] -> save.disabled false）、'刷新中及失败后缓存不是当前权威'（编辑保留、命令阻断）、'旧读取迟到失败不能覆盖新的成功快照'（stale error不覆盖）、'同批次重新读取后旧按钮闭包也不能发起命令'（closure drop）、'读取失败不删除已成功回执'（一次调用保留）、实现侧 CreatorGrowthPage.tsx load() 用 id=request.current 过滤陈旧响应，executeWorkflow 开头校验 workflowReadState==='ready'&&workflowReadReady.current。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前测试与已合法复审实现源码哈希一致，269项与类型检查证据支持候选；没有把mock命令或测试当真人业务批准或完整Goal完成。",
+        "evidence": "source-verification-r2.json (SHA 580390db6056f64a49a8bd7a0a64c72025ea8ec08670ddab0997b932b8305045) 显示 before/after 中 CreatorGrowthPage.tsx d7582295... 和 .test.tsx f8d656d0... 完全一致，typecheck-r2 returncode=0，cumulative-r2 测试套件 'Tests 269 passed (269)'。材料明确 'No realuser command/browser proof or fullGoal completion'，r1 PASS 结果 (f4237870...) 已被 consumption 记录 (2c1fcd50...) 消费。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "消费本轮 r2 PASS 基线并按 AOS-002030 推进；如需收敛，可安排不同批次并发读写场景的运行时冒烟验证后再合并。"
+  }
+}

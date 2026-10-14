@@ -1,0 +1,23 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002030",
+  "scope": [
+    "aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx",
+    "aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx",
+    "aos-platform/.evidence/qyh-creator-workflow-read-failure-ui-20261014"
+  ],
+  "excluded_scope": [
+    "aos-platform/apps/web/src/styles",
+    "aos-platform/services/aos-api",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Exact source-confirmed stale workflow list read failure: distinct trueempty/unavailable, clear current drafts on failedload, preserve operation receipts as evidence and disable workflowcommands untilread verified; no styles redesign, no permissiongrant",
+    "PlanPrime/RED/minimum/frontend meaningful tests/browserunknown/read-only original/screensize ref/Prime/accurateDelivery; fullGoal and visualP1 remain"
+  ],
+  "lease_expires_at": "2026-10-14T16:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-14T21:24:27+08:00"
+}

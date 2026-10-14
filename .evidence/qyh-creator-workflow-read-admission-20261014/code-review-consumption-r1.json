@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-workflow-read-admission-20261014-code-r1",
+  "task_id": "qyh-creator-workflow-read-admission-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "5a1855482e92a2de4f028ffa106b9dfccde89a50",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-creator-workflow-read-admission-20261014/code-review-package-r1.txt": "a0487ddc2362e46d6f173c61f5fd386b236b3e0c14c07b887b1c4314b283496c"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "4f5e543f9e1080e26f56c8c28dd425c002fd4741438fdfeba4c46a8894f6fc61",
+  "transport_sha256": "bda756f57ee5ab53e200954875c7aa33fc1f8621a5ea823f1525ba0e4b44ef10"
+}

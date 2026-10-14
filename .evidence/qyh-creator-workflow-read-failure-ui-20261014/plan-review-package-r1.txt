@@ -1,0 +1,248 @@
+PROSPECTIVE UI plan only, product unchanged. Target stale authority correctness/command deny, no new command approval. Whole Goal preserved.
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/registration.json SHA a595e101c47ccebc466a64dfccb8f1af45a8499b6ccad89194fb343302d27b6b
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002030",
+  "scope": [
+    "aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx",
+    "aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx",
+    "aos-platform/.evidence/qyh-creator-workflow-read-failure-ui-20261014"
+  ],
+  "excluded_scope": [
+    "aos-platform/apps/web/src/styles",
+    "aos-platform/services/aos-api",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Exact source-confirmed stale workflow list read failure: distinct trueempty/unavailable, clear current drafts on failedload, preserve operation receipts as evidence and disable workflowcommands untilread verified; no styles redesign, no permissiongrant",
+    "PlanPrime/RED/minimum/frontend meaningful tests/browserunknown/read-only original/screensize ref/Prime/accurateDelivery; fullGoal and visualP1 remain"
+  ],
+  "lease_expires_at": "2026-10-14T16:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-14T21:24:27+08:00"
+}
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/implementation-plan.md SHA 3406befcf096ec854142608dc592f4f05a3d64bbc39d0f4aa137ceacd4610ce3
+# 内部草稿读取失败与历史暂存区分方案
+
+Rules/231/AGENTS同owner/base2030/16:00UTC精确CreatorGrowthPage.tsx与原test，其他CSS/组件/AIPStore不改。上位产品为六类内部准备/版本精确/人审且外部触达独立；继续全部长Goal。本波修复读取失败语义，不借此授予任何内部或外部命令权限。实际原API仍f005、Web6c，新有界reader已代码候选5a1855482但未接线。
+
+现load吞list错误且未改变旧workflowDrafts。修复引入 workflowReadState（loading/ready/failed）与独立固定业务错误文本：load开始设loading，新id胜出的完整list成功为ready，null为failed。空[]也是合法ready，不能与failed混同；错误不输出异常/SQL/secret。保留旧workflowDrafts仅为明确标记的“上次读取的暂存内容”，verified current accessor在state!=ready时不存在；history useEffect仅访问verified current，无当前准入不继续history读取/恢复。响应stale id仍现有request ref拒绝，不引入复制客户端租户状态机。
+
+不销毁用户正在编辑的字段或已发生操作Receipt/idempotencyKey。PreparationPanel增加readUnavailable prop，读取中或失败时提示“当前内部草稿暂未读取，暂存内容不能作为当前版本操作”；如果有cache，状态文字必须明确“上次读取”。保持cache prop ref/revision不因失败变动，避免现hydrate effect覆盖未保存输入；失败时不自动清空编辑，不改原成功更新version的水合语义。触发明确重新读取后不同服务端新revision仍原hydrate处理，不宣称解决全部多用户编辑冲突；CAS版本仍后端权威。
+
+所有真正workflow命令按钮(save/submit/approve/reject/restore)及新建一份仅state ready才采用原busy/字段/status判断；executeWorkflow入口还须guard readstate!=ready，早于生成intent/key/任何client call，防仅禁button不足。关闭/导航/只读重新读取可用；准备表单可以查看/保留暂存，但不能把cache ref发给服务器。不自动重试execute，不重置unknown/attempted命令key，不复用read成功作预算/审批决定。原命令成功+history失败保留新draft/Receipt，与list读取故障是不同state和错误来源；原正常读取/空态/内部合法流程保持。
+
+RED：首次list失败→明确unknown且所有命令0调用，真实empty→合法入口；已有draft/编辑后重新读取失败→cache明确历史/不再verified current/所有写按钮及restore禁用/输入保留/Receipt不消失；重新读取成功→当前状态恢复只读显示和既有guard，失败期间没有execute重发；成功命令history失败原回归、stale async load不覆盖新snapshot。先独立plan合法消费、最小2文件修改，Vitest本组件/API strictclient及相邻工作台、typecheck按已装环境（不改pnpm锁或重装）。真实浏览器所有动作限read/UI，不保存/approve/execute；故障UI验收使用授权隔离localfixture/受控client响应，不在原库造坏数据。按原稿三视口只核状态显示/不遮挡和主结构；1280按钮裁切与价格255px仍另待，不能P1合格。
+
+UI与root接线需各自代码质量/精确最新已提交冻结/API和Web fresh维护门/原真人GET菜单/650指纹/独立现场Prime及准确各scopeDelivery之后才同步Authority/Prime。日报及每次aos仍最新m1原权威卷完整PG→API→Web；aos-2不重启。完整BudgetC/用户最后真实批准/原部署/自然首链/安装全生命周期/八场景/全视觉/观察发布仍未完成。
+
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/proposed-diff-r1.txt SHA 333a2ec514e782670f52c64d01b7c0022105e31932ea484693fd4200c258d227
+--- /Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx CURRENT
++++ /Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx PROSPECTIVE NOT APPLIED
+@@ -112,7 +112,7 @@
+ const WORKFLOW_STATUS: Record<CreatorInternalWorkflowDraft["status"], string> = { draft: "草稿", in_review: "审核中", approved: "已批准", rejected: "已驳回" };
+ const detailText = (details: Record<string, unknown> | undefined, key: string) => typeof details?.[key] === "string" ? String(details[key]) : "";
+ 
+-function PreparationPanel({ purpose, products, current, receipt, history, busy, error, onClose, onCommand, onNew }: { purpose: CreatorInternalWorkflowPurpose; products: ContentCampaignProductInput[]; current: CreatorInternalWorkflowDraft | null; receipt: CreatorInternalWorkflowReceipt | null; history: CreatorInternalWorkflowDraft[]; busy: boolean; error: string; onClose: () => void; onCommand: (command: CreatorInternalWorkflowCommand, values: { title: string; summary: string; details: Record<string, unknown> }, restoreRevision?: number) => void; onNew: () => void }) {
++function PreparationPanel({ purpose, products, current, receipt, history, busy, readUnavailable, error, onClose, onCommand, onNew }: { purpose: CreatorInternalWorkflowPurpose; products: ContentCampaignProductInput[]; current: CreatorInternalWorkflowDraft | null; receipt: CreatorInternalWorkflowReceipt | null; history: CreatorInternalWorkflowDraft[]; busy: boolean; readUnavailable: boolean; error: string; onClose: () => void; onCommand: (command: CreatorInternalWorkflowCommand, values: { title: string; summary: string; details: Record<string, unknown> }, restoreRevision?: number) => void; onNew: () => void }) {
+   const copy = PREPARATION_COPY[purpose];
+   const [title, setTitle] = useState(current?.title ?? copy.defaultTitle);
+   const [summary, setSummary] = useState(current?.summary ?? "");
+@@ -131,7 +131,7 @@
+   useEffect(() => { const details = current?.details; setTitle(current?.title ?? copy.defaultTitle); setSummary(current?.summary ?? ""); setOwner(detailText(details, "owner") || "经营负责人"); setProductRef(detailText(details, "productRef") || products[0]?.productRef.resourceId || ""); setCandidateSource(detailText(details, "candidateSource")); setContentCategory(detailText(details, "contentCategory")); setAudienceScale(detailText(details, "audienceScale")); setChannel(detailText(details, "channel")); setBudget(detailText(details, "budget")); setCommission(detailText(details, "commission")); setBenefits(detailText(details, "benefits")); setDeliverables(detailText(details, "deliverables")); setEvidence(detailText(details, "evidence")); setSchedule(detailText(details, "schedule")); }, [current?.revision, purpose, products]);
+   const selectedProduct = products.find((item) => item.productRef.resourceId === productRef);
+   const values = { title: title.trim(), summary: summary.trim(), details: { owner: owner.trim(), productRef, productName: selectedProduct?.title ?? detailText(current?.details, "productName"), candidateSource: candidateSource.trim(), contentCategory: contentCategory.trim(), audienceScale: audienceScale.trim(), channel: channel.trim(), budget: budget.trim(), commission: commission.trim(), benefits: benefits.trim(), deliverables: deliverables.trim(), evidence: evidence.trim(), schedule: schedule.trim() } };
+-  const disabled = busy || values.title.length < 2 || values.summary.length < 2;
++  const disabled = busy || readUnavailable || values.title.length < 2 || values.summary.length < 2;
+   return <aside className="creator-growth-preparation" aria-label={copy.title}><header><div><span>内部业务工作流</span><h2>{copy.title}</h2></div><button type="button" onClick={onClose}>关闭</button></header>
+     <label>任务名称<input aria-label="任务名称" value={title} onChange={(event) => setTitle(event.target.value)} /></label>
+     <label>{copy.summaryLabel}<textarea aria-label={copy.summaryLabel} value={summary} onChange={(event) => setSummary(event.target.value)} placeholder={copy.placeholder} /></label>
+@@ -143,15 +143,16 @@
+     {purpose === "relationship_plan" ? <div className="creator-growth-business-fields"><label>维护权益<input aria-label="维护权益" value={benefits} onChange={(event) => setBenefits(event.target.value)} placeholder="例如：新品优先试用" /></label><label>复邀窗口<input aria-label="复邀窗口" value={schedule} onChange={(event) => setSchedule(event.target.value)} placeholder="例如：合作结束30天后" /></label></div> : null}
+     <label>负责人<input aria-label="负责人" value={owner} onChange={(event) => setOwner(event.target.value)} /></label>
+     <p>草稿、审核和历史版本保存在当前租户；不会自动导入、发送邀约、签署合同或产生外部触达。</p>
+-    {current ? <section aria-label="当前草稿"><strong>{WORKFLOW_STATUS[current.status]} · 第 {current.revision} 版</strong><small>写入基线 {current.version} · {current.resourceId}</small>{receipt ? <small>回执 {receipt.receiptId}{receipt.replay ? " · 幂等重放" : ""}</small> : null}</section> : null}
++    {readUnavailable ? <p role="alert">当前内部草稿暂未读取，暂存内容不能作为当前版本操作。请重新读取后再准备或评审。</p> : null}
++    {current ? <section aria-label={readUnavailable ? "上次读取草稿" : "当前草稿"}><strong>{readUnavailable ? "上次读取：" : ""}{WORKFLOW_STATUS[current.status]} · 第 {current.revision} 版</strong><small>{readUnavailable ? "暂存版本" : "写入基线"} {current.version} · {current.resourceId}</small>{receipt ? <small>回执 {receipt.receiptId}{receipt.replay ? " · 幂等重放" : ""}</small> : null}</section> : null}
+     {error ? <p role="alert">{error}</p> : null}
+     <div className="creator-growth-preparation-actions">
+       {!current ? <button type="button" className="is-primary" disabled={disabled} onClick={() => onCommand("create", values)}>保存草稿</button> : null}
+       {current && (current.status === "draft" || current.status === "rejected") ? <><button type="button" disabled={disabled} onClick={() => onCommand("save", values)}>保存修改</button><button type="button" className="is-primary" disabled={disabled} onClick={() => onCommand("submit_review", values)}>提交审核</button></> : null}
+-      {current?.status === "in_review" ? <><button type="button" className="is-primary" disabled={busy} onClick={() => onCommand("approve", values)}>批准</button><button type="button" disabled={busy} onClick={() => onCommand("reject", values)}>驳回</button></> : null}
+-      {current ? <button type="button" disabled={busy} onClick={onNew}>新建一份</button> : null}
++      {current?.status === "in_review" ? <><button type="button" className="is-primary" disabled={busy || readUnavailable} onClick={() => onCommand("approve", values)}>批准</button><button type="button" disabled={busy || readUnavailable} onClick={() => onCommand("reject", values)}>驳回</button></> : null}
++      {current ? <button type="button" disabled={busy || readUnavailable} onClick={onNew}>新建一份</button> : null}
+     </div>
+-    {history.length ? <details className="creator-growth-workflow-history"><summary>查看版本历史（{history.length}）</summary>{[...history].reverse().map((item) => <article key={item.revision}><div><strong>第 {item.revision} 版 · {WORKFLOW_STATUS[item.status]}</strong><span>{item.title}</span></div>{item.revision < (current?.revision ?? 0) ? <button type="button" disabled={busy} onClick={() => onCommand("restore", { title: item.title, summary: item.summary, details: item.details }, item.revision)}>恢复此版本</button> : null}</article>)}</details> : null}
++    {history.length ? <details className="creator-growth-workflow-history"><summary>查看版本历史（{history.length}）</summary>{[...history].reverse().map((item) => <article key={item.revision}><div><strong>第 {item.revision} 版 · {WORKFLOW_STATUS[item.status]}</strong><span>{item.title}</span></div>{item.revision < (current?.revision ?? 0) ? <button type="button" disabled={busy || readUnavailable} onClick={() => onCommand("restore", { title: item.title, summary: item.summary, details: item.details }, item.revision)}>恢复此版本</button> : null}</article>)}</details> : null}
+   </aside>;
+ }
+ 
+@@ -173,11 +174,12 @@
+   const [workflowHistory, setWorkflowHistory] = useState<Partial<Record<CreatorInternalWorkflowPurpose, CreatorInternalWorkflowDraft[]>>>({});
+   const [workflowReceipts, setWorkflowReceipts] = useState<Partial<Record<CreatorInternalWorkflowPurpose, CreatorInternalWorkflowReceipt>>>({});
+   const [workflowBusy, setWorkflowBusy] = useState(false); const [workflowError, setWorkflowError] = useState("");
++  const [workflowReadState, setWorkflowReadState] = useState<"loading" | "ready" | "failed">("loading");
+   const workflowIntentKeys = useRef<Record<string, string>>({});
+-  const load = () => { const id = ++request.current; setPhase("loading"); void Promise.all([client.getCreatorGrowthView(), client.getCreatorContributionView().catch(() => null), client.getCreatorLifecycleView?.().catch(() => null) ?? Promise.resolve(null), client.getThreeModuleClosureContributionView?.("creator").catch(() => null) ?? Promise.resolve(null), client.listCreatorInternalWorkflows().catch(() => null), client.getContentCampaignRealInputs().catch(() => null)]).then(([next, nextContribution, nextLifecycle, nextClosure, workflows, inputs]) => { if (id !== request.current) return; setResponse(next); setContribution(nextContribution ?? unavailableContribution(next)); setLifecycle(nextLifecycle ?? unavailableLifecycle(next)); setClosure(nextClosure ?? unavailableThreeModuleClosure("creator", next.tenant, next.evaluatedAt)); setRealInputs(inputs); setProductReadFailed(inputs === null || inputs.unavailableGroups.includes("products")); if (workflows) { const latest: Partial<Record<CreatorInternalWorkflowPurpose, CreatorInternalWorkflowDraft>> = {}; for (const item of workflows.items) if (!latest[item.purpose]) latest[item.purpose] = item; setWorkflowDrafts(latest); } setPhase("ready"); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); }); };
++  const load = () => { const id = ++request.current; setPhase("loading"); setWorkflowReadState("loading"); void Promise.all([client.getCreatorGrowthView(), client.getCreatorContributionView().catch(() => null), client.getCreatorLifecycleView?.().catch(() => null) ?? Promise.resolve(null), client.getThreeModuleClosureContributionView?.("creator").catch(() => null) ?? Promise.resolve(null), client.listCreatorInternalWorkflows().catch(() => null), client.getContentCampaignRealInputs().catch(() => null)]).then(([next, nextContribution, nextLifecycle, nextClosure, workflows, inputs]) => { if (id !== request.current) return; setResponse(next); setContribution(nextContribution ?? unavailableContribution(next)); setLifecycle(nextLifecycle ?? unavailableLifecycle(next)); setClosure(nextClosure ?? unavailableThreeModuleClosure("creator", next.tenant, next.evaluatedAt)); setRealInputs(inputs); setProductReadFailed(inputs === null || inputs.unavailableGroups.includes("products")); if (workflows) { const latest: Partial<Record<CreatorInternalWorkflowPurpose, CreatorInternalWorkflowDraft>> = {}; for (const item of workflows.items) if (!latest[item.purpose]) latest[item.purpose] = item; setWorkflowDrafts(latest); } setWorkflowReadState(workflows === null ? "failed" : "ready"); setPhase("ready"); }, (error: unknown) => { if (id === request.current) { setWorkflowReadState("failed"); setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); } }); };
+   useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
+   useEffect(() => { const search = (event: Event) => setQuery(String((event as CustomEvent<{ value?: string }>).detail?.value ?? "")); const openImport = () => setPreparation("candidate_import"); const openBatch = () => { setSelected("outreach"); setPreparation("outreach_batch"); }; window.addEventListener("aos-workshop-creator-search", search); window.addEventListener("aos-workshop-creator-import", openImport); window.addEventListener("aos-workshop-creator-new-batch", openBatch); return () => { window.removeEventListener("aos-workshop-creator-search", search); window.removeEventListener("aos-workshop-creator-import", openImport); window.removeEventListener("aos-workshop-creator-new-batch", openBatch); }; }, []);
+-  const activeDraft = preparation ? workflowDrafts[preparation] : undefined;
++  const activeDraft = preparation && workflowReadState === "ready" ? workflowDrafts[preparation] : undefined;
+   useEffect(() => {
+     if (!preparation || !activeDraft) return;
+     let active = true;
+@@ -192,6 +194,7 @@
+   const advisor = advisorFor(selected); const purposeForStage: Record<CreatorBusinessStage, CreatorInternalWorkflowPurpose> = { candidate: "candidate_import", outreach: "outreach_batch", contract: "collaboration", delivery: "delivery_check", relationship: "relationship_plan" }; const openRelevantPreparation = () => setPreparation(purposeForStage[selected]);
+   const executeWorkflow = async (command: CreatorInternalWorkflowCommand, values: { title: string; summary: string; details: Record<string, unknown> }, restoreRevision?: number) => {
+     if (!preparation) return;
++    if (workflowReadState !== "ready") { setWorkflowError("当前内部草稿暂未读取，请重新读取后再操作。"); return; }
+     const current = workflowDrafts[preparation];
+     const input: CreatorInternalWorkflowCommandInput = { command, purpose: preparation, ...values };
+     if (command !== "create") {
+@@ -223,10 +226,11 @@
+   const auditCodes = [...slice.blockers.map((item) => item.code), ...contribution.blockers, ...lifecycle.blockers];
+   return <section className="creator-growth-page" aria-label="达人邀约驾驶舱">
+     <nav className="creator-growth-toolbar" aria-label="达人增长主视图"><div>{STAGES.map((stage) => <button type="button" className={selected === stage ? "is-active" : ""} key={stage} onClick={() => { setSelected(stage); setNotice(""); }}>{TABS[stage]}</button>)}</div></nav>
++    {workflowReadState === "failed" ? <p role="alert">当前内部草稿暂未读取，请重新读取后再准备或评审。</p> : null}
+     <div className="creator-growth-read-model"><div className="creator-growth-board">
+       <aside className="creator-growth-directory"><header><div><h2>达人与机构</h2><span>{response.page.count} 条正式记录</span></div><button type="button" onClick={() => setPreparation("candidate_import")}>导入准备</button></header><label className="creator-growth-search"><input aria-label="检索达人或机构" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索达人、机构、邀约记录" /></label><div className="creator-growth-filters">{FILTERS.map((item) => <button type="button" key={item} className={filter === item ? "is-selected" : ""} aria-pressed={filter === item} onClick={() => setFilter(item)}>{item}</button>)}</div><p className="creator-growth-range">{filter} · {query || "全部关键词"} · {visibleRefs.length} 条</p><section className="creator-growth-products"><header><strong>栖月汇商品</strong><span>{productReadFailed ? "商品数据暂未读取" : `正式商品 ${realInputs?.products.length ?? 0}`}</span></header>{realInputs?.products.slice(0, 4).map((item) => <article key={item.productRef.resourceId}><strong>{item.title}</strong><span>{item.price === null ? "价格待核对" : `¥${item.price}`} · {item.availableStock === null ? "库存待核对" : `库存 ${item.availableStock}`}</span><small>来源更新 {new Date(item.sourceUpdatedAt).toLocaleDateString("zh-CN")}</small></article>)}{productReadFailed ? <button type="button" onClick={load}>重新读取业务数据</button> : null}</section><div className="creator-growth-stage-list">{response.slices.map((item) => <button type="button" className={`content-campaign-slice${selected === item.businessStage ? " is-selected" : ""}`} key={item.businessStage} onClick={() => setSelected(item.businessStage)}><strong>{STAGE_LABELS[item.businessStage]}</strong><span>{item.authorityRefs.length}</span><small>{STAGE_DESCRIPTIONS[item.businessStage]}</small></button>)}</div><section className="creator-growth-directory-empty"><strong>{visibleRefs.length ? `${visibleRefs.length} 条匹配记录` : "没有匹配记录"}</strong><p>{visibleRefs.length ? "选择业务阶段查看正式数据。" : "调整关键词或先准备候选来源与筛选条件。"}</p></section></aside>
+       <main className="creator-growth-main"><StageWorkspace stage={selected} slice={{ ...slice, authorityRefs: visibleRefs }} lifecycle={lifecycle} onPrepare={setPreparation} />{notice ? <p className="creator-growth-notice" role="status">{notice}</p> : null}</main>
+       <aside className="creator-growth-analysis"><header><h2>{advisor[0]}</h2><span>{slice.authorityRefs.length} 条依据</span></header><section className="creator-growth-analysis-summary"><span>当前判断</span><strong>{slice.authorityRefs.length ? "可基于正式记录继续核对" : "当前没有可验证业务对象"}</strong><p>{advisor[1]}没有正式记录时不生成姓名、联系方式、匹配分或经营结果。</p></section><section className="creator-growth-next-actions"><h3>下一步动作</h3><div><button type="button" onClick={() => setPreparation("candidate_import")}>补充候选条件</button><button type="button" onClick={() => setPreparation("collaboration")}>补充预算权益</button><button type="button" onClick={() => setPreparation("delivery_check")}>补充交付物证据</button><button type="button" onClick={openRelevantPreparation}>{advisor[2]}</button>{selected === "outreach" ? <button type="button" onClick={() => setPreparation("outreach_message")}>编写邀约内容</button> : null}</div><button type="button" onClick={() => { load(); setNotice("已重新读取栖月汇当前正式数据。" ); }}>重新读取业务数据</button><small>页面准备不会自动触达达人，也不会代替合同、履约或关系记录。</small></section><section className="creator-growth-colleagues"><h3>共享数字同事</h3><div><span>导购顾问</span><span>数据参谋</span><span>活动策划师</span><span>内容官</span><span>私域管家</span></div></section><details className="creator-growth-audit-context"><summary>技术与数据诊断</summary><dl><div><dt>租户</dt><dd>{response.tenant.orgId}/{response.tenant.projectId}</dd></div><div><dt>数据截止</dt><dd>{new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</dd></div><div><dt>内容校验</dt><dd>{slice.authorityRefs.length ? short(slice.authorityRefs[0]!.contentHash) : "无正式记录"}</dd></div></dl>{auditCodes.length ? <ul>{auditCodes.map((code) => <li key={code}>{code}</li>)}</ul> : <p>当前读取链无诊断项。</p>}<ThreeModuleClosureCard value={closure} /></details><footer><span>数据截止 {new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</span><button type="button" onClick={load}>重新读取</button></footer></aside>
+-    </div></div>{preparation ? <PreparationPanel purpose={preparation} products={realInputs?.products ?? []} current={workflowDrafts[preparation] ?? null} receipt={workflowReceipts[preparation] ?? null} history={workflowHistory[preparation] ?? []} busy={workflowBusy} error={workflowError} onClose={() => setPreparation(null)} onCommand={(command, values, restoreRevision) => { void executeWorkflow(command, values, restoreRevision); }} onNew={() => { setWorkflowDrafts((previous) => ({ ...previous, [preparation]: undefined })); setWorkflowHistory((previous) => ({ ...previous, [preparation]: [] })); setWorkflowReceipts((previous) => ({ ...previous, [preparation]: undefined })); setWorkflowError(""); }} /> : null}
++    </div></div>{preparation ? <PreparationPanel purpose={preparation} products={realInputs?.products ?? []} current={workflowDrafts[preparation] ?? null} receipt={workflowReceipts[preparation] ?? null} history={workflowHistory[preparation] ?? []} busy={workflowBusy} readUnavailable={workflowReadState !== "ready"} error={workflowError} onClose={() => setPreparation(null)} onCommand={(command, values, restoreRevision) => { void executeWorkflow(command, values, restoreRevision); }} onNew={() => { setWorkflowDrafts((previous) => ({ ...previous, [preparation]: undefined })); setWorkflowHistory((previous) => ({ ...previous, [preparation]: [] })); setWorkflowReceipts((previous) => ({ ...previous, [preparation]: undefined })); setWorkflowError(""); }} /> : null}
+   </section>;
+ }
+
+CURRENT COMPLETE command/load/history context lines174-226
+  const [workflowReceipts, setWorkflowReceipts] = useState<Partial<Record<CreatorInternalWorkflowPurpose, CreatorInternalWorkflowReceipt>>>({});
+  const [workflowBusy, setWorkflowBusy] = useState(false); const [workflowError, setWorkflowError] = useState("");
+  const workflowIntentKeys = useRef<Record<string, string>>({});
+  const load = () => { const id = ++request.current; setPhase("loading"); void Promise.all([client.getCreatorGrowthView(), client.getCreatorContributionView().catch(() => null), client.getCreatorLifecycleView?.().catch(() => null) ?? Promise.resolve(null), client.getThreeModuleClosureContributionView?.("creator").catch(() => null) ?? Promise.resolve(null), client.listCreatorInternalWorkflows().catch(() => null), client.getContentCampaignRealInputs().catch(() => null)]).then(([next, nextContribution, nextLifecycle, nextClosure, workflows, inputs]) => { if (id !== request.current) return; setResponse(next); setContribution(nextContribution ?? unavailableContribution(next)); setLifecycle(nextLifecycle ?? unavailableLifecycle(next)); setClosure(nextClosure ?? unavailableThreeModuleClosure("creator", next.tenant, next.evaluatedAt)); setRealInputs(inputs); setProductReadFailed(inputs === null || inputs.unavailableGroups.includes("products")); if (workflows) { const latest: Partial<Record<CreatorInternalWorkflowPurpose, CreatorInternalWorkflowDraft>> = {}; for (const item of workflows.items) if (!latest[item.purpose]) latest[item.purpose] = item; setWorkflowDrafts(latest); } setPhase("ready"); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); }); };
+  useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
+  useEffect(() => { const search = (event: Event) => setQuery(String((event as CustomEvent<{ value?: string }>).detail?.value ?? "")); const openImport = () => setPreparation("candidate_import"); const openBatch = () => { setSelected("outreach"); setPreparation("outreach_batch"); }; window.addEventListener("aos-workshop-creator-search", search); window.addEventListener("aos-workshop-creator-import", openImport); window.addEventListener("aos-workshop-creator-new-batch", openBatch); return () => { window.removeEventListener("aos-workshop-creator-search", search); window.removeEventListener("aos-workshop-creator-import", openImport); window.removeEventListener("aos-workshop-creator-new-batch", openBatch); }; }, []);
+  const activeDraft = preparation ? workflowDrafts[preparation] : undefined;
+  useEffect(() => {
+    if (!preparation || !activeDraft) return;
+    let active = true;
+    void client.getCreatorInternalWorkflowHistory(activeDraft.resourceId).then(
+      (history) => { if (active) setWorkflowHistory((previous) => ({ ...previous, [preparation]: history.items })); },
+      () => { if (active) setWorkflowError("当前草稿已恢复，但版本历史暂未读取；可重新读取后再试。"); },
+    );
+    return () => { active = false; };
+  }, [client, preparation, activeDraft?.resourceId, activeDraft?.revision]);
+  const slice = response?.slices.find((item) => item.businessStage === selected); const visibleRefs = useMemo(() => slice?.authorityRefs.filter((item) => !query.trim() || `${item.resourceType} ${item.resourceId}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) ?? [], [slice, query]);
+  if (!response || !contribution || !lifecycle || !closure || !slice) return <section className="creator-growth-page"><AsyncStateBoundary state={phase} action={phase === "failed" ? <button type="button" onClick={load}>重新读取</button> : undefined} /></section>;
+  const advisor = advisorFor(selected); const purposeForStage: Record<CreatorBusinessStage, CreatorInternalWorkflowPurpose> = { candidate: "candidate_import", outreach: "outreach_batch", contract: "collaboration", delivery: "delivery_check", relationship: "relationship_plan" }; const openRelevantPreparation = () => setPreparation(purposeForStage[selected]);
+  const executeWorkflow = async (command: CreatorInternalWorkflowCommand, values: { title: string; summary: string; details: Record<string, unknown> }, restoreRevision?: number) => {
+    if (!preparation) return;
+    const current = workflowDrafts[preparation];
+    const input: CreatorInternalWorkflowCommandInput = { command, purpose: preparation, ...values };
+    if (command !== "create") {
+      if (!current) return;
+      input.draftRef = {
+        resourceType: current.resourceType,
+        resourceId: current.resourceId,
+        revision: current.revision,
+        contentHash: current.contentHash,
+      };
+      input.expectedVersion = current.version;
+    }
+    if (command === "restore") input.restoreRevision = restoreRevision;
+    const intent = JSON.stringify([preparation, command, values, restoreRevision ?? null, current?.version ?? 0]);
+    const idempotencyKey = workflowIntentKeys.current[intent] ?? `creator-${preparation}-${command}-${Date.now()}-${current?.version ?? 0}`;
+    workflowIntentKeys.current[intent] = idempotencyKey;
+    setWorkflowBusy(true); setWorkflowError("");
+    try {
+      const result = await client.executeCreatorInternalWorkflow(input, idempotencyKey);
+      setWorkflowDrafts((previous) => ({ ...previous, [preparation]: result.draft }));
+      setWorkflowReceipts((previous) => ({ ...previous, [preparation]: result.receipt }));
+      setNotice(`${result.message} 当前为${WORKFLOW_STATUS[result.draft.status]}，第 ${result.draft.revision} 版。`);
+      delete workflowIntentKeys.current[intent];
+      try { const history = await client.getCreatorInternalWorkflowHistory(result.draft.resourceId); setWorkflowHistory((previous) => ({ ...previous, [preparation]: history.items })); }
+      catch { setWorkflowError("操作已保存并取得回执，但版本历史暂未刷新；可稍后重新打开或重新读取。"); }
+    } catch (error) { setWorkflowError(error instanceof Error ? `操作结果未确认：${error.message}。再次点击将复用同一请求回执键。` : "操作结果未确认；再次点击将复用同一请求回执键。"); }
+    finally { setWorkflowBusy(false); }
+  };
+  const auditCodes = [...slice.blockers.map((item) => item.code), ...contribution.blockers, ...lifecycle.blockers];
+  return <section className="creator-growth-page" aria-label="达人邀约驾驶舱">
+    <nav className="creator-growth-toolbar" aria-label="达人增长主视图"><div>{STAGES.map((stage) => <button type="button" className={selected === stage ? "is-active" : ""} key={stage} onClick={() => { setSelected(stage); setNotice(""); }}>{TABS[stage]}</button>)}</div></nav>
+    <div className="creator-growth-read-model"><div className="creator-growth-board">
+CURRENT hydration context lines115-135
+function PreparationPanel({ purpose, products, current, receipt, history, busy, error, onClose, onCommand, onNew }: { purpose: CreatorInternalWorkflowPurpose; products: ContentCampaignProductInput[]; current: CreatorInternalWorkflowDraft | null; receipt: CreatorInternalWorkflowReceipt | null; history: CreatorInternalWorkflowDraft[]; busy: boolean; error: string; onClose: () => void; onCommand: (command: CreatorInternalWorkflowCommand, values: { title: string; summary: string; details: Record<string, unknown> }, restoreRevision?: number) => void; onNew: () => void }) {
+  const copy = PREPARATION_COPY[purpose];
+  const [title, setTitle] = useState(current?.title ?? copy.defaultTitle);
+  const [summary, setSummary] = useState(current?.summary ?? "");
+  const [owner, setOwner] = useState(detailText(current?.details, "owner") || "经营负责人");
+  const [productRef, setProductRef] = useState(detailText(current?.details, "productRef") || products[0]?.productRef.resourceId || "");
+  const [candidateSource, setCandidateSource] = useState(detailText(current?.details, "candidateSource"));
+  const [contentCategory, setContentCategory] = useState(detailText(current?.details, "contentCategory"));
+  const [audienceScale, setAudienceScale] = useState(detailText(current?.details, "audienceScale"));
+  const [channel, setChannel] = useState(detailText(current?.details, "channel"));
+  const [budget, setBudget] = useState(detailText(current?.details, "budget"));
+  const [commission, setCommission] = useState(detailText(current?.details, "commission"));
+  const [benefits, setBenefits] = useState(detailText(current?.details, "benefits"));
+  const [deliverables, setDeliverables] = useState(detailText(current?.details, "deliverables"));
+  const [evidence, setEvidence] = useState(detailText(current?.details, "evidence"));
+  const [schedule, setSchedule] = useState(detailText(current?.details, "schedule"));
+  useEffect(() => { const details = current?.details; setTitle(current?.title ?? copy.defaultTitle); setSummary(current?.summary ?? ""); setOwner(detailText(details, "owner") || "经营负责人"); setProductRef(detailText(details, "productRef") || products[0]?.productRef.resourceId || ""); setCandidateSource(detailText(details, "candidateSource")); setContentCategory(detailText(details, "contentCategory")); setAudienceScale(detailText(details, "audienceScale")); setChannel(detailText(details, "channel")); setBudget(detailText(details, "budget")); setCommission(detailText(details, "commission")); setBenefits(detailText(details, "benefits")); setDeliverables(detailText(details, "deliverables")); setEvidence(detailText(details, "evidence")); setSchedule(detailText(details, "schedule")); }, [current?.revision, purpose, products]);
+  const selectedProduct = products.find((item) => item.productRef.resourceId === productRef);
+  const values = { title: title.trim(), summary: summary.trim(), details: { owner: owner.trim(), productRef, productName: selectedProduct?.title ?? detailText(current?.details, "productName"), candidateSource: candidateSource.trim(), contentCategory: contentCategory.trim(), audienceScale: audienceScale.trim(), channel: channel.trim(), budget: budget.trim(), commission: commission.trim(), benefits: benefits.trim(), deliverables: deliverables.trim(), evidence: evidence.trim(), schedule: schedule.trim() } };
+  const disabled = busy || values.title.length < 2 || values.summary.length < 2;
+  return <aside className="creator-growth-preparation" aria-label={copy.title}><header><div><span>内部业务工作流</span><h2>{copy.title}</h2></div><button type="button" onClick={onClose}>关闭</button></header>
+EXISTING clientfixture+tests relevant known success/currenthydration/historyreceipt
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { ContentCampaignInputsResponse, CreatorGrowthViewResponse } from "../../api/ecommerceWorkshop";
+import { CreatorGrowthPage } from "./CreatorGrowthPage";
+
+const cutoff = "2026-09-05T00:00:00+08:00";
+const stages = ["candidate", "outreach", "contract", "delivery", "relationship"] as const;
+const phases = ["discovery", "evidence", "matching", "batch_prepare", "start"] as const;
+const emptyView: CreatorGrowthViewResponse = {
+  schemaVersion: "aos.ecommerce-workshop.creator-growth-view/v1",
+  tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: cutoff, dataCutoff: cutoff, readiness: "degraded",
+  slices: stages.map((businessStage) => ({ businessStage, workflowPhases: [...phases], status: "blocked", dataCutoff: cutoff, authorityRefs: [], blockers: [{ code: `CANONICAL_CREATOR_${businessStage.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: businessStage, requiredAction: "补充正式业务数据" }], countLedger: { input: 0, eligible: 0, excluded: 0, needsReview: 0, unknown: 0, deduplicated: 0 } })),
+  page: { limit: 100, count: 0, hasMore: false, nextCursor: null },
+};
+const contribution = { schemaVersion: "aos.ecommerce-workshop.creator-prepare/v1" as const, tenant: emptyView.tenant, evaluatedAt: cutoff, atomicSkillRefs: [], logicRef: null, primaryColleague: "导购顾问" as const, collaboratorColleagues: ["数据参谋", "内容官", "活动策划师"], latestBatch: null, blockers: ["CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"], allowedCommands: ["PREPARE_CREATOR_BATCH" as const], externalEffectsAllowed: false as const };
+const lifecycle = { schemaVersion: "aos.ecommerce-workshop.creator-lifecycle/v1" as const, tenant: emptyView.tenant, evaluatedAt: cutoff, latestStart: null, ledger: { eligibleItems: 0, lanes: 0, prepared: 0, accepted: 0, applied: 0, failed: 0, unknown: 0, disputed: 0, completed: 0 }, contracts: [], deliveries: [], relationships: [], blockers: ["CREATOR_BATCH_START_NOT_AVAILABLE"], allowedCommands: ["START_CREATOR_BATCH_GOVERNANCE" as const], externalEffectsAllowed: false as const };
+const draft = { resourceType: "TaskBriefRevision" as const, resourceId: "creator-brief-1", revision: 1, contentHash: "a".repeat(64), version: 1, purpose: "candidate_import" as const, title: "达人候选导入", summary: "品牌合作名单与美妆达人筛选", details: { owner: "经营负责人" }, status: "draft" as const };
+const realInputs: ContentCampaignInputsResponse = { schemaVersion: "aos.ecommerce-workshop.content-campaign-inputs/v1", tenant: emptyView.tenant, evaluatedAt: cutoff, dataCutoff: cutoff, status: "ready", products: [{ productRef: { resourceType: "Product", resourceId: "niushop:1:65", revision: null, contentHash: "sha256:" + "b".repeat(64), authority: "ecom_object" }, title: "栖月汇焕亮面膜", price: "99.00", availableStock: 28, businessStatus: "1", sourceUpdatedAt: cutoff }], inventory: [], plans: [], ledger: { products: 1, inventory: 0, plans: 0, unmatchedInventory: 0 }, unavailableGroups: [] };
+const clientFor = () => ({ getCreatorGrowthView: vi.fn().mockResolvedValue(emptyView), getCreatorContributionView: vi.fn().mockResolvedValue(contribution), getCreatorLifecycleView: vi.fn().mockResolvedValue(lifecycle), getContentCampaignRealInputs: vi.fn().mockResolvedValue(realInputs), listCreatorInternalWorkflows: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, items: [], count: 0 }), executeCreatorInternalWorkflow: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, command: "create", taskId: "creator-task-1", draft, receipt: { receiptId: "receipt-1", operation: "task_brief.create", idempotencyKey: "creator-key:creator-brief", replay: false }, sideEffects: { providerInvocationCount: 0, externalOutreachCount: 0, contractSignatureCount: 0, businessMutationCount: 0 }, message: "内部业务草稿已创建。" }), getCreatorInternalWorkflowHistory: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, items: [draft], count: 1 }) });
+
+  it("刷新后从服务端水合最新内部草稿", async () => {
+    const client = clientFor(); client.listCreatorInternalWorkflows.mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 });
+    await act(async () => root.render(<CreatorGrowthPage client={client} />));
+    await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-import")));
+    expect(host.textContent).toContain("草稿 · 第 1 版"); expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')?.value).toBe("达人候选导入");
+    expect(client.getCreatorInternalWorkflowHistory).toHaveBeenCalledWith("creator-brief-1");
+    expect(host.textContent).toContain("查看版本历史（1）");
+  });
+
+  it("修订命令只提交精确草稿引用而不夹带展示字段", async () => {
+    const client = clientFor(); client.listCreatorInternalWorkflows.mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 });
+    await act(async () => root.render(<CreatorGrowthPage client={client} />));
+    await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-import")));
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-preparation button")].find((button) => button.textContent === "保存修改")!.click());
+    const input = client.executeCreatorInternalWorkflow.mock.calls[0]![0];
+    expect(input.draftRef).toEqual({ resourceType: "TaskBriefRevision", resourceId: "creator-brief-1", revision: 1, contentHash: "a".repeat(64) });
+    expect(input.draftRef).not.toHaveProperty("status");
+  });
+
+  it("命令成功但历史读取失败时保留草稿和回执", async () => {
+    const client = clientFor(); client.getCreatorInternalWorkflowHistory.mockRejectedValueOnce(new Error("history unavailable"));
+    await act(async () => root.render(<CreatorGrowthPage client={client} />));
+    await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-import")));
+    const summary = host.querySelector<HTMLTextAreaElement>('textarea[aria-label="来源与筛选条件"]')!;
+    await act(async () => { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(summary, "品牌合作名单与美妆达人筛选"); summary.dispatchEvent(new Event("input", { bubbles: true })); });
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-preparation button")].find((button) => button.textContent === "保存草稿")!.click());
+    expect(host.textContent).toContain("回执 receipt-1"); expect(host.textContent).toContain("操作已保存并取得回执"); expect(host.textContent).not.toContain("操作未保存");
+  });
+
+Prospective RED cases: initial list failure unknown+0execute vs genuine empty success; cacheddraft in_review/history/reviewbuttons disabled when refreshfails, cached label becomeshistorical not current; unsaved field stays mounted; oldReceipt retained; pendingreload before resolves blockscommands; successful sameversionreload clearsunknown without retry and preserveslocalediting; currentexisting command/historyfail retainsreceipt. request-id rejects stale delayed response. All tests use owned syntheticclients, no original user effects.

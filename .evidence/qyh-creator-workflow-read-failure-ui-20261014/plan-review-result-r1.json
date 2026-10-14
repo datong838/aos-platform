@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a00fa9562178204ec7a10c8aa8972b7366db4d3168fb3b72fb8d0f0cf20c7c13",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-workflow-read-failure-ui-20261014-plan-r1",
+    "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "5a1855482e92a2de4f028ffa106b9dfccde89a50",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-creator-workflow-read-failure-ui-20261014/plan-review-package-r1.txt": "232e78508d36299650e78badf0c3b904892e200619e5d7a73ff9916421cc1ce1"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "前端方案区分成功空与读取失败，暂存草稿不当当前权威，失败或加载中禁止命令及history恢复，入口guard早于请求键和调用。",
+        "evidence": "文件 .evidence/qyh-creator-workflow-read-failure-ui-20261014/proposed-diff-r1.txt diff行：1) `setWorkflowReadState(workflows === null ? \"failed\" : \"ready\")`；2) `const activeDraft = preparation && workflowReadState === \"ready\" ? workflowDrafts[preparation] : undefined;`；3) `if (workflowReadState !== \"ready\") { setWorkflowError(...); return; }` 在 executeWorkflow 内；4) diff行 `disabled = busy || readUnavailable || ...` 及各按钮 `busy || readUnavailable`。材料明确：null为failed，空[]为合法ready，错误不输出异常/SQL/secret。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "方案保留编辑字段和已发生Receipt及未知请求键，恢复仅从新read成功建立当前状态，原正常流程和旧相邻行为不改。",
+        "evidence": "文件 .evidence/qyh-creator-workflow-read-failure-ui-20261014/proposed-diff-r1.txt 计划段落与diff：1) 计划明确“不销毁用户正在编辑的字段或已发生操作Receipt/idempotencyKey”，且“不重置unknown/attempted命令key”；2) `current` prop 仍传 `workflowDrafts[preparation] ?? null`，但 `activeDraft` 仅在 `readState===ready` 时有效，故history useEffect仅在新read成功后运行；3) diff中保留 `{receipt ? <small>回执...</small> : null}` 与 `error` 段，原 `busy || values.title...` 增加 `readUnavailable` 而非删除逻辑。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前仅方案拟稿，不是业务批准、已实现/浏览器验收或完整Goal完成。",
+        "evidence": "文件 .evidence/qyh-creator-workflow-read-failure-ui-20261014/registration.json header：“PROSPECTIVE UI plan only, product unchanged. Whole Goal preserved.”；implementation-plan.md：“先独立plan合法消费、最小2文件修改...真实浏览器所有动作限read/UI，不保存/approve/execute”；proposal diff文件名为“PROSPECTIVE NOT APPLIED”，测试部分列“Prospective RED cases”未显示已写/通过。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "按RED用例用本地合成client跑CreatorGrowthPage.test.tsx最小用例；确认首次list失败时按钮0调用、已存在草稿在重新读取前禁用并标记历史；未通过则补diff后提交，仍不触碰后端权限与样式目标。"
+  }
+}

@@ -51,7 +51,7 @@ def test_root_get_uses_scoped_read_admission_before_business_reader(module):
 
 
 @pytest.mark.parametrize('path', [
-    '/views/customer/contributions', '/views/creator-growth/workflow/drafts',
+    '/views/customer/contributions', '/views/creator-growth/workflow/drafts/fixture/history',
     '/modules/ecommerce.operations/readiness',
 ])
 def test_unreviewed_get_still_uses_legacy_admission(path):
@@ -83,6 +83,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
         '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
         '/v1/ecommerce-workshop/views/creator-growth/contributions',
         '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+        '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
     }
 
 
@@ -331,4 +332,98 @@ def test_lifecycle_readonly_serializes_genuine_empty_without_commands():
     assert data['tenant'] == dict(orgId='org-org', projectId='dev-project')
     assert data['latestStart'] is None and data['contracts'] == []
     assert data['allowedCommands'] == [] and data['externalEffectsAllowed'] is False
+    assert not legacy.calls
+
+
+WORKFLOW_PATH = '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts'
+
+
+def workflow_probes(client, *, failure=None):
+    calls = []
+    class Legacy:
+        def list(self, scope):
+            calls.append(('legacy', scope.key))
+            raise ReadReached('legacy-workflow')
+    class Readonly:
+        def list(self, scope):
+            calls.append(('readonly', scope.key))
+            if failure:
+                from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorWorkflowReadonlyError
+                raise CreatorWorkflowReadonlyError(failure)
+            raise ReadReached('readonly-workflow')
+    client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+    client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+    return calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_workflow_list_selects_exact_installed_or_legacy_reader(readonly):
+    client, legacy, reader = client_with_catalogs()
+    calls = workflow_probes(client)
+    def admit(**scope):
+        reader.calls.append(scope)
+        return lifecycle_admission(readonly=readonly)
+    reader.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-workflow'):
+        client.get(WORKFLOW_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'))]
+    assert not legacy.calls and reader.calls == [dict(module_id='ecommerce.creator-growth',
+        org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])]
+
+
+def test_workflow_list_denied_catalog_precedes_every_reader():
+    client, legacy, reader = client_with_catalogs()
+    calls = workflow_probes(client)
+    assert client.get(WORKFLOW_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(reader.calls) == 1
+
+
+@pytest.mark.parametrize('query', ['orgId=dev-org', 'projectId=other', 'limit=1', 'mode=legacy'])
+def test_workflow_list_query_never_selects_scope_limits_or_reader(query):
+    client, legacy, reader = client_with_catalogs()
+    calls = workflow_probes(client)
+    assert client.get(WORKFLOW_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not reader.calls
+
+
+@pytest.mark.parametrize('admission', [None, object()])
+def test_workflow_list_unknown_admission_is_503_not_empty(admission):
+    client, legacy, reader = client_with_catalogs()
+    calls = workflow_probes(client)
+    reader.get_readiness = lambda **scope: admission
+    response = client.get(WORKFLOW_PATH)
+    assert response.status_code == 503 and 'CREATOR_WORKFLOW_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert 'items' not in response.text and not calls and not legacy.calls
+
+
+@pytest.mark.parametrize('code', ['CREATOR_WORKFLOW_READ_UNAVAILABLE',
+    'CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT', 'CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE',
+    'CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED', 'CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'])
+def test_workflow_read_failure_is_explicit_and_not_empty_success(code):
+    client, legacy, reader = client_with_catalogs()
+    calls = workflow_probes(client, failure=code)
+    reader.get_readiness = lambda **scope: lifecycle_admission()
+    response = client.get(WORKFLOW_PATH)
+    assert response.status_code == 503 and code in response.text
+    assert 'items' not in response.text and calls == [('readonly', ('org-org', 'dev-project'))]
+    assert not legacy.calls
+
+
+def test_workflow_successful_empty_has_current_authenticated_scope():
+    from aos_api.ecommerce_creator_internal_workflow_contracts import CreatorInternalWorkflowListResponse
+    client, legacy, reader = client_with_catalogs()
+    reader.get_readiness = lambda **scope: lifecycle_admission()
+    class Readonly:
+        def list(self, scope):
+            assert scope.key == ('org-org', 'dev-project')
+            return CreatorInternalWorkflowListResponse(tenant=dict(orgId=scope.org_id, projectId=scope.project_id), items=[], count=0)
+    class Legacy:
+        def list(self, scope):
+            pytest.fail('installed readonly cannot invoke legacy workflow list')
+    client.app.dependency_overrides[routes.get_creator_workflow_readonly] = lambda: Readonly()
+    client.app.dependency_overrides[routes.get_ecommerce_creator_internal_workflow] = lambda: Legacy()
+    response = client.get(WORKFLOW_PATH)
+    assert response.status_code == 200
+    assert response.json() == dict(tenant=dict(orgId='org-org', projectId='dev-project'), items=[], count=0)
     assert not legacy.calls

@@ -1,0 +1,23 @@
+{
+  "sourceHashes": {
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "d7582295e43e72d9a13351af37b81f0e30ecd3072d1c5e203028edebcdbc67da",
+    "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "f8d656d06acbfebd31364662446bee5f24659290afc70a6bbab7fd94af0511a7"
+  },
+  "reviews": [
+    {
+      "part": "r1",
+      "resultSha256": "df1f208920619d9269245c10e304d8ba6339bcf7a6d28563f5103caac22249d4",
+      "consumptionSha256": "2c1fcd50c9998e1c7ed247017145496e3be2bd1fd6b1e38eec7affb77987b69e"
+    },
+    {
+      "part": "r2",
+      "resultSha256": "dfaaf60193ece3ef7c46906848981809307f12f59579c8d40b94e0884f13e052",
+      "consumptionSha256": "e020ebddb56feb231a0a13001d37c8eda17d8740e8c71e89c79b2f1276655c1a"
+    }
+  ],
+  "sourceBeforeEqualsAfter": true,
+  "frontendTests": 269,
+  "typecheckReturncode": 0,
+  "originalRuntimeAccepted": false,
+  "fullGoalComplete": false
+}

@@ -1,0 +1,7 @@
+# 草稿读取失败的前端旧状态缺口
+
+现CreatorGrowthPage.load: listCreatorInternalWorkflows().catch(()=>null)，只有workflows非null时setWorkflowDrafts(latest)，失败既不清理旧drafts也不标明workflow readfailed。PreparationPanel按钮依赖busy/字段长度/旧status，可能旧保存草稿被误显示为当前且继续修订/approve。没有实际点击原真人写或造故障。reader新固定503不自动修复此前端缺口。
+
+另exactTask/base2030/16:00UTC持有CreatorGrowthPage.tsx和原test，仅处理失败/重试状态，不改CSS/视觉稿结构、不放开operation。需要把合法空[]和未读取/错误分开，失败清除当前draft authority/禁止execute/save/submit/approve/reject/restore，新成功hydrate后恢复现有行为；原未知命令attempt/idempotencyKey/已成功Receipt及history失败证据保留，不因read重置而重发。正在编辑的准备字段是否应保留需在方案明确生命周期，不擅自覆盖用户输入。
+
+先方案Prime再RED，新增首次readfail不当空、成功后reload失败不留旧ref/status及任一写命令、空成功合法入口、成功命令历史失败保留draft+receipt、stale异步load/cancel不覆盖新scope、安全readonlyretry恢复。真实浏览器只验证read/UI，不点击保存/批准等原业务写。root接线与新API/Webfreeze/维护门必须合并验收后才准确Delivery，不从114unit/nativePG成功推导UI合格。1280裁切/price255px仍待独立视觉修复，完整Goal继续。

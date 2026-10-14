@@ -102,6 +102,9 @@ from aos_api.ecommerce_content_campaign_workflow_contracts import (
     ContentCampaignWorkflowCommandRequest,
     ContentCampaignWorkflowCommandResponse,
 )
+from aos_api.ecommerce_creator_internal_workflow_readonly import (
+    CreatorInternalWorkflowReadonlyReader, CreatorWorkflowReadonlyError,
+)
 from aos_api.ecommerce_creator_internal_workflow import (
     CreatorInternalWorkflowConflict,
     CreatorInternalWorkflowError,
@@ -648,6 +651,16 @@ def get_creator_lifecycle_readonly() -> CreatorLifecycleReadonlyReader:
 
 CreatorLifecycleReadonlyDependency = Annotated[
     CreatorLifecycleReadonlyReader, Depends(get_creator_lifecycle_readonly)
+]
+
+
+@lru_cache(maxsize=1)
+def get_creator_workflow_readonly() -> CreatorInternalWorkflowReadonlyReader:
+    return CreatorInternalWorkflowReadonlyReader()
+
+
+CreatorWorkflowReadonlyDependency = Annotated[
+    CreatorInternalWorkflowReadonlyReader, Depends(get_creator_workflow_readonly)
 ]
 
 
@@ -1600,13 +1613,30 @@ def execute_creator_internal_workflow(
 def list_creator_internal_workflows(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     workflow: CreatorInternalWorkflowDependency,
+    readonly: CreatorWorkflowReadonlyDependency,
 ) -> CreatorInternalWorkflowListResponse:
     _reject_query_parameters(request)
-    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    admission = _require_creator_growth_installation(principal=principal, catalog=catalog)
+    if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+        raise ApiError(
+            code="CREATOR_WORKFLOW_READ_ADMISSION_UNAVAILABLE",
+            message="当前内部草稿读取准入不可核验。",
+            status_code=503,
+        )
+    scope = TenantScope(principal.org_id, principal.project_id)
+    if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+        try:
+            return readonly.list(scope)
+        except CreatorWorkflowReadonlyError as exc:
+            raise ApiError(
+                code=exc.code,
+                message="当前内部草稿暂不可读，请核对内容或读取范围。",
+                status_code=503,
+            ) from exc
     try:
-        return workflow.list(TenantScope(principal.org_id, principal.project_id))
+        return workflow.list(scope)
     except CreatorInternalWorkflowError as exc:
         raise _map_creator_internal_workflow_error(exc) from exc
 
