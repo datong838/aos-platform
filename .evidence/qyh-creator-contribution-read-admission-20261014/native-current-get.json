@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "path": "/v1/ecommerce-workshop/views/creator-growth/contributions",
+  "apiHead": "23e76bcd6bd1f5d8b6bc9a343cc4df75b24d54e3",
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "dto": {
+    "schemaVersion": "aos.ecommerce-workshop.creator-prepare/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "evaluatedAt": "2026-10-14T10:04:15.044766Z",
+    "atomicSkillRefs": [],
+    "logicRef": null,
+    "primaryColleague": "导购顾问",
+    "collaboratorColleagues": [
+      "数据参谋",
+      "内容官",
+      "活动策划师"
+    ],
+    "latestBatch": null,
+    "blockers": [
+      "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"
+    ],
+    "allowedCommands": [
+      "PREPARE_CREATOR_BATCH",
+      "FREEZE_CREATOR_BATCH"
+    ],
+    "externalEffectsAllowed": false
+  },
+  "at": "2026-10-14T10:04:15.090Z",
+  "noBusinessCommands": true
+}

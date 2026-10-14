@@ -1,0 +1,38 @@
+{
+  "bounds": [
+    {
+      "label": "准备候选条件",
+      "left": 775,
+      "right": 881,
+      "width": 106,
+      "viewport": 1280,
+      "clipped": false
+    },
+    {
+      "label": "补充预算权益",
+      "left": 1249.5,
+      "right": 1376,
+      "width": 126.5,
+      "viewport": 1280,
+      "clipped": true
+    },
+    {
+      "label": "准备候选条件",
+      "left": 1249.5,
+      "right": 1376,
+      "width": 126.5,
+      "viewport": 1280,
+      "clipped": true
+    },
+    {
+      "label": "重新读取业务数据",
+      "left": 1117,
+      "right": 1376,
+      "width": 259,
+      "viewport": 1280,
+      "clipped": true
+    }
+  ],
+  "onlyReadonlyDOM": true,
+  "at": "2026-10-14T10:09:00.140Z"
+}

@@ -1,0 +1,14 @@
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "status": 404,
+  "apiHead": "11037bd4b91f654effb467cc987fc1e83929753e",
+  "path": "/v1/ecommerce-workshop/views/creator-growth/contributions",
+  "loginSettledBeforeMe": true,
+  "initialImmediateMeRejectedAndNoAuthResend": true,
+  "at": "2026-10-14T08:38:05.864Z"
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "004289413a6dc99ff821fa8dbe0852b7a47d294efdd5c9073483985dc35c37e8",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-20261014-creator-reload-r2",
+    "task_id": "qyh-restoration-readonly-continuation-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "23e76bcd6bd1f5d8b6bc9a343cc4df75b24d54e3",
+      "authority_revision": "AOS-002028",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-20261014/creator-reload-review-package-r2.txt": "6d8a1d3d706d8a1e8e56dab5f18bf337b33d22d2137ea4de36bd8b604eb5c0f6"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The supplied controller source implements a bounded prospective readonly API-only reload with owner/lease/base/source/hash/PASS gates before one durable stop/start intent, and preserves original OIDC/installation guards without PG/Web/Chrome or business operations; no new process/listening success is claimed yet.",
+        "evidence": "FILE .evidence/qyh-restoration-successor-latest-restart-20261013/creator_contribution_api_reload.py SHA 2dc8772098c0d1b7285f580c09eb2eda70f8988c1dbe470762e8324ce9190b09。Gates: assert PASS+CONSUMED_MATERIAL_REVIEW(3-4行)、assert intent/start文件不存在(12-13行)、assert lease[0]['owner']==OWNER且lease_expires_at>now(15-16行)、guard.require_api_source_candidate(REPORT.resolve())(19行)、report['head']==git rev-parse HEAD(20行)、lease[0]['base_revision']=='AOS-002028'(21行)、paired-source-hashes.json四源SHA校验(23-24行)、assert 'n'+OLD_SOURCE in lsof-PID-CWD(25行)、assert listeners()==[OLD]端口18080(28-30行)。Stop: os.kill(OLD,SIGTERM)+轮询至listeners()为空+record(old-stop)(33-39行)。Spawn: args含--serve-management-readonly/--trust-roots-file/--management-oidc-config/--installed-readonly-installation/--source-candidate，start_new_session=True，record(pid,terminalVerified=False,pgWebChromeTouched=False)，print(spawnedOnly=True)(41-48行)。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The supplied controller source implements a bounded prospective readonly API-only reload with owner/lease/base/source/hash/PASS gates before one durable stop/start intent, and preserves original OIDC/installation guards without PG/Web/Chrome or business operations; no new process/listening success is claimed yet.",
+        "evidence": "FILE .evidence/qyh-creator-contribution-read-admission-20261014/code-review-result-r1.json verdict=PASS，FILE .evidence/qyh-creator-contribution-read-admission-20261014/code-review-consumption-r1.json status=CONSUMED_MATERIAL_REVIEW，二者sha256对账一致(controller第3-4行assert)。FILE .evidence/qyh-full-system-restoration-20261011/creator-contribution-api-20261014.json head=23e76bcd6bd1...、source指向private/api-source-23e76...、apiStarted=false、explicitStartupEnabledSwitches列明但startupFlags全false、remaining含guarded PG/API/Web restart。FILE .evidence/qyh-creator-contribution-read-admission-20261014/code-commit-readback.json head=23e76... pairedSourceHashes=四源、liveAfterReload=PENDING。这些材料证明本reload只消费已有PASS且未触发PG/Web/Chrome或业务写入。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The supplied controller source implements a bounded prospective readonly API-only reload with owner/lease/base/source/hash/PASS gates before one durable stop/start intent, and preserves original OIDC/installation guards without PG/Web/Chrome or business operations; no new process/listening success is claimed yet.",
+        "evidence": "FILE .evidence/qyh-creator-contribution-read-admission-20261014/native-baseline-get.json apiHead=11037bd4...、status=404、path=/v1/ecommerce-workshop/views/creator-growth/contributions、at=2026-10-14T08:38:05Z，证明OIDC认证+旧source下的tenant门禁已校验。controller args中--management-oidc-config指向/Users/ddt/.aos-local-identities/qyh-20261013/aos-management-oidc.json、--installed-readonly-installation=ab2fd72f-d81c-400d-bbbc-e1589a159d6b与原稿一致。无任何PG连接、Web启动、Chrome调用或新business operation代码路径出现在本次材料中。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The supplied controller source implements a bounded prospective readonly API-only reload with owner/lease/base/source/hash/PASS gates before one durable stop/start intent, and preserves original OIDC/installation guards without PG/Web/Chrome or business operations; no new process/listening success is claimed yet.",
+        "evidence": "请求断言明确'no new process/listening success is claimed yet'。材料中record('creator-contribution-api-started.json',...{'terminalVerified':False,'pgWebChromeTouched':False})与print(json.dumps({'newPid':proc.pid,'spawnedOnly':True,...}))均属spawn记录与自述输出；现有lsof只证明OLD=87013在端口18080 LISTEN中。断言中不存在将spawn解读为listening HTTP success的要求，故本项不构成反证。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留PENDING live状态，由后续独立只读审阅按同一owner/lease基线验证新PID是否实际在18080 LISTEN并完成八页native GET确认；不要在此审阅中推断spawn即成功。"
+  }
+}

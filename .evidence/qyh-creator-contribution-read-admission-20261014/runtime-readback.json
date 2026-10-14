@@ -1,0 +1,44 @@
+{
+  "apiHead": "23e76bcd6bd1f5d8b6bc9a343cc4df75b24d54e3",
+  "apiPid": 7645,
+  "rawCurrentProcess": [
+    {
+      "command": [
+        "lsof",
+        "-a",
+        "-p",
+        "7645",
+        "-d",
+        "cwd",
+        "-Fn"
+      ],
+      "returncode": 0,
+      "stdout": "p7645\nfcwd\nn/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-23e76bcd6bd1f5d8b6bc9a343cc4df75b24d54e3\n"
+    },
+    {
+      "command": [
+        "lsof",
+        "-nP",
+        "-iTCP:18080",
+        "-iTCP:18434",
+        "-sTCP:LISTEN"
+      ],
+      "returncode": 0,
+      "stdout": "COMMAND     PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\npython3.1  7645  ddt   10u  IPv4 0xf42c6802215cca7f      0t0  TCP 127.0.0.1:18080 (LISTEN)\nnode      78346  ddt   20u  IPv4 0x5fb2e72b51689ab8      0t0  TCP 127.0.0.1:18434 (LISTEN)\n"
+    }
+  ],
+  "webPid": 78346,
+  "webStartupHead": "6c9b65777eec4ab0688fa50a318e40b0a9b05d9b",
+  "webTreesEqualCurrentHead": true,
+  "full650FingerprintEqualBefore": true,
+  "postSuccessSnapshotSha256": "226a0cae21e68c9833b11b21b77d1e708368d1e27ab415ddc51424e777ab562d",
+  "native": {
+    "cluster": "7695302940039200809",
+    "schema": "a0v_161",
+    "enabledBindings": 0,
+    "otherActiveClients": 0
+  },
+  "pgStartedAt": "2026-10-14T02:56:36.001669303Z",
+  "postRejectedBeforeBusinessRouting": 405,
+  "dbWrites": false
+}

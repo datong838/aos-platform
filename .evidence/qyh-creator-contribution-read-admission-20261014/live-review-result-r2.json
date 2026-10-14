@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "1a439977801d5c827d84c955a25a72b8fb597756959b551ee83e54ef085c5bee",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-contribution-read-admission-20261014-live-r2",
+    "task_id": "qyh-creator-contribution-read-admission-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "23e76bcd6bd1f5d8b6bc9a343cc4df75b24d54e3",
+      "authority_revision": "AOS-002028",
+      "files": {
+        ".evidence/qyh-creator-contribution-read-admission-20261014/live-review-package-r2.txt": "edee6639f8dd305a8060a61323e8a50185e44e8db5eb212cd0d36fc4bfbc7cb7"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The supplied exact API/cwd/source and original-user OIDC evidence proves scoped creator contribution GET404->200 with tenant-correct no-prepared-batch DTO/blocker and no external effects, while code reviews cover both the routing and distinct unavailable-branch repair.",
+        "evidence": "FILE .evidence/qyh-creator-contribution-read-admission-20261014/native-baseline-get.json 显示原始OIDC subject=6f31cfdc-a26c-4f1f-ad6b-95a8559cc657/org-org/dev-project，status=404；FILE .evidence/qyh-creator-contribution-read-admission-20261014/native-current-get.json 显示同subject/status=200，apiHead=23e76bcd6bd1f5d8b6bc9a343cc4df75b24d54e3，dto.tenant.orgId=org-org、projectId=dev-project，atomicSkillRefs=[]/logicRef=null/latestBatch=null，blockers=[CREATOR_BATCH_PREPARATION_NOT_AVAILABLE]，allowedCommands=['PREPARE_CREATOR_BATCH','FREEZE_CREATOR_BATCH']，externalEffectsAllowed=false，noBusinessCommands=true。FILE .evidence/qyh-creator-contribution-read-admission-20261014/live-and-visual-report.md 记录原87013/cwd110/新7645/cwd冻结23e76/18080；仅API，PG/Web不操作。code-review-result-r1 verdict PASS 支持路由门禁，code-review-result-r3 verdict PASS 支持unavailable分支修复。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The original-volume/schema161/cluster/zero-binding full650 equality and bounded API-only reload preserve original data and runtime/budget/source restrictions, without claiming unavailable branch was induced on originalDB or business execution.",
+        "evidence": "FILE .evidence/qyh-creator-contribution-read-admission-20261014/runtime-readback.json 显示 apiHead=23e76bcd...、pgStartedAt=2026-10-14T02:56:36...、native.cluster=7695302940039200809、native.schema=a0v_161、enabledBindings=0、postRejectedBeforeBusinessRouting=405、dbWrites=false、full650FingerprintEqualBefore=true。SOURCE .evidence/qyh-restoration-successor-latest-restart-20261013/fingerprint_snapshot.py 注释 'One bounded READ ONLY 650-table snapshot; never backup/restore or restart.' ACTUAL json parsing all650 显示 before/after 两文件 count=650、mismatchedTableKeys=[]、volume相同。report 说明 '未读取/保存token/cookie/storage/authheaders/密码' 且 '不能声称原库该分支实际触发'。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "The report truthfully leaves1280 clipping/fullvisual, remaining nine helpers, fullC/userbudget/deployment and natural business/install/release Goal incomplete; this paired slice can receive only accurate scoped delivery.",
+        "evidence": "FILE .evidence/qyh-creator-contribution-read-admission-20261014/visual-1280-bounds.json 显示补充预算权益/重新读取业务数据 clipped=true；report 记录 Visual1280 P1 persists、全视觉未通过、1920/其他页签/键盘/200%/嵌套滚动尚未全验。report 列明其余九条未完成：其余九条辅助GET、完整C真实预算intent、唯一用户最后审批、部署、原SourceReadiness阻断/新的自然CaseRun首链、安装全生命周期、八真实场景、复盘Wiki、连续观察发布。report 明确 Goal ACTIVE、'当前成功读取不能代替视觉合格'、下一步只有 scope accurate Delivery。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前 scoped GET 成功作为范围交付基线，按原方案推进 1280 裁切 CSS 修复与其余九项辅助验证；不扩展 freeze/start、不修改 origin 数据或预算。"
+  }
+}
