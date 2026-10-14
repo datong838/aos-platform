@@ -225,4 +225,31 @@ describe("CreatorGrowthPage R5-D01 视觉与交互", () => {
     expect(client.executeCreatorInternalWorkflow).not.toHaveBeenCalled();
   });
 
+
+  it("新的商品数组在草稿读取失败及恢复时不能覆盖未保存输入", async () => {
+    const client = clientFor();
+    client.getContentCampaignRealInputs.mockImplementation(async () => ({ ...realInputs, products: [...realInputs.products] }));
+    client.listCreatorInternalWorkflows.mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 })
+      .mockRejectedValueOnce(new Error("draft read failed"))
+      .mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 });
+    await act(async () => root.render(<CreatorGrowthPage client={client} />)); await openPreparation();
+    await editField('input[aria-label="任务名称"]', "未保存的名称不能丢失");
+    await editField('textarea[aria-label="来源与筛选条件"]', "未保存的准备内容不能丢失", "textarea");
+    await reloadDrafts();
+    expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')!.value).toBe("未保存的名称不能丢失");
+    expect(host.querySelector<HTMLTextAreaElement>('textarea[aria-label="来源与筛选条件"]')!.value).toBe("未保存的准备内容不能丢失");
+    await reloadDrafts();
+    expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')!.value).toBe("未保存的名称不能丢失");
+    expect(client.executeCreatorInternalWorkflow).not.toHaveBeenCalled();
+  });
+
+  it("明确重新读取另一个同版本草稿按resourceId水合", async () => {
+    const client = clientFor();const next={...draft,resourceId:"creator-brief-2",title:"另一个同版本的草稿"};
+    client.listCreatorInternalWorkflows.mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 })
+      .mockResolvedValueOnce({ tenant: emptyView.tenant, items: [next], count: 1 });
+    await act(async () => root.render(<CreatorGrowthPage client={client} />));await openPreparation();await reloadDrafts();
+    expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')!.value).toBe("另一个同版本的草稿");
+    expect(client.executeCreatorInternalWorkflow).not.toHaveBeenCalled();
+  });
+
 });

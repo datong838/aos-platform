@@ -1,0 +1,137 @@
+{
+  "at": "2026-10-14T15:23:22.218Z",
+  "sourceHash": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e",
+  "uncommittedCandidate": true,
+  "fixtureOnly": true,
+  "originalServicesTouched": false,
+  "steps": [
+    {
+      "label": "initial-edited",
+      "probe": {
+        "mode": "success",
+        "reads": 1,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "修复后未保存编辑",
+      "summary": "修复后未保存准备内容",
+      "current": 1,
+      "cached": 0,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": false
+        },
+        {
+          "text": "驳回",
+          "disabled": false
+        },
+        {
+          "text": "新建一份",
+          "disabled": false
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "label": "pending",
+      "probe": {
+        "mode": "pending",
+        "reads": 2,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "修复后未保存编辑",
+      "summary": "修复后未保存准备内容",
+      "current": 0,
+      "cached": 1,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": true
+        },
+        {
+          "text": "驳回",
+          "disabled": true
+        },
+        {
+          "text": "新建一份",
+          "disabled": true
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "label": "failed-fresh-products",
+      "probe": {
+        "mode": "pending",
+        "reads": 2,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "修复后未保存编辑",
+      "summary": "修复后未保存准备内容",
+      "current": 0,
+      "cached": 1,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": true
+        },
+        {
+          "text": "驳回",
+          "disabled": true
+        },
+        {
+          "text": "新建一份",
+          "disabled": true
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "label": "recovered-fresh-products",
+      "probe": {
+        "mode": "success",
+        "reads": 3,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "修复后未保存编辑",
+      "summary": "修复后未保存准备内容",
+      "current": 1,
+      "cached": 0,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": false
+        },
+        {
+          "text": "驳回",
+          "disabled": false
+        },
+        {
+          "text": "新建一份",
+          "disabled": false
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": false
+        }
+      ]
+    }
+  ]
+}

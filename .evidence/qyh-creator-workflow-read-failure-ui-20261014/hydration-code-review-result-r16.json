@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a9d9b024c5d8c3e4091ccc31a76ffc50193660776b547ff8145a7953fb37d67f",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-creator-workflow-read-failure-ui-20261014-hydration-code-r16",
+    "task_id": "qyh-creator-workflow-read-failure-ui-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-creator-workflow-read-failure-ui-20261014/hydration-code-review-package-r16.txt": "16c89c06ebd090e43e42a3ad80da06847448df88957f78984f5aa9fcdc388b6e"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "水合依赖修复与回归验证符合本波方案。",
+        "evidence": "文件CreatorGrowthPage.tsx diff显示useEffect依赖从[current?.revision, purpose, products]改为[current?.resourceId, current?.revision, purpose]，去掉了products对象引用。测试文件新增两个测试用例：'新的商品数组在草稿读取失败及恢复时不能覆盖未保存输入'和'明确重新读取另一个同版本草稿按resourceId水合'。hydration-source-verification-r3.json显示vitest和tsc --noEmit均returncode:0。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "精确候选隔离浏览器证据证明编辑保留及故障禁入。",
+        "evidence": "browser-hydration-proof-r2.json显示四个步骤：initial-edited标题/摘要为'修复后未保存编辑/准备内容'，buttons全部disabled=false；pending与failed-fresh-products步骤保持相同title/summary且buttons全部disabled=true；recovered-fresh-products步骤仍保持'修复后未保存编辑/准备内容'且buttons恢复disabled=false。fixtureOnly=true，originalServicesTouched=false，port 18574已释放portFree=true，证明是隔离fixture验证而非线上真实调用。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "本轮质量审阅通过。建议将当前uncommitted candidate staged并commit到ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d基线下，然后执行完整回归测试套件确认无回归，再提交至主分支。"
+  }
+}

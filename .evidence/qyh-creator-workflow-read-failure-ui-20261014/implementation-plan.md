@@ -15,3 +15,19 @@ UI与root接线需各自代码质量/精确最新已提交冻结/API和Web fresh
 ## 自查补充：同一事件批次的即时禁入
 
 state更新需要React重绘；同一批次先reload再旧按钮handler可能仍持旧ready闭包。增加仅本地读取状态的即时ref：load开始立即false，ready已渲染后effect同步true（当前响应仍经request id裁决）；命令入口同时检查state与ref，未重绘不能借旧闭包触发client。不是业务权限或审批第二真源，不修改请求键。新增单批次reload+旧save点击0execute的RED反例，再复跑相关验证；这是原方案“命令入口guard早于任何调用”的必要补强，范围与Goal不变。
+
+## 已登记的隔离浏览器故障验收
+
+原用户草稿真实为空，不能造坏原DB或把synthetic草稿放入原AOS。本Task evidence/private下另设localhost18574隔离页面，明示“隔离验收，非栖月汇业务数据”；仅导入ce冻结的实际CreatorGrowthPage及原styles，注入纯本地dev-org/fixture-project client，所有命令拒绝且/api中间件硬403、proxy指向不可用localhost1。无登录/真实API/Source/用户凭据或真人审批；浏览器只本ownedTarget，记录同一target导航前原URL，结束恢复原URL/1440并停止exactfixturePID。测试数据不称权威或真实审批，受控source不能成为生产安装/运营证明。
+
+步骤：成功本地旧in_review缓存→打开准备编辑→pending重新读取即时禁入→拒绝read显示明确unknown/上次读取且输入保留/所有命令及restore disabled且click0clientcalls→控制read恢复同revision，恢复当前视图且编辑保留。原客户正常GET、650指纹与三视口为另独立证据。截图必须实际查看；未覆盖的历史Receipt/多用户编辑或原非空场景继续明确边界。
+
+## 浏览器反证后的水合依赖修订
+
+已提交ce的逻辑在本地新商品数组返回时仍触发原PreparationPanel useEffect(products)，失败后标题由未保存输入回到旧草稿；browser-isolated-proof-r1实际反证，不合格，不得消费作成功。修复仅水合依赖绑定当前草稿resourceId/revision与purpose，去掉products对象引用（商品选项仍渲染最新props）；同草稿同version的商品刷新或失败不能覆盖输入。不同authority identity/版本仍按原明确重新读取水合语义，不声称全部并发编辑冲突已解决。初次打开仍使用当前商品默认值；若初次商品未读取，稍后新列表不强制替用户选择或重置字段。新增mock每次返回fresh products数组的失败/恢复反例及同version不同resourceId正确水合测试，RED→最小改动→专项/累计/typecheck→独立Prime/source冻结/新Web维护门→新隔离browser实际复验。原已运行API无需因UI一行修复再重放，Web只fresh新intent/精确旧37975/sourcece/新版源码后切换；任何失败原记录保留。
+
+## Prime 传输诊断与进程入口修复
+
+进一步对账：同r15冻结大小的stream请求经Python及外部undici.fetch分别200/首event，约0.56/0.68秒；二者仅诊断，不消费作review。修改范围仅本Task新prime-undici-fetch-r2.cjs与新review_controller_owned_undici.py：外部已安装undici.fetch直接接原SDK URL/options及专用dispatcher，保持认证/TLS/body/signal/无retry；不混用Node内建fetch和外部dispatcher，不改厂商/全局源码或用户默认配置。取fresh r16冻结资料和runner，严格原parse/claims/baseline/消费全部不改。
+
+2026-10-15：r12终止且仅transport，无合法结果，不重发原ID。原已配置身份 `/models`200及一次最小非stream推理200，不保存凭据或响应正文。Prime当前CLI默认经daemon执行；本进程preload trace只有preload-active没有fetch，不能把此前60秒配置认作已进入真正模型调用。源码cli-main/owned-session-worker及main明确支持兼容owned frontend，由其自身建立子进程/owner通道、转发execArgs，并在实际owned worker中避免daemon runtime；不伪造worker角色/通道、不停止共享daemon。使用task-only环境 PRIME_AGENT_INTERNAL_LEGACY_OWNED_WORKER_FRONTEND=1，先独立最小诊断；确证工具禁用与真实fetch后，以新请求ID进行精确冻结复审。临时cwd继续禁retry/compaction/refine/telemetry，原严格validator/合法消费不改。入口或模型诊断成功不代替代码质量PASS、实际部署、原数据或经营验收。

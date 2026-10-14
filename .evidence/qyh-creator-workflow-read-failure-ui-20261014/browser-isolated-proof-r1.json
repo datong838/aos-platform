@@ -1,0 +1,137 @@
+{
+  "at": "2026-10-14T15:05:39.650Z",
+  "fixtureOnly": true,
+  "originalApiConnected": false,
+  "realUserOrApproval": false,
+  "sourceHead": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+  "steps": [
+    {
+      "label": "success-existing-synthetic",
+      "probe": {
+        "mode": "success",
+        "reads": 1,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "隔离验收未保存编辑",
+      "currentCount": 1,
+      "cachedCount": 0,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": false
+        },
+        {
+          "text": "驳回",
+          "disabled": false
+        },
+        {
+          "text": "新建一份",
+          "disabled": false
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "label": "pending-read",
+      "probe": {
+        "mode": "pending",
+        "reads": 2,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "隔离验收未保存编辑",
+      "currentCount": 0,
+      "cachedCount": 1,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": true
+        },
+        {
+          "text": "驳回",
+          "disabled": true
+        },
+        {
+          "text": "新建一份",
+          "disabled": true
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "label": "failed-read",
+      "probe": {
+        "mode": "pending",
+        "reads": 2,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "隔离测试草稿",
+      "currentCount": 0,
+      "cachedCount": 1,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": true
+        },
+        {
+          "text": "驳回",
+          "disabled": true
+        },
+        {
+          "text": "新建一份",
+          "disabled": true
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "label": "recovered-same-version",
+      "probe": {
+        "mode": "success",
+        "reads": 3,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "隔离测试草稿",
+      "currentCount": 1,
+      "cachedCount": 0,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": false
+        },
+        {
+          "text": "驳回",
+          "disabled": false
+        },
+        {
+          "text": "新建一份",
+          "disabled": false
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": false
+        }
+      ]
+    }
+  ],
+  "apiDenied": {
+    "status": 403
+  },
+  "timeoutReconciledNoOperationReplay": true
+}

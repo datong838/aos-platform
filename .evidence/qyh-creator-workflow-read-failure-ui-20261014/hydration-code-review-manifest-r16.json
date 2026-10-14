@@ -1,0 +1,11 @@
+{
+  "baseHead": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+  "sourceHashes": {
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e",
+    "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "292371bc6f17c0f9c9cea8e410105a8a101bd77569338f015ac8c1b9565e2e53"
+  },
+  "reviewResult": "hydration-code-review-result-r16.json",
+  "reviewConsumption": "hydration-code-review-consumption-r16.json",
+  "deployed": false,
+  "wholeGoalComplete": false
+}

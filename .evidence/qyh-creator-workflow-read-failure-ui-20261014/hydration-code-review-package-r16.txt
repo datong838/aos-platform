@@ -1,0 +1,276 @@
+Follow-up CODE QUALITY only. Base ce/Authority2030/sameowner lease23UTC. Prior full ce UI has consumed code-r1/r2 PASS; new change is one hydration dependency line and two tests. No deployment/Goalcomplete. r14 terminal UND_ERR_SOCKET26573ms raw preserved/unconsumed. Clean bounded material avoids nested escaping. Strict validator unchanged.
+FULL DELTA
+diff --git a/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx b/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx
+index 3dbd8ae0f..b65f6cda2 100644
+--- a/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx
++++ b/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx
+@@ -225,4 +225,31 @@ describe("CreatorGrowthPage R5-D01 视觉与交互", () => {
+     expect(client.executeCreatorInternalWorkflow).not.toHaveBeenCalled();
+   });
+ 
++
++  it("新的商品数组在草稿读取失败及恢复时不能覆盖未保存输入", async () => {
++    const client = clientFor();
++    client.getContentCampaignRealInputs.mockImplementation(async () => ({ ...realInputs, products: [...realInputs.products] }));
++    client.listCreatorInternalWorkflows.mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 })
++      .mockRejectedValueOnce(new Error("draft read failed"))
++      .mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 });
++    await act(async () => root.render(<CreatorGrowthPage client={client} />)); await openPreparation();
++    await editField('input[aria-label="任务名称"]', "未保存的名称不能丢失");
++    await editField('textarea[aria-label="来源与筛选条件"]', "未保存的准备内容不能丢失", "textarea");
++    await reloadDrafts();
++    expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')!.value).toBe("未保存的名称不能丢失");
++    expect(host.querySelector<HTMLTextAreaElement>('textarea[aria-label="来源与筛选条件"]')!.value).toBe("未保存的准备内容不能丢失");
++    await reloadDrafts();
++    expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')!.value).toBe("未保存的名称不能丢失");
++    expect(client.executeCreatorInternalWorkflow).not.toHaveBeenCalled();
++  });
++
++  it("明确重新读取另一个同版本草稿按resourceId水合", async () => {
++    const client = clientFor();const next={...draft,resourceId:"creator-brief-2",title:"另一个同版本的草稿"};
++    client.listCreatorInternalWorkflows.mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 })
++      .mockResolvedValueOnce({ tenant: emptyView.tenant, items: [next], count: 1 });
++    await act(async () => root.render(<CreatorGrowthPage client={client} />));await openPreparation();await reloadDrafts();
++    expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')!.value).toBe("另一个同版本的草稿");
++    expect(client.executeCreatorInternalWorkflow).not.toHaveBeenCalled();
++  });
++
+ });
+diff --git a/apps/web/src/components/workshop/CreatorGrowthPage.tsx b/apps/web/src/components/workshop/CreatorGrowthPage.tsx
+index 9e8ad5d08..a71808fdd 100644
+--- a/apps/web/src/components/workshop/CreatorGrowthPage.tsx
++++ b/apps/web/src/components/workshop/CreatorGrowthPage.tsx
+@@ -128,7 +128,7 @@ function PreparationPanel({ purpose, products, current, receipt, history, busy,
+   const [deliverables, setDeliverables] = useState(detailText(current?.details, "deliverables"));
+   const [evidence, setEvidence] = useState(detailText(current?.details, "evidence"));
+   const [schedule, setSchedule] = useState(detailText(current?.details, "schedule"));
+-  useEffect(() => { const details = current?.details; setTitle(current?.title ?? copy.defaultTitle); setSummary(current?.summary ?? ""); setOwner(detailText(details, "owner") || "经营负责人"); setProductRef(detailText(details, "productRef") || products[0]?.productRef.resourceId || ""); setCandidateSource(detailText(details, "candidateSource")); setContentCategory(detailText(details, "contentCategory")); setAudienceScale(detailText(details, "audienceScale")); setChannel(detailText(details, "channel")); setBudget(detailText(details, "budget")); setCommission(detailText(details, "commission")); setBenefits(detailText(details, "benefits")); setDeliverables(detailText(details, "deliverables")); setEvidence(detailText(details, "evidence")); setSchedule(detailText(details, "schedule")); }, [current?.revision, purpose, products]);
++  useEffect(() => { const details = current?.details; setTitle(current?.title ?? copy.defaultTitle); setSummary(current?.summary ?? ""); setOwner(detailText(details, "owner") || "经营负责人"); setProductRef(detailText(details, "productRef") || products[0]?.productRef.resourceId || ""); setCandidateSource(detailText(details, "candidateSource")); setContentCategory(detailText(details, "contentCategory")); setAudienceScale(detailText(details, "audienceScale")); setChannel(detailText(details, "channel")); setBudget(detailText(details, "budget")); setCommission(detailText(details, "commission")); setBenefits(detailText(details, "benefits")); setDeliverables(detailText(details, "deliverables")); setEvidence(detailText(details, "evidence")); setSchedule(detailText(details, "schedule")); }, [current?.resourceId, current?.revision, purpose]);
+   const selectedProduct = products.find((item) => item.productRef.resourceId === productRef);
+   const values = { title: title.trim(), summary: summary.trim(), details: { owner: owner.trim(), productRef, productName: selectedProduct?.title ?? detailText(current?.details, "productName"), candidateSource: candidateSource.trim(), contentCategory: contentCategory.trim(), audienceScale: audienceScale.trim(), channel: channel.trim(), budget: budget.trim(), commission: commission.trim(), benefits: benefits.trim(), deliverables: deliverables.trim(), evidence: evidence.trim(), schedule: schedule.trim() } };
+   const disabled = busy || readUnavailable || values.title.length < 2 || values.summary.length < 2;
+
+EXACT lines115-137
+function PreparationPanel({ purpose, products, current, receipt, history, busy, readUnavailable, error, onClose, onCommand, onNew }: { purpose: CreatorInternalWorkflowPurpose; products: ContentCampaignProductInput[]; current: CreatorInternalWorkflowDraft | null; receipt: CreatorInternalWorkflowReceipt | null; history: CreatorInternalWorkflowDraft[]; busy: boolean; readUnavailable: boolean; error: string; onClose: () => void; onCommand: (command: CreatorInternalWorkflowCommand, values: { title: string; summary: string; details: Record<string, unknown> }, restoreRevision?: number) => void; onNew: () => void }) {
+  const copy = PREPARATION_COPY[purpose];
+  const [title, setTitle] = useState(current?.title ?? copy.defaultTitle);
+  const [summary, setSummary] = useState(current?.summary ?? "");
+  const [owner, setOwner] = useState(detailText(current?.details, "owner") || "经营负责人");
+  const [productRef, setProductRef] = useState(detailText(current?.details, "productRef") || products[0]?.productRef.resourceId || "");
+  const [candidateSource, setCandidateSource] = useState(detailText(current?.details, "candidateSource"));
+  const [contentCategory, setContentCategory] = useState(detailText(current?.details, "contentCategory"));
+  const [audienceScale, setAudienceScale] = useState(detailText(current?.details, "audienceScale"));
+  const [channel, setChannel] = useState(detailText(current?.details, "channel"));
+  const [budget, setBudget] = useState(detailText(current?.details, "budget"));
+  const [commission, setCommission] = useState(detailText(current?.details, "commission"));
+  const [benefits, setBenefits] = useState(detailText(current?.details, "benefits"));
+  const [deliverables, setDeliverables] = useState(detailText(current?.details, "deliverables"));
+  const [evidence, setEvidence] = useState(detailText(current?.details, "evidence"));
+  const [schedule, setSchedule] = useState(detailText(current?.details, "schedule"));
+  useEffect(() => { const details = current?.details; setTitle(current?.title ?? copy.defaultTitle); setSummary(current?.summary ?? ""); setOwner(detailText(details, "owner") || "经营负责人"); setProductRef(detailText(details, "productRef") || products[0]?.productRef.resourceId || ""); setCandidateSource(detailText(details, "candidateSource")); setContentCategory(detailText(details, "contentCategory")); setAudienceScale(detailText(details, "audienceScale")); setChannel(detailText(details, "channel")); setBudget(detailText(details, "budget")); setCommission(detailText(details, "commission")); setBenefits(detailText(details, "benefits")); setDeliverables(detailText(details, "deliverables")); setEvidence(detailText(details, "evidence")); setSchedule(detailText(details, "schedule")); }, [current?.resourceId, current?.revision, purpose]);
+  const selectedProduct = products.find((item) => item.productRef.resourceId === productRef);
+  const values = { title: title.trim(), summary: summary.trim(), details: { owner: owner.trim(), productRef, productName: selectedProduct?.title ?? detailText(current?.details, "productName"), candidateSource: candidateSource.trim(), contentCategory: contentCategory.trim(), audienceScale: audienceScale.trim(), channel: channel.trim(), budget: budget.trim(), commission: commission.trim(), benefits: benefits.trim(), deliverables: deliverables.trim(), evidence: evidence.trim(), schedule: schedule.trim() } };
+  const disabled = busy || readUnavailable || values.title.length < 2 || values.summary.length < 2;
+  return <aside className="creator-growth-preparation" aria-label={copy.title}><header><div><span>内部业务工作流</span><h2>{copy.title}</h2></div><button type="button" onClick={onClose}>关闭</button></header>
+    <label>任务名称<input aria-label="任务名称" value={title} onChange={(event) => setTitle(event.target.value)} /></label>
+    <label>{copy.summaryLabel}<textarea aria-label={copy.summaryLabel} value={summary} onChange={(event) => setSummary(event.target.value)} placeholder={copy.placeholder} /></label>
+
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/browser-hydration-proof-r2.json SHA d804829212a6196afe51dc71c00f5d8ee6c169b322234d5bb58564de8e77223c
+{
+  "at": "2026-10-14T15:23:22.218Z",
+  "sourceHash": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e",
+  "uncommittedCandidate": true,
+  "fixtureOnly": true,
+  "originalServicesTouched": false,
+  "steps": [
+    {
+      "label": "initial-edited",
+      "probe": {
+        "mode": "success",
+        "reads": 1,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "修复后未保存编辑",
+      "summary": "修复后未保存准备内容",
+      "current": 1,
+      "cached": 0,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": false
+        },
+        {
+          "text": "驳回",
+          "disabled": false
+        },
+        {
+          "text": "新建一份",
+          "disabled": false
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "label": "pending",
+      "probe": {
+        "mode": "pending",
+        "reads": 2,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "修复后未保存编辑",
+      "summary": "修复后未保存准备内容",
+      "current": 0,
+      "cached": 1,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": true
+        },
+        {
+          "text": "驳回",
+          "disabled": true
+        },
+        {
+          "text": "新建一份",
+          "disabled": true
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "label": "failed-fresh-products",
+      "probe": {
+        "mode": "pending",
+        "reads": 2,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "修复后未保存编辑",
+      "summary": "修复后未保存准备内容",
+      "current": 0,
+      "cached": 1,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": true
+        },
+        {
+          "text": "驳回",
+          "disabled": true
+        },
+        {
+          "text": "新建一份",
+          "disabled": true
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "label": "recovered-fresh-products",
+      "probe": {
+        "mode": "success",
+        "reads": 3,
+        "commandCalls": 0,
+        "originalApiConnected": false,
+        "realUserOrApproval": false
+      },
+      "title": "修复后未保存编辑",
+      "summary": "修复后未保存准备内容",
+      "current": 1,
+      "cached": 0,
+      "buttons": [
+        {
+          "text": "批准",
+          "disabled": false
+        },
+        {
+          "text": "驳回",
+          "disabled": false
+        },
+        {
+          "text": "新建一份",
+          "disabled": false
+        },
+        {
+          "text": "恢复此版本",
+          "disabled": false
+        }
+      ]
+    }
+  ]
+}
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/hydration-source-verification-r3.json SHA 51e6f96aa0e03bfe34866c2a61f2a7e8e4197a05eee1a285ee571c7d56b660fd
+{
+  "at": "2026-10-14T15:12:57.780604+00:00",
+  "finishedAt": "2026-10-14T15:13:12.539769+00:00",
+  "sourceBefore": {
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e",
+    "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "292371bc6f17c0f9c9cea8e410105a8a101bd77569338f015ac8c1b9565e2e53"
+  },
+  "sourceAfter": {
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e",
+    "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "292371bc6f17c0f9c9cea8e410105a8a101bd77569338f015ac8c1b9565e2e53"
+  },
+  "results": {
+    "hydration-cumulative-r3": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/components/workshop",
+        "src/api/ecommerceWorkshop/creatorWorkflowClient.test.ts"
+      ],
+      "logSha256": "f68e2ff6d322bc7aaa7b98f27f1f7381b1773302837970d00dc5d552e8615462"
+    },
+    "hydration-typecheck-r3": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "-p",
+        "tsconfig.json"
+      ],
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "originalRuntimeTouched": false
+}
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/browser-fixture-config-r2.json SHA dfb5bc201384150c027f707fd9d3f70f76c9ce3fceed58beb4f84d8c2a014f1f
+{
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-creator-workflow-read-failure-ui-20261014/private/hydration-candidate-source",
+  "baseHead": "ce1f8258c863a2dae3baddadb1b5d2fa9557ea3d",
+  "uncommittedCandidate": true,
+  "port": 18574,
+  "fixtureOnly": true,
+  "sourceHash": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e"
+}
+FILE .evidence/qyh-creator-workflow-read-failure-ui-20261014/browser-fixture-stopped-r2.json SHA 305a81fff8d47c3fdacebe7f0b17fd06a5ba02369806a289a16536a9659a2153
+{
+  "pid": 42706,
+  "portFree": true,
+  "originalServicesTouched": false
+}
+PLAN FOLLOWUP
+
+
+已提交ce的逻辑在本地新商品数组返回时仍触发原PreparationPanel useEffect(products)，失败后标题由未保存输入回到旧草稿；browser-isolated-proof-r1实际反证，不合格，不得消费作成功。修复仅水合依赖绑定当前草稿resourceId/revision与purpose，去掉products对象引用（商品选项仍渲染最新props）；同草稿同version的商品刷新或失败不能覆盖输入。不同authority identity/版本仍按原明确重新读取水合语义，不声称全部并发编辑冲突已解决。初次打开仍使用当前商品默认值；若初次商品未读取，稍后新列表不强制替用户选择或重置字段。新增mock每次返回fresh products数组的失败/恢复反例及同version不同resourceId正确水合测试，RED→最小改动→专项/累计/typecheck→独立Prime/source冻结/新Web维护门→新隔离browser实际复验。原已运行API无需因UI一行修复再重放，Web只fresh新intent/精确旧37975/sourcece/新版源码后切换；任何失败原记录保留。
+
+
+SOURCE HASHES {"apps/web/src/components/workshop/CreatorGrowthPage.tsx": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e", "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "292371bc6f17c0f9c9cea8e410105a8a101bd77569338f015ac8c1b9565e2e53"}
+TRANSPORT r16: same-sized diagnostic via Python and external undici.fetch both200/firstevent; diagnostic not qualityreview. New task-only external fetch delegates original SDK input/options, TLS/auth unchanged. Old r15 terminal UND_ERR_SOCKET/unconsumed. RunnerSHA a9d9b024c5d8c3e4091ccc31a76ffc50193660776b547ff8145a7953fb37d67f preloadSHA 38355697ebfcef44c6ec0b18fd15c3f29ddccf00e271183a918f50a2662faa81
