@@ -1,0 +1,9 @@
+{
+  "request": "qyh-creator-workflow-bounded-reader-20261014-plan-r3",
+  "processTerminal": true,
+  "failure": "exact finding claim scope rejected",
+  "envelopeAbsent": true,
+  "consumed": false,
+  "rawRepair": false,
+  "prospectiveCodeUnapplied": true
+}

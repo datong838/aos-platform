@@ -1,0 +1,8 @@
+{
+  "processTerminal": true,
+  "failure": "strict raw JSON invalid delimiter line30col3",
+  "transportPreserved": true,
+  "envelopeAbsent": true,
+  "consumed": false,
+  "repairRaw": false
+}

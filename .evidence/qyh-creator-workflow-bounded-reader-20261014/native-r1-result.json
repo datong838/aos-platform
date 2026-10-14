@@ -1,0 +1,49 @@
+{
+  "containerId": "8515ce1c741ebe1476ed94cfbc7fdd9a84ffd8f33025fd14efbb4f2164c3b849",
+  "name": "qyh-creator-workflow-bounded-native-20261014-r1",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "sourceSha256": "baae1ede2cb0ed6594b7b8f89ca75e15f9b96141c565640340f70cfdb465b412",
+  "tables": [
+    "aip_task",
+    "aip_task_brief_head",
+    "aip_task_brief_revision"
+  ],
+  "fixtureOnlyNotFullOriginalSchema": true,
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "firstSnapshotCount": 1,
+  "nextSnapshotCount": 2,
+  "otherTypeExcluded": true,
+  "foreignRowsHiddenWithoutWhere": true,
+  "writeDeniedSqlstate": "25006",
+  "privacyError": "CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE",
+  "oversizeCaseError": "CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED",
+  "rowLimitError": "CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED",
+  "originalVolumeTouched": false,
+  "originalUserOrBudgetApproval": false
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a0650f8ed39ddbe4e8de3a864c8c5c82f92b5f0af4eec516f36b0e56d3570c82",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-workflow-bounded-reader-20261014-code-r2",
+    "task_id": "qyh-creator-workflow-bounded-reader-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "90ca032b60071cb0f2c84294e21018f13d99f150",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-creator-workflow-bounded-reader-20261014/code-review-package-r1.txt": "1612b6b0e8aa781ef24511223b5a0651be69be8a698a3f5ba3cc13a19f31a7bc"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "新专用reader满足方案：固定达人tenant查询、只读单快照、有界行字节、head/revision/task/schema/hash/time严格一致、真实空与失败关闭分开。",
+        "evidence": "services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py: CreatorInternalWorkflowReadonlyReader.list调用connect_read_only(scope)，检查read_only=True/autocommit=False/isolation=REPEATABLE_READ；SQL WHERE h.org_id=%s AND h.project_id=%s AND (r.brief_type='creator_internal_workflow' OR r.brief_id IS NULL)，LIMIT 1001哨兵，CASE octet_length<=64KiB过滤；每行校验head/org+project/head+brief/head+task与revision/task org+project一致、task_type='ecommerce.workshop.creator_internal_task'、canonical_hash校验、schema_ref严格等于_schema_ref()、时间aware且<=cutoff；真实空items[]/count=0仅空源返回，任何异常/漂移/超限均raise CreatorWorkflowReadonlyError('UNAVAILABLE/AUTHORITY_DRIFT/LIMIT_EXCEEDED')，见test_ecommerce_creator_internal_workflow_readonly.py:test_empty_is_true_one_readonly_snapshot、test_connection_or_clock_unknown_is_not_empty、test_authority_drift_fails_before_any_success。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "13字段及原redaction隐私拒绝、复用旧draft/purpose语义，其他legacy/Store/HTTP/writer未改；状态不是操作许可。",
+        "evidence": "services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py:_DETAIL_KEYS包含owner/productRef/productName/candidateSource/contentCategory/audienceScale/channel/budget/commission/benefits/deliverables/evidence/schedule共13项，set(details)-_DETAIL_KEYS拒绝；调用public_contracts.redact_sensitive，检测到Bearer/Email/Phone/Secret返回PRIVACY_UNAVAILABLE；复用了EcommerceCreatorInternalWorkflow._require_creator_brief和_draft（EXISTING exact helper），响应类型CreatorInternalWorkflowListResponse；文件未import/修改aic_production_contract_store/aip_task_store/ecommerce_creator_internal_workflow（writer）；test_ecommerce_creator_internal_workflow_readonly.py:test_valid_restore_and_freeze_version_are_readable_saved_facts_only断言'allowedCommands' not in result.model_dump(by_alias=True)，确认status/version不提供execute/人审许可。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "114项验证与同源隔离PG并发/RLS/25006/隐私限额证据支持候选代码质量，原客户部署和完整Goal未宣称完成。",
+        "evidence": ".evidence/qyh-creator-workflow-bounded-reader-20261014/green-source-r2.log: 'collected 114 items'且'114 passed, 7 warnings in 7.27s'；.evidence/qyh-creator-workflow-bounded-reader-20261014/verification-source-r2.json sourceBefore/After SHA256与材料中代码SHA256一致，originalRuntimeTouched=false；native_fixture_r1.py使用同名隔离容器（tmpfs/127.0.0.1:18573），建aip_task/aip_task_brief_head/aip_task_brief_revision三表并ENABLE+FORCE RLS+SELECT role aos_runtime，观测observations.read_only='on'/isolation='repeatable read'；native-r1-result.json: firstSnapshotCount=1/nextSnapshotCount=2(并发insert可见)，writeDeniedSqlstate='25006'，privacyError='CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE'，oversizeCaseError=rowlimit='CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'，fixtureOnlyNotFullOriginalSchema=true/originalVolumeTouched=false；registration.json状态ACTIVE、scope排除apps/web/production_contract_store/task_store/restored-data-volume，未宣称客户数据或完整231 Goal。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "将readonly.py及对应测试作为独立提交保留，不挂载router；原Task另行集成GET。"
+  }
+}

@@ -1,0 +1,9 @@
+# 内部Creator草稿有界reader代码候选
+
+Rules/231完整Goal/唯一m1串行、同owner/base2030/16:00UTC准确新模块与test scope。现HEAD90ca、原API25389/f005与Web78346/6c；候选未加载或root接线，原DBschema161/650/绑定0/原命名卷READONLY/HostworkerProviderOFF。完整安装生命周期、预算C用户最终真实审批/原部署、自然业务CaseRun建议评审内容能力人审续跑总控Wiki、八场景/视觉/观察发布目标不缩小。
+
+只新模块ecommerce_creator_internal_workflow_readonly.py与test_ecommerce_creator_internal_workflow_readonly.py。原Creatorworkflowlist/execute/history、共享AIPStore/TaskStore/DTO、router与其他读写门未改。固定同readonlyREPEATABLE_READ快照，SQLtenant/type过滤/minimalcolumns/head+revision+task来源/版本/schema原hash/awaretime严格校验；rows1000+1/item64KiB/total1MiB/最终响应上限，错误/未知/敏感/不支持内容不返回零成功。复用旧purpose状态/draft/原canonicalhash/redaction，不新增业务状态机。13字符串字段与前端实际values相符，隐私扫描只覆盖既有规则，不声称任意文本全部合规。approved仅保存状态，没有权限或Budget批准。
+
+独立方案r1 rawJSON坏/r2 NEED_EVIDENCE要求方案前已实施/r3改claim被严格门拒绝均原证据保留；补完整未应用拟稿与短精确claims后r4PASS合法消费才应用test。REDmissingmodule后最小源码，新逻辑+旧workflow/目录/HTTP111PASS，补headidentity/autocommit风险用例后114PASS；同2源码before=afterHash回执。isolatedowner3表PG16 fixture，原FORCERLS低权SELECT/runtime/readonlyon/repeatable read，snapshot1后并发新行仅下一snapshot2可见；非creator排除/foreignraw无WHERE不可见、UPDATE25006拒绝、privacy及SQLCASE大JSON/1001rows分别显式拒绝。fixture准确CID已停止，未触及原卷/真实主体/预算。代码r1 rawJSON坏未消费，fresh r2PASS合法消费，与sourceSHAbaae1ede…一致。
+
+后续rootTask已有精确未应用router接线拟diff/方案，仍需独立plan/RED及完整质量/源冻结/维护/原真人GET/menu/原650/三视口/现场Prime/准确Delivery/AuthorityPrime。新增发现CreatorGrowthPage.load吞read错误且保留旧drafts：已另登记qyh-creator-workflow-read-failure-ui-20261014 exact2files/evidence同base16UTC，需独立plan/RED明确trueempty与unknown、失效旧ref、禁写/恢复、保留命令Receipt/unknownintent且不覆盖编辑。此候选提交不代替UI修复、接线或Delivery。1280按钮right1376/1390裁切及price255px视觉P1仍未修；剩余helper/fullC/自然首链/安装八场景/观察发布持续。每日/aos最新m1原卷完整PG→API→Web重启仍要求，aos-2不重启。

@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-14T13:13:53.948032+00:00",
+  "finishedAt": "2026-10-14T13:14:10.651122+00:00",
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-p",
+    "no:cacheprovider",
+    "services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py",
+    "services/aos-api/tests/test_ecommerce_creator_internal_workflow.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_catalog.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py"
+  ],
+  "returncode": 0,
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py": "baae1ede2cb0ed6594b7b8f89ca75e15f9b96141c565640340f70cfdb465b412",
+    "services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py": "64b42e0968064ea660ea9902232123aafc0bebcf0af2dfbd98518a5a2d81f183"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py": "baae1ede2cb0ed6594b7b8f89ca75e15f9b96141c565640340f70cfdb465b412",
+    "services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py": "64b42e0968064ea660ea9902232123aafc0bebcf0af2dfbd98518a5a2d81f183"
+  },
+  "logSha256": "079d57377672930d657986768ae7c00a26efe7e52f922cb20dddf5c7cf05dd20",
+  "originalRuntimeTouched": false,
+  "uncommittedCandidate": true
+}

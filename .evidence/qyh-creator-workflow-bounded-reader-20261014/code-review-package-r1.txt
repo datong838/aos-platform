@@ -1,0 +1,777 @@
+ACTUAL STANDALONE CODE QUALITY before commit. Product2files not yet loaded or routed, originalAPI25389/f005 still creatorworkflowlist404; root integration separateTask/plan. REDmissingmodule actualred-r1,114PASS actual currenthash beforeafter, native isolated3table scopedroleFORCERLS25006/concurrency andprivacy/limits; no original volume, budgets/humanapproval/operations. FullGoal retained.
+FILE .evidence/qyh-creator-workflow-bounded-reader-20261014/registration.json SHA256 860a20ec6ab3b4beeb6aa230d5d57f7ee5bb657102cfbb478d1c79ad059cbf68
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-workflow-bounded-reader-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002030",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py",
+    "aos-platform/.evidence/qyh-creator-workflow-bounded-reader-20261014"
+  ],
+  "excluded_scope": [
+    "aos-platform/apps/web",
+    "aos-platform/services/aos-api/aos_api/aip_production_contract_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_task_store.py",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "PlanPrime/RED/minimum standalone bounded readonly saved CreatorInternalWorkflowListResponse with original canonicalhash/typedDTO, same snapshot/tenant/headref/task provenance/privacy limits/trueempty/failure503; no legacywriters or originalDB effects",
+    "Unitadjacent/nativeisolationquality then rootTask separately integrates only draftlistGET; preserve full231Goal/visual/install/business/budgetC final genuineuserapproval"
+  ],
+  "lease_expires_at": "2026-10-14T16:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-14T20:56:19+08:00"
+}
+FILE .evidence/qyh-creator-workflow-bounded-reader-20261014/implementation-plan.md SHA256 c1867894a7ff8e95558244a07e5c9fa5ea15ea0a6064c792b32b3d055a8f8f8e
+# 达人内部草稿专用有界只读投影方案
+
+Rules：用户AGENTS方案先行、最小更改、保护data/dirty；231唯一m1串行/完整Loop/独立Prime精确冻结消费。同ownerTask/base2030/16:00UTC精确新模块/test/evidence；rootTask另持有router/http/D-wave，不修改共享AIP生产Store/TaskStore、原Creator execute/list/history或globalDTO。完整Goal/原安装全恢复授权/唯一真实审批者持续，读slice不是预算或业务批准。
+
+已复习产品v2达人五阶段/内部准备与外部触达分离、技术13的tenant/同cutoff/hash/PII最小披露/未知失败关闭、231全旅程与真实链要求；现前端PreparationPanel六purpose及13个字符串details字段。DDL w2_001 head/version/currentrevision/taskID及appendonlyrevision/RLSFORCE，原create/revise canonical_hash({briefType,schemaRef,spec})均已定位；原legacy列表全brief无LIMIT/defaultdbconnectreadwrite，因此新专用reader而非机械flipCatalog。
+
+新增 `services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py`、`services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py`。class CreatorInternalWorkflowReadonlyReader.list(scope)只用原connect_read_only(scope)，要求readonlyTrue/autocommitFalse/REPEATABLE_READ，一事务SELECT transaction_timestamp()作为DBcutoff；一个固定SELECT head LEFTJOIN scoped currentrevision及scopedtask，WHERE精确org/project+brief_type=creator_internal_workflow（或currentrevision缺失以免错误空态），不读取其他业务spec，不查Receipt/Run/Source，不Provider/ref解引用。
+
+SQL仅选head org/project/brief/task/currentrevision/version/updatedAt、revisionorg/project/brief/task/revision/type/schemaRef/spec/contentHash/lifecycle/createdAt、taskorg/project/taskID/task_type。只取匹配本head当前version，旧head不存在当前revision或task行不存在/outertenant drift均失败而非静默掉行。known canonical creator task type ecommerce.workshop.creator_internal_task由原execute CreateTaskRequest硬编码提供，SQLleftjoin验证，不改变旧legacy可能存在的非canonicalmanualbrief，但安装readonly不能把其他任务当此工作流。
+
+固定MAX_ROWS1000+LIMIT1001哨兵，ORDERrevision.createdAt DESC/briefID稳定，先识别行超限再purpose去重，不截断冒充完整。CASE spec+schemaRef JSON text总bytes<=64KiB才返回，逐行和所有源材料1MiB/finalDTO1MiB上限；超过任一限额CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED，不回零成功。每行head/revision/task tenant、brief/taskID/currentrevision一致；整数revision/version>=1且version>=revision（freeze版本递增，不能要求相等）；head.updatedAt与revision.createdAt aware<=cutoff，revcreatedAt<=headupdatedAt；schemaRef原ResourceRef strictvalidate+精确EcommerceCreatorInternalWorkflow._schema_ref比较；lifecycle原BriefLifecycle enum可读，仅历史事实不推导运行许可；严格原typed TaskBriefRevision构建及original canonical_hash校验，不复制哈希算法。非法schema/hash/spec及任务来源漂移CREATOR_WORKFLOW_READ_AUTHORITY_DRIFT，连接/表/role/clock失败固定错误码，任一异常不空成功、错误不附SQL/数据/私密文本。
+
+spec由原内部workflow规定purpose/title/summary/details/status/externalEffectsAllowed及可选restoredFromRevision；外部标记必须False，purpose/status由原_require_creator_brief+typed输出验证。还需title2..160/summary2..2000，恢复revision正整数<currentrevision。privacy最小披露：details只允许现前端实际13字段(owner/productRef/productName/candidateSource/contentCategory/audienceScale/channel/budget/commission/benefits/deliverables/evidence/schedule)，字段值字符串<=2000；完整13字段已与前端values机械逐项核对。未列字段/嵌套对象不回给浏览器，整个读取显式CREATOR_WORKFLOW_READ_CONTENT_UNSUPPORTED，不静默丢弃伪造exact内容。原公共redact_sensitive对title/summary/details扫描；检测到原敏感合同会redact的字符串则显式CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE，不返回原文或改写后伪称原稿。该检测只覆盖已有公开secret规则，不能声称所有自由文本PII都自动审过；新内部展示仍依赖原安装role/markings/dataScope准入，无模型或外部发送。未知敏感字段failclosed，预算/佣金只是内部文本不能批准费用。
+
+复用原workflow._require_creator_brief和_draft不复制六purpose/四status/原ref状态机；按原最新createdAt/briefID排序，全部行先严格验证再每purpose保留首项，防被去重遮蔽坏旧行。响应沿用CreatorInternalWorkflowListResponse，仅当前授权保存草稿；真正全空返回items[]/count0，不合格任一源row明确unknown/error。此类无allowedCommands字段，不凭status approved、version或exactRef授予任何execute/人审/Provider/外发许可。
+
+测试RED missingmodule，再empty/nonempty sixpurpose/latestpurpose、同事务/role/readonly/isolation、outertenant/head/task drift/missingrevision+task/tasktype/hash/schema/spec/lifecycle/time/version/secret及unknowndetail拒绝、1000/1001/smallmanytotal/64KiBCASE NULL及finalsize，去重后坏旧行仍拒绝。累计旧workflow9、readCatalog/readHTTP、生产Brief现有邻域；真实owner隔离PG3表+FORCERLS/只SELECT角色/读写25006/并发snapshot，坏行与限额只在隔离fixture，原库不seed/造坏数据。之后codePrime exactsource/nativequality，rootTask另方案/Prime/RED只GET接线，最新已提交archive+freshAPI维护门+原真人GET/原菜单/原650/三视口Prime/准确Delivery/AuthorityPrime，再剩余helpers/fullC/自然链/安装/八场景/视觉/观察发布。
+
+FILE .evidence/qyh-creator-workflow-bounded-reader-20261014/plan-review-result-r4.json SHA256 aff3fde2b521c183912c71e019d298e3cc03d87c7d37c47ae87b055c6a2d259e
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a0650f8ed39ddbe4e8de3a864c8c5c82f92b5f0af4eec516f36b0e56d3570c82",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-workflow-bounded-reader-20261014-plan-r4",
+    "task_id": "qyh-creator-workflow-bounded-reader-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "90ca032b60071cb0f2c84294e21018f13d99f150",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-creator-workflow-bounded-reader-20261014/plan-review-package-r3.txt": "72b5c39798594685f450a7bac093e587a1b2ca89b125a2a03fae86a9b88af1b8"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "方案拟稿可进入RED：固定租户和达人类型、有界只读快照、head/revision/task/hash/schema/time验证。",
+        "evidence": "proposed-reader.py.txt:CreatorInternalWorkflowReadonlyReader._rows含WHERE h.org_id=%s AND h.project_id=%s 及 (r.brief_type=%s OR r.brief_id IS NULL) with 'creator_internal_workflow'；连接用connect_read_only，代码验证read_only/autocommit/isolation/transaction_timestamp；SQL JOIN aip_task_brief_head/re vision/task，按row head/revision/task/timestamp/tenant/canonical_hash/schemaRef强制校验。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "方案复用旧草稿语义，13字段最小披露及敏感拒绝，旧接口与写路径保持不变。",
+        "evidence": "proposed-reader.py.txt调用EcommerceCreatorInternalWorkflow._require_creator_brief和_draft，details校验_detail_keys={owner/productRef/productName/candidateSource/contentCategory/audienceScale/channel/budget/commission/benefits/deliverables/evidence/schedule}，并用public_contracts.redact_sensitive扫描拒绝PRIVACY_UNAVAILABLE；响应用原有CreatorInternalWorkflowListResponse，新增文件未修改AIP生产Store/TaskStore及原execute/list/history写路径，仅计划通过rootTask在router/http挂载。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前仅审方案拟稿，未宣称已实施、运行授权或完整Goal完成。",
+        "evidence": "plan-review-package-r3.txt头部声明'PHASE: 方案审查 BEFORE productcoding'及'Exact prospective source/test files are evidence-only text and NOT APPLIED'；registration.json状态ACTIVE/lease_expires_at在未来；implementation-plan.md明确'Current product files absent intentionally until legal plan gate'。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "按plan将proposed-reader.py.txt和proposed-tests.py.txt应用至限定路径后，先跑RED与隔离测试，再单独集成rootTask GET路由，最终回归旧write/HTTP契约。"
+  }
+}
+FILE .evidence/qyh-creator-workflow-bounded-reader-20261014/plan-review-consumption-r4.json SHA256 c618e0b0105771adebda92407b4b292e936d29ed3594a97a393fcded6954b361
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-workflow-bounded-reader-20261014-plan-r4",
+  "task_id": "qyh-creator-workflow-bounded-reader-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "90ca032b60071cb0f2c84294e21018f13d99f150",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-creator-workflow-bounded-reader-20261014/plan-review-package-r3.txt": "72b5c39798594685f450a7bac093e587a1b2ca89b125a2a03fae86a9b88af1b8"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "8bcccd40079b033458193425ff08b6dff5495d46f7d37caf74a2c70b16f1f64d",
+  "transport_sha256": "6d2fddf7e7f20da8d4354fd1c982ec17d9ec7397282ae4d3c8417237e141c90e"
+}
+FILE services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py SHA256 baae1ede2cb0ed6594b7b8f89ca75e15f9b96141c565640340f70cfdb465b412
+"""Saved creator preparation projection; never grants workflow execution."""
+from datetime import datetime
+
+import psycopg
+from psycopg import IsolationLevel
+
+from aos_api.aip_contracts import ResourceRef
+from aos_api.aip_production_contract_store import canonical_hash
+from aos_api.aip_production_contracts import TaskBriefRevision
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_creator_internal_workflow import (
+    EcommerceCreatorInternalWorkflow, CreatorInternalWorkflowError,
+)
+from aos_api.ecommerce_creator_internal_workflow_contracts import CreatorInternalWorkflowListResponse
+from aos_api.public_contracts import redact_sensitive
+from aos_api.tenant_scope import TenantScope
+
+MAX_ROWS = 1000
+MAX_ITEM_BYTES = 64 * 1024
+MAX_TOTAL_BYTES = 1024 * 1024
+_DETAIL_KEYS = frozenset({
+    'owner', 'productRef', 'productName', 'candidateSource', 'contentCategory',
+    'audienceScale', 'channel', 'budget', 'commission', 'benefits',
+    'deliverables', 'evidence', 'schedule',
+})
+_SPEC_KEYS = frozenset({'purpose', 'title', 'summary', 'details', 'status',
+                        'externalEffectsAllowed', 'restoredFromRevision'})
+
+
+class CreatorWorkflowReadonlyError(RuntimeError):
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
+def _deny(suffix):
+    raise CreatorWorkflowReadonlyError('CREATOR_WORKFLOW_READ_' + suffix)
+
+
+def _integer(value):
+    return type(value) is int and value >= 1
+
+
+def _time(value, cutoff):
+    return isinstance(value, datetime) and value.utcoffset() is not None and value <= cutoff
+
+
+class CreatorInternalWorkflowReadonlyReader:
+    def __init__(self, *, connect_factory=None):
+        self._connect = connect_factory or connect_read_only
+
+    @staticmethod
+    def _rows(conn, scope):
+        return conn.execute(
+            f'''SELECT h.org_id AS head_org,h.project_id AS head_project,
+                h.brief_id AS head_brief,h.task_id AS head_task,h.current_revision,
+                h.version,h.updated_at AS head_updated,
+                r.org_id,r.project_id,r.brief_id,r.task_id,r.revision,r.brief_type,
+                r.content_hash,r.lifecycle,r.created_by,r.created_at,
+                t.org_id AS task_org,t.project_id AS task_project,
+                t.task_id AS linked_task,t.task_type,
+                octet_length(r.spec::text)+octet_length(r.schema_ref::text) AS payload_bytes,
+                CASE WHEN octet_length(r.spec::text)+octet_length(r.schema_ref::text)<={MAX_ITEM_BYTES}
+                     THEN r.spec ELSE NULL END AS spec,
+                CASE WHEN octet_length(r.spec::text)+octet_length(r.schema_ref::text)<={MAX_ITEM_BYTES}
+                     THEN r.schema_ref ELSE NULL END AS schema_ref
+                FROM aip_task_brief_head h
+                LEFT JOIN aip_task_brief_revision r
+                  ON r.org_id=h.org_id AND r.project_id=h.project_id
+                 AND r.brief_id=h.brief_id AND r.revision=h.current_revision
+                LEFT JOIN aip_task t
+                  ON t.org_id=h.org_id AND t.project_id=h.project_id AND t.task_id=h.task_id
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND (r.brief_type=%s OR r.brief_id IS NULL)
+                ORDER BY r.created_at DESC,h.brief_id LIMIT %s''',
+            (*scope.key, 'creator_internal_workflow', MAX_ROWS + 1),
+        ).fetchall()
+
+    @staticmethod
+    def _draft(row, scope, cutoff):
+        for org, project in [('head_org', 'head_project'), ('org_id', 'project_id'),
+                             ('task_org', 'task_project')]:
+            if (row[org], row[project]) != scope.key:
+                _deny('AUTHORITY_DRIFT')
+        if (row['head_brief'] != row['brief_id']
+                or row['head_task'] != row['task_id']
+                or row['linked_task'] != row['task_id']
+                or row['task_type'] != 'ecommerce.workshop.creator_internal_task'
+                or not all(_integer(row[k]) for k in ['revision', 'current_revision', 'version'])
+                or row['current_revision'] != row['revision'] or row['version'] < row['revision']
+                or not _time(row['created_at'], cutoff) or not _time(row['head_updated'], cutoff)
+                or row['created_at'] > row['head_updated']):
+            _deny('AUTHORITY_DRIFT')
+        spec, schema = row['spec'], row['schema_ref']
+        if type(spec) is not dict or type(schema) is not dict:
+            _deny('AUTHORITY_DRIFT')
+        if ResourceRef.model_validate(schema) != EcommerceCreatorInternalWorkflow._schema_ref():
+            _deny('AUTHORITY_DRIFT')
+        if row['content_hash'] != canonical_hash({
+                'briefType': row['brief_type'], 'schemaRef': schema, 'spec': spec}):
+            _deny('AUTHORITY_DRIFT')
+        value = TaskBriefRevision(
+            tenant=dict(orgId=scope.org_id, projectId=scope.project_id),
+            brief_id=row['brief_id'], task_id=row['task_id'], revision=row['revision'],
+            version=row['version'], brief_type=row['brief_type'], schema_ref=schema,
+            spec=spec, content_hash=row['content_hash'], lifecycle=row['lifecycle'],
+            created_by=row['created_by'], created_at=row['created_at'],
+        )
+        EcommerceCreatorInternalWorkflow._require_creator_brief(value)
+        if set(spec) - _SPEC_KEYS:
+            _deny('CONTENT_UNSUPPORTED')
+        if not 2 <= len(spec['title']) <= 160 or not 2 <= len(spec['summary']) <= 2000:
+            _deny('CONTENT_UNSUPPORTED')
+        restore = spec.get('restoredFromRevision')
+        if 'restoredFromRevision' in spec and (not _integer(restore) or restore >= row['revision']):
+            _deny('AUTHORITY_DRIFT')
+        details = spec.get('details', {})
+        if (set(details) - _DETAIL_KEYS
+                or any(type(v) is not str or len(v) > 2000 for v in details.values())):
+            _deny('CONTENT_UNSUPPORTED')
+        visible = {'title': spec['title'], 'summary': spec['summary'], 'details': details}
+        if redact_sensitive(visible) != visible:
+            _deny('PRIVACY_UNAVAILABLE')
+        return EcommerceCreatorInternalWorkflow._draft(value)
+
+    def list(self, scope: TenantScope) -> CreatorInternalWorkflowListResponse:
+        try:
+            with self._connect(scope) as conn:
+                if (conn.read_only is not True or conn.autocommit is not False
+                        or conn.isolation_level != IsolationLevel.REPEATABLE_READ):
+                    _deny('UNAVAILABLE')
+                cutoff = conn.execute('SELECT transaction_timestamp() AS cutoff').fetchone()['cutoff']
+                if not isinstance(cutoff, datetime) or cutoff.utcoffset() is None:
+                    _deny('AUTHORITY_DRIFT')
+                rows = self._rows(conn, scope)
+                if len(rows) > MAX_ROWS:
+                    _deny('LIMIT_EXCEEDED')
+                total, items, seen = 0, [], set()
+                for row in rows:
+                    size = row['payload_bytes']
+                    if type(size) is not int or size < 1:
+                        _deny('AUTHORITY_DRIFT')
+                    total += size
+                    if size > MAX_ITEM_BYTES or total > MAX_TOTAL_BYTES:
+                        _deny('LIMIT_EXCEEDED')
+                    draft = self._draft(row, scope, cutoff)
+                    if draft.purpose not in seen:
+                        seen.add(draft.purpose)
+                        items.append(draft)
+                result = CreatorInternalWorkflowListResponse(
+                    tenant=dict(orgId=scope.org_id, projectId=scope.project_id),
+                    items=items, count=len(items),
+                )
+                if len(result.model_dump_json(by_alias=True).encode()) > MAX_TOTAL_BYTES:
+                    _deny('LIMIT_EXCEEDED')
+                return result
+        except CreatorWorkflowReadonlyError:
+            raise
+        except psycopg.Error:
+            _deny('UNAVAILABLE')
+        except (ValueError, KeyError, TypeError, AttributeError, CreatorInternalWorkflowError):
+            _deny('AUTHORITY_DRIFT')
+
+FILE services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py SHA256 64b42e0968064ea660ea9902232123aafc0bebcf0af2dfbd98518a5a2d81f183
+"""Synthetic authority rows are not genuine customer/human approvals."""
+import copy
+import json
+from contextlib import contextmanager
+from datetime import datetime, timedelta, timezone
+
+import psycopg
+import pytest
+from psycopg import IsolationLevel
+
+from aos_api.aip_production_contract_store import canonical_hash
+from aos_api.ecommerce_creator_internal_workflow import EcommerceCreatorInternalWorkflow
+from aos_api.ecommerce_creator_internal_workflow_readonly import (
+    CreatorInternalWorkflowReadonlyReader, CreatorWorkflowReadonlyError,
+    MAX_ROWS, MAX_ITEM_BYTES, MAX_TOTAL_BYTES,
+)
+from aos_api.tenant_scope import TenantScope
+
+SCOPE = TenantScope('org-org', 'dev-project')
+NOW = datetime(2026, 10, 14, tzinfo=timezone.utc)
+
+
+def row(*, purpose='outreach_batch', brief='brief-fixture', revision=1, version=1):
+    spec = dict(purpose=purpose, title='内部准备', summary='整理内部合作条件',
+                status='draft', details={'channel': '站内邀约'}, externalEffectsAllowed=False)
+    schema = EcommerceCreatorInternalWorkflow._schema_ref().model_dump(mode='json', by_alias=True)
+    value = dict(head_org=SCOPE.org_id, head_project=SCOPE.project_id, head_brief=brief,
+                 head_task='creator-task-fixture', current_revision=revision, version=version,
+                 head_updated=NOW, org_id=SCOPE.org_id, project_id=SCOPE.project_id,
+                 brief_id=brief, task_id='creator-task-fixture', revision=revision,
+                 brief_type='creator_internal_workflow', lifecycle='draft', created_by='fixture',
+                 created_at=NOW, task_org=SCOPE.org_id, task_project=SCOPE.project_id,
+                 linked_task='creator-task-fixture', task_type='ecommerce.workshop.creator_internal_task',
+                 spec=spec, schema_ref=schema)
+    return reseal(value)
+
+
+def reseal(value):
+    value['content_hash'] = canonical_hash({
+        'briefType': value['brief_type'], 'schemaRef': value['schema_ref'], 'spec': value['spec']})
+    value['payload_bytes'] = len(json.dumps(value['spec'], ensure_ascii=False).encode()) + len(json.dumps(value['schema_ref']).encode())
+    return value
+
+
+def snapshot(rows=(), *, readonly=True, isolation=IsolationLevel.REPEATABLE_READ, cutoff=NOW, fail=False, auto=False):
+    calls, connections = [], []
+    class Result:
+        def __init__(self, data): self.data = data
+        def fetchone(self): return self.data[0]
+        def fetchall(self): return self.data
+    class Connection:
+        read_only = readonly
+        autocommit = auto
+        isolation_level = isolation
+        def execute(self, sql, params=()):
+            calls.append((sql, params))
+            assert sql.startswith('SELECT ')
+            if fail: raise psycopg.OperationalError('fixture connection failure')
+            if 'transaction_timestamp' in sql: return Result([{'cutoff': cutoff}])
+            assert 'LEFT JOIN aip_task_brief_revision' in sql and 'LEFT JOIN aip_task t' in sql
+            assert 'r.brief_type=%s OR r.brief_id IS NULL' in sql
+            assert 'CASE WHEN octet_length' in sql and 'LIMIT %s' in sql
+            assert params == (*SCOPE.key, 'creator_internal_workflow', MAX_ROWS + 1)
+            return Result(rows)
+        def commit(self): pytest.fail('reader cannot mutate')
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        connections.append(scope)
+        yield Connection()
+    return CreatorInternalWorkflowReadonlyReader(connect_factory=connect), calls, connections
+
+
+def denied(rows, code, **options):
+    reader, _, _ = snapshot(rows, **options)
+    with pytest.raises(CreatorWorkflowReadonlyError) as error:
+        reader.list(SCOPE)
+    assert error.value.code == 'CREATOR_WORKFLOW_READ_' + code
+    assert str(error.value) == error.value.code
+
+
+def test_empty_is_true_one_readonly_snapshot():
+    reader, calls, connections = snapshot()
+    result = reader.list(SCOPE)
+    assert result.items == [] and result.count == 0
+    assert len(calls) == 2 and connections == [SCOPE]
+    assert result.tenant.org_id == SCOPE.org_id
+
+
+def test_all_six_purposes_and_latest_per_purpose_preserve_typed_exact_ref():
+    purposes = ['candidate_import', 'outreach_batch', 'outreach_message',
+                'collaboration', 'delivery_check', 'relationship_plan']
+    rows = [row(purpose=p, brief='brief-' + p) for p in purposes]
+    rows.append(row(brief='brief-older'))
+    reader, _, _ = snapshot(rows)
+    result = reader.list(SCOPE)
+    assert result.count == 6
+    assert [v.purpose for v in result.items] == purposes
+    assert result.items[1].resource_id == 'brief-outreach_batch'
+    assert result.items[1].content_hash == rows[1]['content_hash']
+
+
+@pytest.mark.parametrize('field,value', [
+    ('head_org', 'other'), ('head_project', 'other'), ('org_id', 'other'),
+    ('project_id', 'other'), ('task_org', 'other'), ('task_project', 'other'),
+    ('brief_id', 'other'), ('head_brief', 'other'), ('head_task', 'other'), ('task_id', 'other'), ('linked_task', None),
+    ('task_type', 'other'), ('current_revision', 2), ('revision', True),
+    ('version', 0), ('version', True), ('created_at', NOW + timedelta(seconds=1)),
+    ('head_updated', NOW - timedelta(seconds=1)), ('created_at', NOW.replace(tzinfo=None)),
+    ('lifecycle', 'unknown'), ('content_hash', 'a' * 64), ('spec', None),
+])
+def test_authority_drift_fails_before_any_success(field, value):
+    item = row(); item[field] = value
+    denied([item], 'AUTHORITY_DRIFT')
+
+
+def test_missing_current_revision_is_not_empty_success():
+    item = row(); item.update(brief_id=None, payload_bytes=None, spec=None)
+    denied([item], 'AUTHORITY_DRIFT')
+
+
+def test_bad_older_duplicate_is_not_hidden_by_latest_purpose():
+    broken = row(brief='older'); broken['content_hash'] = 'b' * 64
+    denied([row(), broken], 'AUTHORITY_DRIFT')
+
+
+@pytest.mark.parametrize('change', [
+    {'schema_ref': {'resourceType': 'Other', 'resourceId': 'other', 'revision': '1'}},
+    {'spec': {'externalEffectsAllowed': True}}, {'spec': {'purpose': 'unknown'}},
+    {'spec': {'status': 'unknown'}}, {'spec': {'restoredFromRevision': 1}},
+])
+def test_rehashed_bad_contract_is_still_rejected(change):
+    item = row()
+    for key, value in change.items():
+        if key == 'spec': item['spec'].update(value)
+        else: item[key] = value
+    reseal(item)
+    denied([item], 'AUTHORITY_DRIFT')
+
+
+@pytest.mark.parametrize('details', [{'password': 'fixture'}, {'channel': {'nested': 'fixture'}},
+    {'owner': None}, {'channel': 'x' * 2001}])
+def test_unknown_or_nested_details_are_explicit_unavailable(details):
+    item = row(); item['spec']['details'] = details; reseal(item)
+    denied([item], 'CONTENT_UNSUPPORTED')
+
+
+@pytest.mark.parametrize('text', ['Bearer fixture-token-123', 'fixture@example.test', '13800138000', 'sk-fixture123'])
+def test_known_sensitive_text_never_reaches_response(text):
+    item = row(); item['spec']['details']['channel'] = text; reseal(item)
+    denied([item], 'PRIVACY_UNAVAILABLE')
+
+
+@pytest.mark.parametrize('options,code', [({'readonly': False}, 'UNAVAILABLE'), ({'auto': True}, 'UNAVAILABLE'),
+    ({'isolation': IsolationLevel.READ_COMMITTED}, 'UNAVAILABLE'),
+    ({'fail': True}, 'UNAVAILABLE'), ({'cutoff': NOW.replace(tzinfo=None)}, 'AUTHORITY_DRIFT')])
+def test_connection_or_clock_unknown_is_not_empty(options, code):
+    denied([], code, **options)
+
+
+def test_row_bound_checks_all_rows_before_purpose_reduction():
+    reader, _, _ = snapshot([row()] * MAX_ROWS)
+    assert reader.list(SCOPE).count == 1
+    denied([row()] * (MAX_ROWS + 1), 'LIMIT_EXCEEDED')
+
+
+def test_single_oversize_sql_null_guard_and_total_size_limit():
+    item = row(); item.update(payload_bytes=MAX_ITEM_BYTES + 1, spec=None, schema_ref=None)
+    denied([item], 'LIMIT_EXCEEDED')
+    item = row(); item['payload_bytes'] = MAX_ITEM_BYTES
+    denied([item] * (MAX_TOTAL_BYTES // MAX_ITEM_BYTES + 1), 'LIMIT_EXCEEDED')
+
+
+def test_valid_restore_and_freeze_version_are_readable_saved_facts_only():
+    item = row(revision=3, version=4); item['spec'].update(status='approved', restoredFromRevision=1)
+    item['lifecycle'] = 'frozen'; reseal(item)
+    reader, _, _ = snapshot([item]); result = reader.list(SCOPE)
+    assert result.items[0].revision == 3 and result.items[0].version == 4
+    assert result.items[0].status == 'approved'
+    assert 'allowedCommands' not in result.model_dump(by_alias=True)
+
+FILE .evidence/qyh-creator-workflow-bounded-reader-20261014/verification-source-r2.json SHA256 62bbe48728ab9e01ab50afcfa1482480081a86f8e5d7640aea3d6a56ef697ea4
+{
+  "at": "2026-10-14T13:13:53.948032+00:00",
+  "finishedAt": "2026-10-14T13:14:10.651122+00:00",
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-p",
+    "no:cacheprovider",
+    "services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py",
+    "services/aos-api/tests/test_ecommerce_creator_internal_workflow.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_catalog.py",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py"
+  ],
+  "returncode": 0,
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py": "baae1ede2cb0ed6594b7b8f89ca75e15f9b96141c565640340f70cfdb465b412",
+    "services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py": "64b42e0968064ea660ea9902232123aafc0bebcf0af2dfbd98518a5a2d81f183"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py": "baae1ede2cb0ed6594b7b8f89ca75e15f9b96141c565640340f70cfdb465b412",
+    "services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py": "64b42e0968064ea660ea9902232123aafc0bebcf0af2dfbd98518a5a2d81f183"
+  },
+  "logSha256": "079d57377672930d657986768ae7c00a26efe7e52f922cb20dddf5c7cf05dd20",
+  "originalRuntimeTouched": false,
+  "uncommittedCandidate": true
+}
+FILE .evidence/qyh-creator-workflow-bounded-reader-20261014/green-source-r2.log SHA256 079d57377672930d657986768ae7c00a26efe7e52f922cb20dddf5c7cf05dd20
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collected 114 items
+
+services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py . [  0%]
+..............................................                           [ 41%]
+services/aos-api/tests/test_ecommerce_creator_internal_workflow.py ..... [ 45%]
+....                                                                     [ 49%]
+services/aos-api/tests/test_ecommerce_workshop_read_catalog.py ......... [ 57%]
+.......                                                                  [ 63%]
+services/aos-api/tests/test_ecommerce_workshop_read_http.py ............ [ 73%]
+..............................                                           [100%]
+
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 114 passed, 7 warnings in 7.27s ========================
+
+FILE .evidence/qyh-creator-workflow-bounded-reader-20261014/native_fixture_r1.py SHA256 1525ddffeb5483585aa6494d71cba98e687de1eb4233e4bc629478689fcd7597
+"""Owned isolated native PG projection proof; no original volume or user data."""
+from pathlib import Path
+import contextlib, datetime, hashlib, json, os, secrets, subprocess, sys, time
+import psycopg
+from psycopg import IsolationLevel, sql
+from psycopg.rows import dict_row
+
+E=Path(__file__).resolve().parent;R=E.parents[1]
+os.environ.update(AOS_DATABASE_URL='postgresql://placeholder@127.0.0.1:1/unused',AOS_DOTENV_DISABLED='1')
+sys.path.insert(0,str(R/'services/aos-api'))
+from aos_api.ecommerce_creator_internal_workflow_readonly import CreatorInternalWorkflowReadonlyReader,CreatorWorkflowReadonlyError
+from aos_api.ecommerce_creator_internal_workflow import EcommerceCreatorInternalWorkflow
+from aos_api.aip_production_contract_store import canonical_hash
+from aos_api.tenant_scope import TenantScope
+
+NAME='qyh-creator-workflow-bounded-native-20261014-r1';OWNER='codex-01a13484-f019-7d82-94ce-812396db9124';PORT=18573
+IMAGE='sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd'
+SCOPE=TenantScope('org-org','dev-project')
+TABLES=['aip_task','aip_task_brief_head','aip_task_brief_revision']
+def docker(*args):return subprocess.run(['docker','--context','colima-aos-extension',*args],text=True,capture_output=True)
+def save(name,value):
+ with (E/name).open('x') as f:json.dump(value,f,ensure_ascii=False,indent=2);f.flush();os.fsync(f.fileno())
+assert not (E/'native-r1-intent.json').exists(),'known operation must reconcile, never replay'
+lease=json.loads((R.parent/'docs/palantier/AOS项目开发上下文/memory/receipts/tasks'/f'{E.name}.json').read_text())
+assert lease['owner']==OWNER and datetime.datetime.fromisoformat(lease['lease_expires_at'])>datetime.datetime.now(datetime.timezone.utc)
+assert docker('inspect',NAME).returncode!=0
+assert not subprocess.run(['lsof','-t',f'-iTCP:{PORT}','-sTCP:LISTEN'],capture_output=True,text=True).stdout.strip()
+password=secrets.token_hex(24)
+save('native-r1-intent.json',dict(name=NAME,port=PORT,tmpfs=True,owner=OWNER,originalVolumeTouched=False))
+created=docker('run','-d','--name',NAME,'--label','aos.owner='+OWNER,'--label','aos.task='+E.name,'--tmpfs','/var/lib/postgresql/data:rw,size=512m','-p',f'127.0.0.1:{PORT}:5432','-e','POSTGRES_PASSWORD='+password,IMAGE)
+assert created.returncode==0,'creation terminal failed, inspect exact known name before new action'
+cid=created.stdout.strip();save('native-r1-created.json',dict(name=NAME,containerId=cid,owner=OWNER))
+args=dict(host='127.0.0.1',port=PORT,dbname='postgres',password=password,row_factory=dict_row,connect_timeout=1)
+try:
+ # Host TCP readiness avoids pg_isready succeeding against temporary init server.
+ for attempt in range(100):
+  try:
+   with psycopg.connect(user='postgres',**args) as c:c.execute('SELECT 1')
+   break
+  except psycopg.OperationalError:time.sleep(.1)
+ else:raise RuntimeError('fixture host startup unresolved')
+ with psycopg.connect(user='postgres',**args) as c:
+  c.execute('CREATE ROLE aos_runtime NOLOGIN NOSUPERUSER NOBYPASSRLS')
+  c.execute(sql.SQL('CREATE ROLE fixture_reader LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS PASSWORD {}').format(sql.Literal(password)))
+  c.execute('GRANT aos_runtime TO fixture_reader')
+  c.execute('CREATE TABLE aip_task(org_id text,project_id text,task_id text,task_type text,PRIMARY KEY(org_id,project_id,task_id))')
+  c.execute('CREATE TABLE aip_task_brief_head(org_id text,project_id text,brief_id text,task_id text,current_revision bigint,version bigint,updated_at timestamptz DEFAULT now(),PRIMARY KEY(org_id,project_id,brief_id))')
+  c.execute('CREATE TABLE aip_task_brief_revision(org_id text,project_id text,brief_id text,task_id text,revision bigint,brief_type text,schema_ref jsonb,spec jsonb,content_hash text,lifecycle text,created_by text,created_at timestamptz DEFAULT now(),PRIMARY KEY(org_id,project_id,brief_id,revision))')
+  for table in TABLES:
+   c.execute(sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(sql.Identifier(table)))
+   c.execute(sql.SQL('ALTER TABLE {} FORCE ROW LEVEL SECURITY').format(sql.Identifier(table)))
+   c.execute(sql.SQL("CREATE POLICY tenant_scope ON {} TO aos_runtime USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))").format(sql.Identifier(table)))
+   c.execute(sql.SQL('GRANT SELECT ON {} TO aos_runtime').format(sql.Identifier(table)))
+ schema=EcommerceCreatorInternalWorkflow._schema_ref().model_dump(mode='json',by_alias=True)
+ def spec(purpose='outreach_batch'):
+  return dict(purpose=purpose,title='隔离内部准备',summary='隔离来源与合作条件',status='draft',externalEffectsAllowed=False,details={'channel':'站内邀约'})
+ def seed(brief,purpose='outreach_batch',org=SCOPE.org_id,kind='creator_internal_workflow',data=None):
+  body=data or spec(purpose);digest=canonical_hash(dict(briefType=kind,schemaRef=schema,spec=body));task='task-'+brief
+  with psycopg.connect(user='postgres',**args) as c:
+   c.execute('INSERT INTO aip_task VALUES(%s,%s,%s,%s)',(org,SCOPE.project_id,task,'ecommerce.workshop.creator_internal_task'))
+   c.execute('INSERT INTO aip_task_brief_head(org_id,project_id,brief_id,task_id,current_revision,version) VALUES(%s,%s,%s,%s,1,1)',(org,SCOPE.project_id,brief,task))
+   c.execute('INSERT INTO aip_task_brief_revision(org_id,project_id,brief_id,task_id,revision,brief_type,schema_ref,spec,content_hash,lifecycle,created_by) VALUES(%s,%s,%s,%s,1,%s,%s::jsonb,%s::jsonb,%s,%s,%s)',(org,SCOPE.project_id,brief,task,kind,json.dumps(schema),json.dumps(body),digest,'draft','isolated-fixture'))
+ seed('initial');seed('foreign',org='dev-org');seed('other-kind',kind='unrelated_brief')
+ observations=[];inject=[True]
+ @contextlib.contextmanager
+ def connect(scope):
+  assert scope==SCOPE
+  with psycopg.connect(user='fixture_reader',**args) as conn:
+   conn.read_only=True;conn.isolation_level=IsolationLevel.REPEATABLE_READ
+   conn.execute('SET LOCAL ROLE aos_runtime')
+   conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",scope.key)
+   observations.append(dict(conn.execute("SELECT current_user AS role,current_setting('transaction_read_only') AS readonly,current_setting('transaction_isolation') AS isolation").fetchone()))
+   class Probe:
+    read_only=conn.read_only;autocommit=conn.autocommit;isolation_level=conn.isolation_level
+    def execute(self,statement,params=()):
+     result=conn.execute(statement,params)
+     if 'transaction_timestamp() AS cutoff' in statement and inject[0]:
+      inject[0]=False;seed('concurrent','candidate_import')
+     return result
+   yield Probe()
+ reader=CreatorInternalWorkflowReadonlyReader(connect_factory=connect)
+ first=reader.list(SCOPE);second=reader.list(SCOPE)
+ assert first.count==1 and second.count==2
+ with psycopg.connect(user='fixture_reader',**args) as c:
+  c.read_only=True;c.isolation_level=IsolationLevel.REPEATABLE_READ;c.execute('SET LOCAL ROLE aos_runtime');c.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",SCOPE.key)
+  assert c.execute('SELECT count(*) AS n FROM aip_task_brief_head').fetchone()['n']==3
+  try:c.execute('UPDATE aip_task_brief_head SET version=version+1')
+  except psycopg.Error as error:write_state=error.sqlstate;c.rollback()
+  else:raise AssertionError('native write was not denied')
+ assert write_state in {'25006','42501'}
+ # Known sensitive source is never returned or silently omitted.
+ seed('sensitive',data={**spec('delivery_check'),'details':{'channel':'fixture@example.test'}})
+ try:reader.list(SCOPE)
+ except CreatorWorkflowReadonlyError as error:privacy=error.code
+ else:raise AssertionError('sensitive saved content was exposed')
+ assert privacy=='CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE'
+ with psycopg.connect(user='postgres',**args) as c:
+  c.execute("DELETE FROM aip_task_brief_revision WHERE brief_id='sensitive'");c.execute("DELETE FROM aip_task_brief_head WHERE brief_id='sensitive'");c.execute("DELETE FROM aip_task WHERE task_id='task-sensitive'")
+ seed('oversize',data={**spec('delivery_check'),'details':{'channel':'x'*70000}})
+ try:reader.list(SCOPE)
+ except CreatorWorkflowReadonlyError as error:oversize=error.code
+ else:raise AssertionError('oversize returned success')
+ assert oversize=='CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'
+ with psycopg.connect(user='postgres',**args) as c:
+  c.execute("DELETE FROM aip_task_brief_revision WHERE brief_id='oversize'");c.execute("DELETE FROM aip_task_brief_head WHERE brief_id='oversize'");c.execute("DELETE FROM aip_task WHERE task_id='task-oversize'")
+ # Enough current creator heads to prove server LIMIT+1 fails before dedup.
+ body=spec();digest=canonical_hash(dict(briefType='creator_internal_workflow',schemaRef=schema,spec=body))
+ with psycopg.connect(user='postgres',**args) as c:
+  c.execute("INSERT INTO aip_task_brief_head(org_id,project_id,brief_id,task_id,current_revision,version) SELECT %s,%s,'bulk-'||g,'task-initial',1,1 FROM generate_series(1,1000) g",SCOPE.key)
+  c.execute("INSERT INTO aip_task_brief_revision(org_id,project_id,brief_id,task_id,revision,brief_type,schema_ref,spec,content_hash,lifecycle,created_by) SELECT org_id,project_id,brief_id,task_id,1,'creator_internal_workflow',%s::jsonb,%s::jsonb,%s,'draft','fixture' FROM aip_task_brief_head WHERE brief_id LIKE 'bulk-%%'",(json.dumps(schema),json.dumps(body),digest))
+ try:reader.list(SCOPE)
+ except CreatorWorkflowReadonlyError as error:rowlimit=error.code
+ else:raise AssertionError('rowlimit silently truncated')
+ assert rowlimit=='CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED'
+ save('native-r1-result.json',dict(containerId=cid,name=NAME,owner=OWNER,sourceSha256=hashlib.sha256((R/'services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py').read_bytes()).hexdigest(),tables=TABLES,fixtureOnlyNotFullOriginalSchema=True,observations=observations,firstSnapshotCount=first.count,nextSnapshotCount=second.count,otherTypeExcluded=True,foreignRowsHiddenWithoutWhere=True,writeDeniedSqlstate=write_state,privacyError=privacy,oversizeCaseError=oversize,rowLimitError=rowlimit,originalVolumeTouched=False,originalUserOrBudgetApproval=False))
+ print(json.dumps({'snapshotCounts':[first.count,second.count],'writeDenied':write_state,'privacy':privacy,'oversize':oversize,'rowlimit':rowlimit,'originalVolumeTouched':False}))
+finally:
+ owned=json.loads(docker('inspect',NAME).stdout)[0]
+ assert owned['Id']==cid and owned['Config']['Labels']['aos.owner']==OWNER
+ stopped=docker('stop',NAME);assert stopped.returncode==0
+ after=json.loads(docker('inspect',NAME).stdout)[0];assert after['Id']==cid and not after['State']['Running']
+ save('native-r1-stopped.json',dict(containerId=cid,stopped=True,originalVolumeTouched=False))
+
+FILE .evidence/qyh-creator-workflow-bounded-reader-20261014/native-r1-result.json SHA256 748f31badd58b01941b34aa92abe170b130813d614f95e8d629199a10f24f3b0
+{
+  "containerId": "8515ce1c741ebe1476ed94cfbc7fdd9a84ffd8f33025fd14efbb4f2164c3b849",
+  "name": "qyh-creator-workflow-bounded-native-20261014-r1",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "sourceSha256": "baae1ede2cb0ed6594b7b8f89ca75e15f9b96141c565640340f70cfdb465b412",
+  "tables": [
+    "aip_task",
+    "aip_task_brief_head",
+    "aip_task_brief_revision"
+  ],
+  "fixtureOnlyNotFullOriginalSchema": true,
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "firstSnapshotCount": 1,
+  "nextSnapshotCount": 2,
+  "otherTypeExcluded": true,
+  "foreignRowsHiddenWithoutWhere": true,
+  "writeDeniedSqlstate": "25006",
+  "privacyError": "CREATOR_WORKFLOW_READ_PRIVACY_UNAVAILABLE",
+  "oversizeCaseError": "CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED",
+  "rowLimitError": "CREATOR_WORKFLOW_READ_LIMIT_EXCEEDED",
+  "originalVolumeTouched": false,
+  "originalUserOrBudgetApproval": false
+}
+FILE .evidence/qyh-creator-workflow-bounded-reader-20261014/native-r1-stopped.json SHA256 2e9199d698faa7b1a2f569d334d62f32e17213ea7b4e51ce71639a3b7d65a69a
+{
+  "containerId": "8515ce1c741ebe1476ed94cfbc7fdd9a84ffd8f33025fd14efbb4f2164c3b849",
+  "stopped": true,
+  "originalVolumeTouched": false
+}
+EXISTING exact helper services/aos-api/aos_api/ecommerce_creator_internal_workflow.py list
+def list(self, scope: TenantScope) -> CreatorInternalWorkflowListResponse:
+        try:
+            values = self._briefs.list_briefs(scope).items
+            items = []
+            seen_purposes: set[str] = set()
+            for value in values:
+                if value.brief_type != "creator_internal_workflow":
+                    continue
+                self._require_creator_brief(value)
+                purpose = value.spec["purpose"]
+                if purpose in seen_purposes:
+                    continue
+                seen_purposes.add(purpose)
+                items.append(self._draft(value))
+        except (ProductionContractError, ValueError) as exc:
+            raise CreatorInternalWorkflowConflict(str(exc)) from exc
+        return CreatorInternalWorkflowListResponse(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            items=items,
+            count=len(items),
+        )
+EXISTING exact helper services/aos-api/aos_api/ecommerce_creator_internal_workflow.py _schema_ref
+def _schema_ref() -> ResourceRef:
+        return ResourceRef(resource_type="CreatorInternalWorkflowSchema", resource_id="schema://aos/ecommerce/creator-internal-workflow/v1", revision="1", authority="aos://ecommerce-workshop/creator-growth")
+EXISTING exact helper services/aos-api/aos_api/ecommerce_creator_internal_workflow.py _draft
+def _draft(value, *, version: int | None = None) -> CreatorInternalWorkflowDraft:
+        return CreatorInternalWorkflowDraft(resource_id=value.brief_id, revision=value.revision, version=version or value.version, content_hash=value.content_hash, purpose=value.spec["purpose"], title=value.spec["title"], summary=value.spec["summary"], details=value.spec.get("details", {}), status=value.spec.get("status", "draft"))
+EXISTING exact helper services/aos-api/aos_api/ecommerce_creator_internal_workflow.py _require_creator_brief
+def _require_creator_brief(cls, value) -> None:
+        if value.brief_type != "creator_internal_workflow" or value.schema_ref != cls._schema_ref():
+            raise CreatorInternalWorkflowConflict("task brief is not a creator internal workflow")
+        spec = value.spec
+        if not isinstance(spec, dict) or spec.get("externalEffectsAllowed") is not False:
+            raise CreatorInternalWorkflowConflict("creator workflow safety marker is invalid")
+        if spec.get("purpose") not in {"candidate_import", "outreach_batch", "outreach_message", "collaboration", "delivery_check", "relationship_plan"}:
+            raise CreatorInternalWorkflowConflict("creator workflow purpose is invalid")
+        if spec.get("status") not in {"draft", "in_review", "approved", "rejected"}:
+            raise CreatorInternalWorkflowConflict("creator workflow status is invalid")
+        if not isinstance(spec.get("title"), str) or not isinstance(spec.get("summary"), str) or not isinstance(spec.get("details", {}), dict):
+            raise CreatorInternalWorkflowConflict("creator workflow content is invalid")
+EXISTING exact helper services/aos-api/aos_api/aip_production_contract_store.py canonical_hash
+def canonical_hash(value: Any) -> str:
+    raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(raw.encode()).hexdigest()
+EXISTING exact helper services/aos-api/aos_api/public_contracts.py redact_sensitive
+def redact_sensitive(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {
+            str(key): "[REDACTED]" if _SENSITIVE_KEYS.search(str(key)) else redact_sensitive(child)
+            for key, child in value.items()
+        }
+    if isinstance(value, (list, tuple, set)):
+        return [redact_sensitive(child) for child in value]
+    if isinstance(value, str):
+        result = _BEARER.sub("Bearer [REDACTED]", value)
+        result = _EMAIL.sub("[REDACTED]", result)
+        result = _PHONE.sub("[REDACTED]", result)
+        return _SECRET.sub("[REDACTED]", result)
+    return value
+EXISTING PUBLIC REDACTION PATTERNS
+_SENSITIVE_KEYS = re.compile(
+    r"authorization|token|secret|password|passwd|cookie|api[_-]?key|email|phone|mobile|address|id[_-]?card|ssn",
+    re.IGNORECASE,
+)
+_BEARER = re.compile(r"(?i)bearer\s+[A-Za-z0-9._~+\-/=]+")
+_EMAIL = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
+_PHONE = re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)")
+_SECRET = re.compile(r"\b(?:sk|pk)-[A-Za-z0-9_-]{8,}\b")
+
+

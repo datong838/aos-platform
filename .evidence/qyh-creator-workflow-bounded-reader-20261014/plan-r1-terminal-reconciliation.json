@@ -1,0 +1,11 @@
+{
+  "request": "qyh-creator-workflow-bounded-reader-20261014-plan-r1",
+  "processTerminal": true,
+  "transportPreserved": true,
+  "envelopeAbsent": true,
+  "failure": "strict raw JSON parse invalid at line17col1",
+  "consumed": false,
+  "repairRaw": false,
+  "nextFreshRequest": "plan-r2",
+  "productCodeChanged": false
+}

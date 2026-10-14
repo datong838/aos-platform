@@ -1,0 +1,24 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-creator-workflow-bounded-reader-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002030",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_creator_internal_workflow_readonly.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_creator_internal_workflow_readonly.py",
+    "aos-platform/.evidence/qyh-creator-workflow-bounded-reader-20261014"
+  ],
+  "excluded_scope": [
+    "aos-platform/apps/web",
+    "aos-platform/services/aos-api/aos_api/aip_production_contract_store.py",
+    "aos-platform/services/aos-api/aos_api/aip_task_store.py",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "PlanPrime/RED/minimum standalone bounded readonly saved CreatorInternalWorkflowListResponse with original canonicalhash/typedDTO, same snapshot/tenant/headref/task provenance/privacy limits/trueempty/failure503; no legacywriters or originalDB effects",
+    "Unitadjacent/nativeisolationquality then rootTask separately integrates only draftlistGET; preserve full231Goal/visual/install/business/budgetC final genuineuserapproval"
+  ],
+  "lease_expires_at": "2026-10-14T16:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-14T20:56:19+08:00"
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a0650f8ed39ddbe4e8de3a864c8c5c82f92b5f0af4eec516f36b0e56d3570c82",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-workflow-bounded-reader-20261014-plan-r4",
+    "task_id": "qyh-creator-workflow-bounded-reader-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "90ca032b60071cb0f2c84294e21018f13d99f150",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-creator-workflow-bounded-reader-20261014/plan-review-package-r3.txt": "72b5c39798594685f450a7bac093e587a1b2ca89b125a2a03fae86a9b88af1b8"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "方案拟稿可进入RED：固定租户和达人类型、有界只读快照、head/revision/task/hash/schema/time验证。",
+        "evidence": "proposed-reader.py.txt:CreatorInternalWorkflowReadonlyReader._rows含WHERE h.org_id=%s AND h.project_id=%s 及 (r.brief_type=%s OR r.brief_id IS NULL) with 'creator_internal_workflow'；连接用connect_read_only，代码验证read_only/autocommit/isolation/transaction_timestamp；SQL JOIN aip_task_brief_head/re vision/task，按row head/revision/task/timestamp/tenant/canonical_hash/schemaRef强制校验。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "方案复用旧草稿语义，13字段最小披露及敏感拒绝，旧接口与写路径保持不变。",
+        "evidence": "proposed-reader.py.txt调用EcommerceCreatorInternalWorkflow._require_creator_brief和_draft，details校验_detail_keys={owner/productRef/productName/candidateSource/contentCategory/audienceScale/channel/budget/commission/benefits/deliverables/evidence/schedule}，并用public_contracts.redact_sensitive扫描拒绝PRIVACY_UNAVAILABLE；响应用原有CreatorInternalWorkflowListResponse，新增文件未修改AIP生产Store/TaskStore及原execute/list/history写路径，仅计划通过rootTask在router/http挂载。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前仅审方案拟稿，未宣称已实施、运行授权或完整Goal完成。",
+        "evidence": "plan-review-package-r3.txt头部声明'PHASE: 方案审查 BEFORE productcoding'及'Exact prospective source/test files are evidence-only text and NOT APPLIED'；registration.json状态ACTIVE/lease_expires_at在未来；implementation-plan.md明确'Current product files absent intentionally until legal plan gate'。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "按plan将proposed-reader.py.txt和proposed-tests.py.txt应用至限定路径后，先跑RED与隔离测试，再单独集成rootTask GET路由，最终回归旧write/HTTP契约。"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a0650f8ed39ddbe4e8de3a864c8c5c82f92b5f0af4eec516f36b0e56d3570c82",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "result": {
+    "request_id": "qyh-creator-workflow-bounded-reader-20261014-plan-r2",
+    "task_id": "qyh-creator-workflow-bounded-reader-20261014",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "90ca032b60071cb0f2c84294e21018f13d99f150",
+      "authority_revision": "AOS-002030",
+      "files": {
+        ".evidence/qyh-creator-workflow-bounded-reader-20261014/plan-review-package-r1.txt": "449d7c033657f01b785c3a05bddf4bb2c104432e685ef8fd7a2fdbcd191d398d"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "专用Creator内部草稿有界只读投影方案符合既有产品技术旅程/原canonical Brief hash/当前typed ListResponse：固定SQL按creator类型与tenant筛选、同readonly REPEATABLE_READ快照、outer head/revision/task来源/版本/schema/hash/time验证，行/字节上限显式失败，13字段最小内部准备和既有redaction规则拒绝敏感或未知内容，复用原purpose/status/draft projection；合法空与错误不混淆。此为新模块/test方案，原legacy/共享AIP/writer/其他HTTP门不改，root接线和native/Delivery尚待，完整Goal未缩小。",
+        "evidence": "材料为plan-review-package-r1.txt，含registration.json (scope列示新文件ecommerce_creator_internal_workflow_readonly.py)、implementation-plan.md详细设计、现有ecommerce_creator_internal_workflow.py、contracts、migration w2_001、audit-findings-r1.md及源码片段。未提供新readonly模块源码、测试源码、或已提交证据。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "提交新readonly模块源文件与测试至指定scope路径，并附上SHA或git commit哈希，以便复核固定SQL/只读约束/限额/字段白名单是否实现。"
+  }
+}

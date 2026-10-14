@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-workflow-bounded-reader-20261014-plan-r2",
+  "task_id": "qyh-creator-workflow-bounded-reader-20261014",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "90ca032b60071cb0f2c84294e21018f13d99f150",
+    "authority_revision": "AOS-002030",
+    "files": {
+      ".evidence/qyh-creator-workflow-bounded-reader-20261014/plan-review-package-r1.txt": "449d7c033657f01b785c3a05bddf4bb2c104432e685ef8fd7a2fdbcd191d398d"
+    }
+  },
+  "status": "NEED_EVIDENCE",
+  "execution_authorized": false,
+  "result_sha256": "2701cfbdec6ef978677ab18c5cd109e7c6113a5590517b3164b709a6eae6ccc9",
+  "transport_sha256": "b6fca9059eda47cd77f309948dcf708cd462adc65f7f51cad048436c80f6a165"
+}
