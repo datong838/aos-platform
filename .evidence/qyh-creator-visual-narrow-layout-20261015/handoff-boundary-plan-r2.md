@@ -1,0 +1,7 @@
+# 当前几何/隔离验证边界交付与全部剩余承接
+
+本次不把Creator原任务全部验收或完整Goal标成完成。原Task以GEOMETRY_ONLY_INPUT_INCOMPLETE_HANDOFF精确交接边界：两CSS代码/冻结407/真实四宽裁切几何/隔离长文本及五视图滚动补证是已证进展，真实Chrome输入/滚动/最终现场完整复审仍未证，须原样承接到新同owner Task。仅支持Task控件完成交接边界并释放旧Lease，不将未证记为通过。
+
+维护r13只交付已reviewed今日原卷全面PGAPIWeb和一次CreatorWeb-only切换；其ALL原恢复/每日aos/full231 remaining完整交接r14，aos2不重启和唯一真人原授权不变。Authority2040→2041，通过memoryctl支持入口；其他38Lease原样保留，七强投影与Prime同步CURRENT，不写个人Codex记忆/私有Goal/提醒，不push。原两Task所有expected_outputs及scope按ALLremaining保留并加新目录，租约沿用2026-10-16T08:00:00Z，不伪造其他owner。
+
+新Creator输入/滚动Task保留全部本波未完成及原文件scope，正常控件输入需真实原目标trusted见证/状态与内部末尾，不能用IAB fixture替代。下一已登记独立安全主线仍为完整自然经营/预算续期/当前安装源生产准备；局部Chrome门不能取消后续授权安全工作。禁止输入盲试或重放未知业务命令，旧writer仍归档停止。

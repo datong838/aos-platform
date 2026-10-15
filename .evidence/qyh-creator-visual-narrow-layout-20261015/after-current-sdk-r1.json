@@ -1,0 +1,14 @@
+{
+  "who": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "count": 0,
+  "schemaVersion": "aos.ecommerce-workshop.creator-growth-view/v1"
+}

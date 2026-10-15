@@ -1,0 +1,12 @@
+{
+  "syntheticFixtureOnly": true,
+  "commandCalls": [],
+  "readCalls": [
+    "root",
+    "contribution",
+    "lifecycle",
+    "drafts",
+    "products"
+  ],
+  "apiProxy": false
+}

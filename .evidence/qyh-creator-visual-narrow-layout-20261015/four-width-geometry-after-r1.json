@@ -1,0 +1,526 @@
+[
+  {
+    "width": 1280,
+    "height": 720,
+    "documentWidth": 1280,
+    "board": {
+      "left": 308,
+      "right": 1280,
+      "top": 94,
+      "bottom": 680,
+      "width": 972,
+      "height": 586,
+      "clientWidth": 972,
+      "scrollWidth": 972,
+      "columns": "260px 392px 320px"
+    },
+    "children": [
+      {
+        "className": "creator-growth-directory",
+        "left": 308,
+        "right": 568,
+        "top": 94,
+        "bottom": 680,
+        "width": 260,
+        "height": 586,
+        "clientWidth": 253,
+        "scrollWidth": 253,
+        "clientHeight": 586,
+        "scrollHeight": 905,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      },
+      {
+        "className": "creator-growth-main",
+        "left": 568,
+        "right": 960,
+        "top": 94,
+        "bottom": 680,
+        "width": 392,
+        "height": 586,
+        "clientWidth": 392,
+        "scrollWidth": 392,
+        "clientHeight": 586,
+        "scrollHeight": 586,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      },
+      {
+        "className": "creator-growth-analysis",
+        "left": 960,
+        "right": 1280,
+        "top": 94,
+        "bottom": 680,
+        "width": 320,
+        "height": 586,
+        "clientWidth": 313,
+        "scrollWidth": 313,
+        "clientHeight": 586,
+        "scrollHeight": 640,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      }
+    ],
+    "rightButtons": [
+      {
+        "label": "补充候选条件",
+        "left": 989,
+        "right": 1115.5,
+        "top": 322,
+        "bottom": 354,
+        "width": 126.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "补充预算权益",
+        "left": 1121.5,
+        "right": 1248,
+        "top": 322,
+        "bottom": 354,
+        "width": 126.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "补充交付物证据",
+        "left": 989,
+        "right": 1115.5,
+        "top": 366,
+        "bottom": 398,
+        "width": 126.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "准备候选条件",
+        "left": 1121.5,
+        "right": 1248,
+        "top": 366,
+        "bottom": 398,
+        "width": 126.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "重新读取业务数据",
+        "left": 989,
+        "right": 1248,
+        "top": 404,
+        "bottom": 436,
+        "width": 259,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "重新读取",
+        "left": 1206,
+        "right": 1262,
+        "top": 681.5,
+        "bottom": 711.5,
+        "width": 56,
+        "height": 30,
+        "disabled": false,
+        "centerHits": false
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "documentWidth": 1440,
+    "board": {
+      "left": 308,
+      "right": 1440,
+      "top": 94,
+      "bottom": 860,
+      "width": 1132,
+      "height": 766,
+      "clientWidth": 1132,
+      "scrollWidth": 1132,
+      "columns": "260px 552px 320px"
+    },
+    "children": [
+      {
+        "className": "creator-growth-directory",
+        "left": 308,
+        "right": 568,
+        "top": 94,
+        "bottom": 860,
+        "width": 260,
+        "height": 766,
+        "clientWidth": 253,
+        "scrollWidth": 253,
+        "clientHeight": 766,
+        "scrollHeight": 905,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      },
+      {
+        "className": "creator-growth-main",
+        "left": 568,
+        "right": 1120,
+        "top": 94,
+        "bottom": 860,
+        "width": 552,
+        "height": 766,
+        "clientWidth": 552,
+        "scrollWidth": 552,
+        "clientHeight": 766,
+        "scrollHeight": 766,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      },
+      {
+        "className": "creator-growth-analysis",
+        "left": 1120,
+        "right": 1440,
+        "top": 94,
+        "bottom": 860,
+        "width": 320,
+        "height": 766,
+        "clientWidth": 319,
+        "scrollWidth": 319,
+        "clientHeight": 766,
+        "scrollHeight": 766,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      }
+    ],
+    "rightButtons": [
+      {
+        "label": "补充候选条件",
+        "left": 1149,
+        "right": 1278.5,
+        "top": 322,
+        "bottom": 354,
+        "width": 129.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "补充预算权益",
+        "left": 1284.5,
+        "right": 1414,
+        "top": 322,
+        "bottom": 354,
+        "width": 129.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "补充交付物证据",
+        "left": 1149,
+        "right": 1278.5,
+        "top": 366,
+        "bottom": 398,
+        "width": 129.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "准备候选条件",
+        "left": 1284.5,
+        "right": 1414,
+        "top": 366,
+        "bottom": 398,
+        "width": 129.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "重新读取业务数据",
+        "left": 1149,
+        "right": 1414,
+        "top": 404,
+        "bottom": 436,
+        "width": 265,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "重新读取",
+        "left": 1372,
+        "right": 1428,
+        "top": 668,
+        "bottom": 698,
+        "width": 56,
+        "height": 30,
+        "disabled": false,
+        "centerHits": true
+      }
+    ]
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "documentWidth": 1920,
+    "board": {
+      "left": 308,
+      "right": 1920,
+      "top": 94,
+      "bottom": 1040,
+      "width": 1612,
+      "height": 946,
+      "clientWidth": 1612,
+      "scrollWidth": 1612,
+      "columns": "260px 1032px 320px"
+    },
+    "children": [
+      {
+        "className": "creator-growth-directory",
+        "left": 308,
+        "right": 568,
+        "top": 94,
+        "bottom": 1040,
+        "width": 260,
+        "height": 946,
+        "clientWidth": 259,
+        "scrollWidth": 259,
+        "clientHeight": 946,
+        "scrollHeight": 946,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      },
+      {
+        "className": "creator-growth-main",
+        "left": 568,
+        "right": 1600,
+        "top": 94,
+        "bottom": 1040,
+        "width": 1032,
+        "height": 946,
+        "clientWidth": 1032,
+        "scrollWidth": 1032,
+        "clientHeight": 946,
+        "scrollHeight": 946,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      },
+      {
+        "className": "creator-growth-analysis",
+        "left": 1600,
+        "right": 1920,
+        "top": 94,
+        "bottom": 1040,
+        "width": 320,
+        "height": 946,
+        "clientWidth": 319,
+        "scrollWidth": 319,
+        "clientHeight": 946,
+        "scrollHeight": 946,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      }
+    ],
+    "rightButtons": [
+      {
+        "label": "补充候选条件",
+        "left": 1629,
+        "right": 1758.5,
+        "top": 322,
+        "bottom": 354,
+        "width": 129.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "补充预算权益",
+        "left": 1764.5,
+        "right": 1894,
+        "top": 322,
+        "bottom": 354,
+        "width": 129.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "补充交付物证据",
+        "left": 1629,
+        "right": 1758.5,
+        "top": 366,
+        "bottom": 398,
+        "width": 129.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "准备候选条件",
+        "left": 1764.5,
+        "right": 1894,
+        "top": 366,
+        "bottom": 398,
+        "width": 129.5,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "重新读取业务数据",
+        "left": 1629,
+        "right": 1894,
+        "top": 404,
+        "bottom": 436,
+        "width": 265,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "重新读取",
+        "left": 1852,
+        "right": 1908,
+        "top": 668,
+        "bottom": 698,
+        "width": 56,
+        "height": 30,
+        "disabled": false,
+        "centerHits": true
+      }
+    ]
+  },
+  {
+    "width": 1180,
+    "height": 900,
+    "documentWidth": 1180,
+    "board": {
+      "left": 308,
+      "right": 1180,
+      "top": 94,
+      "bottom": 860,
+      "width": 872,
+      "height": 766,
+      "clientWidth": 872,
+      "scrollWidth": 872,
+      "columns": "225px 362px 285px"
+    },
+    "children": [
+      {
+        "className": "creator-growth-directory",
+        "left": 308,
+        "right": 533,
+        "top": 94,
+        "bottom": 860,
+        "width": 225,
+        "height": 766,
+        "clientWidth": 218,
+        "scrollWidth": 218,
+        "clientHeight": 766,
+        "scrollHeight": 949,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      },
+      {
+        "className": "creator-growth-main",
+        "left": 533,
+        "right": 895,
+        "top": 94,
+        "bottom": 860,
+        "width": 362,
+        "height": 766,
+        "clientWidth": 362,
+        "scrollWidth": 362,
+        "clientHeight": 766,
+        "scrollHeight": 766,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      },
+      {
+        "className": "creator-growth-analysis",
+        "left": 895,
+        "right": 1180,
+        "top": 94,
+        "bottom": 860,
+        "width": 285,
+        "height": 766,
+        "clientWidth": 284,
+        "scrollWidth": 284,
+        "clientHeight": 766,
+        "scrollHeight": 766,
+        "overflowX": "auto",
+        "overflowY": "auto"
+      }
+    ],
+    "rightButtons": [
+      {
+        "label": "补充候选条件",
+        "left": 924,
+        "right": 1036,
+        "top": 338,
+        "bottom": 370,
+        "width": 112,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "补充预算权益",
+        "left": 1042,
+        "right": 1154,
+        "top": 338,
+        "bottom": 370,
+        "width": 112,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "补充交付物证据",
+        "left": 924,
+        "right": 1036,
+        "top": 382,
+        "bottom": 414,
+        "width": 112,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "准备候选条件",
+        "left": 1042,
+        "right": 1154,
+        "top": 382,
+        "bottom": 414,
+        "width": 112,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "重新读取业务数据",
+        "left": 924,
+        "right": 1154,
+        "top": 420,
+        "bottom": 452,
+        "width": 230,
+        "height": 32,
+        "disabled": false,
+        "centerHits": true
+      },
+      {
+        "label": "重新读取",
+        "left": 1112,
+        "right": 1168,
+        "top": 697.5,
+        "bottom": 727.5,
+        "width": 56,
+        "height": 30,
+        "disabled": false,
+        "centerHits": true
+      }
+    ]
+  }
+]

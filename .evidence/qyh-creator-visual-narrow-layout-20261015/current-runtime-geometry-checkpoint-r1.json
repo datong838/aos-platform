@@ -1,0 +1,78 @@
+{
+  "checkedAt": "2026-10-15T17:13:36.770913+00:00",
+  "head": "d5c8598e50904041314c3ab66703f103a003a48b",
+  "webPid": 75206,
+  "apiPid": 72057,
+  "apiHead": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+  "webHead": "d5c8598e50904041314c3ab66703f103a003a48b",
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "pgStartedAt": "2026-10-15T16:28:04.112157693Z",
+  "full650BeforeAfterEqual": true,
+  "web764DiskManifestEqual": true,
+  "fourWidthsRightCropRemoved": true,
+  "images": {
+    "actual-after-1280-r1.png": {
+      "width": 1280,
+      "height": 720,
+      "sha256": "d7763728886123f65c92eb3b295279d75734424e7c987070f34f5eca517e8ea4"
+    },
+    "reference-after-1280-r1.png": {
+      "width": 1280,
+      "height": 720,
+      "sha256": "9f8052980090cdb1ee4ffcec73a26eb63a86ad93eaa3ae1618b992e58f77450a"
+    },
+    "actual-after-1440-r1.png": {
+      "width": 1440,
+      "height": 900,
+      "sha256": "4a4cf0d9dec2038ac55d0a47e9bfe389d0a4064f20043cbfd9d669e10499868f"
+    },
+    "reference-after-1440-r1.png": {
+      "width": 1440,
+      "height": 900,
+      "sha256": "70ae489cfe3a9f0d00bbd27dcbb04bd21a8aa4a6c96b8f01a43b7dc4b5ba029d"
+    },
+    "actual-after-1920-r1.png": {
+      "width": 1920,
+      "height": 1080,
+      "sha256": "94dda89e73aeb5f8442657946ff6426ab73ed47e4f6d94218953005ffd204cf9"
+    },
+    "reference-after-1920-r1.png": {
+      "width": 1920,
+      "height": 1080,
+      "sha256": "cca0c9a7b5bcc69cbdd85ad1cf64faf5849d2741aa6856d977bed5effa18677d"
+    },
+    "actual-after-1180-r1.png": {
+      "width": 1180,
+      "height": 900,
+      "sha256": "b4fdb378c3eabf3e8d441f534ba5485d2ff9eec14e486bc20246a17f95a30af6"
+    },
+    "reference-after-1180-r1.png": {
+      "width": 1180,
+      "height": 900,
+      "sha256": "eb5a378732cd8d07eb63bfabd30512e022e863a588364119ee67ad8f7dba1b3f"
+    }
+  },
+  "genuineCurrentSdk": {
+    "who": {
+      "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+      "orgId": "org-org",
+      "projectId": "dev-project",
+      "tokenKind": "oidc"
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "count": 0,
+    "schemaVersion": "aos.ecommerce-workshop.creator-growth-view/v1"
+  },
+  "businessNonGet": [],
+  "inputAcceptancePassed": false,
+  "scrollEndAcceptancePassed": false,
+  "nonEmptyFiveStagesAccepted": false,
+  "finalLiveIndependentReviewConsumed": false,
+  "deliveryComplete": false,
+  "wholeVisualComplete": false,
+  "wholeGoalComplete": false,
+  "remaining": "Diagnose unwitnessed native input on same original target; perform real five-stage/filters/keyboard/internal scroll-to-end, especially right footer at1280x720; nonempty long table/text geometry as needed; final independent live and exact Delivery/Authority/Prime ALLremaining handoff. No browser restart/force/DOM-click/unknown replay."
+}

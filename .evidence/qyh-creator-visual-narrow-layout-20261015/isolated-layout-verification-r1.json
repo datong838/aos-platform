@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-15T17:47:13.053251+00:00",
+  "fourWidths": 4,
+  "fiveViewSwitchesEach": true,
+  "candidateSyntheticRecords": 24,
+  "longResourceIdAndProductTitle": true,
+  "allThreeRegionsVerticalEndReachable": true,
+  "narrowDeliveryRelationshipHorizontalEndReachable": true,
+  "fixtureNormalKeyboardTabEnter": true,
+  "fixtureCommandCalls": 0,
+  "syntheticTenant": {
+    "orgId": "dev-org",
+    "projectId": "fixture-project"
+  },
+  "fixtureServerStopped": true,
+  "actualChromeInputPassed": false,
+  "actualChromeBrowserRestarted": false,
+  "originalServicesChanged": false,
+  "images": {
+    "fixture-nonempty-1280-r1.png": {
+      "sha256": "0f8c9394b2c8ac8056a15e7d98de4580c44af4c061a7b63f3a83b2fc4d4183a3",
+      "size": [
+        1280,
+        720
+      ]
+    },
+    "fixture-nonempty-1440-r1.png": {
+      "sha256": "64c8b32ecffffbba19ba1e1372a402f75c4428dd157494061f05507352444dd6",
+      "size": [
+        1440,
+        900
+      ]
+    },
+    "fixture-nonempty-1920-r1.png": {
+      "sha256": "20fe8b471fe120fef21cd188ef382541a0258c84e4e4e5d297deb3cae1536498",
+      "size": [
+        1920,
+        1080
+      ]
+    },
+    "fixture-nonempty-1180-r1.png": {
+      "sha256": "a8e50ff102dfde649411a09fa890bf684ba4f6b3e9db760ffa33d020448154de",
+      "size": [
+        1180,
+        900
+      ]
+    }
+  },
+  "wholeVisualComplete": false,
+  "wholeGoalComplete": false
+}

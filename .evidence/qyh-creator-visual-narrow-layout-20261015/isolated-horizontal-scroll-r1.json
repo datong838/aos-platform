@@ -1,0 +1,98 @@
+[
+  {
+    "width": 1280,
+    "stage": "履约效果",
+    "before": {
+      "client": 392,
+      "left": 0,
+      "scroll": 519,
+      "x": 764,
+      "y": 387
+    },
+    "after": {
+      "boardClient": 972,
+      "boardScroll": 972,
+      "client": 392,
+      "lastHeader": {
+        "left": 860,
+        "right": 960,
+        "text": "状态"
+      },
+      "left": 127,
+      "right": 1280,
+      "scroll": 519
+    }
+  },
+  {
+    "width": 1280,
+    "stage": "长期关系",
+    "before": {
+      "client": 392,
+      "left": 0,
+      "scroll": 519,
+      "x": 764,
+      "y": 387
+    },
+    "after": {
+      "boardClient": 972,
+      "boardScroll": 972,
+      "client": 392,
+      "lastHeader": {
+        "left": 860,
+        "right": 960,
+        "text": "负责人"
+      },
+      "left": 127,
+      "right": 1280,
+      "scroll": 519
+    }
+  },
+  {
+    "width": 1180,
+    "stage": "履约效果",
+    "before": {
+      "client": 362,
+      "left": 0,
+      "scroll": 519,
+      "x": 714,
+      "y": 477
+    },
+    "after": {
+      "boardClient": 872,
+      "boardScroll": 872,
+      "client": 362,
+      "lastHeader": {
+        "left": 795,
+        "right": 895,
+        "text": "状态"
+      },
+      "left": 157,
+      "right": 1180,
+      "scroll": 519
+    }
+  },
+  {
+    "width": 1180,
+    "stage": "长期关系",
+    "before": {
+      "client": 362,
+      "left": 0,
+      "scroll": 519,
+      "x": 714,
+      "y": 477
+    },
+    "after": {
+      "boardClient": 872,
+      "boardScroll": 872,
+      "client": 362,
+      "lastHeader": {
+        "left": 795,
+        "right": 895,
+        "text": "负责人"
+      },
+      "left": 157,
+      "right": 1180,
+      "scroll": 519
+    }
+  }
+]

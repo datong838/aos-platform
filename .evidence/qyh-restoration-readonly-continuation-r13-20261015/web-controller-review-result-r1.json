@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "ddb9bff3df5d58b2ba817ca437c2bb268e4ca829b96320f49797dfc729cf89f8",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r13-20261015-creator-web-controller-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r13-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "d5c8598e50904041314c3ab66703f103a003a48b",
+      "authority_revision": "AOS-002040",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r13-20261015/web-controller-review-package-r1.txt": "b0e0bd2bbc8ba24610e4a4b199248821494fc9e349a37101ce090d8547e1d315"
+      }
+    },
+    "verdict": "NEED_DECISION",
+    "findings": [
+      {
+        "claim": "The pre-effect controller source requires current HEAD/Authority/valid same-owner lease, exact committed reviewed CSS and full Git/disk manifests, original API/PG identity and old Web PID72110 command/cwd before a new Web intent/signal; it requires legally consumed independent PASS and binds runner/validator/controller hashes, without requiring its own future verdict to preexist at review time.",
+        "evidence": "源码review_controller_r1.py/creator_web_switch_r1.py硬编码HEAD/OWNER/API/OLD；base()校验git rev-parse HEAD/authority.json/leases.json/消费者legal；web-preflight-r1.json证实native schema161/bindings0/650指纹与pgStartedAt精确匹配；web-missing-review-rejection-r1.json证伪缺request时拒绝。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Actual readonly preflight and missing-review rejection match the supplied source, current original API72057/PG unchanged and old Web72110 still active; only one exact Web switch is proposed, with later actual listener/source, genuine original identity three-width plus1180 clipping/scroll/input and650 plus independent live acceptance still required.",
+        "evidence": "web-missing-review-rejection-r1.json stderr指向creator_web_switch_r1.py quality()缺失web-controller-review-request-r1.json，actualWebStill72110=true；preflight成功且otherServicesTouched=false。但文档称三宽+1180/650 live acceptance仍要求，未提供实际验收证据，仅声明required。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "由Owner确认：(1) 接受NEED_DECISION并授权后续独立Live Acceptance阶段开启；(2) 或提交1280/1440/1920/1180四宽真实截图与650行指纹after-fix证据。在未提供新物证前禁止执行Web切换。"
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "width": 1440,
+  "height": 900,
+  "documentWidth": 1440,
+  "board": {
+    "left": 308,
+    "right": 1440,
+    "top": 94,
+    "bottom": 860,
+    "width": 1132,
+    "height": 766,
+    "clientWidth": 1132,
+    "scrollWidth": 1132,
+    "columns": "260px 552px 320px"
+  },
+  "children": [
+    {
+      "className": "creator-growth-directory",
+      "left": 308,
+      "right": 568,
+      "top": 94,
+      "bottom": 860,
+      "width": 260,
+      "height": 766,
+      "clientWidth": 253,
+      "scrollWidth": 253,
+      "clientHeight": 766,
+      "scrollHeight": 905,
+      "overflowX": "auto",
+      "overflowY": "auto"
+    },
+    {
+      "className": "creator-growth-main",
+      "left": 568,
+      "right": 1120,
+      "top": 94,
+      "bottom": 860,
+      "width": 552,
+      "height": 766,
+      "clientWidth": 552,
+      "scrollWidth": 552,
+      "clientHeight": 766,
+      "scrollHeight": 766,
+      "overflowX": "auto",
+      "overflowY": "auto"
+    },
+    {
+      "className": "creator-growth-analysis",
+      "left": 1120,
+      "right": 1440,
+      "top": 94,
+      "bottom": 860,
+      "width": 320,
+      "height": 766,
+      "clientWidth": 319,
+      "scrollWidth": 319,
+      "clientHeight": 766,
+      "scrollHeight": 766,
+      "overflowX": "auto",
+      "overflowY": "auto"
+    }
+  ],
+  "rightButtons": [
+    {
+      "label": "补充候选条件",
+      "left": 1149,
+      "right": 1278.5,
+      "top": 322,
+      "bottom": 354,
+      "width": 129.5,
+      "height": 32,
+      "disabled": false,
+      "centerHits": true
+    },
+    {
+      "label": "补充预算权益",
+      "left": 1284.5,
+      "right": 1414,
+      "top": 322,
+      "bottom": 354,
+      "width": 129.5,
+      "height": 32,
+      "disabled": false,
+      "centerHits": true
+    },
+    {
+      "label": "补充交付物证据",
+      "left": 1149,
+      "right": 1278.5,
+      "top": 366,
+      "bottom": 398,
+      "width": 129.5,
+      "height": 32,
+      "disabled": false,
+      "centerHits": true
+    },
+    {
+      "label": "准备候选条件",
+      "left": 1284.5,
+      "right": 1414,
+      "top": 366,
+      "bottom": 398,
+      "width": 129.5,
+      "height": 32,
+      "disabled": false,
+      "centerHits": true
+    },
+    {
+      "label": "重新读取业务数据",
+      "left": 1149,
+      "right": 1414,
+      "top": 404,
+      "bottom": 436,
+      "width": 265,
+      "height": 32,
+      "disabled": false,
+      "centerHits": true
+    },
+    {
+      "label": "重新读取",
+      "left": 1372,
+      "right": 1428,
+      "top": 668,
+      "bottom": 698,
+      "width": 56,
+      "height": 30,
+      "disabled": false,
+      "centerHits": true
+    }
+  ]
+}

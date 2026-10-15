@@ -1,0 +1,1042 @@
+[
+  {
+    "width": 1280,
+    "height": 720,
+    "stages": [
+      {
+        "active": "达人库",
+        "boardClient": 972,
+        "boardScroll": 972,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 253,
+            "height": 586,
+            "right": 568,
+            "scroll": 253,
+            "scrollHeight": 905,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 386,
+            "height": 586,
+            "right": 960,
+            "scroll": 386,
+            "scrollHeight": 5502,
+            "width": 392
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 313,
+            "height": 586,
+            "right": 1280,
+            "scroll": 313,
+            "scrollHeight": 640,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1280,
+        "heading": "候选匹配概览",
+        "width": 1280
+      },
+      {
+        "active": "招募漏斗",
+        "boardClient": 972,
+        "boardScroll": 972,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 253,
+            "height": 586,
+            "right": 568,
+            "scroll": 253,
+            "scrollHeight": 905,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 392,
+            "height": 586,
+            "right": 960,
+            "scroll": 392,
+            "scrollHeight": 586,
+            "width": 392
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 313,
+            "height": 586,
+            "right": 1280,
+            "scroll": 313,
+            "scrollHeight": 684,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1280,
+        "heading": "邀约漏斗",
+        "width": 1280
+      },
+      {
+        "active": "商务签约",
+        "boardClient": 972,
+        "boardScroll": 972,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 253,
+            "height": 586,
+            "right": 568,
+            "scroll": 253,
+            "scrollHeight": 905,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 392,
+            "height": 586,
+            "right": 960,
+            "scroll": 392,
+            "scrollHeight": 586,
+            "width": 392
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 313,
+            "height": 586,
+            "right": 1280,
+            "scroll": 313,
+            "scrollHeight": 640,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1280,
+        "heading": "合作条款看板",
+        "width": 1280
+      },
+      {
+        "active": "履约效果",
+        "boardClient": 972,
+        "boardScroll": 972,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 253,
+            "height": 586,
+            "right": 568,
+            "scroll": 253,
+            "scrollHeight": 905,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 392,
+            "height": 580,
+            "right": 960,
+            "scroll": 519,
+            "scrollHeight": 580,
+            "width": 392
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 313,
+            "height": 586,
+            "right": 1280,
+            "scroll": 313,
+            "scrollHeight": 640,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1280,
+        "heading": "履约任务列表",
+        "width": 1280
+      },
+      {
+        "active": "长期关系",
+        "boardClient": 972,
+        "boardScroll": 972,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 253,
+            "height": 586,
+            "right": 568,
+            "scroll": 253,
+            "scrollHeight": 905,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 392,
+            "height": 580,
+            "right": 960,
+            "scroll": 519,
+            "scrollHeight": 580,
+            "width": 392
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 313,
+            "height": 586,
+            "right": 1280,
+            "scroll": 313,
+            "scrollHeight": 640,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1280,
+        "heading": "复邀计划",
+        "width": 1280
+      }
+    ],
+    "scrolls": [
+      {
+        "area": "creator-growth-directory",
+        "before": {
+          "area": "creator-growth-directory",
+          "client": 586,
+          "hit": true,
+          "scroll": 905,
+          "top": 0,
+          "x": 438,
+          "y": 387
+        },
+        "after": {
+          "client": 586,
+          "last": {
+            "bottom": 585,
+            "text": "关系24分层、复邀窗口与关系事件",
+            "top": 515
+          },
+          "scroll": 905,
+          "top": 319
+        }
+      },
+      {
+        "area": "creator-growth-main",
+        "before": {
+          "area": "creator-growth-main",
+          "client": 586,
+          "hit": true,
+          "scroll": 5502,
+          "top": 0,
+          "x": 764,
+          "y": 387
+        },
+        "after": {
+          "client": 586,
+          "last": {
+            "bottom": 662,
+            "text": "-resource-reference-long-resource-reference-long-resource-reference-23FixtureCreator · 第 1 版当前租户正式记录",
+            "top": 228.5
+          },
+          "scroll": 5502,
+          "top": 4915.5
+        }
+      },
+      {
+        "area": "creator-growth-analysis",
+        "before": {
+          "area": "creator-growth-analysis",
+          "client": 586,
+          "hit": true,
+          "scroll": 640,
+          "top": 0,
+          "x": 1120,
+          "y": 387
+        },
+        "after": {
+          "client": 586,
+          "last": {
+            "bottom": 658,
+            "text": "重新读取",
+            "top": 628
+          },
+          "scroll": 640,
+          "top": 53.5
+        }
+      }
+    ],
+    "syntheticFixtureOnly": true
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "stages": [
+      {
+        "active": "达人库",
+        "boardClient": 1132,
+        "boardScroll": 1132,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 253,
+            "height": 766,
+            "right": 568,
+            "scroll": 253,
+            "scrollHeight": 905,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 546,
+            "height": 766,
+            "right": 1120,
+            "scroll": 546,
+            "scrollHeight": 4098,
+            "width": 552
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 319,
+            "height": 766,
+            "right": 1440,
+            "scroll": 319,
+            "scrollHeight": 766,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1440,
+        "heading": "候选匹配概览",
+        "width": 1440
+      },
+      {
+        "active": "招募漏斗",
+        "boardClient": 1132,
+        "boardScroll": 1132,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 253,
+            "height": 766,
+            "right": 568,
+            "scroll": 253,
+            "scrollHeight": 905,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 552,
+            "height": 766,
+            "right": 1120,
+            "scroll": 552,
+            "scrollHeight": 766,
+            "width": 552
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 319,
+            "height": 766,
+            "right": 1440,
+            "scroll": 319,
+            "scrollHeight": 766,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1440,
+        "heading": "邀约漏斗",
+        "width": 1440
+      },
+      {
+        "active": "商务签约",
+        "boardClient": 1132,
+        "boardScroll": 1132,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 253,
+            "height": 766,
+            "right": 568,
+            "scroll": 253,
+            "scrollHeight": 905,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 552,
+            "height": 766,
+            "right": 1120,
+            "scroll": 552,
+            "scrollHeight": 766,
+            "width": 552
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 319,
+            "height": 766,
+            "right": 1440,
+            "scroll": 319,
+            "scrollHeight": 766,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1440,
+        "heading": "合作条款看板",
+        "width": 1440
+      },
+      {
+        "active": "履约效果",
+        "boardClient": 1132,
+        "boardScroll": 1132,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 253,
+            "height": 766,
+            "right": 568,
+            "scroll": 253,
+            "scrollHeight": 905,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 552,
+            "height": 766,
+            "right": 1120,
+            "scroll": 552,
+            "scrollHeight": 766,
+            "width": 552
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 319,
+            "height": 766,
+            "right": 1440,
+            "scroll": 319,
+            "scrollHeight": 766,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1440,
+        "heading": "履约任务列表",
+        "width": 1440
+      },
+      {
+        "active": "长期关系",
+        "boardClient": 1132,
+        "boardScroll": 1132,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 253,
+            "height": 766,
+            "right": 568,
+            "scroll": 253,
+            "scrollHeight": 905,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 552,
+            "height": 766,
+            "right": 1120,
+            "scroll": 552,
+            "scrollHeight": 766,
+            "width": 552
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 319,
+            "height": 766,
+            "right": 1440,
+            "scroll": 319,
+            "scrollHeight": 766,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1440,
+        "heading": "复邀计划",
+        "width": 1440
+      }
+    ],
+    "scrolls": [
+      {
+        "area": "creator-growth-directory",
+        "before": {
+          "area": "creator-growth-directory",
+          "client": 766,
+          "hit": true,
+          "scroll": 905,
+          "top": 0,
+          "x": 438,
+          "y": 477
+        },
+        "after": {
+          "client": 766,
+          "last": {
+            "bottom": 765,
+            "text": "关系24分层、复邀窗口与关系事件",
+            "top": 695
+          },
+          "scroll": 905,
+          "top": 139
+        }
+      },
+      {
+        "area": "creator-growth-main",
+        "before": {
+          "area": "creator-growth-main",
+          "client": 766,
+          "hit": true,
+          "scroll": 4098,
+          "top": 0,
+          "x": 844,
+          "y": 477
+        },
+        "after": {
+          "client": 766,
+          "last": {
+            "bottom": 842,
+            "text": "-resource-reference-long-resource-reference-long-resource-reference-23FixtureCreator · 第 1 版当前租户正式记录",
+            "top": 525.5
+          },
+          "scroll": 4098,
+          "top": 3331.5
+        }
+      },
+      {
+        "area": "creator-growth-analysis",
+        "before": {
+          "area": "creator-growth-analysis",
+          "client": 766,
+          "hit": true,
+          "scroll": 766,
+          "top": 0,
+          "x": 1280,
+          "y": 477
+        },
+        "after": {
+          "client": 766,
+          "last": {
+            "bottom": 698,
+            "text": "重新读取",
+            "top": 668
+          },
+          "scroll": 766,
+          "top": 0
+        }
+      }
+    ],
+    "syntheticFixtureOnly": true
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "stages": [
+      {
+        "active": "达人库",
+        "boardClient": 1612,
+        "boardScroll": 1612,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 259,
+            "height": 946,
+            "right": 568,
+            "scroll": 259,
+            "scrollHeight": 946,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 1026,
+            "height": 946,
+            "right": 1600,
+            "scroll": 1026,
+            "scrollHeight": 2226,
+            "width": 1032
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 319,
+            "height": 946,
+            "right": 1920,
+            "scroll": 319,
+            "scrollHeight": 946,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1920,
+        "heading": "候选匹配概览",
+        "width": 1920
+      },
+      {
+        "active": "招募漏斗",
+        "boardClient": 1612,
+        "boardScroll": 1612,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 259,
+            "height": 946,
+            "right": 568,
+            "scroll": 259,
+            "scrollHeight": 946,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 1032,
+            "height": 946,
+            "right": 1600,
+            "scroll": 1032,
+            "scrollHeight": 946,
+            "width": 1032
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 319,
+            "height": 946,
+            "right": 1920,
+            "scroll": 319,
+            "scrollHeight": 946,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1920,
+        "heading": "邀约漏斗",
+        "width": 1920
+      },
+      {
+        "active": "商务签约",
+        "boardClient": 1612,
+        "boardScroll": 1612,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 259,
+            "height": 946,
+            "right": 568,
+            "scroll": 259,
+            "scrollHeight": 946,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 1032,
+            "height": 946,
+            "right": 1600,
+            "scroll": 1032,
+            "scrollHeight": 946,
+            "width": 1032
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 319,
+            "height": 946,
+            "right": 1920,
+            "scroll": 319,
+            "scrollHeight": 946,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1920,
+        "heading": "合作条款看板",
+        "width": 1920
+      },
+      {
+        "active": "履约效果",
+        "boardClient": 1612,
+        "boardScroll": 1612,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 259,
+            "height": 946,
+            "right": 568,
+            "scroll": 259,
+            "scrollHeight": 946,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 1032,
+            "height": 946,
+            "right": 1600,
+            "scroll": 1032,
+            "scrollHeight": 946,
+            "width": 1032
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 319,
+            "height": 946,
+            "right": 1920,
+            "scroll": 319,
+            "scrollHeight": 946,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1920,
+        "heading": "履约任务列表",
+        "width": 1920
+      },
+      {
+        "active": "长期关系",
+        "boardClient": 1612,
+        "boardScroll": 1612,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 259,
+            "height": 946,
+            "right": 568,
+            "scroll": 259,
+            "scrollHeight": 946,
+            "width": 260
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 1032,
+            "height": 946,
+            "right": 1600,
+            "scroll": 1032,
+            "scrollHeight": 946,
+            "width": 1032
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 319,
+            "height": 946,
+            "right": 1920,
+            "scroll": 319,
+            "scrollHeight": 946,
+            "width": 320
+          }
+        ],
+        "documentWidth": 1920,
+        "heading": "复邀计划",
+        "width": 1920
+      }
+    ],
+    "scrolls": [
+      {
+        "area": "creator-growth-directory",
+        "before": {
+          "area": "creator-growth-directory",
+          "client": 946,
+          "hit": true,
+          "scroll": 946,
+          "top": 0,
+          "x": 438,
+          "y": 567
+        },
+        "after": {
+          "client": 946,
+          "last": {
+            "bottom": 904,
+            "text": "关系24分层、复邀窗口与关系事件",
+            "top": 834
+          },
+          "scroll": 946,
+          "top": 0
+        }
+      },
+      {
+        "area": "creator-growth-main",
+        "before": {
+          "area": "creator-growth-main",
+          "client": 946,
+          "hit": true,
+          "scroll": 2226,
+          "top": 0,
+          "x": 1084,
+          "y": 567
+        },
+        "after": {
+          "client": 946,
+          "last": {
+            "bottom": 1022,
+            "text": "-resource-reference-long-resource-reference-long-resource-reference-23FixtureCreator · 第 1 版当前租户正式记录",
+            "top": 861.5
+          },
+          "scroll": 2226,
+          "top": 1279.5
+        }
+      },
+      {
+        "area": "creator-growth-analysis",
+        "before": {
+          "area": "creator-growth-analysis",
+          "client": 946,
+          "hit": true,
+          "scroll": 946,
+          "top": 0,
+          "x": 1760,
+          "y": 567
+        },
+        "after": {
+          "client": 946,
+          "last": {
+            "bottom": 698,
+            "text": "重新读取",
+            "top": 668
+          },
+          "scroll": 946,
+          "top": 0
+        }
+      }
+    ],
+    "syntheticFixtureOnly": true
+  },
+  {
+    "width": 1180,
+    "height": 900,
+    "stages": [
+      {
+        "active": "达人库",
+        "boardClient": 872,
+        "boardScroll": 872,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 218,
+            "height": 766,
+            "right": 533,
+            "scroll": 218,
+            "scrollHeight": 935,
+            "width": 225
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 356,
+            "height": 766,
+            "right": 895,
+            "scroll": 356,
+            "scrollHeight": 5502,
+            "width": 362
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 284,
+            "height": 766,
+            "right": 1180,
+            "scroll": 284,
+            "scrollHeight": 766,
+            "width": 285
+          }
+        ],
+        "documentWidth": 1180,
+        "heading": "候选匹配概览",
+        "width": 1180
+      },
+      {
+        "active": "招募漏斗",
+        "boardClient": 872,
+        "boardScroll": 872,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 218,
+            "height": 766,
+            "right": 533,
+            "scroll": 218,
+            "scrollHeight": 935,
+            "width": 225
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 362,
+            "height": 766,
+            "right": 895,
+            "scroll": 362,
+            "scrollHeight": 766,
+            "width": 362
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 284,
+            "height": 766,
+            "right": 1180,
+            "scroll": 284,
+            "scrollHeight": 766,
+            "width": 285
+          }
+        ],
+        "documentWidth": 1180,
+        "heading": "邀约漏斗",
+        "width": 1180
+      },
+      {
+        "active": "商务签约",
+        "boardClient": 872,
+        "boardScroll": 872,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 218,
+            "height": 766,
+            "right": 533,
+            "scroll": 218,
+            "scrollHeight": 935,
+            "width": 225
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 362,
+            "height": 766,
+            "right": 895,
+            "scroll": 362,
+            "scrollHeight": 766,
+            "width": 362
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 284,
+            "height": 766,
+            "right": 1180,
+            "scroll": 284,
+            "scrollHeight": 766,
+            "width": 285
+          }
+        ],
+        "documentWidth": 1180,
+        "heading": "合作条款看板",
+        "width": 1180
+      },
+      {
+        "active": "履约效果",
+        "boardClient": 872,
+        "boardScroll": 872,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 218,
+            "height": 766,
+            "right": 533,
+            "scroll": 218,
+            "scrollHeight": 935,
+            "width": 225
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 362,
+            "height": 760,
+            "right": 895,
+            "scroll": 519,
+            "scrollHeight": 760,
+            "width": 362
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 284,
+            "height": 766,
+            "right": 1180,
+            "scroll": 284,
+            "scrollHeight": 766,
+            "width": 285
+          }
+        ],
+        "documentWidth": 1180,
+        "heading": "履约任务列表",
+        "width": 1180
+      },
+      {
+        "active": "长期关系",
+        "boardClient": 872,
+        "boardScroll": 872,
+        "children": [
+          {
+            "className": "creator-growth-directory",
+            "client": 218,
+            "height": 766,
+            "right": 533,
+            "scroll": 218,
+            "scrollHeight": 935,
+            "width": 225
+          },
+          {
+            "className": "creator-growth-main",
+            "client": 362,
+            "height": 760,
+            "right": 895,
+            "scroll": 519,
+            "scrollHeight": 760,
+            "width": 362
+          },
+          {
+            "className": "creator-growth-analysis",
+            "client": 284,
+            "height": 766,
+            "right": 1180,
+            "scroll": 284,
+            "scrollHeight": 766,
+            "width": 285
+          }
+        ],
+        "documentWidth": 1180,
+        "heading": "复邀计划",
+        "width": 1180
+      }
+    ],
+    "scrolls": [
+      {
+        "area": "creator-growth-directory",
+        "before": {
+          "area": "creator-growth-directory",
+          "client": 766,
+          "hit": true,
+          "scroll": 935,
+          "top": 0,
+          "x": 420.5,
+          "y": 477
+        },
+        "after": {
+          "client": 766,
+          "last": {
+            "bottom": 765,
+            "text": "关系24分层、复邀窗口与关系事件",
+            "top": 695
+          },
+          "scroll": 935,
+          "top": 169
+        }
+      },
+      {
+        "area": "creator-growth-main",
+        "before": {
+          "area": "creator-growth-main",
+          "client": 766,
+          "hit": true,
+          "scroll": 5502,
+          "top": 0,
+          "x": 714,
+          "y": 477
+        },
+        "after": {
+          "client": 766,
+          "last": {
+            "bottom": 842,
+            "text": "-resource-reference-long-resource-reference-long-resource-reference-23FixtureCreator · 第 1 版当前租户正式记录",
+            "top": 408.5
+          },
+          "scroll": 5502,
+          "top": 4735.5
+        }
+      },
+      {
+        "area": "creator-growth-analysis",
+        "before": {
+          "area": "creator-growth-analysis",
+          "client": 766,
+          "hit": true,
+          "scroll": 766,
+          "top": 0,
+          "x": 1037.5,
+          "y": 477
+        },
+        "after": {
+          "client": 766,
+          "last": {
+            "bottom": 727.5,
+            "text": "重新读取",
+            "top": 697.5
+          },
+          "scroll": 766,
+          "top": 0
+        }
+      }
+    ],
+    "syntheticFixtureOnly": true
+  }
+]

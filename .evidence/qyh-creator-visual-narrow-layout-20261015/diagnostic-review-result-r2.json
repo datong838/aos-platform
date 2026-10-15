@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "d936d41ed62324085ba99229dbe53b090423a2407fb8c6a2b2feba4baab07705",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-creator-visual-narrow-layout-20261015-layout-input-diagnostic-r2",
+    "task_id": "qyh-creator-visual-narrow-layout-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "d5c8598e50904041314c3ab66703f103a003a48b",
+      "authority_revision": "AOS-002040",
+      "files": {
+        ".evidence/qyh-creator-visual-narrow-layout-20261015/diagnostic-review-material-r2.txt": "143267261016eba1fe6699169c7358d07db747efc8e5fe9276dcf25364d2d959"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "实际d5c8598原组件/CSS部署的四宽布局证据支持1280/1180右侧裁切几何消除，报告明确原Chrome普通输入仍未通过、不把Playwright监听器存在或协议返回当已证根因/交互成功，亦不把资料复审当运行或整体完成授权。",
+        "evidence": "current-runtime-geometry-checkpoint-r1.json: fourWidthsRightCropRemoved=true, images包含1280/1180 actual/reference后截图且sha256匹配设计参考, inputAcceptancePassed=false。layout-and-input-diagnostic-report-r2.md第3段声明原始Chrome native input无trusted见证且未通过；同段指出window两组capture监听器来自Playwright injectedScript，但强调不能证明_hitTargetInterceptor正在阻断；raw-root-input-diagnosis-r2.json actual.witness=[]，input-channel-recovery-r2.json actual.witness=[]，证明Playwright监听器存在及协议返回未被当作交互成功根因。material header明确今日最新原卷全面PGAPIWeb controller/live PASS合法消费已执行，Creator两CSS code d5c8598/design-r2/code-r1 PASS合法消费；Web-only controller-r1 NEED_DECISION按原 verdict消费，stage-r2独立PASS合法消费后一次Web75206/d5冻源；且声明以上诊断不是用户新授权请求或业务许可。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "隔离fixture源和当前四宽五视图/键盘/纵向末尾/窄表横向末列物证支持非空长文本布局的补充验证；fixture明确dev-org/fixture-project合成、无原API代理、命令拒绝且计数0，已准确关闭临时server/tab，不能替代原真实经营/身份/输入验收，报告保留全部剩余目标。",
+        "evidence": "isolated-layout-fixture-prepared-r1.json: tenant={orgId:dev-org,projectId:fixture-project}, realApiProxy=false, realDataCopied=false。isolated-layout-verification-r1.json: fourWidths=4, fiveViewSwitchesEach=true, candidateSyntheticRecords=24, longResourceIdAndProductTitle=true, allThreeRegionsVerticalEndReachable=true, narrowDeliveryRelationshipHorizontalEndReachable=true, fixtureNormalKeyboardTabEnter=true, fixtureCommandCalls=0, fixtureServerStopped=true, actualChromeInputPassed=false, wholeVisualComplete=false, wholeGoalComplete=false。isolated-horizontal-scroll-r1.json: 1280/1180履约/长期关系横向scroll前=519、后=519且lastHeader分别为状态/负责人，表明横向滚动可达末列而非再次裁右栏。isolated-keyboard-and-effects-r1.json reads=[root,contribution,lifecycle,drafts,products], commands=[]；isolated-final-client-readback-r1.json syntheticFixtureOnly=true, commandCalls=[], apiProxy=false。isolated-layout-fixture-stopped-r1.json pid=79198, portFree=true, tabClosed=true, api72057Web75206Untouched=true。layout-and-input-diagnostic-report-r2.md第4-5段明确fixture为dev-org/fixture-project合成数据、不替代原Chrome真实输入验收；同时声明当前Task/完整Goal均ACTIVE，无整体Delivery，后续仍需恢复真实原输入/滚动/filters和最终现场复审；current-runtime-geometry-checkpoint-r1.json remaining字段列出待完成事项（native input, 五阶段/filters/keyboard, 1280x720右footer, 非空长文本/表格, final independent live, exact Delivery/Authority/Prime ALLremaining handoff），并禁止浏览器重启/强制/DOM点击/未知重放。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留原actual Chrome tab与冻结源不变，按remaining清单继续对原目标同session只做只读诊断：优先恢复真实native input witness并与产品经理确认Playwright injectedScript行为边界；随后在原环境完成五视图非空长文本与纵向/横向末列端到端真实输入验收，再执行final independent live与Delivery/Authority/Prime ALLremaining交接。"
+  }
+}

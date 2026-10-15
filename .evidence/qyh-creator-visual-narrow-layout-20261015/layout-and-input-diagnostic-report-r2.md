@@ -1,0 +1,11 @@
+# 达人布局与输入诊断当前证据复核 r2
+
+Rules：完整231Goal/原唯一真人授权/Authority2040/两有效同owner Lease/27原dirty/原DB只读/HostworkerProviderOFF/旧unknown不重放/Schedule不启/商城源不读/noPush保持。今日最新原卷全面PGAPIWeb controller/live PASS合法消费已执行；Creator两CSS code d5c8598/design-r2/code-r1 PASS合法消费/407/type/build成功；Web-only controller-r1 NEED_DECISION按原 verdict消费，stage-r2独立PASS合法消费后一次Web75206/d5冻源。原API72057/40100 backend同当前、PGStarted16:28:04/schema161/650/绑定0不变。
+
+当前实际四宽boardclient==scroll、全部三子区右边界在窗口内；1280原裁128px/1180原裁98px已在几何上消除。四宽actual/reference8图已逐图检视，真实正式0达人/57保存商品与原稿147等演示区分。Web764磁盘manifest仍精确一致。上一轮fresh650before/after完整字典相等；本轮未发原业务非GET，未调用真实源或动作。仅当前几何事实，不是完整视觉/经营/安装闭环。
+
+真实Chrome普通Input命令与键盘缺trusted见证及实际状态，输入门仍未通过。只读精确定位window两组capture监听器来自Playwright injectedScript，不能证明其_hitTargetInterceptor正在阻断。当前hasFocus/visible、目标ID准确/无Debugger暂停，原window1560958496 bounds normal不是最小化；正常页面reload+正常真人登录200后仍无事件；同目标page-root原生CDP与系统mouse tap也无事件，不能把它单归于Playwright客户端或产品按钮逻辑。首次root诊断缺WebSocket依赖/绑定失败皆发生连接前，现有PW ws库完成一次root诊断后关闭。临时inputignore=false仅本session正常输入恢复尝试未奏效，未删监听/force/DOMclick/业务state注入；Debugger/lifecycle临时观察均关闭，视口和连接清理，原Chrome未重启。旧AOS开发接续只读询问未送达（已归档），未解除归档、未恢复旧writer。以上诊断不是用户新授权请求或业务许可。
+
+按已审plan-r3可选fixture条款继续真实风险验证：新IAB隔离fixture tab12和独立loopback18461服务，用原冻结Creator组件+CSS，未改冻源。所有数据为dev-org/fixture-project合成布局fixture：候选24个长resourceId、4个长商品标题/大数字；不填原系统、不当真实来源。fixture client只读五方法返回合成DTO，commands全部抛错；server无原API代理、NONGET/API拒绝、CSP外部连接拒绝。当前instrumentation读取5方法/commands0。实际component所有五阶段四宽逐次普通点击切换对应标题，Tab到招募漏斗focusVisible/Return激活；三子区真实wheel纵向都到末尾，1280右栏53.5px滚动到footer；候选长refs末尾可达。1280/1180履约/关系表格中栏scrollWidth519，实际横向wheel分别127/157至末列，board/right栏始终不溢出。该横滚是内部承载，不是再次裁右栏。四张有醒目隔离标识截图已逐图检视，长id可换行但卡片很高，未来产品可读名称/非空真实业务语义仍待。五视图结构不等于真实五阶段业务闭环。
+
+临时fixture已按准确PID79198/command/port核后停止、端口free，tab12关闭，原实际tab与原视觉稿保留。不能用fixture成功替代原Chrome真实输入验收。当前Task/完整Goal均ACTIVE，无整体Delivery；后续仍要恢复真实原输入/滚动/filters和最终现场复审，或在明确保留未完成的交接里承接全部剩余，再继续所有八台视觉和经营/预算最终人审/安装生命周期/持续观察发布。不得把本次资料PASS当作输入通过、业务授权或整体完成。

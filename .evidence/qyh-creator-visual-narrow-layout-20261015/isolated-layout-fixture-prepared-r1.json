@@ -1,0 +1,17 @@
+{
+  "fixtureRoot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-creator-visual-narrow-layout-20261015/private/layout-fixture-r1",
+  "frozenComponentSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/private/creator-narrow-web-d5c8598e50904041314c3ab66703f103a003a48b",
+  "head": "d5c8598e50904041314c3ab66703f103a003a48b",
+  "manifest": {
+    "main.tsx": "2844b845e25e4f2f1f351e5c81fbbbf072b05b49fbba7b503ea25b696df59ac1",
+    "index.html": "73fdf79afdf79c97dad0d0336cffc632d253e5a3d01c170b05f102a32f423ee3",
+    "server.mjs": "21affa009230607a898bc6f4381757314e60c1cf9082c640854007edd41e5432"
+  },
+  "tenant": {
+    "orgId": "dev-org",
+    "projectId": "fixture-project"
+  },
+  "realApiProxy": false,
+  "realDataCopied": false,
+  "processStarted": false
+}

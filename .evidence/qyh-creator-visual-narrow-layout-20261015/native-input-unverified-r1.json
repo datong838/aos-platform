@@ -1,0 +1,36 @@
+{
+  "observedAt": "2026-10-15T17:10:59.661Z",
+  "ownedTargetId": "7263AE405334660557A7840F95B4446F",
+  "url": "http://127.0.0.1:18434/workshop/creator-growth",
+  "actualState": {
+    "focused": true,
+    "visibility": "visible",
+    "active": "达人库",
+    "events": [],
+    "scrolls": [
+      {
+        "class": "creator-growth-directory",
+        "top": 0,
+        "client": 586,
+        "scroll": 905
+      },
+      {
+        "class": "creator-growth-main",
+        "top": 0,
+        "client": 586,
+        "scroll": 586
+      },
+      {
+        "class": "creator-growth-analysis",
+        "top": 0,
+        "client": 586,
+        "scroll": 640
+      }
+    ]
+  },
+  "completedWidths": 0,
+  "inputAcceptancePassed": false,
+  "browserRestarted": false,
+  "businessCommandIssued": false,
+  "notes": "Native CDP and regular Playwright mouse/keyboard returned without witnessed events; geometry and read state still available. Do not count as five-stage interaction pass; preserve and diagnose input transport. No forced or DOM product click."
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "dfe2c2348bb816a25f7dac3cc8dc4eb988417028f63dec4d47e37ee2492cf70c",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r13-20261015-creator-web-controller-r2",
+    "task_id": "qyh-restoration-readonly-continuation-r13-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "d5c8598e50904041314c3ab66703f103a003a48b",
+      "authority_revision": "AOS-002040",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r13-20261015/web-controller-review-package-r2.txt": "461868c384584c052a2816b7a5097c3f3f49f399b4af6e7b0615f53d8e5fbf81"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "The controller source validates current HEAD/Authority/valid same-owner Lease, exact reviewed committed CSS/full Git-disk manifest, original API/PG identity and exact old Web72110 command/cwd before any new intent or signal; source requires consumed independent PASS with original validator/raw transport and frozen controller/runner SHA checks. This is pre-effect source review, no after-fix result claimed.",
+        "evidence": "creator_web_switch_r1.py:HEAD/OWNER/API/OLD硬编码；base()调用git rev-parse HEAD==HEAD、authority.json/leases.json owner==OWNER且未过期；legal(product,'code-review','r1')校验前序PASS与validator_sha256/runner_sha256；web['head']==HEAD且disk_manifest和git archive manifest一致；old['head']=='40100ba...';review_controller_r2.py要求validator_sha256==digest(gate.__file__)且consume模式验证consumption_record。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Actual current readonly preflight r2 terminates successfully and missing-review r2 terminates with refusal before any intent; original Web72110 listener is independently read back unchanged. The supplied stage clarification preserves all original gates and the separate future after-effect acceptance; no current screenshot-after-fix or 650-after-fix result is asserted.",
+        "evidence": "web-preflight-r2.json:outcome RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY、nativeManagementReadonly.schema='a0v_161'、enabledBindings=0、fingerprints=650、databaseStartedAt精确匹配；web-missing-review-rejection-r2.json returncode=1、stderr指向creator_web_switch_r1.py quality()缺失web-controller-review-request-r2.json、actualWebStill72110=true；stage澄清明确后效仅审源码/方案保留。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续独立受控切换：准备web-controller-review-request-r2.json并在无新意图情况下运行creator_web_switch_r1.py --phase web；切换后由真人采集1280/1440/1920/1180四宽截图与650行指纹。"
+  }
+}

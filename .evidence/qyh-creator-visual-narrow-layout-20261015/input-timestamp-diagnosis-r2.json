@@ -1,0 +1,19 @@
+{
+  "point": {
+    "x": 487,
+    "y": 70.5,
+    "width": 1449,
+    "height": 804,
+    "hit": true,
+    "disabled": false
+  },
+  "protocolResponses": [
+    {},
+    {},
+    {}
+  ],
+  "actual": {
+    "active": "达人库",
+    "witness": []
+  }
+}

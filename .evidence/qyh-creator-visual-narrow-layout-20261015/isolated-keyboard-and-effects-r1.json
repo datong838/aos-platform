@@ -1,0 +1,21 @@
+{
+  "focusAfterTab": {
+    "focusVisible": true,
+    "text": "招募漏斗"
+  },
+  "afterEnter": {
+    "active": "招募漏斗",
+    "heading": "邀约漏斗"
+  },
+  "fixtureInstrumentation": {
+    "commands": [],
+    "reads": [
+      "root",
+      "contribution",
+      "lifecycle",
+      "drafts",
+      "products"
+    ]
+  },
+  "syntheticOnly": true
+}

@@ -1,0 +1,10 @@
+{
+  "method": "same-owned-session Input.setIgnoreInputEvents false",
+  "targetId": "7263AE405334660557A7840F95B4446F",
+  "actual": {
+    "active": "达人库",
+    "witness": []
+  },
+  "productStateInjected": false,
+  "chromeRestarted": false
+}
