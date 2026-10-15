@@ -1,0 +1,38 @@
+{
+  "authority": "AOS-002037",
+  "lease": {
+    "base_revision": "AOS-002037",
+    "created_at": "2026-10-15T13:28:41+08:00",
+    "excluded_scope": [
+      "aos-platform/apps/web",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py"
+    ],
+    "expected_outputs": [
+      "Full231Goal/original authorization retained. Audit canonical customer/contact-contributions original producer/Store/DTO/privacy/consent/frequency/current authority/bounded same cutoff before design Prime/admission; never resolve ProtectedContact or dispatch/send.",
+      "Any extra reader/test/Web/shared files separately register before code. Frozen/native/genuine SDK/650/original visuals/independent reviews and accurate Delivery mandatory; no copied whitelist or reuse installation as unrelated budget authority."
+    ],
+    "lease_expires_at": "2026-10-15T08:00:00+00:00",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+      "docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/\u5fae\u5546\u57ce\u7535\u5546\u63a5\u5165\u65b9\u6848/D-waves/2026-10-13-QYH-\u516b\u53f0\u53ea\u8bfb\u5165\u53e3\u6062\u590d\u4e0e\u7ecf\u8425\u94fe\u63a5\u7eed\u6e05\u5355.md",
+      "aos-platform/.evidence/qyh-customer-contact-read-admission-20261015"
+    ],
+    "status": "ACTIVE",
+    "task_id": "qyh-customer-contact-read-admission-20261015"
+  },
+  "readOnlySourceAudit": true,
+  "files": {
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "b775e52e5c56019ec9cd1323daa7c13e27ca85864c9bd4ba6ad24f0392a99303",
+    "services/aos-api/aos_api/ecommerce_workshop_customer_contact.py": "f8b745746782cc9ff9fa648b97787cb1bc06680db4f51f87baaab9c28a1354a6",
+    "services/aos-api/aos_api/ecommerce_workshop_customer_contact_store.py": "0031d5be4f00b9b4bdbe8c66ecd88076f25fd42c0ec740eb51fc74ff17fce782",
+    "services/aos-api/aos_api/ecommerce_workshop_customer_lifecycle.py": "0c1cb897d99b622d041d65688bedceedd5697da1fdd6152844fcd0e2bfa3ac4d",
+    "apps/web/src/api/ecommerceWorkshop/client.ts": "e479a2bc2ffade26db66cb7c7c3deb3fa8e9a8bf97523b887c90d7ca231098aa",
+    "apps/web/src/api/ecommerceWorkshop/parser.ts": "2cdd8d9bf4dde1e320eea0fd9b675a2a4da50948aaa52d7c78462dfa3ca60d5d"
+  },
+  "wholeGoalComplete": false
+}
