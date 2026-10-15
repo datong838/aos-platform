@@ -1,0 +1,25 @@
+# 价格闭环辅助读取：接续初始审计
+
+Rules：231完整Goal、AOS工程交付、先方案/Scope/独立Prime再代码、唯一owner及原数据READONLY保护、逐条GET准入。当前Authority2035，Task qyh-price-closure-read-admission-20261015与maintenance-r8同owner非重叠，至04UTC。前波root/reader两个准确Delivery、完整maintenance剩余接续与七强CURRENT已回读；当前API95375/source4e、Web89803/f036、原卷/schema161/650/绑定0。此页只有只读审计，不是新代码/准入或完整交付。
+
+## 当前GET与默认链
+
+canonical GET `/views/{module}/closure-contributions`的module枚举包含creator/price/customer；实际价格页调用`/views/price/closure-contributions`仍404。当前router仅creator分支用ReadCatalog、typed installed readonly及CreatorClosureReadonlyReader；price走原Catalog和ThreeModuleClosureService.contribution_view。不能把price-governance路径的400当canonical缺口修好。
+
+contribution_view只调用Store.latest_bindings(scope,module)，不调用compile、resolve_domain_items、resolve_usage/effect/handoff、bind或消费方法。latest_bindings使用默认_connect（普通事务），一个连接内先取最新closure，再按closure_id取usage/effect/handoff各最新行；固定4表SELECT，均LIMIT1但authority_data字节无界、只按created_at排序、未核outer tenant/id/hash/time/完整raw。模型验证不是完整producer真实性证明。结果无closure时返回四null及四missing blockers；无异常补空分支，底层异常仍须专用稳定处理，不能换catalog后裸露异常。
+
+## 已有reader可复用边界
+
+ecommerce_three_module_closure_readonly.py已有creator专用的一连接READ ONLY REPEATABLE READ、SQLCASE尺寸、tenant/outer/ref/hash/ledger/time/privacy/DTO与commands[]、handoffConsumeAllowed/memoryPromotionAllowed/externalEffectsAllowed false门。其SQL module参数、Compile request、派生closure_id、row.module断言和service.contribution_view均写死creator。禁止只把router price指向它或复制一套哈希规则；须完整producer/模型/DDL审计及方案裁决，再另登记共享reader/测试文件。
+
+## 原producer与价格来源（只审源码，未执行）
+
+compile以module/sourceRef/typed items生成canonical_hash(default=str)，派生closure_id还包含scope/module/sourceId；原保存closure外层created_at实际compiled_at。usage/effect/handoff各原payload typed refs与具体resolved字段生成hash及binding_id，原binding外层module可NULL、created_at=bound_at。后续必须按原算法及exact closure/hash、数量账本、成熟度、task/taskRun公开ref合同核实，不能由可见状态推断真实审批/完成。
+
+resolve_domain_items的PRICE分支只在compile producer调用：读取exact PriceDispositionRevision后，另连接按observation JSON中dispositionRef.resourceId取最近观察，未按该ref的revision/hash过滤；_STATUS将prepared/frozen映射in_progress、adopted/applied→succeeded、unknown/disputed保留。它不是本GET传递调用；不能在只读贡献GET中临时运行producer或照搬这个观察关联作为exact权威。本波保存视图只证明已保存bridge及bindings，不自动证明当前源/gate/预算/真人批准或经营成功。前波价格处置reader已经证明latest observation可能指向其他全局latest处置，原exact关联须保留。
+
+## 下一安全步骤
+
+读完原ClosureExactRef/Compile及四DTO、全producer resolver、原w6_009 DDL/RLS与原producer测试/前端parser/调用页。形成price模块原producer非空签名与绑定probe，决定最小参数化既有reader与回归边界；另登记全部新增/共享文件后才独立Prime方案、RED/最小实现、冻结专项和creator/price/customer邻接、原DDL隔离PG、真实SDK/650/原稿/现场Prime及Delivery。不直接换Catalog，不重复前波267或已经交付的价格处置验收。
+
+完整fullC唯一真人最终预算/原部署、自然有来源CaseRun建议exact评审内容受约束能力产物人审续跑总控Wiki、安装全生命周期、八真实场景/全视觉/观察发布继续；每日与每次aos最新m1同原卷完整PG→API→Web/aos2不重启保留。HostworkerProviderOFF/unknown旧12不重放/disabledSchedule不启用/source不读/noPush/不写个人Codex记忆，Goal ACTIVE。

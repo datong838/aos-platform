@@ -1,0 +1,28 @@
+{
+  "head": "d73f83388be98029345d9b18e761e8e816ea2b74",
+  "authority": "AOS-002035",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "sha256": "78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_three_module_closure.py",
+      "sha256": "abb7798aae5fe3ca87ec0a05e2445bdbbf16cb54663009709bff20252458ea40",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_three_module_closure_store.py",
+      "sha256": "79954f70a921f7c1e0115ed6b759358e8c8421891a433b2c4efe189a430c83d8",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py",
+      "sha256": "a70090a0c039d159cd72f0de84596baa47caeb8ad81cbb9aebb1210e6cabf3e8",
+      "workingEqualsCommitted": true
+    }
+  ],
+  "productChanges": false,
+  "wholeGoalComplete": false
+}
