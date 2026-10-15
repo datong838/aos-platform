@@ -1,0 +1,13 @@
+{
+  "head": "7038adb5b8b791bafd43b7206b9bf28be86da4bf",
+  "before": "AOS-002033",
+  "expected": "AOS-002034",
+  "tasks": [
+    "qyh-price-visual-filter-sizing-20261015",
+    "qyh-price-disposition-read-admission-20261015",
+    "qyh-restoration-readonly-continuation-r6-20261015"
+  ],
+  "otherLeasesPreserved": 38,
+  "wholeGoalComplete": false,
+  "personalMemoryWrites": false
+}
