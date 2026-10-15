@@ -1,0 +1,906 @@
+ROUTE CODE QUALITY ONLY, not deployed. Reader code r1 PASS legally consumed; frozen387 PASS. RED logs are pre-implementation, not current failures. Full231Goal ACTIVE. Canonical customer contributions GET only; contact/closure/POST remain legacy. Original DB untouched.
+
+SELECTED COMPLETE AST services/aos-api/aos_api/routers/ecommerce_workshop.py fullFileSHA b775e52e5c56019ec9cd1323daa7c13e27ca85864c9bd4ba6ad24f0392a99303
+
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_catalog() -> EcommerceWorkshopCatalog:
+    return build_ecommerce_workshop_catalog()
+
+def get_ecommerce_workshop_read_catalog(
+    legacy: Annotated[EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)],
+) -> EcommerceWorkshopReadCatalog:
+    from aos_api.ecommerce_installed_readonly_catalog import build_installed_readonly_catalog
+
+    return EcommerceWorkshopReadCatalog(
+        legacy=legacy,
+        installed_factory=build_installed_readonly_catalog,
+    )
+
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_customer_lifecycle() -> EcommerceWorkshopCustomerLifecycleService:
+    return EcommerceWorkshopCustomerLifecycleService(EcommerceWorkshopCustomerLifecycleStore())
+
+def get_customer_lifecycle_readonly() -> CustomerLifecycleReadonlyReader:
+    return CustomerLifecycleReadonlyReader()
+
+def _reject_query_parameters(request: Request) -> None:
+    if request.query_params:
+        raise ApiError(
+            code="VALIDATION",
+            message="ecommerce Workshop reads do not accept query parameters",
+            status_code=400,
+        )
+
+def _invoke(operation: Callable[[], ResultT]) -> ResultT:
+    try:
+        return operation()
+    except AssetRegistryError as exc:
+        raise ApiError(
+            code=exc.code.value,
+            message=str(exc),
+            status_code=exc.http_status,
+            details=exc.details,
+        ) from exc
+
+def _require_customer_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.customer",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+
+@router.get(
+    "/views/customer/contributions",
+    response_model=CustomerLifecycleContributionView,
+    operation_id="ecommerceWorkshopCustomerLifecycleContributionViewGet",
+    responses=_ERRORS,
+)
+def get_customer_lifecycle_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    service: CustomerLifecycleDependency,
+    readonly: CustomerLifecycleReadonlyDependency,
+) -> CustomerLifecycleContributionView:
+    _reject_query_parameters(request)
+    admission = _invoke(lambda: catalog.get_readiness(
+        module_id="ecommerce.customer", org_id=principal.org_id,
+        project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
+    ))
+    if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+        raise ApiError(code="CUSTOMER_LIFECYCLE_READ_ADMISSION_UNAVAILABLE",
+                       message="当前客户贡献读取准入不可核验。", status_code=503)
+    if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+        try:
+            return readonly.read(TenantScope(principal.org_id, principal.project_id))
+        except CustomerLifecycleReadonlyError as exc:
+            raise ApiError(code=exc.code, message="当前客户贡献暂不可读，请核对保存记录或读取范围。",
+                           status_code=503) from exc
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+
+@router.get(
+    "/views/customer/contact-contributions",
+    response_model=CustomerContactContributionView,
+    operation_id="ecommerceWorkshopCustomerContactContributionViewGet",
+    responses=_ERRORS,
+)
+def get_customer_contact_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerContactDependency,
+) -> CustomerContactContributionView:
+    _reject_query_parameters(request)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+
+EXACT FULL FILE DIFF
+diff --git a/services/aos-api/aos_api/routers/ecommerce_workshop.py b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+index 126c24775..ddc2032d9 100644
+--- a/services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+@@ -222,6 +222,7 @@ from aos_api.ecommerce_workshop_price_research import (
+ from aos_api.ecommerce_workshop_price_research_store import EcommerceWorkshopPriceResearchStore
+ from aos_api.ecommerce_price_research_readonly import PriceResearchReadonlyError, PriceResearchReadonlyReader
+ from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader, PriceDispositionReadonlyError
++from aos_api.ecommerce_customer_lifecycle_readonly import CustomerLifecycleReadonlyError, CustomerLifecycleReadonlyReader
+ from aos_api.ecommerce_workshop_price_disposition import (
+     CreatePriceCaseRequest,
+     CreatePriceDispositionContractRequest,
+@@ -633,6 +634,15 @@ def get_ecommerce_workshop_customer_lifecycle() -> EcommerceWorkshopCustomerLife
+     return EcommerceWorkshopCustomerLifecycleService(EcommerceWorkshopCustomerLifecycleStore())
+ 
+ 
++def get_customer_lifecycle_readonly() -> CustomerLifecycleReadonlyReader:
++    return CustomerLifecycleReadonlyReader()
++
++
++CustomerLifecycleReadonlyDependency = Annotated[
++    CustomerLifecycleReadonlyReader, Depends(get_customer_lifecycle_readonly)
++]
++
++
+ @lru_cache(maxsize=1)
+ def get_ecommerce_workshop_customer_contact() -> EcommerceWorkshopCustomerContactService:
+     return EcommerceWorkshopCustomerContactService(
+@@ -2632,11 +2642,24 @@ def freeze_customer_dialogue_batch(
+ def get_customer_lifecycle_contribution_view(
+     request: Request,
+     principal: PrincipalDependency,
+-    catalog: CatalogDependency,
++    catalog: ReadCatalogDependency,
+     service: CustomerLifecycleDependency,
++    readonly: CustomerLifecycleReadonlyDependency,
+ ) -> CustomerLifecycleContributionView:
+     _reject_query_parameters(request)
+-    _require_customer_installation(principal=principal, catalog=catalog)
++    admission = _invoke(lambda: catalog.get_readiness(
++        module_id="ecommerce.customer", org_id=principal.org_id,
++        project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
++    ))
++    if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
++        raise ApiError(code="CUSTOMER_LIFECYCLE_READ_ADMISSION_UNAVAILABLE",
++                       message="当前客户贡献读取准入不可核验。", status_code=503)
++    if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
++        try:
++            return readonly.read(TenantScope(principal.org_id, principal.project_id))
++        except CustomerLifecycleReadonlyError as exc:
++            raise ApiError(code=exc.code, message="当前客户贡献暂不可读，请核对保存记录或读取范围。",
++                           status_code=503) from exc
+     return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+ 
+ 
+
+
+SELECTED COMPLETE AST services/aos-api/tests/test_ecommerce_workshop_read_http.py fullFileSHA fa0150202d61f7458a66787d892e40c47fdd0dc079b4e87257ea04f446f91471
+
+class RejectingCatalog:
+    def __init__(self):
+        self.calls = []
+
+    def get_readiness(self, **scope):
+        self.calls.append(scope)
+        raise AssetNotFoundError('not installed in current scoped catalog')
+
+def client_with_catalogs():
+    app = FastAPI()
+    register_exception_handlers(app)
+    app.include_router(routes.router)
+    legacy, reader = RejectingCatalog(), RejectingCatalog()
+    app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+    app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+    app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='scope-test', org_id='org-org', project_id='dev-project',
+        roles=['admin'], markings=[],
+    )
+    return TestClient(app), legacy, reader
+
+@pytest.mark.parametrize('path', [
+    '/views/customer/contact-contributions', '/views/creator-growth/workflow/drafts/fixture/history',
+    '/modules/ecommerce.operations/readiness',
+])
+def test_unreviewed_get_still_uses_legacy_admission(path):
+    client, legacy, reader = client_with_catalogs()
+    response = client.get('/v1/ecommerce-workshop' + path)
+    assert response.status_code == 404
+    assert legacy.calls
+    assert not reader.calls
+
+def test_read_dependency_only_reaches_explicit_audited_get_routes():
+    actual = set()
+    for route in routes.router.routes:
+        uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                        for d in route.dependant.dependencies)
+        if uses_read:
+            assert route.methods == {'GET'}
+            actual.add(route.path)
+    assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+        '/v1/ecommerce-workshop/source-readiness',
+        '/v1/ecommerce-workshop/views/operations/cases',
+        '/v1/ecommerce-workshop/commands/operations/readiness',
+        '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+        '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+        '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+        '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+        '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+        '/v1/ecommerce-workshop/views/creator-growth/contributions',
+        '/v1/ecommerce-workshop/views/customer/contributions',
+        '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+        '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
+        '/v1/ecommerce-workshop/views/{module}/closure-contributions',
+        '/v1/ecommerce-workshop/views/price-governance/contributions',
+        '/v1/ecommerce-workshop/views/price-governance/dispositions',
+    }
+
+class ReadReached(RuntimeError):
+    pass
+
+def price_admission(readonly=True):
+    from tests.test_ecommerce_workshop_read_catalog import make, ARGS
+    catalog, _ = make()
+    result = catalog.get_readiness(**{**ARGS, 'module_id': 'ecommerce.price-governance'})
+    if not readonly:
+        result = result.model_copy(update={'item': result.item.model_copy(update={
+            'blockers': [b for b in result.item.blockers if b.reason_code != 'INSTALLED_ASSET_READONLY'],
+        })})
+    return result
+
+def customer_lifecycle_probes(client, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope):
+            calls.append(('legacy', scope.key))
+            raise ReadReached('legacy-customer-lifecycle')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key))
+            if failure:
+                from aos_api.ecommerce_customer_lifecycle_readonly import CustomerLifecycleReadonlyError
+                raise CustomerLifecycleReadonlyError(failure)
+            raise ReadReached('readonly-customer-lifecycle')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_customer_lifecycle] = lambda: Legacy()
+    client.app.dependency_overrides[getattr(routes, 'get_customer_lifecycle_readonly', Readonly)] = lambda: Readonly()
+    return calls
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_customer_lifecycle_selects_only_admitted_reader(readonly):
+    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
+    def admit(**scope):
+        assert scope == dict(module_id='ecommerce.customer', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+        return price_admission(readonly)
+    catalog.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-customer-lifecycle'): client.get(CUSTOMER_LIFECYCLE_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'))] and not legacy.calls
+
+def test_customer_lifecycle_denied_before_business_read():
+    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
+    assert client.get(CUSTOMER_LIFECYCLE_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+
+@pytest.mark.parametrize('admission', [None, {}, {'item': {'blockers': []}}])
+def test_customer_lifecycle_unknown_admission_fails_closed(admission):
+    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
+    catalog.get_readiness = lambda **kwargs: admission
+    response = client.get(CUSTOMER_LIFECYCLE_PATH)
+    assert response.status_code == 503 and 'CUSTOMER_LIFECYCLE_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls
+
+@pytest.mark.parametrize('suffix', ['AUTHORITY_UNAVAILABLE', 'AUTHORITY_DRIFT', 'LIMIT_EXCEEDED', 'SENSITIVE_CONTENT'])
+def test_customer_lifecycle_failure_does_not_become_empty_success(suffix):
+    client, legacy, catalog = client_with_catalogs()
+    code = 'CUSTOMER_LIFECYCLE_READ_' + suffix; calls = customer_lifecycle_probes(client, code)
+    catalog.get_readiness = lambda **kwargs: price_admission()
+    response = client.get(CUSTOMER_LIFECYCLE_PATH)
+    assert response.status_code == 503 and code in response.text and 'latestBatch' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
+
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'unknown=x'])
+def test_customer_lifecycle_query_cannot_change_scope(query):
+    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
+    assert client.get(CUSTOMER_LIFECYCLE_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+
+@pytest.mark.parametrize('readonly', [False, True])
+@pytest.mark.parametrize('nonempty', [False, True])
+def test_customer_lifecycle_full_http_serialization(readonly, nonempty):
+    from tests.test_ecommerce_customer_lifecycle_readonly import run
+    from aos_api.ecommerce_workshop_customer_lifecycle import EcommerceWorkshopCustomerLifecycleService
+    f, conn, reader = run()
+    if not nonempty:
+        for table in conn.data: conn.data[table] = []
+    verified = reader.read(f.SCOPE)
+    class Store:
+        def authority_counts(self, scope):
+            assert scope == f.SCOPE
+            return {key: getattr(verified, key + '_count') for key in ('consent_policy', 'segment', 'journey', 'dialogue')}
+        def latest_batch_or_none_any(self, scope): return verified.latest_batch
+    client, legacy, catalog = client_with_catalogs()
+    client.app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='isolated-fixture', org_id=f.SCOPE.org_id, project_id=f.SCOPE.project_id, roles=['admin'], markings=[])
+    catalog.get_readiness = lambda **kwargs: price_admission(readonly)
+    client.app.dependency_overrides[routes.get_customer_lifecycle_readonly] = lambda: reader
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_customer_lifecycle] = lambda: EcommerceWorkshopCustomerLifecycleService(Store())
+    response = client.get(CUSTOMER_LIFECYCLE_PATH)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['tenant'] == dict(orgId='dev-org', projectId='fixture-project')
+    assert body['primaryColleague'] == '私域管家'
+    assert len(body['allowedCommands']) == (0 if readonly else 6)
+    assert body['contactResolutionAllowed'] is body['startAllowed'] is body['sendAllowed'] is body['externalEffectsAllowed'] is False
+    if nonempty:
+        assert body['latestBatch']['lifecycle'] == 'frozen'
+        assert body['latestBatch']['ledger']['unknown'] == 1
+        assert body['latestBatch']['items'][1]['retentionActive'] is None
+    else:
+        assert body['latestBatch'] is None and body['consentPolicyCount'] == 0
+    assert not legacy.calls
+
+EXACT FULL FILE DIFF
+diff --git a/services/aos-api/tests/test_ecommerce_workshop_read_http.py b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+index da02ac23d..9dd53776e 100644
+--- a/services/aos-api/tests/test_ecommerce_workshop_read_http.py
++++ b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+@@ -51,7 +51,7 @@ def test_root_get_uses_scoped_read_admission_before_business_reader(module):
+ 
+ 
+ @pytest.mark.parametrize('path', [
+-    '/views/customer/contributions', '/views/creator-growth/workflow/drafts/fixture/history',
++    '/views/customer/contact-contributions', '/views/creator-growth/workflow/drafts/fixture/history',
+     '/modules/ecommerce.operations/readiness',
+ ])
+ def test_unreviewed_get_still_uses_legacy_admission(path):
+@@ -82,6 +82,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
+         '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+         '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+         '/v1/ecommerce-workshop/views/creator-growth/contributions',
++        '/v1/ecommerce-workshop/views/customer/contributions',
+         '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+         '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
+         '/v1/ecommerce-workshop/views/{module}/closure-contributions',
+@@ -838,3 +839,104 @@ def test_price_closure_complete_http_dto(readonly, nonempty):
+     else:
+         assert body['latestClosure'] is body['latestUsage'] is body['latestEffect'] is body['latestHandoff'] is None
+     assert bool(conn.queries) == readonly and not legacy.calls
++
++
++CUSTOMER_LIFECYCLE_PATH = '/v1/ecommerce-workshop/views/customer/contributions'
++
++
++def customer_lifecycle_probes(client, failure=None):
++    calls = []
++    class Legacy:
++        def contribution_view(self, scope):
++            calls.append(('legacy', scope.key))
++            raise ReadReached('legacy-customer-lifecycle')
++    class Readonly:
++        def read(self, scope):
++            calls.append(('readonly', scope.key))
++            if failure:
++                from aos_api.ecommerce_customer_lifecycle_readonly import CustomerLifecycleReadonlyError
++                raise CustomerLifecycleReadonlyError(failure)
++            raise ReadReached('readonly-customer-lifecycle')
++    client.app.dependency_overrides[routes.get_ecommerce_workshop_customer_lifecycle] = lambda: Legacy()
++    client.app.dependency_overrides[getattr(routes, 'get_customer_lifecycle_readonly', Readonly)] = lambda: Readonly()
++    return calls
++
++
++@pytest.mark.parametrize('readonly', [True, False])
++def test_customer_lifecycle_selects_only_admitted_reader(readonly):
++    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
++    def admit(**scope):
++        assert scope == dict(module_id='ecommerce.customer', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
++        return price_admission(readonly)
++    catalog.get_readiness = admit
++    kind = 'readonly' if readonly else 'legacy'
++    with pytest.raises(ReadReached, match=kind + '-customer-lifecycle'): client.get(CUSTOMER_LIFECYCLE_PATH)
++    assert calls == [(kind, ('org-org', 'dev-project'))] and not legacy.calls
++
++
++def test_customer_lifecycle_denied_before_business_read():
++    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
++    assert client.get(CUSTOMER_LIFECYCLE_PATH).status_code == 404
++    assert not calls and not legacy.calls and len(catalog.calls) == 1
++
++
++@pytest.mark.parametrize('admission', [None, {}, {'item': {'blockers': []}}])
++def test_customer_lifecycle_unknown_admission_fails_closed(admission):
++    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
++    catalog.get_readiness = lambda **kwargs: admission
++    response = client.get(CUSTOMER_LIFECYCLE_PATH)
++    assert response.status_code == 503 and 'CUSTOMER_LIFECYCLE_READ_ADMISSION_UNAVAILABLE' in response.text
++    assert not calls and not legacy.calls
++
++
++@pytest.mark.parametrize('suffix', ['AUTHORITY_UNAVAILABLE', 'AUTHORITY_DRIFT', 'LIMIT_EXCEEDED', 'SENSITIVE_CONTENT'])
++def test_customer_lifecycle_failure_does_not_become_empty_success(suffix):
++    client, legacy, catalog = client_with_catalogs()
++    code = 'CUSTOMER_LIFECYCLE_READ_' + suffix; calls = customer_lifecycle_probes(client, code)
++    catalog.get_readiness = lambda **kwargs: price_admission()
++    response = client.get(CUSTOMER_LIFECYCLE_PATH)
++    assert response.status_code == 503 and code in response.text and 'latestBatch' not in response.text
++    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
++
++
++@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'unknown=x'])
++def test_customer_lifecycle_query_cannot_change_scope(query):
++    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
++    assert client.get(CUSTOMER_LIFECYCLE_PATH + '?' + query).status_code == 400
++    assert not calls and not legacy.calls and not catalog.calls
++
++
++@pytest.mark.parametrize('readonly', [False, True])
++@pytest.mark.parametrize('nonempty', [False, True])
++def test_customer_lifecycle_full_http_serialization(readonly, nonempty):
++    from tests.test_ecommerce_customer_lifecycle_readonly import run
++    from aos_api.ecommerce_workshop_customer_lifecycle import EcommerceWorkshopCustomerLifecycleService
++    f, conn, reader = run()
++    if not nonempty:
++        for table in conn.data: conn.data[table] = []
++    verified = reader.read(f.SCOPE)
++    class Store:
++        def authority_counts(self, scope):
++            assert scope == f.SCOPE
++            return {key: getattr(verified, key + '_count') for key in ('consent_policy', 'segment', 'journey', 'dialogue')}
++        def latest_batch_or_none_any(self, scope): return verified.latest_batch
++    client, legacy, catalog = client_with_catalogs()
++    client.app.dependency_overrides[require_principal] = lambda: Principal(
++        subject='isolated-fixture', org_id=f.SCOPE.org_id, project_id=f.SCOPE.project_id, roles=['admin'], markings=[])
++    catalog.get_readiness = lambda **kwargs: price_admission(readonly)
++    client.app.dependency_overrides[routes.get_customer_lifecycle_readonly] = lambda: reader
++    client.app.dependency_overrides[routes.get_ecommerce_workshop_customer_lifecycle] = lambda: EcommerceWorkshopCustomerLifecycleService(Store())
++    response = client.get(CUSTOMER_LIFECYCLE_PATH)
++    assert response.status_code == 200
++    body = response.json()
++    assert body['tenant'] == dict(orgId='dev-org', projectId='fixture-project')
++    assert body['primaryColleague'] == '私域管家'
++    assert len(body['allowedCommands']) == (0 if readonly else 6)
++    assert body['contactResolutionAllowed'] is body['startAllowed'] is body['sendAllowed'] is body['externalEffectsAllowed'] is False
++    if nonempty:
++        assert body['latestBatch']['lifecycle'] == 'frozen'
++        assert body['latestBatch']['ledger']['unknown'] == 1
++        assert body['latestBatch']['items'][1]['retentionActive'] is None
++    else:
++        assert body['latestBatch'] is None and body['consentPolicyCount'] == 0
++    assert not legacy.calls
+
+
+FULL READER
+"""Read saved customer revisions without contact resolution or operational admission."""
+from datetime import datetime
+import json
+import re
+from time import monotonic
+
+import psycopg
+from psycopg import IsolationLevel
+
+from aos_api.db import connect_read_only
+from aos_api import ecommerce_workshop_customer_lifecycle as domain
+from aos_api.public_contracts import redact_sensitive
+
+MAX_ROW_BYTES = 1024 * 1024
+MAX_TOTAL_BYTES = 8 * MAX_ROW_BYTES
+BATCH_TABLE = 'ecommerce_customer_dialogue_batch_revision'
+POLICIES = (
+    ('ecommerce_customer_consent_policy_revision', 'policy_id', domain.CustomerConsentPolicyRevision, domain.CreateCustomerConsentPolicyRequest, 'consent_policy'),
+    ('ecommerce_customer_segment_revision', 'segment_id', domain.CustomerSegmentRevision, domain.CreateCustomerSegmentRequest, 'segment'),
+    ('ecommerce_customer_journey_revision', 'journey_id', domain.CustomerJourneyRevision, domain.CreateCustomerJourneyRequest, 'journey'),
+    ('ecommerce_customer_dialogue_strategy_revision', 'dialogue_id', domain.CustomerDialogueStrategyRevision, domain.CreateCustomerDialogueRequest, 'dialogue'),
+)
+_FREEZE_EXCLUDE = {'revision', 'version', 'lifecycle', 'prior_content_hash', 'content_hash', 'created_by', 'created_at'}
+_INTS = {'revision', 'version', 'retentionDays', 'kAnonymityMinimum', 'input', 'eligible', 'excluded',
+         'needsReview', 'unknown', 'deduplicated', 'contactResolutionCount', 'actionCount',
+         'providerCallCount', 'sendCount', 'externalEffectCount'}
+_BOOLS = {'originalsReachable', 'retentionActive', 'kAnonymitySatisfied'}
+_NULLABLE_BOOLS = {'retentionActive', 'kAnonymitySatisfied'}
+_REFS = {'segment': 'segment_ref', 'journey': 'journey_ref', 'dialogue': 'dialogue_ref',
+         'consentPolicy': 'consent_policy_ref', 'frequencyPolicy': 'frequency_policy_ref',
+         'channelCapability': 'channel_capability_ref'}
+
+
+class CustomerLifecycleReadonlyError(RuntimeError):
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
+def _deny(suffix):
+    raise CustomerLifecycleReadonlyError('CUSTOMER_LIFECYCLE_READ_' + suffix)
+
+
+def _aware(value):
+    return isinstance(value, datetime) and value.utcoffset() is not None
+
+
+def _strict(value):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key in _INTS and type(child) is not int: _deny('AUTHORITY_DRIFT')
+            if key in _BOOLS and type(child) is not bool and not (key in _NULLABLE_BOOLS and child is None):
+                _deny('AUTHORITY_DRIFT')
+            _strict(child)
+    elif isinstance(value, list):
+        for child in value: _strict(child)
+
+
+def _visible(value):
+    # Hash syntax and full producer hashes are checked separately; avoid matching
+    # accidental digit sequences inside hashes as if they were phone numbers.
+    if isinstance(value, dict):
+        return {k: _visible(v) for k, v in value.items() if not k.endswith(('Hash', 'Hashes'))}
+    if isinstance(value, list): return [_visible(v) for v in value]
+    return value
+
+
+def _privacy(raw):
+    visible = _visible(raw)
+    if redact_sensitive(visible) != visible: _deny('SENSITIVE_CONTENT')
+    serialized = json.dumps(visible, ensure_ascii=False).lower()
+    if any(word in serialized for word in ('mobile', 'openid', 'email', 'address', 'nickname', 'avatar', 'rawmessage', 'providerpayload')):
+        _deny('SENSITIVE_CONTENT')
+
+
+def _request(model, item):
+    return model.model_validate({name: getattr(item, name) for name in model.model_fields})
+
+
+def _matches(ref, item, identity):
+    return (ref.resource_id == getattr(item, identity) and ref.revision == item.revision
+            and ref.content_hash == 'sha256:' + item.content_hash)
+
+
+class _ValidatedStore:
+    def __init__(self, counts, batch): self.counts, self.batch = counts, batch
+    def authority_counts(self, _scope): return self.counts
+    def latest_batch_or_none_any(self, _scope): return self.batch
+
+
+class CustomerLifecycleReadonlyReader:
+    def __init__(self, *, connect_factory=None):
+        self._connect = connect_factory or connect_read_only
+
+    @staticmethod
+    def _count(conn, scope, table, identity):
+        # Identifiers are fixed POLICIES constants, never request input. These
+        # are counts of ALL stored revisions, not distinct or active customers.
+        alias = ''.join(part.title() if index else part for index, part in enumerate(identity.split('_')))
+        valid = (f"length({identity}) BETWEEN 1 AND 200 AND revision>=1 "
+                 f"AND content_hash ~ '^[0-9a-f]{{64}}$' "
+                 "AND jsonb_typeof(authority_data)='object' "
+                 "AND authority_data->'tenant'->'orgId'=to_jsonb(org_id) "
+                 "AND authority_data->'tenant'->'projectId'=to_jsonb(project_id) "
+                 f"AND authority_data->'{alias}'=to_jsonb({identity}) "
+                 "AND authority_data->'revision'=to_jsonb(revision) "
+                 "AND authority_data->'contentHash'=to_jsonb(content_hash::text) "
+                 "AND jsonb_typeof(authority_data->'createdAt')='string' "
+                 "AND authority_data->>'createdAt' ~ '(Z|[+-][0-9]{2}:[0-9]{2})$' "
+                 "AND (authority_data->>'createdAt')::timestamptz=created_at")
+        return conn.execute(f'SELECT COUNT(*) AS count, '
+                            f'SUM(CASE WHEN {valid} THEN 0 ELSE 1 END) AS invalid_count, '
+                            f'MAX(created_at) AS latest_created_at FROM {table} '
+                            'WHERE org_id=%s AND project_id=%s', scope.key).fetchone()
+
+    @staticmethod
+    def _row(conn, scope, table, identity, exact=None):
+        # At most one payload per query, bounded in SQL before transfer.
+        sql = (f'SELECT org_id,project_id,CASE WHEN length({identity})<=200 THEN {identity} ELSE NULL END AS identity,'
+               'revision,CASE WHEN length(content_hash)=64 THEN content_hash ELSE NULL END AS content_hash,'
+               'created_at,octet_length(authority_data::text) AS size,'
+               f'CASE WHEN octet_length(authority_data::text)<={MAX_ROW_BYTES} THEN authority_data ELSE NULL END AS authority_data '
+               f'FROM {table} WHERE org_id=%s AND project_id=%s ')
+        params = scope.key
+        if exact is not None:
+            sql += f'AND {identity}=%s AND revision=%s '
+            params = (*params, *exact)
+        return conn.execute(sql + f'ORDER BY created_at DESC,revision DESC,{identity} LIMIT 1', params).fetchone()
+
+    @staticmethod
+    def _decode(row, model, identity, scope, cutoff):
+        if row is None: _deny('AUTHORITY_DRIFT')
+        if ((row.get('org_id'), row.get('project_id')) != scope.key
+                or not isinstance(row.get('identity'), str) or not 0 < len(row['identity']) <= 200
+                or type(row.get('revision')) is not int or row['revision'] < 1
+                or not isinstance(row.get('content_hash'), str) or re.fullmatch('[0-9a-f]{64}', row['content_hash']) is None
+                or not _aware(row.get('created_at')) or row['created_at'] > cutoff): _deny('AUTHORITY_DRIFT')
+        if type(row.get('size')) is not int or row['size'] < 1: _deny('AUTHORITY_DRIFT')
+        if row['size'] > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
+        raw = row.get('authority_data')
+        if not isinstance(raw, dict): _deny('AUTHORITY_DRIFT')
+        _strict(raw)
+        item = model.model_validate(raw)
+        if item.model_dump(mode='json', by_alias=True) != raw: _deny('AUTHORITY_DRIFT')
+        if ((item.tenant.org_id, item.tenant.project_id) != scope.key or getattr(item, identity) != row['identity']
+                or item.revision != row['revision'] or item.content_hash != row['content_hash']
+                or not _aware(item.created_at) or item.created_at != row['created_at']
+                or item.created_at > cutoff): _deny('AUTHORITY_DRIFT')
+        if hasattr(item, 'cutoff') and (not _aware(item.cutoff) or item.cutoff > cutoff): _deny('AUTHORITY_DRIFT')
+        _privacy(raw)
+        return item
+
+    @staticmethod
+    def _validate_batch(item, prior=None):
+        request = _request(domain.PrepareCustomerDialogueBatchRequest, item)
+        refs = {key: getattr(request, attr) for key, attr in _REFS.items()}
+        hashes = [domain.canonical_hash(value.model_dump(mode='json', by_alias=True)) for value in request.items]
+        counts = {kind: sum(value.disposition == kind for value in request.items) for kind in domain.CustomerBatchDisposition}
+        ledger = domain.CustomerDialogueBatchLedger(input=len(request.items), **{key.value: value for key, value in counts.items()})
+        binding = domain.canonical_hash({'refs': refs, 'itemHashes': hashes})
+        if item.item_hashes != hashes or item.binding_hash != binding or item.ledger != ledger: _deny('AUTHORITY_DRIFT')
+        if any(getattr(item, field) != 0 for field in ('contact_resolution_count', 'action_count', 'provider_call_count', 'send_count', 'external_effect_count')):
+            _deny('AUTHORITY_DRIFT')
+        if item.lifecycle == 'prepared':
+            expected = domain.canonical_hash({**request.model_dump(mode='json', by_alias=True), 'ledger': ledger, 'bindingHash': binding})
+            if item.revision != 1 or item.version != 1 or item.prior_content_hash is not None or item.content_hash != expected:
+                _deny('AUTHORITY_DRIFT')
+        elif item.lifecycle == 'frozen':
+            if prior is None or prior.lifecycle != 'prepared': _deny('AUTHORITY_DRIFT')
+            CustomerLifecycleReadonlyReader._validate_batch(prior)
+            if (item.revision != prior.revision + 1 or item.version != prior.version + 1
+                    or item.prior_content_hash != prior.content_hash or item.created_at < prior.created_at): _deny('AUTHORITY_DRIFT')
+            inherited = prior.model_dump(mode='json', by_alias=True, exclude=_FREEZE_EXCLUDE)
+            if item.model_dump(mode='json', by_alias=True, exclude=_FREEZE_EXCLUDE) != inherited: _deny('AUTHORITY_DRIFT')
+            expected = domain.canonical_hash({**inherited, 'revision': item.revision, 'version': item.version,
+                                              'lifecycle': 'frozen', 'priorContentHash': prior.content_hash})
+            if item.content_hash != expected: _deny('AUTHORITY_DRIFT')
+        else: _deny('AUTHORITY_DRIFT')
+
+    def read(self, scope):
+        started = monotonic()
+        def deadline():
+            if monotonic() - started > 10: _deny('LIMIT_EXCEEDED')
+        try:
+            with self._connect(scope) as conn:
+                if conn.read_only is not True or conn.autocommit is not False or conn.isolation_level != IsolationLevel.REPEATABLE_READ:
+                    _deny('AUTHORITY_DRIFT')
+                conn.execute("SET LOCAL statement_timeout='3000ms'")
+                conn.execute("SET LOCAL lock_timeout='500ms'")
+                cutoff = conn.execute('SELECT transaction_timestamp() AS cutoff').fetchone()['cutoff']
+                if not _aware(cutoff): _deny('AUTHORITY_DRIFT')
+                counts = {}
+                for table, identity, _model, _request_model, key in POLICIES:
+                    deadline()
+                    aggregate = self._count(conn, scope, table, identity)
+                    count, invalid, latest = (aggregate[k] for k in ('count', 'invalid_count', 'latest_created_at'))
+                    if type(count) is not int or not 0 <= count <= 2**53 - 1: _deny('AUTHORITY_DRIFT')
+                    # SUM over no rows is SQL NULL; all other aggregates must be strict integers.
+                    if not ((count == 0 and invalid is None) or (type(invalid) is int and invalid == 0)): _deny('AUTHORITY_DRIFT')
+                    if count == 0 and latest is not None: _deny('AUTHORITY_DRIFT')
+                    if count and (not _aware(latest) or latest > cutoff): _deny('AUTHORITY_DRIFT')
+                    counts[key] = count
+                deadline()
+                selected = self._row(conn, scope, BATCH_TABLE, 'batch_id')
+                batch = None
+                if selected is not None:
+                    total = 0
+                    def decode(row, model, identity):
+                        nonlocal total
+                        item = self._decode(row, model, identity, scope, cutoff)
+                        total += row['size']
+                        if total > MAX_TOTAL_BYTES: _deny('LIMIT_EXCEEDED')
+                        return item
+                    batch = decode(selected, domain.CustomerDialogueBatchRevision, 'batch_id')
+                    prior = None
+                    if batch.lifecycle == 'frozen':
+                        deadline()
+                        prior = decode(self._row(conn, scope, BATCH_TABLE, 'batch_id', (batch.batch_id, batch.revision - 1)),
+                                       domain.CustomerDialogueBatchRevision, 'batch_id')
+                    self._validate_batch(batch, prior)
+                    facts = {}
+                    for table, identity, model, request_model, key in POLICIES:
+                        deadline()
+                        if counts[key] < 1: _deny('AUTHORITY_DRIFT')
+                        ref = getattr(batch, key + '_ref')
+                        fact = decode(self._row(conn, scope, table, identity, (ref.resource_id, ref.revision)), model, identity)
+                        if not _matches(ref, fact, identity): _deny('AUTHORITY_DRIFT')
+                        request = _request(request_model, fact)
+                        if fact.content_hash != domain.canonical_hash(request.model_dump(mode='json', by_alias=True)): _deny('AUTHORITY_DRIFT')
+                        facts[key] = fact
+                    if (facts['segment'].consent_policy_ref != batch.consent_policy_ref
+                            or facts['journey'].segment_ref != batch.segment_ref
+                            or facts['dialogue'].journey_ref != batch.journey_ref
+                            or facts['dialogue'].eval_ref != facts['journey'].eval_ref): _deny('AUTHORITY_DRIFT')
+                deadline()
+                view = domain.EcommerceWorkshopCustomerLifecycleService(_ValidatedStore(counts, batch)).contribution_view(scope, now=cutoff)
+                payload = view.model_dump(mode='json', by_alias=True)
+                payload['allowedCommands'] = []
+                result = domain.CustomerLifecycleContributionView.model_validate(payload)
+                if result.model_dump(mode='json', by_alias=True) != payload: _deny('AUTHORITY_DRIFT')
+                if len(result.model_dump_json(by_alias=True).encode()) > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
+                deadline()
+                return result
+        except CustomerLifecycleReadonlyError:
+            raise
+        except psycopg.Error:
+            _deny('AUTHORITY_UNAVAILABLE')
+        except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+            _deny('AUTHORITY_DRIFT')
+
+
+EVIDENCE source-verification-r1.json
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py": "b7ac470efd1d04f36621896d830b094562fb899ab223fb73555f03bc88617010",
+    "services/aos-api/tests/test_ecommerce_customer_lifecycle_readonly.py": "7a987406dcf9def751b096f5a2e3cf53d1d2698da8cad3402a047195abda8f2f",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "b775e52e5c56019ec9cd1323daa7c13e27ca85864c9bd4ba6ad24f0392a99303",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "fa0150202d61f7458a66787d892e40c47fdd0dc079b4e87257ea04f446f91471"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py": "b7ac470efd1d04f36621896d830b094562fb899ab223fb73555f03bc88617010",
+    "services/aos-api/tests/test_ecommerce_customer_lifecycle_readonly.py": "7a987406dcf9def751b096f5a2e3cf53d1d2698da8cad3402a047195abda8f2f",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "b775e52e5c56019ec9cd1323daa7c13e27ca85864c9bd4ba6ad24f0392a99303",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "fa0150202d61f7458a66787d892e40c47fdd0dc079b4e87257ea04f446f91471"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_customer_lifecycle_readonly.py",
+    "tests/test_w6_009_three_module_closure.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/aip/test_w6_07_customer_lifecycle.py",
+    "tests/aip/test_w6_07_customer_lifecycle_store.py"
+  ],
+  "baseHead": "7385617635ab7331483ad6e891e8bf5e089839e5",
+  "frozenWithOnlyFourOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T04:46:40.758613+00:00",
+  "finishedAt": "2026-10-15T04:57:42.469955+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "5bf30d40edc1944c554921d2c3c14c436108330f9987d31edb163d986c01084c"
+}
+
+EVIDENCE native-r1-result.json
+{
+  "containerId": "fc23e2de9209e7f18138b90d41e78c09bab7866e54cde5d599482ea1e36bb333",
+  "originalVolumeTouched": false,
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "662295c5b97111b7bcb343eed877dba20925fc36218875e72e4cf13af331df07",
+  "sourceSha": "b7ac470efd1d04f36621896d830b094562fb899ab223fb73555f03bc88617010",
+  "originalProducerSyntheticResolver": true,
+  "actualConsentAuthority": false,
+  "productionAuthority": false,
+  "snapshotCounts": [
+    1,
+    2
+  ],
+  "savedRevisionCountNotDistinct": true,
+  "oldExactPolicyRefPreserved": true,
+  "unknownPreserved": true,
+  "commandsEmpty": true,
+  "foreignRowsHiddenWithoutWhere": true,
+  "visiblePolicyRows": 2,
+  "writeDeniedSqlstate": "25006",
+  "sqlCaseNull": true,
+  "privacyRejected": true,
+  "aggregateTenantDriftRejected": true,
+  "malformedTimestampRejected": true,
+  "futureCountNotFiltered": true,
+  "connectionFacts": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "wholeGoalComplete": false
+}
+
+EVIDENCE native-r1-stopped.json
+{
+  "containerId": "fc23e2de9209e7f18138b90d41e78c09bab7866e54cde5d599482ea1e36bb333",
+  "stopped": true,
+  "originalVolumeTouched": false
+}
+
+EVIDENCE code-review-result-r1.json
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "69dad932aaea4c9892c5666762c768a6e82aa98dec2658fb549256c27c321d65",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-lifecycle-bounded-reader-20261015-code-r1",
+    "task_id": "qyh-customer-lifecycle-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "7385617635ab7331483ad6e891e8bf5e089839e5",
+      "authority_revision": "AOS-002036",
+      "files": {
+        ".evidence/qyh-customer-lifecycle-bounded-reader-20261015/code-review-material-r1.txt": "17bb9195bacb9b569661955c24277fbb72ba087ad5688a59668efe3d770499cd"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "客户reader在同一核实只读RR快照中读取四完整保存修订COUNT及有界latest Batch/exact ancestor/policies，SQL尺寸与时间门、outer metadata与稳定错误防止失败伪装空成功。",
+        "evidence": "services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py: connect_read_only with IsolationLevel.REPEATABLE_READ; _count() returns count/invalid_count/latest_created_at over POLICIES tuple (4 tables); _row() uses SQL CASE octet_length<=MAX_ROW_BYTES and LIMIT 1; monotonic deadline() across queries; psycopg.Error maps to AUTHORITY_UNAVAILABLE.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "选中保存事实按原policy请求签名、typed refs/typed ledger与item hashes、prepare/freeze完整继承及lineage核验；strict raw/tenant/time/隐私和零效果保留unknown，不产生Contact或当前Consent准入。",
+        "evidence": "services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py: _validate_batch checks item_hashes/binding_hash/ledger equality, prepared rev1/version1/prior None, frozen inheritance excluding _FREEZE_EXCLUDE fields; _strict enforces int/bool types; counts from _ValidatedStore authority_counts; result.allowedCommands=[], contact/start/send/external_effects_allowed all False via service.contribution_view.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "冻结仅四owned overlay的387专项及相邻测试、原w6_007临时PG真快照/RLS/25006/SQLCASE/metadata拒绝物证与已停止CID支持此候选；未部署、不宣称真实经营或完整Goal完成。",
+        "evidence": ".evidence/qyh-customer-lifecycle-bounded-reader-20261015/source-verification-r1.json: frozenWithOnlyFourOwnedOverlays=true, 387 passed, originalVolumeTouched=false; .evidence/qyh-customer-lifecycle-bounded-reader-20261015/native-r1-result.json: originalProducerSyntheticResolver=true, productionAuthority=false, wholeGoalComplete=false, writeDeniedSqlstate='25006', sqlCaseNull=true, privacyRejected=true; .evidence/qyh-customer-lifecycle-bounded-reader-20261015/native-r1-stopped.json: stopped=true.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前PASS结论及基线7385617635ab7331483ad6e891e8bf5e089839e5；如需推进可登记独立read_http路由集成或真实数据库连接适配审查。"
+  }
+}
+
+EVIDENCE code-review-consumption-r1.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-lifecycle-bounded-reader-20261015-code-r1",
+  "task_id": "qyh-customer-lifecycle-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "7385617635ab7331483ad6e891e8bf5e089839e5",
+    "authority_revision": "AOS-002036",
+    "files": {
+      ".evidence/qyh-customer-lifecycle-bounded-reader-20261015/code-review-material-r1.txt": "17bb9195bacb9b569661955c24277fbb72ba087ad5688a59668efe3d770499cd"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "748678ae4c197954f004d8b90ef70c6a5b8899c60bd764d2a80fd0ef68ecbc67",
+  "transport_sha256": "1d0445934d2d8d48ac4d0252c10cd4bda455ad28def35e7ee00998a56d6d79aa"
+}
+
+RAW FROZEN LOG SHA 5bf30d40edc1944c554921d2c3c14c436108330f9987d31edb163d986c01084c
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+387 passed, 7 warnings in 32.90s

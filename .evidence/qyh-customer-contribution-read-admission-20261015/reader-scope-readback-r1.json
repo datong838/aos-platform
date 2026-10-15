@@ -1,0 +1,30 @@
+{
+  "authority": "AOS-002036",
+  "reader": {
+    "schema": "aos-memory-task-receipt/v1",
+    "task_id": "qyh-customer-lifecycle-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "base_revision": "AOS-002036",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py",
+      "aos-platform/services/aos-api/tests/test_ecommerce_customer_lifecycle_readonly.py",
+      "aos-platform/.evidence/qyh-customer-lifecycle-bounded-reader-20261015"
+    ],
+    "excluded_scope": [
+      "aos-platform/apps/web",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py"
+    ],
+    "expected_outputs": [
+      "Only saved customer contribution readonly snapshot reader and exact tests. Original typed producer hashes, complete saved-revision counts, strict tenant/time/privacy/bounds/failures and commands[]; no ProtectedContact/current consent authorization or effects.",
+      "Full231Goal, independent design/code Prime and frozen/native/genuine SDK/650/visual gates retained; no domain writer/Store/DDL/Web/AIP changes."
+    ],
+    "lease_expires_at": "2026-10-15T08:00:00+00:00",
+    "status": "ACTIVE",
+    "created_at": "2026-10-15T12:40:58+08:00"
+  },
+  "otherLeasesPreserved": 40,
+  "nonOverlapping": true,
+  "wholeGoalComplete": false
+}

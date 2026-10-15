@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "93b328df8b5d7dd646931268a9eb3107468e264891c4a970f3ed728e12e13934",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-contribution-read-admission-20261015-route-quality-r1",
+    "task_id": "qyh-customer-contribution-read-admission-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "7385617635ab7331483ad6e891e8bf5e089839e5",
+      "authority_revision": "AOS-002036",
+      "files": {
+        ".evidence/qyh-customer-contribution-read-admission-20261015/route-quality-material-r1.txt": "0bcef01c7c22be94cf62e4533f3bce229ea563117e25584950e2e0b9134698e6"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "仅canonical customer contributions GET切换typed ReadCatalog并按installed readonly blocker分流专用reader；正常legacy成功、contact/closure和全部POST保持原门。",
+        "evidence": "services/aos-api/aos_api/routers/ecommerce_workshop.py: get_customer_lifecycle_contribution_view 使用 ReadCatalogDependency; test_unreviewed_get_still_uses_legacy_admission 将路径从 contact-contributions 改为不触及 readonly; test_read_dependency_only_reaches_explicit_audited_get_routes 断言 actual 包含 /views/customer/contributions 且不包含 POST 路由; diff 确认原 get_customer_contact_contribution_view 未改。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "principal租户/query拒绝/unknown准入及读取失败503、真实空和非空完整HTTP序列化/原写命令正常路径与只读空命令及四false均在冻结387中验证，不把异常补零/null成功。",
+        "evidence": "tests/test_ecommerce_workshop_read_http.py: test_customer_lifecycle_denied_before_business_read 断言 404 与 catalog.calls==1; test_customer_lifecycle_query_cannot_change_scope 断言 unknown=x 为 400; test_customer_lifecycle_unknown_admission_fails_closed 断言 None/{}/{'item':{'blockers':[]}} 返回 503; test_customer_lifecycle_failure_does_not_become_empty_success 参数化 AUTHORITY_UNAVAILABLE/DRIFT/LIMIT_EXCEEDED/SENSITIVE_CONTENT 并断言 'latestBatch' not in response.text; test_customer_lifecycle_full_http_serialization 断言 readonly 时 allowedCommands 长度为 0 且四 false; source-verification-r1.json 报告 387 passed。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "reader独立质量已合法消费，四文件冻结及原w6_007临时PG完整修订计数/快照/RLS/25006/SQLCASE/隐私证据支持此接线候选；原卷未触碰、未部署，不授Contact/Consent/预算/经营权限或宣称完整Goal完成。",
+        "evidence": "source-verification-r1.json: sourceBefore/sourceAfter 四个文件 SHA 完全一致, frozenWithOnlyFourOwnedOverlays=true, originalVolumeTouched=false; native-r1-result.json: originalVolumeTouched=false, writeDeniedSqlstate='25006', sqlCaseNull=true, privacyRejected=true, productionAuthority=false, wholeGoalComplete=false; native-r1-stopped.json: stopped=true; code-review-consumption-r1.json: status=CONSUMED_MATERIAL_REVIEW。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前 PASS 结论与基线 7385617635ab7331483ad6e891e8bf5e089839e5；如需推进，建议在单独 task 中对生产级只读 PG 连接与 RLS 策略进行真实数据库适配审查，当前材料未覆盖生产部署权限。"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "93b328df8b5d7dd646931268a9eb3107468e264891c4a970f3ed728e12e13934",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-contribution-read-admission-20261015-design-r1",
+    "task_id": "qyh-customer-contribution-read-admission-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "7385617635ab7331483ad6e891e8bf5e089839e5",
+      "authority_revision": "AOS-002036",
+      "files": {
+        ".evidence/qyh-customer-contribution-read-admission-20261015/design-review-material-r1.txt": "5c32b3bc59fc759199e62cb6f729646d8e9d057d39e19a57c7241df99d17823a"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "方案保留原四表完整保存修订COUNT语义，用同一只读一致快照和有界SQL读取选中Batch与exact祖先及四policy；失败稳定拒绝而非补零或null成功。",
+        "evidence": "design-review-material-r1.txt 中段“一致截止面与完整COUNT语义”明确：原counts是四表全部已保存修订的COUNT(*)；使用READ ONLY REPEATABLE READ与transaction_timestamp cutoff；statement_timeout 3000ms/lock_timeout 500ms；COUNT不传输policy payload、不全表fetchall、任何错误整视图失败不补0；batch SELECT ORDER BY created_at DESC, revision DESC LIMIT 1，合计最多6行/8MiB，DTO上限1MiB。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "方案按原producer typed refs与typed ledger签名、prepare/freeze继承及policy lineage验证保存事实，严格tenant/time/隐私/尺寸和零效果；不把历史granted或fixture当当前Consent或Contact准入。",
+        "evidence": "设计“选中事实与原签名”声明：每payload字段/strict int与bool、outer tenant/id/revision/hash/created_at校验且不晚于cutoff；selected四policy重建原Create request JSON content hash及exact ref，核segment→consentPolicy、journey→segment、dialogue→journey/eval一致；Batch用原Prepare校验1000项、itemKeys唯一、CustomerLite类型、eligible/unknown与理由、逐项重算itemHashes与五桶ledger、bindingHash/contentHash；producer-probe-result-r1.json syntheticMemoryOnly=true/actualConsentAuthority=false/databaseOrHttpCalls=0/fiveEffectCountsZero=true，reader-scope-readback-r1.json excluded_scope含aip_action_execution.py/aip_action_store.py，确认非真实授权。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "额外reader与test已非重叠登记，router仅canonical installed readonly GET分流；原writer/Store/DDL/Web及POST不改，RED/原DDL隔离PG/冻结相邻/独立质量/真实SDK650与视觉门明确，完整Goal未缩小。",
+        "evidence": "设计“文件与登记”新文件ecommerce_customer_lifecycle_readonly.py与test_ecommerce_customer_lifecycle_readonly.py；reader-scope-readback-r1.json nonOverlapping=true/scope仅readonly+tests+evidence，其他LeasePreserved=40；design声明“parent只改ecommerce_workshop.py与test_ecommerce_workshop_read_http.py，仅canonical GET /views/customer/contributions”“legacy成功及全部POST...不改”“原w6_007隔离tmpfs PG”“实施后专项/原W6-07及相邻price/closure/catalog冻结累计”。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "按计划先登记并实施新reader与其测试，再只改GET路由分流；实施后跑w6_007隔离PG与RED门，确认四表COUNT、快照cutoff、6行/8MiB上限、五零效果、503稳定拒绝及完整Goal未收窄。"
+  }
+}

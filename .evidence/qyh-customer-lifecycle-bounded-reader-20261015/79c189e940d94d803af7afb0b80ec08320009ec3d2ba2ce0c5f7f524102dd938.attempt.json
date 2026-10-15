@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-customer-lifecycle-bounded-reader-20261015-code-r1",
+  "baseline": {
+    "head": "7385617635ab7331483ad6e891e8bf5e089839e5",
+    "authority_revision": "AOS-002036",
+    "files": {
+      ".evidence/qyh-customer-lifecycle-bounded-reader-20261015/code-review-material-r1.txt": "17bb9195bacb9b569661955c24277fbb72ba087ad5688a59668efe3d770499cd"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "69dad932aaea4c9892c5666762c768a6e82aa98dec2658fb549256c27c321d65",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-customer-contribution-read-admission-20261015-design-r1",
+  "baseline": {
+    "head": "7385617635ab7331483ad6e891e8bf5e089839e5",
+    "authority_revision": "AOS-002036",
+    "files": {
+      ".evidence/qyh-customer-contribution-read-admission-20261015/design-review-material-r1.txt": "5c32b3bc59fc759199e62cb6f729646d8e9d057d39e19a57c7241df99d17823a"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "93b328df8b5d7dd646931268a9eb3107468e264891c4a970f3ed728e12e13934",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

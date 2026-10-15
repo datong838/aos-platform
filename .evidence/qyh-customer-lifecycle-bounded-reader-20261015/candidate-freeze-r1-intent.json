@@ -1,0 +1,12 @@
+{
+  "baseHead": "7385617635ab7331483ad6e891e8bf5e089839e5",
+  "overlay": {
+    "services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py": "b7ac470efd1d04f36621896d830b094562fb899ab223fb73555f03bc88617010",
+    "services/aos-api/tests/test_ecommerce_customer_lifecycle_readonly.py": "7a987406dcf9def751b096f5a2e3cf53d1d2698da8cad3402a047195abda8f2f",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "b775e52e5c56019ec9cd1323daa7c13e27ca85864c9bd4ba6ad24f0392a99303",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "fa0150202d61f7458a66787d892e40c47fdd0dc079b4e87257ea04f446f91471"
+  },
+  "privateSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-lifecycle-bounded-reader-20261015/private/candidate-source-r1",
+  "noUserDirtyCopied": true,
+  "noServiceEffects": true
+}

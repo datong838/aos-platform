@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-customer-contribution-read-admission-20261015-route-quality-r1",
+  "baseline": {
+    "head": "7385617635ab7331483ad6e891e8bf5e089839e5",
+    "authority_revision": "AOS-002036",
+    "files": {
+      ".evidence/qyh-customer-contribution-read-admission-20261015/route-quality-material-r1.txt": "0bcef01c7c22be94cf62e4533f3bce229ea563117e25584950e2e0b9134698e6"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "93b328df8b5d7dd646931268a9eb3107468e264891c4a970f3ed728e12e13934",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

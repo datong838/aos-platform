@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "69dad932aaea4c9892c5666762c768a6e82aa98dec2658fb549256c27c321d65",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-lifecycle-bounded-reader-20261015-code-r1",
+    "task_id": "qyh-customer-lifecycle-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "7385617635ab7331483ad6e891e8bf5e089839e5",
+      "authority_revision": "AOS-002036",
+      "files": {
+        ".evidence/qyh-customer-lifecycle-bounded-reader-20261015/code-review-material-r1.txt": "17bb9195bacb9b569661955c24277fbb72ba087ad5688a59668efe3d770499cd"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "客户reader在同一核实只读RR快照中读取四完整保存修订COUNT及有界latest Batch/exact ancestor/policies，SQL尺寸与时间门、outer metadata与稳定错误防止失败伪装空成功。",
+        "evidence": "services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py: connect_read_only with IsolationLevel.REPEATABLE_READ; _count() returns count/invalid_count/latest_created_at over POLICIES tuple (4 tables); _row() uses SQL CASE octet_length<=MAX_ROW_BYTES and LIMIT 1; monotonic deadline() across queries; psycopg.Error maps to AUTHORITY_UNAVAILABLE.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "选中保存事实按原policy请求签名、typed refs/typed ledger与item hashes、prepare/freeze完整继承及lineage核验；strict raw/tenant/time/隐私和零效果保留unknown，不产生Contact或当前Consent准入。",
+        "evidence": "services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py: _validate_batch checks item_hashes/binding_hash/ledger equality, prepared rev1/version1/prior None, frozen inheritance excluding _FREEZE_EXCLUDE fields; _strict enforces int/bool types; counts from _ValidatedStore authority_counts; result.allowedCommands=[], contact/start/send/external_effects_allowed all False via service.contribution_view.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "冻结仅四owned overlay的387专项及相邻测试、原w6_007临时PG真快照/RLS/25006/SQLCASE/metadata拒绝物证与已停止CID支持此候选；未部署、不宣称真实经营或完整Goal完成。",
+        "evidence": ".evidence/qyh-customer-lifecycle-bounded-reader-20261015/source-verification-r1.json: frozenWithOnlyFourOwnedOverlays=true, 387 passed, originalVolumeTouched=false; .evidence/qyh-customer-lifecycle-bounded-reader-20261015/native-r1-result.json: originalProducerSyntheticResolver=true, productionAuthority=false, wholeGoalComplete=false, writeDeniedSqlstate='25006', sqlCaseNull=true, privacyRejected=true; .evidence/qyh-customer-lifecycle-bounded-reader-20261015/native-r1-stopped.json: stopped=true.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前PASS结论及基线7385617635ab7331483ad6e891e8bf5e089839e5；如需推进可登记独立read_http路由集成或真实数据库连接适配审查。"
+  }
+}

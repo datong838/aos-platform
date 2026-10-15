@@ -51,7 +51,7 @@ def test_root_get_uses_scoped_read_admission_before_business_reader(module):
 
 
 @pytest.mark.parametrize('path', [
-    '/views/customer/contributions', '/views/creator-growth/workflow/drafts/fixture/history',
+    '/views/customer/contact-contributions', '/views/creator-growth/workflow/drafts/fixture/history',
     '/modules/ecommerce.operations/readiness',
 ])
 def test_unreviewed_get_still_uses_legacy_admission(path):
@@ -82,6 +82,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
         '/v1/ecommerce-workshop/views/analyst/learning-scenario',
         '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
         '/v1/ecommerce-workshop/views/creator-growth/contributions',
+        '/v1/ecommerce-workshop/views/customer/contributions',
         '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
         '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
         '/v1/ecommerce-workshop/views/{module}/closure-contributions',
@@ -838,3 +839,104 @@ def test_price_closure_complete_http_dto(readonly, nonempty):
     else:
         assert body['latestClosure'] is body['latestUsage'] is body['latestEffect'] is body['latestHandoff'] is None
     assert bool(conn.queries) == readonly and not legacy.calls
+
+
+CUSTOMER_LIFECYCLE_PATH = '/v1/ecommerce-workshop/views/customer/contributions'
+
+
+def customer_lifecycle_probes(client, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope):
+            calls.append(('legacy', scope.key))
+            raise ReadReached('legacy-customer-lifecycle')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key))
+            if failure:
+                from aos_api.ecommerce_customer_lifecycle_readonly import CustomerLifecycleReadonlyError
+                raise CustomerLifecycleReadonlyError(failure)
+            raise ReadReached('readonly-customer-lifecycle')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_customer_lifecycle] = lambda: Legacy()
+    client.app.dependency_overrides[getattr(routes, 'get_customer_lifecycle_readonly', Readonly)] = lambda: Readonly()
+    return calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_customer_lifecycle_selects_only_admitted_reader(readonly):
+    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
+    def admit(**scope):
+        assert scope == dict(module_id='ecommerce.customer', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+        return price_admission(readonly)
+    catalog.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-customer-lifecycle'): client.get(CUSTOMER_LIFECYCLE_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'))] and not legacy.calls
+
+
+def test_customer_lifecycle_denied_before_business_read():
+    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
+    assert client.get(CUSTOMER_LIFECYCLE_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+
+
+@pytest.mark.parametrize('admission', [None, {}, {'item': {'blockers': []}}])
+def test_customer_lifecycle_unknown_admission_fails_closed(admission):
+    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
+    catalog.get_readiness = lambda **kwargs: admission
+    response = client.get(CUSTOMER_LIFECYCLE_PATH)
+    assert response.status_code == 503 and 'CUSTOMER_LIFECYCLE_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls
+
+
+@pytest.mark.parametrize('suffix', ['AUTHORITY_UNAVAILABLE', 'AUTHORITY_DRIFT', 'LIMIT_EXCEEDED', 'SENSITIVE_CONTENT'])
+def test_customer_lifecycle_failure_does_not_become_empty_success(suffix):
+    client, legacy, catalog = client_with_catalogs()
+    code = 'CUSTOMER_LIFECYCLE_READ_' + suffix; calls = customer_lifecycle_probes(client, code)
+    catalog.get_readiness = lambda **kwargs: price_admission()
+    response = client.get(CUSTOMER_LIFECYCLE_PATH)
+    assert response.status_code == 503 and code in response.text and 'latestBatch' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
+
+
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'unknown=x'])
+def test_customer_lifecycle_query_cannot_change_scope(query):
+    client, legacy, catalog = client_with_catalogs(); calls = customer_lifecycle_probes(client)
+    assert client.get(CUSTOMER_LIFECYCLE_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+
+
+@pytest.mark.parametrize('readonly', [False, True])
+@pytest.mark.parametrize('nonempty', [False, True])
+def test_customer_lifecycle_full_http_serialization(readonly, nonempty):
+    from tests.test_ecommerce_customer_lifecycle_readonly import run
+    from aos_api.ecommerce_workshop_customer_lifecycle import EcommerceWorkshopCustomerLifecycleService
+    f, conn, reader = run()
+    if not nonempty:
+        for table in conn.data: conn.data[table] = []
+    verified = reader.read(f.SCOPE)
+    class Store:
+        def authority_counts(self, scope):
+            assert scope == f.SCOPE
+            return {key: getattr(verified, key + '_count') for key in ('consent_policy', 'segment', 'journey', 'dialogue')}
+        def latest_batch_or_none_any(self, scope): return verified.latest_batch
+    client, legacy, catalog = client_with_catalogs()
+    client.app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='isolated-fixture', org_id=f.SCOPE.org_id, project_id=f.SCOPE.project_id, roles=['admin'], markings=[])
+    catalog.get_readiness = lambda **kwargs: price_admission(readonly)
+    client.app.dependency_overrides[routes.get_customer_lifecycle_readonly] = lambda: reader
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_customer_lifecycle] = lambda: EcommerceWorkshopCustomerLifecycleService(Store())
+    response = client.get(CUSTOMER_LIFECYCLE_PATH)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['tenant'] == dict(orgId='dev-org', projectId='fixture-project')
+    assert body['primaryColleague'] == '私域管家'
+    assert len(body['allowedCommands']) == (0 if readonly else 6)
+    assert body['contactResolutionAllowed'] is body['startAllowed'] is body['sendAllowed'] is body['externalEffectsAllowed'] is False
+    if nonempty:
+        assert body['latestBatch']['lifecycle'] == 'frozen'
+        assert body['latestBatch']['ledger']['unknown'] == 1
+        assert body['latestBatch']['items'][1]['retentionActive'] is None
+    else:
+        assert body['latestBatch'] is None and body['consentPolicyCount'] == 0
+    assert not legacy.calls

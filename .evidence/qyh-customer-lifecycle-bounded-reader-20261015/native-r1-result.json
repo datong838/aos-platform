@@ -1,0 +1,79 @@
+{
+  "containerId": "fc23e2de9209e7f18138b90d41e78c09bab7866e54cde5d599482ea1e36bb333",
+  "originalVolumeTouched": false,
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "662295c5b97111b7bcb343eed877dba20925fc36218875e72e4cf13af331df07",
+  "sourceSha": "b7ac470efd1d04f36621896d830b094562fb899ab223fb73555f03bc88617010",
+  "originalProducerSyntheticResolver": true,
+  "actualConsentAuthority": false,
+  "productionAuthority": false,
+  "snapshotCounts": [
+    1,
+    2
+  ],
+  "savedRevisionCountNotDistinct": true,
+  "oldExactPolicyRefPreserved": true,
+  "unknownPreserved": true,
+  "commandsEmpty": true,
+  "foreignRowsHiddenWithoutWhere": true,
+  "visiblePolicyRows": 2,
+  "writeDeniedSqlstate": "25006",
+  "sqlCaseNull": true,
+  "privacyRejected": true,
+  "aggregateTenantDriftRejected": true,
+  "malformedTimestampRejected": true,
+  "futureCountNotFiltered": true,
+  "connectionFacts": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "wholeGoalComplete": false
+}

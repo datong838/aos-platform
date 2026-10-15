@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-contribution-read-admission-20261015-route-quality-r1",
+  "task_id": "qyh-customer-contribution-read-admission-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "7385617635ab7331483ad6e891e8bf5e089839e5",
+    "authority_revision": "AOS-002036",
+    "files": {
+      ".evidence/qyh-customer-contribution-read-admission-20261015/route-quality-material-r1.txt": "0bcef01c7c22be94cf62e4533f3bce229ea563117e25584950e2e0b9134698e6"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "3c5fb70f8d7985719bbc9f59f507b3756299ab88b0c585c0b9fd1501ae219b09",
+  "transport_sha256": "05e7b90091b79869123a68415cc647372fdcf944257167909a43816907717c83"
+}

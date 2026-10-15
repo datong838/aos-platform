@@ -1,0 +1,769 @@
+PRE-IMPLEMENTATION DESIGN REVIEW ONLY. No product code or admission yet. Full231Goal remains ACTIVE. Synthetic original producer probe is not real consent, contact, budget or operating authority. COUNT means all stored revisions, not active consent or distinct customers. Review whether the plan is safe and implementable before RED/code.
+
+FULL FILE services/aos-api/aos_api/ecommerce_workshop_customer_lifecycle.py SHA 0c1cb897d99b622d041d65688bedceedd5697da1fdd6152844fcd0e2bfa3ac4d
+"""W6-07 customer lifecycle authority and side-effect-free batch preparation."""
+from __future__ import annotations
+
+import hashlib
+import json
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
+
+from pydantic import Field, field_validator, model_validator
+
+from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.ecommerce_workshop_customer_contracts import CustomerExactRef
+from aos_api.tenant_scope import TenantScope
+
+
+CUSTOMER_LIFECYCLE_SCHEMA_VERSION = "aos.ecommerce-workshop.customer-lifecycle/v1"
+CUSTOMER_LOGIC_ID = "ecommerce-customer-relationship"
+CUSTOMER_SKILL_IDS = (
+    "build-evidence-pack",
+    "segment-entities",
+    "consent-and-purpose-check",
+    "needs-discovery",
+    "customer-journey-plan",
+    "response-or-outreach-draft",
+    "verify-claims",
+    "review-outcomes",
+)
+
+
+def canonical_hash(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+class CustomerLifecycleBlocked(RuntimeError):
+    code = "CUSTOMER_LIFECYCLE_BLOCKED"
+
+
+class CustomerLifecycleConflict(CustomerLifecycleBlocked):
+    code = "CUSTOMER_LIFECYCLE_CONFLICT"
+
+
+class ConsentDecision(StrEnum):
+    GRANTED = "granted"
+    WITHDRAWN = "withdrawn"
+    EXPIRED = "expired"
+    UNKNOWN = "unknown"
+
+
+class CustomerBatchDisposition(StrEnum):
+    ELIGIBLE = "eligible"
+    EXCLUDED = "excluded"
+    NEEDS_REVIEW = "needs_review"
+    UNKNOWN = "unknown"
+    DEDUPLICATED = "deduplicated"
+
+
+def _unique(values: list[str], label: str) -> list[str]:
+    if len(values) != len(set(values)) or any(not value.strip() for value in values):
+        raise ValueError(f"{label} must be unique and non-empty")
+    return values
+
+
+def _unique_refs(values: list[CustomerExactRef], label: str) -> list[CustomerExactRef]:
+    identities = [(ref.resource_type, ref.resource_id, ref.revision, ref.content_hash, ref.receipt_id) for ref in values]
+    if len(identities) != len(set(identities)):
+        raise ValueError(f"{label} must be unique")
+    return values
+
+
+class CreateCustomerConsentPolicyRequest(AipContractModel):
+    policy_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    purpose: str = Field(min_length=1, max_length=160)
+    allowed_channels: list[str] = Field(min_length=1, max_length=16)
+    marking_policy_ref: CustomerExactRef
+    retention_policy_ref: CustomerExactRef
+    preference_policy_ref: CustomerExactRef
+    retention_days: int = Field(ge=1, le=3650)
+    unknown_behavior: str = Field(default="block", pattern=r"^block$")
+
+    @model_validator(mode="after")
+    def _canonical(self) -> "CreateCustomerConsentPolicyRequest":
+        _unique(self.allowed_channels, "allowedChannels")
+        expected = (
+            (self.marking_policy_ref, "MarkingPolicyRevision"),
+            (self.retention_policy_ref, "RetentionPolicyRevision"),
+            (self.preference_policy_ref, "PreferencePolicyRevision"),
+        )
+        if any(ref.resource_type != kind for ref, kind in expected):
+            raise ValueError("customer consent policy exact refs drifted")
+        return self
+
+
+class CustomerConsentPolicyRevision(CreateCustomerConsentPolicyRequest):
+    tenant: TenantContext
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class CreateCustomerSegmentRequest(AipContractModel):
+    segment_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    definition_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    query_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    schema_ref: CustomerExactRef
+    source_refs: list[CustomerExactRef] = Field(min_length=1, max_length=100)
+    consent_policy_ref: CustomerExactRef
+    k_anonymity_minimum: int = Field(ge=5, le=10000)
+    cutoff: datetime
+
+    @field_validator("cutoff")
+    @classmethod
+    def _aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("cutoff must include timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _refs(self) -> "CreateCustomerSegmentRequest":
+        if self.schema_ref.resource_type != "SegmentSchemaRevision" or self.consent_policy_ref.resource_type != "CustomerConsentPolicyRevision":
+            raise ValueError("segment schema or consent policy ref drifted")
+        if any(ref.resource_type not in {"CustomerLiteProjectionRevision", "SourceReadinessRevision"} for ref in self.source_refs):
+            raise ValueError("segment source refs must remain privacy-minimized")
+        _unique_refs(self.source_refs, "sourceRefs")
+        return self
+
+
+class CustomerSegmentRevision(CreateCustomerSegmentRequest):
+    tenant: TenantContext
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class CreateCustomerJourneyRequest(AipContractModel):
+    journey_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    segment_ref: CustomerExactRef
+    stage_definition_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    entry_condition_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    exit_condition_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    stop_conditions: list[str] = Field(min_length=1, max_length=32)
+    allowed_channels: list[str] = Field(min_length=1, max_length=16)
+    eval_ref: CustomerExactRef
+    policy_ref: CustomerExactRef
+
+    @model_validator(mode="after")
+    def _refs(self) -> "CreateCustomerJourneyRequest":
+        expected = ((self.segment_ref, "CustomerSegmentRevision"), (self.eval_ref, "EvalContractRevision"), (self.policy_ref, "JourneyPolicyRevision"))
+        if any(ref.resource_type != kind for ref, kind in expected):
+            raise ValueError("journey exact refs drifted")
+        _unique(self.stop_conditions, "stopConditions")
+        _unique(self.allowed_channels, "allowedChannels")
+        return self
+
+
+class CustomerJourneyRevision(CreateCustomerJourneyRequest):
+    tenant: TenantContext
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class CreateCustomerDialogueRequest(AipContractModel):
+    dialogue_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    journey_ref: CustomerExactRef
+    brief_ref: CustomerExactRef
+    evidence_ref: CustomerExactRef
+    eval_ref: CustomerExactRef
+    responsibility_ref: CustomerExactRef
+    template_ref: CustomerExactRef
+    strategy_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    originals_reachable: bool
+
+    @model_validator(mode="after")
+    def _refs(self) -> "CreateCustomerDialogueRequest":
+        expected = (
+            (self.journey_ref, "CustomerJourneyRevision"), (self.brief_ref, "TaskBriefRevision"),
+            (self.evidence_ref, "EvidenceBundleRevision"), (self.eval_ref, "EvalContractRevision"),
+            (self.responsibility_ref, "ResponsibilityPlanRevision"), (self.template_ref, "TemplateRevision"),
+        )
+        if any(ref.resource_type != kind for ref, kind in expected):
+            raise ValueError("dialogue exact refs drifted")
+        if not self.originals_reachable:
+            raise ValueError("dialogue originals must remain reachable")
+        return self
+
+
+class CustomerDialogueStrategyRevision(CreateCustomerDialogueRequest):
+    tenant: TenantContext
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class PrepareCustomerDialogueBatchItem(AipContractModel):
+    item_key: str = Field(min_length=1, max_length=200)
+    customer_ref: CustomerExactRef
+    disposition: CustomerBatchDisposition
+    consent_decision: ConsentDecision
+    retention_active: bool | None
+    k_anonymity_satisfied: bool | None
+    reason_codes: list[str] = Field(default_factory=list, max_length=32)
+    eligibility_evidence_refs: list[CustomerExactRef] = Field(default_factory=list, max_length=32)
+
+    @model_validator(mode="after")
+    def _privacy_and_disposition(self) -> "PrepareCustomerDialogueBatchItem":
+        if self.customer_ref.resource_type != "CustomerLiteProjectionRevision":
+            raise ValueError("batch item only accepts CustomerLiteProjectionRevision")
+        _unique(self.reason_codes, "reasonCodes")
+        _unique_refs(self.eligibility_evidence_refs, "eligibilityEvidenceRefs")
+        eligible = self.consent_decision is ConsentDecision.GRANTED and self.retention_active is True and self.k_anonymity_satisfied is True and bool(self.eligibility_evidence_refs)
+        if self.disposition is CustomerBatchDisposition.ELIGIBLE and (not eligible or self.reason_codes):
+            raise ValueError("eligible item requires exact granted consent/retention/k-anonymity evidence")
+        if self.disposition is not CustomerBatchDisposition.ELIGIBLE and not self.reason_codes:
+            raise ValueError("non-eligible item requires reasonCodes")
+        return self
+
+
+class CustomerDialogueBatchLedger(AipContractModel):
+    input: int = Field(ge=0)
+    eligible: int = Field(ge=0)
+    excluded: int = Field(ge=0)
+    needs_review: int = Field(ge=0)
+    unknown: int = Field(ge=0)
+    deduplicated: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _conserves(self) -> "CustomerDialogueBatchLedger":
+        if self.input != self.eligible + self.excluded + self.needs_review + self.unknown + self.deduplicated:
+            raise ValueError("customer batch ledger must conserve input")
+        return self
+
+
+class PrepareCustomerDialogueBatchRequest(AipContractModel):
+    batch_id: str = Field(min_length=1, max_length=200)
+    segment_ref: CustomerExactRef
+    journey_ref: CustomerExactRef
+    dialogue_ref: CustomerExactRef
+    consent_policy_ref: CustomerExactRef
+    frequency_policy_ref: CustomerExactRef
+    channel_capability_ref: CustomerExactRef
+    items: list[PrepareCustomerDialogueBatchItem] = Field(min_length=1, max_length=1000)
+
+    @model_validator(mode="after")
+    def _refs(self) -> "PrepareCustomerDialogueBatchRequest":
+        expected = (
+            (self.segment_ref, "CustomerSegmentRevision"), (self.journey_ref, "CustomerJourneyRevision"),
+            (self.dialogue_ref, "CustomerDialogueStrategyRevision"), (self.consent_policy_ref, "CustomerConsentPolicyRevision"),
+            (self.frequency_policy_ref, "FrequencyPolicyRevision"), (self.channel_capability_ref, "CapabilityBindingRevision"),
+        )
+        if any(ref.resource_type != kind for ref, kind in expected):
+            raise ValueError("customer batch exact refs drifted")
+        _unique([item.item_key for item in self.items], "itemKeys")
+        return self
+
+
+class CustomerDialogueBatchRevision(AipContractModel):
+    tenant: TenantContext
+    batch_id: str
+    revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    lifecycle: str = Field(pattern=r"^(prepared|frozen|stale)$")
+    segment_ref: CustomerExactRef
+    journey_ref: CustomerExactRef
+    dialogue_ref: CustomerExactRef
+    consent_policy_ref: CustomerExactRef
+    frequency_policy_ref: CustomerExactRef
+    channel_capability_ref: CustomerExactRef
+    items: list[PrepareCustomerDialogueBatchItem]
+    item_hashes: list[str]
+    ledger: CustomerDialogueBatchLedger
+    binding_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    contact_resolution_count: int = Field(default=0, ge=0, le=0)
+    action_count: int = Field(default=0, ge=0, le=0)
+    provider_call_count: int = Field(default=0, ge=0, le=0)
+    send_count: int = Field(default=0, ge=0, le=0)
+    external_effect_count: int = Field(default=0, ge=0, le=0)
+    prior_content_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class FreezeCustomerDialogueBatchRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    exact_refs: dict[str, CustomerExactRef]
+    item_hashes: list[str]
+
+
+class CustomerLifecycleContributionView(AipContractModel):
+    schema_version: str = CUSTOMER_LIFECYCLE_SCHEMA_VERSION
+    tenant: TenantContext
+    evaluated_at: datetime
+    atomic_skill_ids: list[str] = Field(default_factory=lambda: list(CUSTOMER_SKILL_IDS))
+    logic_id: str = CUSTOMER_LOGIC_ID
+    primary_colleague: str = "私域管家"
+    collaborator_colleagues: list[str] = Field(default_factory=lambda: ["内容官", "客服专员", "导购顾问", "数据参谋"])
+    consent_policy_count: int = Field(ge=0)
+    segment_count: int = Field(ge=0)
+    journey_count: int = Field(ge=0)
+    dialogue_count: int = Field(ge=0)
+    latest_batch: CustomerDialogueBatchRevision | None
+    blockers: list[str]
+    allowed_commands: list[str] = Field(default_factory=lambda: [
+        "CREATE_CUSTOMER_CONSENT_POLICY", "CREATE_CUSTOMER_SEGMENT", "CREATE_CUSTOMER_JOURNEY",
+        "CREATE_CUSTOMER_DIALOGUE", "PREPARE_CUSTOMER_DIALOGUE_BATCH", "FREEZE_CUSTOMER_DIALOGUE_BATCH",
+    ])
+    contact_resolution_allowed: bool = False
+    start_allowed: bool = False
+    send_allowed: bool = False
+    external_effects_allowed: bool = False
+
+
+class EcommerceWorkshopCustomerLifecycleService:
+    def __init__(self, store: Any) -> None:
+        self.store = store
+
+    @staticmethod
+    def _tenant(scope: TenantScope) -> TenantContext:
+        return TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+
+    @staticmethod
+    def _ref(resource_type: str, resource_id: str, revision: int, content_hash: str) -> CustomerExactRef:
+        return CustomerExactRef(resourceType=resource_type, resourceId=resource_id, revision=revision, contentHash=f"sha256:{content_hash}", receiptId=f"receipt-{resource_id}")
+
+    def _create(self, scope: TenantScope, request: Any, actor: str, model: type[Any], append: Any, *, now: datetime | None = None) -> Any:
+        at = now or datetime.now(UTC)
+        payload = request.model_dump(mode="json", by_alias=True)
+        item = model(tenant=self._tenant(scope), **payload, contentHash=canonical_hash(payload), createdBy=actor, createdAt=at)
+        return append(scope, item)
+
+    def create_consent_policy(self, scope: TenantScope, request: CreateCustomerConsentPolicyRequest, actor: str, *, now: datetime | None = None) -> CustomerConsentPolicyRevision:
+        return self._create(scope, request, actor, CustomerConsentPolicyRevision, self.store.append_consent_policy, now=now)
+
+    def create_segment(self, scope: TenantScope, request: CreateCustomerSegmentRequest, actor: str, *, now: datetime | None = None) -> CustomerSegmentRevision:
+        self.store.require_consent_policy(scope, request.consent_policy_ref)
+        return self._create(scope, request, actor, CustomerSegmentRevision, self.store.append_segment, now=now)
+
+    def create_journey(self, scope: TenantScope, request: CreateCustomerJourneyRequest, actor: str, *, now: datetime | None = None) -> CustomerJourneyRevision:
+        self.store.require_segment(scope, request.segment_ref)
+        return self._create(scope, request, actor, CustomerJourneyRevision, self.store.append_journey, now=now)
+
+    def create_dialogue(self, scope: TenantScope, request: CreateCustomerDialogueRequest, actor: str, *, now: datetime | None = None) -> CustomerDialogueStrategyRevision:
+        journey = self.store.require_journey(scope, request.journey_ref)
+        if journey.eval_ref != request.eval_ref:
+            raise CustomerLifecycleBlocked("CUSTOMER_DIALOGUE_JOURNEY_EVAL_DRIFTED")
+        return self._create(scope, request, actor, CustomerDialogueStrategyRevision, self.store.append_dialogue, now=now)
+
+    def prepare_batch(self, scope: TenantScope, request: PrepareCustomerDialogueBatchRequest, actor: str, *, now: datetime | None = None) -> CustomerDialogueBatchRevision:
+        at = now or datetime.now(UTC)
+        segment = self.store.require_segment(scope, request.segment_ref)
+        journey = self.store.require_journey(scope, request.journey_ref)
+        dialogue = self.store.require_dialogue(scope, request.dialogue_ref)
+        self.store.require_consent_policy(scope, request.consent_policy_ref)
+        if journey.segment_ref != request.segment_ref or dialogue.journey_ref != request.journey_ref or segment.consent_policy_ref != request.consent_policy_ref:
+            raise CustomerLifecycleBlocked("CUSTOMER_BATCH_LINEAGE_DRIFTED")
+        self.store.require_external_policy_authorities(scope, request.frequency_policy_ref, request.channel_capability_ref)
+        counts = {item: 0 for item in CustomerBatchDisposition}
+        for item in request.items:
+            counts[item.disposition] += 1
+        ledger = CustomerDialogueBatchLedger(
+            input=len(request.items), eligible=counts[CustomerBatchDisposition.ELIGIBLE],
+            excluded=counts[CustomerBatchDisposition.EXCLUDED], needsReview=counts[CustomerBatchDisposition.NEEDS_REVIEW],
+            unknown=counts[CustomerBatchDisposition.UNKNOWN], deduplicated=counts[CustomerBatchDisposition.DEDUPLICATED],
+        )
+        refs = {
+            "segment": request.segment_ref, "journey": request.journey_ref, "dialogue": request.dialogue_ref,
+            "consentPolicy": request.consent_policy_ref, "frequencyPolicy": request.frequency_policy_ref,
+            "channelCapability": request.channel_capability_ref,
+        }
+        item_hashes = [canonical_hash(item.model_dump(mode="json", by_alias=True)) for item in request.items]
+        binding_hash = canonical_hash({"refs": refs, "itemHashes": item_hashes})
+        payload = request.model_dump(mode="json", by_alias=True)
+        content_hash = canonical_hash({**payload, "ledger": ledger, "bindingHash": binding_hash})
+        existing = self.store.latest_batch_or_none(scope, request.batch_id)
+        if existing is not None:
+            if existing.content_hash == content_hash:
+                return existing
+            raise CustomerLifecycleConflict("CUSTOMER_BATCH_IDEMPOTENCY_CONFLICT")
+        item = CustomerDialogueBatchRevision(
+            tenant=self._tenant(scope), batchId=request.batch_id, revision=1, version=1, lifecycle="prepared",
+            segmentRef=request.segment_ref, journeyRef=request.journey_ref, dialogueRef=request.dialogue_ref,
+            consentPolicyRef=request.consent_policy_ref, frequencyPolicyRef=request.frequency_policy_ref,
+            channelCapabilityRef=request.channel_capability_ref, items=request.items, itemHashes=item_hashes,
+            ledger=ledger, bindingHash=binding_hash, contentHash=content_hash, createdBy=actor, createdAt=at,
+        )
+        return self.store.append_batch(scope, item)
+
+    def freeze_batch(self, scope: TenantScope, batch_id: str, request: FreezeCustomerDialogueBatchRequest, actor: str, *, now: datetime | None = None) -> CustomerDialogueBatchRevision:
+        at = now or datetime.now(UTC)
+        current = self.store.latest_batch(scope, batch_id)
+        if current.lifecycle != "prepared" or current.version != request.expected_version or current.content_hash != request.expected_content_hash:
+            raise CustomerLifecycleConflict("CUSTOMER_BATCH_EXPECTED_VERSION_OR_HASH_DRIFTED")
+        expected_refs = {
+            "segment": current.segment_ref, "journey": current.journey_ref, "dialogue": current.dialogue_ref,
+            "consentPolicy": current.consent_policy_ref, "frequencyPolicy": current.frequency_policy_ref,
+            "channelCapability": current.channel_capability_ref,
+        }
+        if request.exact_refs != expected_refs or request.item_hashes != current.item_hashes:
+            raise CustomerLifecycleConflict("CUSTOMER_BATCH_EXACT_REFS_OR_ITEMS_DRIFTED")
+        payload = current.model_dump(mode="json", by_alias=True, exclude={"revision", "version", "lifecycle", "prior_content_hash", "content_hash", "created_by", "created_at"})
+        content_hash = canonical_hash({**payload, "revision": current.revision + 1, "version": current.version + 1, "lifecycle": "frozen", "priorContentHash": current.content_hash})
+        frozen = current.model_copy(update={"revision": current.revision + 1, "version": current.version + 1, "lifecycle": "frozen", "prior_content_hash": current.content_hash, "content_hash": content_hash, "created_by": actor, "created_at": at})
+        return self.store.append_batch(scope, frozen)
+
+    def contribution_view(self, scope: TenantScope, *, now: datetime | None = None) -> CustomerLifecycleContributionView:
+        blockers: list[str] = []
+        try:
+            counts = self.store.authority_counts(scope)
+            latest = self.store.latest_batch_or_none_any(scope)
+        except CustomerLifecycleBlocked as exc:
+            counts = {"consent_policy": 0, "segment": 0, "journey": 0, "dialogue": 0}
+            latest = None
+            blockers.append(str(exc))
+        blockers.extend(["CUSTOMER_CONTACT_RESOLUTION_NOT_AUTHORIZED", "CUSTOMER_START_SEND_NOT_AUTHORIZED"])
+        return CustomerLifecycleContributionView(
+            tenant=self._tenant(scope), evaluatedAt=now or datetime.now(UTC),
+            consentPolicyCount=counts["consent_policy"], segmentCount=counts["segment"],
+            journeyCount=counts["journey"], dialogueCount=counts["dialogue"], latestBatch=latest, blockers=blockers,
+        )
+
+
+__all__ = [
+    "CUSTOMER_LIFECYCLE_SCHEMA_VERSION", "CUSTOMER_LOGIC_ID", "CUSTOMER_SKILL_IDS", "ConsentDecision",
+    "CustomerBatchDisposition", "CustomerConsentPolicyRevision", "CustomerDialogueBatchLedger",
+    "CustomerDialogueBatchRevision", "CustomerDialogueStrategyRevision", "CustomerJourneyRevision",
+    "CustomerLifecycleBlocked", "CustomerLifecycleConflict", "CustomerLifecycleContributionView",
+    "CustomerSegmentRevision", "CreateCustomerConsentPolicyRequest", "CreateCustomerDialogueRequest",
+    "CreateCustomerJourneyRequest", "CreateCustomerSegmentRequest", "EcommerceWorkshopCustomerLifecycleService",
+    "FreezeCustomerDialogueBatchRequest", "PrepareCustomerDialogueBatchItem", "PrepareCustomerDialogueBatchRequest",
+]
+
+
+FULL FILE services/aos-api/aos_api/ecommerce_workshop_customer_lifecycle_store.py SHA b533cf7d759aa8f07ae4b3921ce17ae289114db31a2bb6c6abaa2d870c387f30
+"""Tenant-scoped append-only persistence for W6-07 customer lifecycle authority."""
+from __future__ import annotations
+
+import json
+from collections.abc import Callable
+from typing import Any
+
+import psycopg
+
+from aos_api.db import connect
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_workshop_customer_contracts import CustomerExactRef
+from aos_api.ecommerce_workshop_customer_lifecycle import (
+    CustomerConsentPolicyRevision,
+    CustomerDialogueBatchRevision,
+    CustomerDialogueStrategyRevision,
+    CustomerJourneyRevision,
+    CustomerLifecycleBlocked,
+    CustomerSegmentRevision,
+)
+from aos_api.tenant_scope import TenantScope
+
+
+class EcommerceWorkshopCustomerLifecycleStore:
+    def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
+        self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
+
+    @staticmethod
+    def _json(value: Any) -> str:
+        return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+
+    @staticmethod
+    def _assert_tenant(scope: TenantScope, item: Any) -> None:
+        if (item.tenant.org_id, item.tenant.project_id) != scope.key:
+            raise CustomerLifecycleBlocked("CUSTOMER_LIFECYCLE_TENANT_DRIFT")
+
+    def _append(self, scope: TenantScope, table: str, identity_column: str, identity: str, revision: int, content_hash: str, item: Any, created_at: Any) -> Any:
+        self._assert_tenant(scope, item)
+        payload = item.model_dump(mode="json", by_alias=True)
+        with self._connect(scope) as conn:
+            conn.execute(
+                f"INSERT INTO {table}(org_id,project_id,{identity_column},revision,content_hash,authority_data,created_at) VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s) ON CONFLICT DO NOTHING",
+                (*scope.key, identity, revision, content_hash, self._json(payload), created_at),
+            )
+            row = conn.execute(
+                f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",
+                (*scope.key, identity, revision),
+            ).fetchone()
+            if row is None or row["content_hash"] != content_hash:
+                raise CustomerLifecycleBlocked("CUSTOMER_LIFECYCLE_IDEMPOTENCY_CONFLICT")
+            conn.commit()
+        return type(item).model_validate(row["authority_data"])
+
+    def _require(self, scope: TenantScope, table: str, identity_column: str, ref: CustomerExactRef, model: type[Any]) -> Any:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",
+                (*scope.key, ref.resource_id, ref.revision),
+            ).fetchone()
+        if row is None or f"sha256:{row['content_hash']}" != ref.content_hash:
+            raise CustomerLifecycleBlocked(f"{ref.resource_type.upper()}_MISSING_OR_DRIFTED")
+        item = model.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+
+    def append_consent_policy(self, scope: TenantScope, item: CustomerConsentPolicyRevision) -> CustomerConsentPolicyRevision:
+        return self._append(scope, "ecommerce_customer_consent_policy_revision", "policy_id", item.policy_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_segment(self, scope: TenantScope, item: CustomerSegmentRevision) -> CustomerSegmentRevision:
+        return self._append(scope, "ecommerce_customer_segment_revision", "segment_id", item.segment_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_journey(self, scope: TenantScope, item: CustomerJourneyRevision) -> CustomerJourneyRevision:
+        return self._append(scope, "ecommerce_customer_journey_revision", "journey_id", item.journey_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_dialogue(self, scope: TenantScope, item: CustomerDialogueStrategyRevision) -> CustomerDialogueStrategyRevision:
+        return self._append(scope, "ecommerce_customer_dialogue_strategy_revision", "dialogue_id", item.dialogue_id, item.revision, item.content_hash, item, item.created_at)
+
+    def append_batch(self, scope: TenantScope, item: CustomerDialogueBatchRevision) -> CustomerDialogueBatchRevision:
+        return self._append(scope, "ecommerce_customer_dialogue_batch_revision", "batch_id", item.batch_id, item.revision, item.content_hash, item, item.created_at)
+
+    def require_consent_policy(self, scope: TenantScope, ref: CustomerExactRef) -> CustomerConsentPolicyRevision:
+        return self._require(scope, "ecommerce_customer_consent_policy_revision", "policy_id", ref, CustomerConsentPolicyRevision)
+
+    def require_segment(self, scope: TenantScope, ref: CustomerExactRef) -> CustomerSegmentRevision:
+        return self._require(scope, "ecommerce_customer_segment_revision", "segment_id", ref, CustomerSegmentRevision)
+
+    def require_journey(self, scope: TenantScope, ref: CustomerExactRef) -> CustomerJourneyRevision:
+        return self._require(scope, "ecommerce_customer_journey_revision", "journey_id", ref, CustomerJourneyRevision)
+
+    def require_dialogue(self, scope: TenantScope, ref: CustomerExactRef) -> CustomerDialogueStrategyRevision:
+        return self._require(scope, "ecommerce_customer_dialogue_strategy_revision", "dialogue_id", ref, CustomerDialogueStrategyRevision)
+
+    def latest_batch(self, scope: TenantScope, batch_id: str) -> CustomerDialogueBatchRevision:
+        with self._read_connect(scope) as conn:
+            row = conn.execute(
+                "SELECT authority_data FROM ecommerce_customer_dialogue_batch_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s ORDER BY revision DESC LIMIT 1",
+                (*scope.key, batch_id),
+            ).fetchone()
+        if row is None:
+            raise CustomerLifecycleBlocked("CUSTOMER_DIALOGUE_BATCH_NOT_FOUND")
+        item = CustomerDialogueBatchRevision.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+
+    def latest_batch_or_none(self, scope: TenantScope, batch_id: str) -> CustomerDialogueBatchRevision | None:
+        try:
+            return self.latest_batch(scope, batch_id)
+        except CustomerLifecycleBlocked as exc:
+            if str(exc) == "CUSTOMER_DIALOGUE_BATCH_NOT_FOUND":
+                return None
+            raise
+
+    def latest_batch_or_none_any(self, scope: TenantScope) -> CustomerDialogueBatchRevision | None:
+        try:
+            with self._read_connect(scope) as conn:
+                row = conn.execute(
+                    "SELECT authority_data FROM ecommerce_customer_dialogue_batch_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,revision DESC LIMIT 1",
+                    scope.key,
+                ).fetchone()
+        except psycopg.Error as exc:
+            raise CustomerLifecycleBlocked("CUSTOMER_LIFECYCLE_AUTHORITY_UNAVAILABLE") from exc
+        if row is None:
+            return None
+        item = CustomerDialogueBatchRevision.model_validate(row["authority_data"])
+        self._assert_tenant(scope, item)
+        return item
+
+    def authority_counts(self, scope: TenantScope) -> dict[str, int]:
+        tables = {
+            "consent_policy": "ecommerce_customer_consent_policy_revision",
+            "segment": "ecommerce_customer_segment_revision",
+            "journey": "ecommerce_customer_journey_revision",
+            "dialogue": "ecommerce_customer_dialogue_strategy_revision",
+        }
+        try:
+            with self._read_connect(scope) as conn:
+                return {key: conn.execute(f"SELECT COUNT(*) AS count FROM {table} WHERE org_id=%s AND project_id=%s", scope.key).fetchone()["count"] for key, table in tables.items()}
+        except psycopg.Error as exc:
+            raise CustomerLifecycleBlocked("CUSTOMER_LIFECYCLE_AUTHORITY_UNAVAILABLE") from exc
+
+    def require_external_policy_authorities(self, scope: TenantScope, frequency_policy_ref: CustomerExactRef, channel_capability_ref: CustomerExactRef) -> None:
+        del scope, frequency_policy_ref, channel_capability_ref
+        # Caller-shaped refs are never treated as authority. A production resolver
+        # must bind both refs at one cutoff before prepare can proceed.
+        raise CustomerLifecycleBlocked("CUSTOMER_BATCH_EXTERNAL_POLICY_AUTHORITY_RESOLVER_UNAVAILABLE")
+
+
+__all__ = ["EcommerceWorkshopCustomerLifecycleStore"]
+
+
+FULL FILE services/aos-api/alembic/versions/w6_007_customer_lifecycle.py SHA 662295c5b97111b7bcb343eed877dba20925fc36218875e72e4cf13af331df07
+"""Customer consent, segment, journey, dialogue and zero-send batch authority (W6-07).
+
+Revision ID: w6_007
+Revises: w6_006
+"""
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+from alembic import op
+
+revision: str = "w6_007"
+down_revision: str | Sequence[str] | None = "w6_006"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
+
+TABLES = (
+    ("ecommerce_customer_consent_policy_revision", "policy_id"),
+    ("ecommerce_customer_segment_revision", "segment_id"),
+    ("ecommerce_customer_journey_revision", "journey_id"),
+    ("ecommerce_customer_dialogue_strategy_revision", "dialogue_id"),
+    ("ecommerce_customer_dialogue_batch_revision", "batch_id"),
+)
+
+
+def upgrade() -> None:
+    for table, identity in TABLES:
+        op.execute(f"""
+        CREATE TABLE {table} (
+          org_id TEXT NOT NULL, project_id TEXT NOT NULL, {identity} TEXT NOT NULL,
+          revision INTEGER NOT NULL CHECK (revision >= 1),
+          content_hash CHAR(64) NOT NULL CHECK (content_hash ~ '^[0-9a-f]{{64}}$'),
+          authority_data JSONB NOT NULL CHECK (jsonb_typeof(authority_data)='object'),
+          created_at TIMESTAMPTZ NOT NULL,
+          PRIMARY KEY (org_id,project_id,{identity},revision),
+          FOREIGN KEY (org_id,project_id) REFERENCES meta_workspace(org_id,project_id)
+        );
+        ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE {table} FORCE ROW LEVEL SECURITY;
+        CREATE POLICY tenant_scope ON {table}
+          USING (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true));
+        GRANT SELECT, INSERT ON {table} TO aos_runtime;
+        """)
+
+
+def downgrade() -> None:
+    for table, _identity in reversed(TABLES):
+        op.execute(f"DROP TABLE {table}")
+
+
+CURRENT ROUTE services/aos-api/aos_api/routers/ecommerce_workshop.py fullFileSHA f051c3cb511aa80874dda1468dbde603fcd83ade81e9c511de34016cc5f5ae26
+@router.get(
+    "/views/customer/contributions",
+    response_model=CustomerLifecycleContributionView,
+    operation_id="ecommerceWorkshopCustomerLifecycleContributionViewGet",
+    responses=_ERRORS,
+)
+def get_customer_lifecycle_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerLifecycleDependency,
+) -> CustomerLifecycleContributionView:
+    _reject_query_parameters(request)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+
+EVIDENCE implementation-plan-r1.md
+# 客户贡献保存读取：文件级实施方案
+
+## 基线与军规
+
+基线m1 7385617635ab7331483ad6e891e8bf5e089839e5、Authority2036、同owner customer-contribution-read-admission和maintenance-r9至08UTC。已复习产品v2/09、技术55-W6-07含Aug25实施封板、原models/service/Store/w6_007和前端parser。完整231Goal/原唯一真人授权/daily每次aos最新m1同原卷全面PG→API→Web/aos2不重启保留。
+
+只读已保存Consent policy/Segment/Journey/Dialogue修订计数和最新Batch。CustomerLite ref不是ProtectedContact，历史granted/evidence不证明当前Consent/retention/purpose或可联系；不调用prepare/freeze/create/resolver，不读商城源、不解析contact、不start/send/Provider。原生产external policy resolver恒拒绝，读取不解除它。原业务DBREADONLY/HostworkerProviderOFF/unknown旧12不重放/disabledSchedule不启用/noPush、不覆盖用户dirty。
+
+## 文件与登记
+
+parent已拥有router与read_http、本E、原D-wave。另Task先登记：
+
+- `services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py`：新专用reader、原typed请求及hash验证、同snapshot完整计数/选中batch与exact ancestry、尺寸/隐私/时间/稳定错误。
+- `services/aos-api/tests/test_ecommerce_customer_lifecycle_readonly.py`：原producer fixture、metadata/完整counts/strict raw/typed hash/lineage/未知同意/零效果/失败门。
+
+parent只改`services/aos-api/aos_api/routers/ecommerce_workshop.py`与`services/aos-api/tests/test_ecommerce_workshop_read_http.py`，仅canonical GET `/views/customer/contributions`用typed ReadCatalog installed-readonly分流。legacy成功及全部POST、contact/closure辅入口不改；不改原producer/Store/DDL/Web/parser/CSS/AIP或锁文件，额外文件先登记。
+
+## 一致截止面与完整COUNT语义
+
+原counts是四表全部已保存修订的COUNT(*)，不是distinct identity、活跃同意人数或逐行政策有效性背书；保留完整计数，不设截断取样后冒充总数。用一个已核实READ ONLY REPEATABLE READ连接和transaction_timestamp cutoff。固定statement_timeout3000ms/lock_timeout500ms，查询间及返回前monotonic10秒门。
+
+四个固定COUNT SQL仅返回count、invalid_count、latest_created_at。invalid_count检查outer id长度、payload tenant/id/revision/contentHash与外层对应及createdAt有时区且与外层时间一致；无效时间cast失败亦稳定非200。MAX created_at超过cutoff拒绝，不加WHERE时间条件隐藏未来坏行。COUNT不向客户端传输policy payload，不执行全表fetchall，也不声称重算过所有未展示policy的content hash。返回count必须原生int、0到2^53-1；任何错误整视图失败，不能补0。
+
+最新batch用固定表、tenant双列、ORDER created_at DESC/revision DESC/batch_id和LIMIT1，SQLCASE先限制单行1MiB/outer id200字符。frozen再读同id exact前版；selected batch的consentPolicy/segment/journey/dialogue四exact refs各取固定表一行。合计最多6payload行/8MiB，DTO1MiB，所有查询有界且同snapshot。没有batch时仍返回可信四COUNT，不读无关policy载荷。batch存在则各对应count至少1。原计数包含所有修订，例同policy rev1+rev2计2；exact旧refs仍定位旧版本，不强制最新policy。
+
+## 选中事实与原签名
+
+每payload完整字段/strict int与bool、None只在原nullable合同处、原model_dump JSON与raw一致，outer tenant/id/revision/hash/created_at与payload匹配且不晚于cutoff。selected四policy重建原Create request JSON核content hash及exact ref，核segment→consentPolicy、journey→segment、dialogue→journey/eval一致。只作保存历史lineage，不启动当前授权resolver。
+
+Batch用原Prepare request模型校验1000项以内、itemKeys唯一、CustomerLite类型、eligible consent/retention/k/evidence及非eligible理由，逐项重算itemHashes和五桶ledger。bindingHash按原typed refs+itemHashes，经原canonical_hash(default=str)；prepared contentHash按request JSON+typed CustomerDialogueBatchLedger对象+bindingHash，不能改用JSON ledger。prepared只能rev/version1/priorNone；frozen必须exact prepared前版、rev/version递增且所有七字段排除后的继承内容相等，再按原完整payload签名。无已识别stale writer则拒绝，不猜新签名。contactResolution/action/providerCall/send/externalEffect五counts必须原生int0。
+
+全部输出相关字段及selected policy通过原redact_sensitive与前端禁披露字段门，typed hash单独验证后排除其误判为电话；拒绝PII/任意扩展而非脱敏后假称原hash仍有效。不给raw message/Provider payload/成员PII披露。最终复用原contribution_view的Skill/Logic/数字同事/阻断布局，输入是已验证的纯保存适配器；完整DTO重验，commands[]及contactResolution/start/send/external四false。DB/validation/limit/privacy错误稳定503，真实空才0/null。
+
+## Loop与门禁
+
+先本E原producer纯内存probe（修正原测试approximate ref为完整exact hash），核6个typed refs、typed ledger签名、prepare/freeze继承、eligible/unknown及零效果；明确内存resolver非生产权限。独立方案Prime PASS合法消费前不改产品。
+
+RED含原404/异常补0风险、计数全修订/同snapshot/未来坏行、batch两生命周期/引用旧policy、raw缺字段/数字bool/隐私/unknown不造eligible、SQLCASE及稳定非200；实施后专项/原W6-07及相邻price/closure/catalog冻结累计，原w6_007隔离tmpfs PG/COUNT rev2/并发快照/RLS/25006/SQLCASE/privacy，独立reader和route质量。精确提交后fresh维护freeze/controller门/新意图API-only、原真人SDK/400/401、原650全等、客户页三视口原稿/核心只读及livePrime、准确Delivery/Authority七强/下一登记helper。
+
+回滚只撤该GET准入及专用reader增量，经fresh维护门，不reset或动原库。API-only不代替daily全面重启；真实Consent/预算/自然经营首链/安装全生命周期/八真实场景全视觉/观察发布仍未完成，不以页面/测试/fixture或PASS收窄完整Goal。
+
+
+EVIDENCE producer-probe-result-r1.json
+{
+  "syntheticMemoryOnly": true,
+  "databaseOrHttpCalls": 0,
+  "actualConsentAuthority": false,
+  "originalProducerUsed": true,
+  "fullExactRefs": true,
+  "typedLedgerHashVerified": true,
+  "jsonLedgerHashDifferent": true,
+  "itemHashesVerified": true,
+  "frozenFullPayloadHashVerified": true,
+  "inheritedFieldsEqual": true,
+  "ledger": {
+    "input": 2,
+    "eligible": 1,
+    "excluded": 0,
+    "needsReview": 0,
+    "unknown": 1,
+    "deduplicated": 0
+  },
+  "unknownConsentPreserved": true,
+  "fiveEffectCountsZero": true,
+  "sourceSha": "0c1cb897d99b622d041d65688bedceedd5697da1fdd6152844fcd0e2bfa3ac4d",
+  "wholeGoalComplete": false
+}
+
+EVIDENCE reader-scope-readback-r1.json
+{
+  "authority": "AOS-002036",
+  "reader": {
+    "schema": "aos-memory-task-receipt/v1",
+    "task_id": "qyh-customer-lifecycle-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "base_revision": "AOS-002036",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py",
+      "aos-platform/services/aos-api/tests/test_ecommerce_customer_lifecycle_readonly.py",
+      "aos-platform/.evidence/qyh-customer-lifecycle-bounded-reader-20261015"
+    ],
+    "excluded_scope": [
+      "aos-platform/apps/web",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py"
+    ],
+    "expected_outputs": [
+      "Only saved customer contribution readonly snapshot reader and exact tests. Original typed producer hashes, complete saved-revision counts, strict tenant/time/privacy/bounds/failures and commands[]; no ProtectedContact/current consent authorization or effects.",
+      "Full231Goal, independent design/code Prime and frozen/native/genuine SDK/650/visual gates retained; no domain writer/Store/DDL/Web/AIP changes."
+    ],
+    "lease_expires_at": "2026-10-15T08:00:00+00:00",
+    "status": "ACTIVE",
+    "created_at": "2026-10-15T12:40:58+08:00"
+  },
+  "otherLeasesPreserved": 40,
+  "nonOverlapping": true,
+  "wholeGoalComplete": false
+}

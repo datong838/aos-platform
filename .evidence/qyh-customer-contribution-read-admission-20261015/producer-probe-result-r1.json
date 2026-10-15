@@ -1,0 +1,24 @@
+{
+  "syntheticMemoryOnly": true,
+  "databaseOrHttpCalls": 0,
+  "actualConsentAuthority": false,
+  "originalProducerUsed": true,
+  "fullExactRefs": true,
+  "typedLedgerHashVerified": true,
+  "jsonLedgerHashDifferent": true,
+  "itemHashesVerified": true,
+  "frozenFullPayloadHashVerified": true,
+  "inheritedFieldsEqual": true,
+  "ledger": {
+    "input": 2,
+    "eligible": 1,
+    "excluded": 0,
+    "needsReview": 0,
+    "unknown": 1,
+    "deduplicated": 0
+  },
+  "unknownConsentPreserved": true,
+  "fiveEffectCountsZero": true,
+  "sourceSha": "0c1cb897d99b622d041d65688bedceedd5697da1fdd6152844fcd0e2bfa3ac4d",
+  "wholeGoalComplete": false
+}
