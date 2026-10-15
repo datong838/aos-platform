@@ -1,0 +1,15 @@
+{
+  "ordinaryPointerEvent": {
+    "observed": false
+  },
+  "previousState": {
+    "hasFocus": true,
+    "selected": [
+      "customer-tab-customer"
+    ],
+    "tabpanel": "customer-panel-customer",
+    "focusId": ""
+  },
+  "forceOrDomClickUsed": false,
+  "productChanged": false
+}

@@ -1,0 +1,139 @@
+{
+  "metrics": [
+    {
+      "width": 1280,
+      "height": 720,
+      "geometry": {
+        "viewportWidth": 1280,
+        "documentWidth": 1280,
+        "filters": [
+          {
+            "label": "全部",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          },
+          {
+            "label": "可披露",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          },
+          {
+            "label": "待复核",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          },
+          {
+            "label": "已排除",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          }
+        ],
+        "selected": "customer-tab-customer"
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "geometry": {
+        "viewportWidth": 1440,
+        "documentWidth": 1440,
+        "filters": [
+          {
+            "label": "全部",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          },
+          {
+            "label": "可披露",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          },
+          {
+            "label": "待复核",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          },
+          {
+            "label": "已排除",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          }
+        ],
+        "selected": "customer-tab-customer"
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "geometry": {
+        "viewportWidth": 1920,
+        "documentWidth": 1920,
+        "filters": [
+          {
+            "label": "全部",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          },
+          {
+            "label": "可披露",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          },
+          {
+            "label": "待复核",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          },
+          {
+            "label": "已排除",
+            "height": 32,
+            "hitInside": false,
+            "hitRole": "tablist"
+          }
+        ],
+        "selected": "customer-tab-customer"
+      }
+    }
+  ],
+  "nativeActions": [
+    {
+      "type": "ordinary-cdp-pointer",
+      "x": 448,
+      "y": 276.25,
+      "inside": true,
+      "disabled": false,
+      "label": "客户最小投影等待条件 · 正式来源 0"
+    },
+    {
+      "type": "ordinary-cdp-pointer",
+      "x": 448,
+      "y": 276.25,
+      "inside": true,
+      "disabled": false,
+      "label": "客户最小投影等待条件 · 正式来源 0"
+    },
+    {
+      "type": "ordinary-cdp-pointer",
+      "x": 448,
+      "y": 276.25,
+      "inside": true,
+      "disabled": false,
+      "label": "客户最小投影等待条件 · 正式来源 0"
+    }
+  ],
+  "productChanged": false,
+  "red": true,
+  "forceOrDomClickUsed": false,
+  "temporaryViewportCleared": true
+}

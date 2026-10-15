@@ -1,0 +1,40 @@
+{
+  "gitCommitSha1": "bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a",
+  "filePath": "apps/web/src/styles/45-ecommerce-workshop.css",
+  "fileBytes": 289343,
+  "fileSha256": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "gitShowHeadFileSha256": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "gitBlobSha1": "ca11b0db35eb2e119f84615b5e9117f026854d32",
+  "workingFileByteEqualGitHeadFile": true,
+  "approvedImplementationPlanStage": "pre-code-design",
+  "cssUnmodified": true,
+  "authority": "AOS-002039",
+  "task": {
+    "base_revision": "AOS-002039",
+    "created_at": "2026-10-15T20:30:20+08:00",
+    "excluded_scope": [
+      "aos-platform/services/aos-api",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/pnpm-lock.yaml"
+    ],
+    "expected_outputs": [
+      "Full231Goal retained. Start from recorded genuine customer filter pointer interception by transparent tablist at1280/1440/1920; tab switch unverified, diagnose input/event/render cause before claiming product fix. Read approved customer product/visual plan, file plan and independent design before code.",
+      "Minimal scoped pointer/layout repair without current authority/data/POST changes, appropriate RED and true browser pointer/keyboard/selected-state checks, exact CSS-size original comparison, frozen independent quality/live reviews and accurate Delivery. Do not force-click or DOMclick rescue, invent business data, claim fullvisual/business/Goal completion, or overwrite prior failure evidence. Register any further test or shared files first."
+    ],
+    "lease_expires_at": "2026-10-15T16:00:00+00:00",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/apps/web/src/styles/45-ecommerce-workshop.css",
+      "aos-platform/apps/web/src/components/workshop/CustomerPage.tsx",
+      "aos-platform/apps/web/src/components/workshop/CustomerPage.test.tsx",
+      "aos-platform/.evidence/qyh-customer-visual-pointer-20261015",
+      "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md"
+    ],
+    "status": "ACTIVE",
+    "task_id": "qyh-customer-visual-pointer-20261015"
+  },
+  "observedAt": "2026-10-15T13:07:49.662863+00:00",
+  "leaseValidNow": true,
+  "explanation": "Git commit SHA1, git blob SHA1 and file content SHA256 name DIFFERENT objects. They MUST NOT equal. Exact git show HEAD:path bytes match current file. No product fix, RED or post-change test has been claimed. This request IS independent design review; later independent quality/live results are future gates, not claimed to already exist."
+}

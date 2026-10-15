@@ -1,0 +1,203 @@
+PRE-DEPLOYMENT CUSTOMER POINTER CSS QUALITY. ONLY two pointer-events declarations changed, CustomerPage unchanged. Design r3 PASS legal. Real old-site three-width RED recorded. Current frozen oneCSS overlay407 existing tests/type/build PASS. Actual new CSS pointer GREEN remains REQUIRED after independent review/guarded Web update, not claimed now. Full231Goal ACTIVE, no data/action/operating authority.
+EXACT FULL CSS DIFF
+diff --git a/apps/web/src/styles/45-ecommerce-workshop.css b/apps/web/src/styles/45-ecommerce-workshop.css
+index ca11b0db3..f7f30b2db 100644
+--- a/apps/web/src/styles/45-ecommerce-workshop.css
++++ b/apps/web/src/styles/45-ecommerce-workshop.css
+@@ -2818,10 +2818,10 @@
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > em { border-color: #fde68a; background: #fffbeb; color: #d97706; }
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-reload-control { position: absolute; right: 12px; bottom: 8px; z-index: 3; border: 0; padding: 0; background: transparent; color: #2b6cb0; font: 11px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; cursor: pointer; }
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs {
+-  position: absolute; z-index: 2; top: 0; left: 0; width: 280px; display: grid; grid-template-columns: 1fr; align-content: start; gap: 0; padding: 52px 14px 0; background: transparent;
++  position: absolute; z-index: 2; top: 0; left: 0; width: 280px; display: grid; grid-template-columns: 1fr; align-content: start; gap: 0; padding: 52px 14px 0; background: transparent; pointer-events: none;
+ }
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs button {
+-  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; min-height: 42px; border: 0; border-bottom: 1px solid #edf2f7; border-left: 3px solid transparent; padding: 8px 10px; background: #fff; color: #4a5568;
++  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; min-height: 42px; border: 0; border-bottom: 1px solid #edf2f7; border-left: 3px solid transparent; padding: 8px 10px; background: #fff; color: #4a5568; pointer-events: auto;
+ }
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs button span { color: #a0aec0; font-size: 10px; }
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs button[aria-selected="true"] { border-left-color: #2b6cb0; background: #ebf4ff; color: #2b6cb0; box-shadow: none; }
+
+FULL CUSTOMER PRIMARY CSS REGION apps/web/src/styles/45-ecommerce-workshop.css fullSHA e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604
+.customer-page,
+.customer-read-model { display: grid; gap: 12px; min-width: 0; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] { min-height: 100%; height: 100%; background: #f0f2f5; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] > .ecommerce-workshop-context-header,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] > .ecommerce-workshop-technical-context,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] > #ecommerce-workshop-main > .ecommerce-workshop-state,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] > #ecommerce-workshop-main > .capability-blocker {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] > #ecommerce-workshop-main,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .ecommerce-workshop-unverified-read-view { height: 100%; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-page,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-read-model { gap: 0; height: 100%; min-height: 0; align-content: start; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-page { position: relative; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-read-model { position: relative; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip {
+  min-height: 40px; height: 40px; box-sizing: border-box; justify-content: flex-start; gap: 8px; padding: 6px 14px; border-width: 0 0 1px;
+}
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > span,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > small,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > b,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > em {
+  min-height: 27px; box-sizing: border-box; display: inline-flex; align-items: center; margin: 0; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 3px; background: #f7fafc; color: #4a5568; font-size: 10px; font-style: normal; font-weight: 500; white-space: nowrap;
+}
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > span:first-of-type { border-color: #bfdbfe; background: #eff6ff; color: #2563eb; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > span:nth-of-type(2) { border-color: #ddd6fe; background: #faf5ff; color: #7c3aed; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > i { flex: 1; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > b { border-color: #bbf7d0; background: #f0fdf4; color: #16a34a; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > em { border-color: #fde68a; background: #fffbeb; color: #d97706; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-reload-control { position: absolute; right: 12px; bottom: 8px; z-index: 3; border: 0; padding: 0; background: transparent; color: #2b6cb0; font: 11px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; cursor: pointer; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs {
+  position: absolute; z-index: 2; top: 0; left: 0; width: 280px; display: grid; grid-template-columns: 1fr; align-content: start; gap: 0; padding: 52px 14px 0; background: transparent; pointer-events: none;
+}
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs button {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; min-height: 42px; border: 0; border-bottom: 1px solid #edf2f7; border-left: 3px solid transparent; padding: 8px 10px; background: #fff; color: #4a5568; pointer-events: auto;
+}
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs button span { color: #a0aec0; font-size: 10px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs button[aria-selected="true"] { border-left-color: #2b6cb0; background: #ebf4ff; color: #2b6cb0; box-shadow: none; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-panel {
+  order: 2; grid-template-columns: 280px minmax(0, 1fr) 320px; grid-template-rows: minmax(0, 1fr); gap: 0; min-height: 0; height: calc(100vh - 88px); box-sizing: border-box; overflow: hidden; border-width: 0; padding: 0; background: #fff;
+}
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-panel > header { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-items,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-readiness,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-panel > .media-studio-blockers { min-width: 0; overflow-y: auto; padding: 14px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-items { grid-column: 1; grid-row: 1; grid-template-columns: 1fr; align-content: start; border-right: 1px solid #e2e8f0; background: #f7fafc; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-items > p { grid-column: auto; margin-top: 210px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-readiness { grid-column: 2; grid-row: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 8px; border-right: 1px solid #e2e8f0; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-panel > .media-studio-blockers { grid-column: 3; grid-row: 1; align-content: start; border: 0; background: #fff; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-audit-context { order: 3; border-top: 1px solid #e2e8f0; background: #fff; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-audit-context > summary { height: 36px; box-sizing: border-box; cursor: pointer; padding: 9px 14px; color: #718096; font-size: 11px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-audit-stack { display: grid; gap: 12px; padding: 12px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .content-campaign-footnote { order: 4; min-height: 37px; box-sizing: border-box; border-width: 0; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .is-failed-read .customer-failure-taskrail { padding: 14px; background: #f8fafc; }
+.customer-failure-taskrail > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+.customer-failure-taskrail > header strong { font-size: 12px; }
+.customer-failure-taskrail > header span { color: #a0aec0; font-size: 9px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .is-failed-read .customer-failure-taskrail button { min-height: 44px; background: #fff; }
+.customer-failure-segments { margin-top: 15px; padding-top: 13px; border-top: 1px solid #e2e8f0; }
+.customer-failure-segments > strong { font-size: 11px; }
+.customer-failure-segments > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 9px; }
+.customer-failure-segments span { padding: 7px; border: 1px solid #e2e8f0; border-radius: 3px; background: #fff; color: #718096; font-size: 9px; }
+.customer-failure-segments small { display: block; margin-top: 8px; color: #a0aec0; font-size: 9px; line-height: 1.45; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .is-failed-read .customer-failure-plan { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 16px; background: #f7fafc; }
+.customer-failure-plan > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding-bottom: 11px; border-bottom: 1px solid #e2e8f0; }
+.customer-failure-plan > header span { color: #a0aec0; font-size: 9px; letter-spacing: .08em; }
+.customer-failure-plan > header h2 { margin: 4px 0 0; font-size: 15px; }
+.customer-failure-plan > header > strong { padding: 4px 7px; border: 1px solid #fbd38d; border-radius: 3px; background: #fffaf0; color: #b7791f; font-size: 10px; }
+.customer-failure-plan > p { margin: 0 0 3px; color: #718096; font-size: 10px; line-height: 1.5; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-failure-plan article { display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: center; gap: 9px; min-height: 49px; padding: 8px 10px; border: 1px solid #e2e8f0; border-left: 3px solid #cbd5e0; background: #fff; }
+.customer-failure-plan article i { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid #cbd5e0; border-radius: 50%; color: #a0aec0; font-size: 9px; font-style: normal; }
+UNCHANGED COMPLETE MAIN/FAILURE COMPONENTS fullSHA 7f3fca164e10a8e4f3aeb8fd512428879b670923562cf7af4d8b371798e6c1ee
+function CustomerFailureSurface() {
+  const [selected, setSelected] = useState<CustomerViewId>("customer");
+  const [safeAction, setSafeAction] = useState("");
+  return <div className="customer-read-model is-failed-read">
+    <div className="customer-tabs customer-failure-taskrail" role="tablist" aria-label="客户关系只读视图"><header><strong>今日任务与客户分群</strong><span>数据读取失败 · 可信空</span></header>{CUSTOMER_VIEW_IDS.map((viewId, index) => <button id={`customer-failure-tab-${viewId}`} aria-controls={`customer-failure-panel-${viewId}`} type="button" role="tab" aria-selected={selected === viewId} tabIndex={selected === viewId ? 0 : -1} key={viewId} onClick={() => setSelected(viewId)} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? CUSTOMER_VIEW_IDS.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + CUSTOMER_VIEW_IDS.length) % CUSTOMER_VIEW_IDS.length; setSelected(CUSTOMER_VIEW_IDS[nextIndex]!); event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[nextIndex]?.focus(); }}><strong>{LABELS[viewId]}</strong><span>待读取</span></button>)}<section className="customer-failure-segments"><strong>客户分群</strong><div><span>高价值待核对</span><span>潜力待核对</span><span>活跃待核对</span><span>沉睡待核对</span></div><small>当前没有可验证的分群依据，因此不显示人数。</small></section></div>
+    <section id={`customer-failure-panel-${selected}`} aria-labelledby={`customer-failure-tab-${selected}`} className="customer-panel" role="tabpanel" aria-label={LABELS[selected]}><header><div><span>客户关系视图</span><h2>{LABELS[selected]}</h2></div><strong className="content-campaign-status is-blocked">读取失败</strong></header>
+      <div className="customer-readiness customer-failure-plan"><header><div><span>只读计划</span><h2>客户关系处理计划</h2></div><strong>等待数据</strong></header><p>正式服务未返回可验证客户投影；不以演示客户、联系方式或 0 值补齐。</p>{Object.entries(AXIS_LABELS).map(([axis, label], index) => <article className="is-unknown" key={axis}><i>{index + 1}</i><div><strong>{label}</strong><span>待核对 · 暂无可验证来源</span></div></article>)}<div className="customer-failure-actions"><button type="button" onClick={() => setSafeAction("暂停计划预检：当前没有可暂停的正式计划，未变更任何客户状态。")}>暂停计划</button><button type="button" onClick={() => setSafeAction("重新执行预检：当前没有可执行的正式计划，未创建任务或触发客户触达。")}>重新执行</button><small>操作会先检查正式计划与授权；当前只返回安全预检结果。</small>{safeAction ? <p role="status">{safeAction}</p> : null}</div></div>
+      <section className="customer-items" aria-hidden="true" />
+      <aside className="media-studio-blockers customer-failure-artifacts"><section><header><span>客户产物</span><h3>可回链产物</h3></header><strong>当前没有可回链产物</strong><p>话术、名单与客户全景均未从正式数据来源返回。</p></section><section><header><span>客户分群</span><h3>客户分层结果</h3></header><div className="customer-failure-segment-grid"><span>高价值<br /><b>待核对</b></span><span>潜力<br /><b>待核对</b></span><span>活跃<br /><b>待核对</b></span><span>沉睡<br /><b>待核对</b></span></div></section><section><header><span>下一步</span><h3>所需数据</h3></header><div><strong>重新读取客户关系数据</strong><span>同一租户、同一数据截止时间</span><p>读取隐私最小化投影，不补造客户记录。</p><details><summary>查看审计状态码</summary><code>CUSTOMER_VIEW_READ_FAILED</code></details></div></section></aside>
+    </section>
+  </div>;
+}
+
+export function CustomerPage({ client = ecommerceWorkshopClient, actions = aipActionsSdk }: { client?: Client; actions?: CustomerActions }) {
+  const [phase, setPhase] = useState<Phase>("loading");
+  const [response, setResponse] = useState<CustomerViewResponse | null>(null);
+  const [contribution, setContribution] = useState<CustomerLifecycleContributionViewResponse | null>(null);
+  const [contact, setContact] = useState<CustomerContactContributionViewResponse | null>(null);
+  const [closure, setClosure] = useState<ThreeModuleClosureContributionViewResponse | null>(null);
+  const [selected, setSelected] = useState<CustomerViewId>("customer");
+  const [customerFilter, setCustomerFilter] = useState<CustomerFilter>("all");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const request = useRef(0);
+  const load = () => {
+    const id = ++request.current; setPhase("loading"); setResponse(null); setContribution(null); setContact(null); setClosure(null);
+    void Promise.all([client.getCustomerView(), client.getCustomerLifecycleContributionView().catch(() => null), client.getCustomerContactContributionView().catch(() => null), client.getThreeModuleClosureContributionView?.("customer").catch(() => null) ?? Promise.resolve(null)]).then(([next, nextContribution, nextContact, nextClosure]) => {
+      if (id !== request.current) return;
+      setResponse(next); setContribution(nextContribution ?? unavailableLifecycle(next)); setContact(nextContact ?? unavailableContact(next)); setClosure(nextClosure ?? unavailableThreeModuleClosure("customer", next.tenant, next.evaluatedAt));
+      setSelected(pickPreferredWorkshopView(next.views, (item) => item.countLedger.eligible > 0)?.viewId ?? "customer");
+      setPhase(deriveWorkshopViewState(next.views, next.page.count));
+    }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
+  };
+  useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
+  const view = response?.views.find((item) => item.viewId === selected);
+  const visibleCustomers = view?.items.filter((item) => customerFilter === "all" || (customerFilter === "allowed" && item.disclosure === "allowed") || (customerFilter === "review" && item.disclosure === "unknown") || (customerFilter === "excluded" && item.disclosure === "blocked")) ?? [];
+  const selectedCustomer = view?.items.find((item) => item.customerRef.resourceId === selectedCustomerId) ?? view?.items[0] ?? null;
+  const eligible = response?.views.reduce((sum, item) => sum + item.countLedger.eligible, 0) ?? 0;
+  const total = response?.views.reduce((sum, item) => sum + item.countLedger.input, 0) ?? 0;
+  const content = response && contribution && contact && closure && view ? <div className="customer-read-model">
+    <details className="customer-audit-context">
+      <summary>客户治理全过程与累计审计</summary>
+      <div className="customer-audit-stack">
+    <section className="customer-hero"><div><span>客户关系工作台 · 最小披露</span><h2>只在目的、同意与留存边界内阅读客户关系</h2><p>同意撤回、留存到期、质量失败或来源不可核验都会失败关闭；页面不展示联系方式和身份字段。</p></div><strong>只读 · 零触达</strong></section>
+    <section className="creator-growth-axis"><div><span>只读视图</span><strong>4</strong></div><div><span>允许披露</span><strong>{eligible}/{total}</strong></div><div><span>资源 revision</span><strong>r{response.resourceRevision}</strong></div><div><span>外部写入口</span><strong>0</strong></div></section>
+    <section className="customer-contribution" aria-label="客户关系贡献视图">
+      <header><div><span>原子 Skill → Logic → 数字同事</span><h2>客户关系生产贡献链</h2></div><strong>外部副作用 0</strong></header>
+      <div className="customer-contribution-flow">
+        <article><span>原子 Skill · {contribution.atomicSkillIds.length}</span><div>{contribution.atomicSkillIds.map((skillId) => <code key={skillId}>{skillId}</code>)}</div></article>
+        <article><span>Logic 编排</span><strong>{contribution.logicId}</strong><p>同意与目的校验贯穿分群、旅程、对话草案和批次准备。</p></article>
+        <article><span>主责数字同事</span><strong>{contribution.primaryColleague}</strong><p>协作：{contribution.collaboratorColleagues.join(" · ")}</p></article>
+      </div>
+      <div className="customer-contribution-counts"><div><span>同意策略</span><strong>{contribution.consentPolicyCount}</strong></div><div><span>分群</span><strong>{contribution.segmentCount}</strong></div><div><span>旅程</span><strong>{contribution.journeyCount}</strong></div><div><span>对话策略</span><strong>{contribution.dialogueCount}</strong></div></div>
+      {contribution.latestBatch ? <div className="customer-batch-evidence"><header><strong>最近批次 · {labelStatus(contribution.latestBatch.lifecycle)}</strong><span>{contribution.latestBatch.batchId} · r{contribution.latestBatch.revision}</span></header><div>{(["eligible", "excluded", "needsReview", "unknown", "deduplicated"] as const).map((bucket) => <article key={bucket}><span>{labelStatus(bucket)}</span><strong>{contribution.latestBatch!.ledger[bucket]}</strong></article>)}</div><p>联系方式解析 {contribution.latestBatch.contactResolutionCount} · 操作 {contribution.latestBatch.actionCount} · 外部服务调用 {contribution.latestBatch.providerCallCount} · 发送 {contribution.latestBatch.sendCount} · 外部副作用 {contribution.latestBatch.externalEffectCount}</p></div> : <div className="customer-contribution-empty"><strong>尚无可信批次</strong><p>没有可验证的外部策略依据时保持失败关闭；不解析联系方式、不启动、不发送。</p></div>}
+      <aside><strong>安全边界</strong><span>联系方式解析：禁用</span><span>启动：禁用</span><span>发送：禁用</span>{contribution.blockers.map((blocker) => <code key={blocker}>{blocker}</code>)}</aside>
+    </section>
+    <section className="customer-contact-governance" aria-label="客户受控触达治理">
+      <header><div><span>受控 Tool / Capability / Action</span><h2>Start、频控、撤回竞态与触达预检</h2></div><strong>{contact.latestStart?.lifecycle ?? "失败关闭"}</strong></header>
+      <div className="customer-contribution-counts"><div><span>频控策略</span><strong>{contact.frequencyPolicyCount}</strong></div><div><span>撤回观察</span><strong>{contact.withdrawalCount}</strong></div><div><span>冻结 eligible</span><strong>{contact.ledger.frozenEligible}</strong></div><div><span>治理序号</span><strong>{contact.latestStart?.startSequence ?? "—"}</strong></div></div>
+      <div className="customer-contact-ledger">{(["reserved", "skippedWithdrawn", "cancelled", "accepted", "applied", "failed", "unknown", "disputed"] as const).map((bucket) => <article key={bucket}><span>{labelStatus(bucket)}</span><strong>{contact.ledger[bucket]}</strong></article>)}</div>
+      <aside><strong>失败关闭安全线</strong><span>Permit 兑换 0 · 联系方式解析 0 · Provider 0 · 发送 0 · 外部副作用 0</span>{contact.blockers.map((blocker) => <code key={blocker}>{blocker}</code>)}</aside>
+    </section>
+    <ThreeModuleClosureCard value={closure} />
+      </div>
+    </details>
+    <div className="customer-tabs" role="tablist" aria-label="客户关系只读视图">{response.views.map((item, index) => <button id={`customer-tab-${item.viewId}`} aria-controls={`customer-panel-${item.viewId}`} type="button" role="tab" aria-selected={selected === item.viewId} tabIndex={selected === item.viewId ? 0 : -1} key={item.viewId} onClick={() => setSelected(item.viewId)} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? response.views.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + response.views.length) % response.views.length; setSelected(response.views[nextIndex]!.viewId); event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("button")[nextIndex]?.focus(); }}><strong>{LABELS[item.viewId]}</strong><span>{labelStatus(item.status)} · 正式来源 {item.countLedger.input}</span></button>)}</div>
+    <section id={`customer-panel-${selected}`} aria-labelledby={`customer-tab-${selected}`} className="customer-panel" role="tabpanel" aria-label={LABELS[selected]}><header><div><span>客户关系视图</span><h2>{LABELS[view.viewId]}</h2></div><strong className={`content-campaign-status is-${view.status}`}>{view.status === "ready" ? "同截止面可读" : "等待必要条件"}</strong></header>
+      <div className="customer-readiness">{view.readinessAxes.map((axis) => <article key={axis.axis} className={`is-${axis.status}`}><strong>{AXIS_LABELS[axis.axis]}</strong><span>{labelStatus(axis.status)}</span><p>{axis.exactRef ? `${axis.exactRef.resourceType} · r${axis.exactRef.revision}` : "暂无可验证来源"}</p><details><summary>查看数据审计信息</summary><p>{axis.exactRef ? `${axis.exactRef.receiptId} · ${axis.exactRef.contentHash.slice(0, 18)}…` : axis.blockers[0]?.code ?? "authority unavailable"}</p></details></article>)}</div>
+      <section className="customer-items"><nav aria-label="客户最小投影筛选">{([['all', '全部'], ['allowed', '可披露'], ['review', '待复核'], ['excluded', '已排除']] as const).map(([id, label]) => <button type="button" aria-pressed={customerFilter === id} key={id} onClick={() => setCustomerFilter(id)}>{label}</button>)}</nav>{visibleCustomers.length ? visibleCustomers.map((item) => <article key={`${item.customerRef.resourceId}:${item.customerRef.revision}`} className={`is-${item.disclosure}${selectedCustomer?.customerRef.resourceId === item.customerRef.resourceId ? " is-selected" : ""}`}><header><div><strong>{item.customerRef.resourceType}</strong><span>{item.customerRef.resourceId} · r{item.customerRef.revision}</span></div><b>{labelStatus(item.disclosure)}</b></header><dl><div><dt>目的</dt><dd>{item.purpose}</dd></div><div><dt>新鲜度 / 质量</dt><dd>{item.freshness} / {item.quality}</dd></div><div><dt>同意 / 留存</dt><dd>{item.consent} / {item.retention}</dd></div><div><dt>k 匿名 / 原始证据</dt><dd>{item.kAnonymitySatisfied === null ? "待核对" : String(item.kAnonymitySatisfied)} / {item.originalRefs.length}</dd></div></dl><button type="button" aria-pressed={selectedCustomer?.customerRef.resourceId === item.customerRef.resourceId} onClick={() => setSelectedCustomerId(item.customerRef.resourceId)}>选择此最小投影</button></article>) : <p>{view.items.length ? "当前筛选没有匹配的最小客户投影；可切换筛选继续核对。" : `已读取正式来源 ${view.countLedger.input} 条；允许披露 ${view.countLedger.eligible} 条，${view.countLedger.unknown} 条因同意、目的或留存条件未闭合而不展示客户明细。`}</p>}</section>
+      <aside className="media-studio-blockers"><CustomerPlanWorkspace view={view} customer={selectedCustomer} actions={actions} /><h3>所需条件与下一步</h3>{view.blockers.length ? view.blockers.map((item) => <div key={item.code}><strong>补充同租户、同数据截止的客户最小化正式数据</strong><span>客户关系正式数据来源</span><details><summary>查看审计状态码</summary><code>{item.code}</code><p>{item.requiredAction}</p><p>{item.dependency}</p></details></div>) : <p>本视图当前没有待补条件。</p>}</aside>
+    </section>
+    <footer className="content-campaign-footnote"><span>租户 {response.tenant.orgId}/{response.tenant.projectId}</span><span>统一数据截止 {new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</span><span>同意与留存规则已执行</span></footer>
+  </div> : null;
+  return <section className="customer-page" aria-label="客户关系只读视图"><div className="content-campaign-toolbar customer-context-strip"><button className="customer-reload-control" type="button" onClick={load}>重新读取</button><span>栖月汇 · 客户状态待核对</span><span>私域管家（负责人未绑定）</span><small>任务驱动 · 只读计划 · 客户产物</small><i aria-hidden="true" /><b>高价值待核对 · 潜力待核对 · 活跃待核对</b><em>沉睡待核对 · 流失预警待核对</em></div>{phase === "failed" ? <CustomerFailureSurface /> : <AsyncStateBoundary state={stateFor(phase)} dataCutoff={response?.dataCutoff}>{content}</AsyncStateBoundary>}</section>;
+}
+
+FULL ORIGINAL MANIFEST VERIFIED by main writer; file SHA 964fd7ce2bbba21333041a1ec6dad8a0020f30a631ad0f199eeb010a5b422fe7 count 764
+{"baseHead":"bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a","cssBefore":"e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604","cssAfter":"e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604","source":"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-visual-pointer-20261015/private/candidate-source-r1","onlyOneOwnedCSSOverlay":true,"originalComponentUnchanged":true,"noUserDirtyCopied":true,"privateBuildAndCache":true,"results":{"workshop-cumulative-r1":{"returncode":0,"command":["/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node","node_modules/vitest/vitest.mjs","run","src/components/workshop","src/api/ecommerceWorkshop","--config","/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-visual-pointer-20261015/private/frozen-verification-config-r1.ts","--no-cache"],"logSha":"1949bd74333c082c6553e1434612c3a32805a655f4c62761356091acb8abc300"},"web-typecheck-r1":{"returncode":0,"command":["/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node","node_modules/typescript/bin/tsc","--noEmit"],"logSha":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},"web-production-build-r1":{"returncode":0,"command":["/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node","node_modules/vite/bin/vite.js","build","--config","/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-visual-pointer-20261015/private/frozen-verification-config-r1.ts"],"logSha":"b1b23abc9cd8d95153814444fbd199bf5815fde132ce35bdec525ed6aca4bfd0"}},"startedAt":"2026-10-15T13:16:03.856476+00:00","finishedAt":"2026-10-15T13:16:23.261760+00:00","originalServicesTouched":false,"geometryAcceptance":"pending actual browser after guarded Web update; no JSDOM geometry claim"}
+design-review-consumption-r3.json
+{"schema":"aos-material-review-consumption/v1","request_id":"qyh-customer-visual-pointer-20261015-design-r3","task_id":"qyh-customer-visual-pointer-20261015","owner":"codex-01a13484-f019-7d82-94ce-812396db9124","baseline":{"head":"bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a","authority_revision":"AOS-002039","files":{".evidence/qyh-customer-visual-pointer-20261015/design-review-material-r3.txt":"529b1648d99c872ae945112841fe3d39ba7b5c54c553cec5ca6ffbc1c201fc9c"}},"status":"CONSUMED_MATERIAL_REVIEW","execution_authorized":false,"result_sha256":"fa90b253da003c0a3d375dba5252b648c473f6f21b20b0a3b331a6b8ddb2d548","transport_sha256":"73848429d77ea4f18fec1f235505df8e0a46e162bc2f627103a47054e997992d"}
+pointer-red-r1.json
+{"metrics":[{"width":1280,"height":720,"geometry":{"viewportWidth":1280,"documentWidth":1280,"filters":[{"label":"全部","height":32,"hitInside":false,"hitRole":"tablist"},{"label":"可披露","height":32,"hitInside":false,"hitRole":"tablist"},{"label":"待复核","height":32,"hitInside":false,"hitRole":"tablist"},{"label":"已排除","height":32,"hitInside":false,"hitRole":"tablist"}],"selected":"customer-tab-customer"}},{"width":1440,"height":900,"geometry":{"viewportWidth":1440,"documentWidth":1440,"filters":[{"label":"全部","height":32,"hitInside":false,"hitRole":"tablist"},{"label":"可披露","height":32,"hitInside":false,"hitRole":"tablist"},{"label":"待复核","height":32,"hitInside":false,"hitRole":"tablist"},{"label":"已排除","height":32,"hitInside":false,"hitRole":"tablist"}],"selected":"customer-tab-customer"}},{"width":1920,"height":1080,"geometry":{"viewportWidth":1920,"documentWidth":1920,"filters":[{"label":"全部","height":32,"hitInside":false,"hitRole":"tablist"},{"label":"可披露","height":32,"hitInside":false,"hitRole":"tablist"},{"label":"待复核","height":32,"hitInside":false,"hitRole":"tablist"},{"label":"已排除","height":32,"hitInside":false,"hitRole":"tablist"}],"selected":"customer-tab-customer"}}],"nativeActions":[{"type":"ordinary-cdp-pointer","x":448,"y":276.25,"inside":true,"disabled":false,"label":"客户最小投影等待条件 · 正式来源 0"},{"type":"ordinary-cdp-pointer","x":448,"y":276.25,"inside":true,"disabled":false,"label":"客户最小投影等待条件 · 正式来源 0"},{"type":"ordinary-cdp-pointer","x":448,"y":276.25,"inside":true,"disabled":false,"label":"客户最小投影等待条件 · 正式来源 0"}],"productChanged":false,"red":true,"forceOrDomClickUsed":false,"temporaryViewportCleared":true}
+tab-native-input-proof-r2.json
+{"nativePointer":[{"selected":["customer-tab-customer"],"panel":"customer-panel-customer","focused":"customer-tab-customer"},{"selected":["customer-tab-segment"],"panel":"customer-panel-segment","focused":"customer-tab-segment"},{"selected":["customer-tab-journey"],"panel":"customer-panel-journey","focused":"customer-tab-journey"},{"selected":["customer-tab-dialogue"],"panel":"customer-panel-dialogue","focused":"customer-tab-dialogue"}],"nativeKeyboard":[{"key":"ArrowRight","state":{"selected":["customer-tab-segment"],"focused":"customer-tab-segment","focusVisible":true}},{"key":"End","state":{"selected":["customer-tab-dialogue"],"focused":"customer-tab-dialogue","focusVisible":true}},{"key":"ArrowLeft","state":{"selected":["customer-tab-journey"],"focused":"customer-tab-journey","focusVisible":true}},{"key":"Home","state":{"selected":["customer-tab-customer"],"focused":"customer-tab-customer","focusVisible":true}}],"productComponentUnchanged":true,"forceOrDomClickUsed":false,"temporaryEventListenersRetained":false}
+input-channel-diagnosis-r2.md
+# 页签输入通道诊断补充
+
+当前原owned target、真实登录后hasFocus=true/visibility=visible，原四tab均未disabled/inert/fieldset禁用。Playwright locator.click及Enter尝试未使selected变化；原并行listener Promise可能存在注册时序，不能把早先observed=false单独视为产品证据。
+
+在完全相同原目标、当前segment按钮中心elementFromPoint命中自身/子节点后，通过同一CDP标签session的Input.dispatchMouseEvent原生mouseMoved/mousePressed/mouseReleased执行普通左键，真实aria-selected立刻转为customer-tab-segment，焦点也落到该按钮。未force、未DOMclick、未修改组件state/DOM/运行权限，未产生业务POST。已证明无需猜测改CustomerPage逻辑；本波产品范围收敛为已独立设计审查的CSS两处声明。
+
+后续浏览器验收用同一原CDP通道的原生指针与键盘输入，并在每次输入前核真实可见、未disabled且中心hit-test命中目标；不命中则拒绝点击，不能绕过遮挡。每次输入后回读唯一aria-selected/aria-pressed、tabpanel及真实事件元数据，不能将发出事件当完成。记录所用通道，不再把高层locator.click的无效结果混成产品页签失败。
+
+原布局筛选中心仍被tablist遮挡，这是三宽实际DOM命中与正常click超时支持的独立CSS缺陷。修复设计及真实浏览器/冻结/独立质量/维护前效门/现场验收要求不变；之前未通过物证全部保留。未改产品代码之前补充本说明。
+
+FULL LOG SHA workshop-cumulative-r1.log 1949bd74333c082c6553e1434612c3a32805a655f4c62761356091acb8abc300
+
+ Test Files  62 passed (62)
+      Tests  407 passed (407)
+   Start at  21:16:04
+   Duration  3.85s (transform 3.39s, setup 0ms, collect 9.38s, tests 5.99s, environment 20.82s, prepare 2.85s)
+
+FULL LOG SHA web-typecheck-r1.log e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+FULL LOG SHA web-production-build-r1.log b1b23abc9cd8d95153814444fbd199bf5815fde132ce35bdec525ed6aca4bfd0
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.89s

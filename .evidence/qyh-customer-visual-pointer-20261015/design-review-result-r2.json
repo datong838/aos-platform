@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "bb46b0bd79e45ce73b08b12c625f25a2a644ede6ee90f33ef1ff9c6e81bfbb3c",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-visual-pointer-20261015-design-r2",
+    "task_id": "qyh-customer-visual-pointer-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a",
+      "authority_revision": "AOS-002039",
+      "files": {
+        ".evidence/qyh-customer-visual-pointer-20261015/design-review-material-r2.txt": "50c3820bd8f38c35bf38b8ba52e89e2ad8570ebff4d58b53fe98d2f344362333"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "Plan localizes proven customer filter pointer interception to absolute tablist transparent padding; scoped parent pointer-events none plus actual buttons auto preserves layout/focus/customer failure buttons without other module/data/authority changes. Nonbutton descendants and global CSS risks constrained.",
+        "evidence": "material design section '文件级方案' proposes: '首选唯一产品修改 45-ecommerce-workshop.css：仅客户主视觉customer-tabs透明外容器pointer-events:none，实际button恢复pointer-events:auto' and states '保留原position/grid/padding/尺寸/颜色/选中/焦点样式'. Risk note: 'pointer-events:none会影响容器非button交互，须核failure taskrail当前无其他需点元素'. CSS region shows .customer-tabs with position:absolute/z-index2, child buttons defined.",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "Plan distinguishes unverified tab no-op from proven geometry failure; exact owned-target recovery and actual normal pointer/keyboard/aria diagnosis required, focus emulation only if warranted and cleared finally, no guessed component change or forced/DOM click acceptance.",
+        "evidence": "material '已有现场与问题分级': '页签四次普通点击仍首tab...原因尚未证明'. Step 3: '重新连接同一owned target...只在后台focus确有问题时可做临时focus emulation诊断并在finally清除...不调用隐藏React state，不借JS click制造交互通过'. Failure closure shows: 'tabsSwitchVerified=false, tabsNormalClickDidNotChangeSelection=true, tabCauseNotYetDetermined=true'.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Registered scope and future RED/frozen/adjacent component-type-build/independent quality/guarded Web switch/current three-width browser-original/live review/Delivery gates implementable. Pre-code review only, no future code or test evidence claimed; complete231Goal/daily original-volume fullPGAPIWeb/hard boundaries preserved.",
+        "evidence": "material states: 'COMPLETE CUSTOMER PRIMARY CSS REGION' but SHA ed85285f... is NOT the baseline head bb7a742849... nor the approved file SHA. Lease scope includes CustomerPage.tsx/test.tsx. Claim asserts 'Pre-code review only, no future code or test evidence claimed'. Existing failure closures (r1) document current defects but not the proposed fix. Delivery gates listed but no independent review evidence or post-change proof provided yet.",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "Verify that baseline head bb7a7428 is compatible with the proposed CSS patch SHA ed85285f. Re-confirm the lease expires at 2026-10-15T16:00:00+00:00 to ensure it covers the current date. Proceed to independent review before coding."
+  }
+}

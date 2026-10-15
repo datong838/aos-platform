@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-visual-pointer-20261015-design-r3",
+  "task_id": "qyh-customer-visual-pointer-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a",
+    "authority_revision": "AOS-002039",
+    "files": {
+      ".evidence/qyh-customer-visual-pointer-20261015/design-review-material-r3.txt": "529b1648d99c872ae945112841fe3d39ba7b5c54c553cec5ca6ffbc1c201fc9c"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "fa90b253da003c0a3d375dba5252b648c473f6f21b20b0a3b331a6b8ddb2d548",
+  "transport_sha256": "73848429d77ea4f18fec1f235505df8e0a46e162bc2f627103a47054e997992d"
+}

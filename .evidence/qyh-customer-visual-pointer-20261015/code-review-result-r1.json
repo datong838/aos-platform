@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "bb46b0bd79e45ce73b08b12c625f25a2a644ede6ee90f33ef1ff9c6e81bfbb3c",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-visual-pointer-20261015-code-r1",
+    "task_id": "qyh-customer-visual-pointer-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a",
+      "authority_revision": "AOS-002039",
+      "files": {
+        ".evidence/qyh-customer-visual-pointer-20261015/code-review-material-r1.txt": "ed440d0dcc8ce8d80d24dd658a2e8b1580a9c4e9dba07af16346abafc0e834c8"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Exact diff adds only customer primary tablist pointer-events none and button auto; transparent padding no longer intercepts by design, actual buttons/failure buttons remain targetable, layout/style/component/state/data/API/other module behavior unchanged. This is code consistency assessment, post-deploy actual browser GREEN remains pending.",
+        "evidence": "文件 apps/web/src/styles/45-ecommerce-workshop.css，diff 仅改动两处：.customer-tabs 新增 pointer-events: none，.customer-tabs button 新增 pointer-events: auto。组件 CustomerPage 与 CustomerFailureSurface 源码未变更。构建结果 workshop-cumulative-r1、web-typecheck-r1、web-production-build-r1 returncode 均为 0。几何验收 geometryAcceptance=pending。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Old-site real three-width pointer RED and normal native CDP tab/keyboard selected/focus proof distinguish true filter CSS defect from high-level locator input no-op. No component patch, forced or DOM click acceptance used; exact native hit-test gate and current scope are coherent.",
+        "evidence": "pointer-red-r1.json 显示 1280/1440/1920 三种宽度 filters 均为 hitInside=false，red=true 且 forceOrDomClickUsed=false。tab-native-input-proof-r2.json 显示原生 CDP 键盘 ArrowRight/End/ArrowLeft/Home 成功切换 selected/focused，productComponentUnchanged=true，forceOrDomClickUsed=false。input-channel-diagnosis-r2.md 明确原生指针导致 aria-selected 变化，无需改组件。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Recorded immutable oneCSS-overlay freeze407 existing tests/typecheck/build PASS/currentCSS SHA unchanged and unchanged original component support candidate quality; no JSDOM geometry or full visual/business/install/Goal completion claimed. Required current Web source/controller review/switch/real three-width filters/tabs/keyboard/PNG and live review gates remain.",
+        "evidence": "material 中 cssBefore=cssAfter=e9f83...，originalComponentUnchanged=true。test results 显示 407 tests passed (62 passed)，typecheck 与 build returncode=0。geometryAcceptance 明确为 pending actual browser after guarded Web update，无 JSDOM geometry claim，full visual/business/install/Goal completion 未声明。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "等待独立 guarded Web 更新后的真实浏览器验收；在 1280/1440/1920 三宽使用原生 CDP 指针与键盘回放，核 hitInside=true 且 aria-selected 切换，再产出 GREEN 物证。"
+  }
+}

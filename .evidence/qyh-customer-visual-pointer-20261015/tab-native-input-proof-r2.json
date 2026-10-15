@@ -1,0 +1,77 @@
+{
+  "nativePointer": [
+    {
+      "selected": [
+        "customer-tab-customer"
+      ],
+      "panel": "customer-panel-customer",
+      "focused": "customer-tab-customer"
+    },
+    {
+      "selected": [
+        "customer-tab-segment"
+      ],
+      "panel": "customer-panel-segment",
+      "focused": "customer-tab-segment"
+    },
+    {
+      "selected": [
+        "customer-tab-journey"
+      ],
+      "panel": "customer-panel-journey",
+      "focused": "customer-tab-journey"
+    },
+    {
+      "selected": [
+        "customer-tab-dialogue"
+      ],
+      "panel": "customer-panel-dialogue",
+      "focused": "customer-tab-dialogue"
+    }
+  ],
+  "nativeKeyboard": [
+    {
+      "key": "ArrowRight",
+      "state": {
+        "selected": [
+          "customer-tab-segment"
+        ],
+        "focused": "customer-tab-segment",
+        "focusVisible": true
+      }
+    },
+    {
+      "key": "End",
+      "state": {
+        "selected": [
+          "customer-tab-dialogue"
+        ],
+        "focused": "customer-tab-dialogue",
+        "focusVisible": true
+      }
+    },
+    {
+      "key": "ArrowLeft",
+      "state": {
+        "selected": [
+          "customer-tab-journey"
+        ],
+        "focused": "customer-tab-journey",
+        "focusVisible": true
+      }
+    },
+    {
+      "key": "Home",
+      "state": {
+        "selected": [
+          "customer-tab-customer"
+        ],
+        "focused": "customer-tab-customer",
+        "focusVisible": true
+      }
+    }
+  ],
+  "productComponentUnchanged": true,
+  "forceOrDomClickUsed": false,
+  "temporaryEventListenersRetained": false
+}

@@ -2818,10 +2818,10 @@
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-context-strip > em { border-color: #fde68a; background: #fffbeb; color: #d97706; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-reload-control { position: absolute; right: 12px; bottom: 8px; z-index: 3; border: 0; padding: 0; background: transparent; color: #2b6cb0; font: 11px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; cursor: pointer; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs {
-  position: absolute; z-index: 2; top: 0; left: 0; width: 280px; display: grid; grid-template-columns: 1fr; align-content: start; gap: 0; padding: 52px 14px 0; background: transparent;
+  position: absolute; z-index: 2; top: 0; left: 0; width: 280px; display: grid; grid-template-columns: 1fr; align-content: start; gap: 0; padding: 52px 14px 0; background: transparent; pointer-events: none;
 }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs button {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; min-height: 42px; border: 0; border-bottom: 1px solid #edf2f7; border-left: 3px solid transparent; padding: 8px 10px; background: #fff; color: #4a5568;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; min-height: 42px; border: 0; border-bottom: 1px solid #edf2f7; border-left: 3px solid transparent; padding: 8px 10px; background: #fff; color: #4a5568; pointer-events: auto;
 }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs button span { color: #a0aec0; font-size: 10px; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-tabs button[aria-selected="true"] { border-left-color: #2b6cb0; background: #ebf4ff; color: #2b6cb0; box-shadow: none; }

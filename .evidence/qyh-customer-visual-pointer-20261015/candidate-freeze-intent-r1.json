@@ -1,0 +1,10 @@
+{
+  "head": "bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-visual-pointer-20261015/private/candidate-source-r1",
+  "overlay": {
+    "apps/web/src/styles/45-ecommerce-workshop.css": "e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604"
+  },
+  "onlyOneOwnedCSSOverlay": true,
+  "userDirtyCopied": false,
+  "originalServicesTouched": false
+}

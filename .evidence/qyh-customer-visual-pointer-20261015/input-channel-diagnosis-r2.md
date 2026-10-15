@@ -1,0 +1,9 @@
+# 页签输入通道诊断补充
+
+当前原owned target、真实登录后hasFocus=true/visibility=visible，原四tab均未disabled/inert/fieldset禁用。Playwright locator.click及Enter尝试未使selected变化；原并行listener Promise可能存在注册时序，不能把早先observed=false单独视为产品证据。
+
+在完全相同原目标、当前segment按钮中心elementFromPoint命中自身/子节点后，通过同一CDP标签session的Input.dispatchMouseEvent原生mouseMoved/mousePressed/mouseReleased执行普通左键，真实aria-selected立刻转为customer-tab-segment，焦点也落到该按钮。未force、未DOMclick、未修改组件state/DOM/运行权限，未产生业务POST。已证明无需猜测改CustomerPage逻辑；本波产品范围收敛为已独立设计审查的CSS两处声明。
+
+后续浏览器验收用同一原CDP通道的原生指针与键盘输入，并在每次输入前核真实可见、未disabled且中心hit-test命中目标；不命中则拒绝点击，不能绕过遮挡。每次输入后回读唯一aria-selected/aria-pressed、tabpanel及真实事件元数据，不能将发出事件当完成。记录所用通道，不再把高层locator.click的无效结果混成产品页签失败。
+
+原布局筛选中心仍被tablist遮挡，这是三宽实际DOM命中与正常click超时支持的独立CSS缺陷。修复设计及真实浏览器/冻结/独立质量/维护前效门/现场验收要求不变；之前未通过物证全部保留。未改产品代码之前补充本说明。
