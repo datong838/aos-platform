@@ -1,0 +1,56 @@
+{
+  "project_revision": "AOS-002041",
+  "content_hash": "sha256:6f22d61394859f65d8d3f1c2c859ec824abb2196407d0bffe85159be95685113",
+  "delivery_status": "ONLY verified geometry/fixture and maintenance slices; ALL remaining original tasks handed to same owner; no fullvisual/business/install/input completion",
+  "overall": "GREEN_WITH_WARNINGS",
+  "projections": [
+    {
+      "id": "context-current-status",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/01-当前项目状态.md"
+    },
+    {
+      "id": "context-checkpoint",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/06-当前执行检查点.md"
+    },
+    {
+      "id": "project-shared",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/projections/aos-project.json"
+    },
+    {
+      "id": "workbuddy-project",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "/Users/ddt/work/projects/ai_agent/.workbuddy/memory/aos-project-projection.json"
+    },
+    {
+      "id": "prime-milestones",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "aos-milestones"
+    },
+    {
+      "id": "prime-current-delivery",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "aos-current-delivery"
+    },
+    {
+      "id": "prime-aip-checklists",
+      "consistency": "strong",
+      "status": "CURRENT",
+      "location": "aos-aip-full-checklists"
+    },
+    {
+      "id": "codex-project-note",
+      "consistency": "eventual",
+      "status": "STALE",
+      "location": "/Users/ddt/.codex/memories/extensions/ad_hoc/notes/aos-002022-aos-memory-projection.md"
+    }
+  ]
+}

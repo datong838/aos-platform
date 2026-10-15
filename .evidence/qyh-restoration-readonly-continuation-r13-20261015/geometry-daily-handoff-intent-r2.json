@@ -1,0 +1,17 @@
+{
+  "before": "AOS-002040",
+  "expected": "AOS-002041",
+  "head": "306e999c575cf56abf679473abee89f692fc5142",
+  "code": "d5c8598e50904041314c3ab66703f103a003a48b",
+  "oldTasks": [
+    "qyh-creator-visual-narrow-layout-20261015",
+    "qyh-restoration-readonly-continuation-r13-20261015"
+  ],
+  "newTasks": [
+    "qyh-creator-native-input-and-scroll-20261016",
+    "qyh-restoration-readonly-continuation-r14-20261016"
+  ],
+  "otherLeasesPreserved": 38,
+  "actualInputPassed": false,
+  "wholeGoalComplete": false
+}
