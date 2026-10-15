@@ -1,0 +1,59 @@
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "view": {
+    "schemaVersion": "aos.ecommerce-workshop.customer-lifecycle/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "evaluatedAt": "2026-10-15T05:21:42.270946Z",
+    "atomicSkillIds": [
+      "build-evidence-pack",
+      "segment-entities",
+      "consent-and-purpose-check",
+      "needs-discovery",
+      "customer-journey-plan",
+      "response-or-outreach-draft",
+      "verify-claims",
+      "review-outcomes"
+    ],
+    "logicId": "ecommerce-customer-relationship",
+    "primaryColleague": "私域管家",
+    "collaboratorColleagues": [
+      "内容官",
+      "客服专员",
+      "导购顾问",
+      "数据参谋"
+    ],
+    "consentPolicyCount": 0,
+    "segmentCount": 0,
+    "journeyCount": 0,
+    "dialogueCount": 0,
+    "latestBatch": null,
+    "blockers": [
+      "CUSTOMER_CONTACT_RESOLUTION_NOT_AUTHORIZED",
+      "CUSTOMER_START_SEND_NOT_AUTHORIZED"
+    ],
+    "allowedCommands": [],
+    "contactResolutionAllowed": false,
+    "startAllowed": false,
+    "sendAllowed": false,
+    "externalEffectsAllowed": false
+  },
+  "deny": {
+    "query": {
+      "status": 400
+    },
+    "contact": {
+      "status": 404
+    },
+    "closure": {
+      "status": 404
+    }
+  },
+  "anonymousStatus": 401
+}

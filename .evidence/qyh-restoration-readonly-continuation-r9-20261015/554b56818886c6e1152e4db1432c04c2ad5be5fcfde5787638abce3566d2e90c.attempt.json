@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-restoration-readonly-continuation-r9-20261015-customer-live-r2",
+  "baseline": {
+    "head": "80b39a1a8d5f7b76e942c7005e8d4086980d215f",
+    "authority_revision": "AOS-002036",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r9-20261015/customer-live-review-material-r2.txt": "bd455d8303dfe67dfeffa4ff1b54195ede6cd795bdbeaa551175106b64e050bb"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "a5305850726957922ffb8e55648ab96a076cd194282f4bdd09f3c528fbb54054",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

@@ -1,0 +1,614 @@
+{
+  "metrics": [
+    {
+      "width": 1280,
+      "height": 720,
+      "tabStates": [
+        [
+          "客户分群等待条件 · 正式来源 0"
+        ],
+        [
+          "生命周期旅程等待条件 · 正式来源 0"
+        ],
+        [
+          "对话与批次等待条件 · 正式来源 0"
+        ],
+        [
+          "客户最小投影等待条件 · 正式来源 0"
+        ]
+      ],
+      "filterStates": [
+        [
+          "可披露"
+        ],
+        [
+          "待复核"
+        ],
+        [
+          "已排除"
+        ],
+        [
+          "全部"
+        ]
+      ],
+      "geometry": {
+        "documentWidth": 1280,
+        "viewportWidth": 1280,
+        "loading": false,
+        "buttons": [
+          {
+            "text": "专注模式",
+            "width": 75.3203125,
+            "height": 32.5
+          },
+          {
+            "text": "全部",
+            "width": 48,
+            "height": 32
+          },
+          {
+            "text": "可披露",
+            "width": 61,
+            "height": 32
+          },
+          {
+            "text": "待复核",
+            "width": 61,
+            "height": 32
+          },
+          {
+            "text": "已排除",
+            "width": 61,
+            "height": 32
+          }
+        ],
+        "panels": [
+          {
+            "className": "customer-panel",
+            "right": 1280,
+            "width": 972
+          },
+          {
+            "className": "customer-readiness",
+            "right": 960,
+            "width": 372
+          },
+          {
+            "className": "customer-items",
+            "right": 588,
+            "width": 280
+          }
+        ]
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "tabStates": [
+        [
+          "客户分群等待条件 · 正式来源 0"
+        ],
+        [
+          "生命周期旅程等待条件 · 正式来源 0"
+        ],
+        [
+          "对话与批次等待条件 · 正式来源 0"
+        ],
+        [
+          "客户最小投影等待条件 · 正式来源 0"
+        ]
+      ],
+      "filterStates": [
+        [
+          "可披露"
+        ],
+        [
+          "待复核"
+        ],
+        [
+          "已排除"
+        ],
+        [
+          "全部"
+        ]
+      ],
+      "geometry": {
+        "documentWidth": 1440,
+        "viewportWidth": 1440,
+        "loading": false,
+        "buttons": [
+          {
+            "text": "专注模式",
+            "width": 75.3203125,
+            "height": 32.5
+          },
+          {
+            "text": "全部",
+            "width": 48,
+            "height": 32
+          },
+          {
+            "text": "可披露",
+            "width": 61,
+            "height": 32
+          },
+          {
+            "text": "待复核",
+            "width": 61,
+            "height": 32
+          },
+          {
+            "text": "已排除",
+            "width": 61,
+            "height": 32
+          }
+        ],
+        "panels": [
+          {
+            "className": "customer-panel",
+            "right": 1440,
+            "width": 1132
+          },
+          {
+            "className": "customer-readiness",
+            "right": 1120,
+            "width": 532
+          },
+          {
+            "className": "customer-items",
+            "right": 588,
+            "width": 280
+          }
+        ]
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "tabStates": [
+        [
+          "客户分群等待条件 · 正式来源 0"
+        ],
+        [
+          "生命周期旅程等待条件 · 正式来源 0"
+        ],
+        [
+          "对话与批次等待条件 · 正式来源 0"
+        ],
+        [
+          "客户最小投影等待条件 · 正式来源 0"
+        ]
+      ],
+      "filterStates": [
+        [
+          "可披露"
+        ],
+        [
+          "待复核"
+        ],
+        [
+          "已排除"
+        ],
+        [
+          "全部"
+        ]
+      ],
+      "geometry": {
+        "documentWidth": 1920,
+        "viewportWidth": 1920,
+        "loading": false,
+        "buttons": [
+          {
+            "text": "专注模式",
+            "width": 75.3203125,
+            "height": 32.5
+          },
+          {
+            "text": "全部",
+            "width": 48,
+            "height": 32
+          },
+          {
+            "text": "可披露",
+            "width": 61,
+            "height": 32
+          },
+          {
+            "text": "待复核",
+            "width": 61,
+            "height": 32
+          },
+          {
+            "text": "已排除",
+            "width": 61,
+            "height": 32
+          }
+        ],
+        "panels": [
+          {
+            "className": "customer-panel",
+            "right": 1920,
+            "width": 1612
+          },
+          {
+            "className": "customer-readiness",
+            "right": 1600,
+            "width": 1012
+          },
+          {
+            "className": "customer-items",
+            "right": 588,
+            "width": 280
+          }
+        ]
+      }
+    }
+  ],
+  "trace": [
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/auth/oidc",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 400
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "businessNonGet": [],
+  "temporaryViewportCleared": true,
+  "normalAuthPosts": [
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    }
+  ],
+  "navigationNote": "Normal anchor click did not navigate; after read-only reconciliation used its observed customer href. Full document replaced memory auth; both original form submissions returned200, no unknown retry."
+}

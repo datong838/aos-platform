@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a5305850726957922ffb8e55648ab96a076cd194282f4bdd09f3c528fbb54054",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r9-20261015-customer-live-r2",
+    "task_id": "qyh-restoration-readonly-continuation-r9-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "80b39a1a8d5f7b76e942c7005e8d4086980d215f",
+      "authority_revision": "AOS-002036",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r9-20261015/customer-live-review-material-r2.txt": "bd455d8303dfe67dfeffa4ff1b54195ede6cd795bdbeaa551175106b64e050bb"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "独立前效controller PASS合法消费和真实缺审拒绝物证之后，仅一次fresh API更新；实际15265/cwd80b39源、Web89803/f036、原PG同CID卷StartedAt及650完整前后指纹一致支持本次保存读取现场。",
+        "evidence": "pre-effect-gate-deny-result-r1.json显示statesExactlyEqual=true、deniedBeforeIntentAndSignal=true，api-started-r1.json记录pid 15265/source指向80b39a1a，api-switch-intent-r1.json显示oldPid 8498/oldCwd指向04092c82；api-preflight-r1.json确认pgId 84989681/pgStartedAt 2026-10-14T20:36:36Z/WebPid 89803/webSourceHead f036e46c；customer-runtime-proof-r1.json记录all650BeforeAfterEqual=true，原PID/卷未变更。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原唯一真人同租户正式customer SDK200保留四可信保存计数0/latest null/commands[]/四false与实际缺口，query400/匿名401/contact和closure404/业务nonGET[]，不将历史或合成事实当当前Consent/Contact或运营准入。",
+        "evidence": "customer-native-identity-sdk-r1.json显示me为subject6f31cfdc/org-org/dev-project、actualCustomerSdk200=true、savedCounts[0,0,0,0]/latestBatch=null/commandsEmpty/allFourPublicEffectFlagsFalse=true；deny记录query 400/anonymous 401/contact-closure 404；customer-runtime-proof-r1.json确认businessNonGet=[]/all650EntriesVerifiedTrue；native-r1-result.json记录writeDeniedSqlstate='25006'/privacyRejected=true/productionAuthority=false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "实际三视口页签筛选/几何与六图尺寸hash、明确逐图检查及视觉差距登记只支持本真实空态读取slice；未声称像素/非空/a11y/八台或完整Goal完成，daily每次aos原卷full重启及全部剩余长期目标保持。",
+        "evidence": "customer-native-geometry-deny-r1.json记录三视口1280x720/1440x900/1920x1080各tabUniqueCount=4/filterStates切换及无横向溢出；customer-live-shas-r1.json六PNG hash/inspected=true/captureMethod声明；customer-runtime-proof-r1.jsonallThreeViewportsWithoutHorizontalOverflow=true/dataEmptyNotFixture=true；文本明确'不声称像素/非空/a11y或完整Goal完成'/'wholeGoalComplete=false'/'dailyFullPgApiWebRestartSubstitute=false'/'eightWorkbenchesVerified=false'/'remainingGates'列出未完成项。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前PASS结论与基线80b39a1a；后续如需推进完整Goal，需单独task处理生产级PG连接、RLS策略适配及八台全视觉验收。"
+  }
+}

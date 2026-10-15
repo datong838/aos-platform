@@ -1,0 +1,11 @@
+# 客户保存贡献读取：原系统API更新方案
+
+Rules：完整231Goal/原唯一真人安装全恢复本机授权/唯一m1写者，Authority2036及maintenance-r9有效Lease保持，用户dirty及原数据保护。四文件候选80b39a1a已通过设计/reader code/route quality精确独立PASS合法消费，冻结387及原w6_007独立tmpfs snapshot完整修订COUNT1→2/旧exact policy/RLS/25006/SQLCASE/隐私/metadata拒绝通过，准确临时CID已停止。实际Consent/Contact准入及原external resolver不改变。
+
+fresh支持入口freeze latest committed HEAD全manifest/sourceguard与四owned SHA对账，原650表READONLY before；不复制用户dirty或凭据。控制器核HEAD/m1/Authority/有效同owner Lease、两个代码门、原API8498/cwd04092/command/18080、Web89803/entry/18434及原前端f036树、原PG CID84989681/同命名卷/StartedAt2026-10-14T20:36:36.408087963Z。实际management_readonly预检和缺少审查文件的前效负向拒绝证据准备后，独立controller PASS合法消费必须在新意图及信号之前。
+
+批准维护范围内只执行一次新意图API更新：停止已核8498，端口空后用原readonly wrapper/原身份/OIDC/安装/bundle/trust与新冻源启动；unknown只读对账，不重放。PG/Web/Chrome不发信号，spawn不当成功。
+
+后效实际监听/cwd/sourceguard与正式原真人SDK getCustomerLifecycleContributionView核对：真实保存空或可信非空、四完整保存修订计数、commands[]和联系/start/send/external四false；query400/匿名401及contact/closure仍legacy门。原650 after逐表hash/count全等。同授权owned Chrome目标客户页与原workshop-customer.html在1280×720/1440×900/1920×1080逐组截图对照及核心只读交互，保留真实空/unknown/阻断，不填演示人数或当前同意。独立现场Prime后准确Delivery/Authority七强/完整remaining接续下一helper。
+
+本API-only不替代每日及每次实际aos最新m1同原权威卷完整PG→API→Web；aos2不重启。fullC唯一真人最后真实预算及原部署、自然有来源CaseRun建议exact评审内部内容受约束能力可读产物人审续跑总控Wiki、安装全生命周期、八真实场景全部视觉、连续观察发布继续。HostworkerProviderOFF/原DBREADONLY/unknown旧12不重放/disabledSchedule不启/source不读/noPush/个人Codex记忆与私有Goal提醒不写；Goal ACTIVE。

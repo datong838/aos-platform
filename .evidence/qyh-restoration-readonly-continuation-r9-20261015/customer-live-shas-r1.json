@@ -1,0 +1,49 @@
+{
+  "finalScreens": [
+    {
+      "file": "customer-reference-1280-r1.png",
+      "sha256": "3ea7264c29ec8cfa58a43b04cf809e849ae06ab98eeb029b369b9b2a206d9a47",
+      "width": 1280,
+      "height": 720,
+      "inspected": true
+    },
+    {
+      "file": "customer-actual-1280-r1.png",
+      "sha256": "c43b5e89bfabac334953c3d31704cddc3cfae7ae4f208c5a8d038b1ca7392cc5",
+      "width": 1280,
+      "height": 720,
+      "inspected": true
+    },
+    {
+      "file": "customer-reference-1440-r1.png",
+      "sha256": "a1fd5423d7f6c607a11d81096d4e42fa5e72de38346bd05d2efeb3dbe92ab161",
+      "width": 1440,
+      "height": 900,
+      "inspected": true
+    },
+    {
+      "file": "customer-actual-1440-r1.png",
+      "sha256": "d9cfda94fb4ab00341fe0369a36cfd5c71d9fe7544a700ef8666db1634b610ba",
+      "width": 1440,
+      "height": 900,
+      "inspected": true
+    },
+    {
+      "file": "customer-reference-1920-r1.png",
+      "sha256": "4da402f4890a0181e476dcb12f2e6f1fcd60e07a399636c39e5ed526ca2665ac",
+      "width": 1920,
+      "height": 1080,
+      "inspected": true
+    },
+    {
+      "file": "customer-actual-1920-r1.png",
+      "sha256": "a9d1017dd4332de20fadb1e7576894dd280ca252daa9f7755436af1f5edfe69c",
+      "width": 1920,
+      "height": 1080,
+      "inspected": true
+    }
+  ],
+  "captureMethod": "actual native scale=css; reference stable paint then explicit CSS clip scale1",
+  "temporaryOverridesCleared": true,
+  "wholeVisualComplete": false
+}

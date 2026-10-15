@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a5305850726957922ffb8e55648ab96a076cd194282f4bdd09f3c528fbb54054",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r9-20261015-api-controller-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r9-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "80b39a1a8d5f7b76e942c7005e8d4086980d215f",
+      "authority_revision": "AOS-002036",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r9-20261015/api-controller-review-package-r1.txt": "6413e7a464e7c78461de6703b08eae0cc318b2baa792201bdde4abe1cdb5b5b7"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "控制器源码将本次独立复审PASS合法消费置于新意图和信号之前；本机缺少必需审查文件的负向实验已在quality处拒绝，旧API/Web/PG及意图缺失状态前后一致。",
+        "evidence": "customer_contribution_api_switch_r1.py quality()调用read(E/'api-controller-review-request-r1.json')导致FileNotFoundError，因请求文件不存在；pre-effect-gate-deny-result-r1.json确认statesExactlyEqual=true、api-switch-intent-r1.json等均为false、deniedBeforeIntentAndSignal=true、gateMissingReview=true；api-preflight-r1.json显示serviceEffects=false，head与OLD_SOURCE/cwd均与现有状态一致。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前真实只读预检、两个独立代码PASS及其消费、原只读wrapper与准确API8498身份可核；所供前效代码仅更新指定API，不向PG/Web/Chrome发信号，不替代daily或后效SDK/650/视觉验收。",
+        "evidence": "api-preflight-r1.json记录nativeManagementReadonly为RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY且apiStartAuthorized=false、databaseReadOnly=true，验证当前实际预检；route-quality-consumption-r1.json与code-review-consumption-r1.json均status=CONSUMED_MATERIAL_REVIEW，对应result均为PASS；pre-effect-gate-deny-raw-r1.log确认失败在quality阶段、未生成intent/signal，pre-effect-gate-deny-result-r1.json显示pgId/webCommand未变更，且customer-contribution-api-plan.md明确限定'本API-only不替代每日...SDK/650/视觉'。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前PASS结论与基线80b39a1a；如需推进API替换，建议在后续task中提供完整的后效验证材料（pg/listener/sourceguard及正式browser验收），当前前效已确认无新意图/信号发出。"
+  }
+}
