@@ -1,0 +1,10 @@
+{
+  "terminal": "ASSERTION_IN_BASE_PG_ID_BEFORE_PREFLIGHT_AND_SIGNALS",
+  "badControllerSha": "bd545d590ae38220e73bf8180096371fb58cdc92f3503e886438db57ce62cde8",
+  "correctedControllerSha": "f3df8d9fcc304b6d206f2b8d3879022d5e140c6c457363d7c4a94c2a3f8b4880",
+  "actualContainerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "oldApi15265StillListening": true,
+  "web89803StillListening": true,
+  "noEffectsArtifacts": true,
+  "wholeGoalComplete": false
+}

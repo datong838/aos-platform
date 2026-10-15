@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "bfe3d7c415216110bd07dae914ec91d5c3bfd62e6e1c2f53f680754fa22792cf",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r10-20261015-contact-live-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r10-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "17164dc7b71bdb897db501d03657741f42c8122b",
+      "authority_revision": "AOS-002037",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r10-20261015/contact-live-review-material-r1.txt": "83123a42cb7abf79575329c866dd2410fbb81ca3de84b9d60c2499e035d6b6c9"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "修正前CID误替换预检安全拒绝且无效果、修正后真实预检与缺审负向/独立controller PASS合法消费后仅一次新意图API更新；实际44093/cwd17164、Web89803/f036与原PG同CID卷StartedAt及650完整前后全等支持本保存读取现场。",
+        "evidence": "preflight-terminal-cid-mismatch-r0.json(坏SHA bd545d.../好SHA f3df8d...)记录BASE_PG_ID前ASSERTION_IN_BASE_PG_ID_AND_SIGNALS拒绝，noEffectsArtifacts:true。api-preflight-r1.json(head:17164dc7...,apiPid:15265,pgStartedAt:2026-10-14T20:36:36.408087963Z,webPid:89803)。api-switch-intent-r1.json(oldPid:15265→new:44093)。verify_contact_runtime_r1.py断言lsof:44093/18080、89803、diff f036 HEAD apps/web空；650 before==after、native/containerId/volume/pgStartedAt相等。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原唯一真人同租户正式contact SDK200保留两可信保存计数0/latest null/ledger0/真实blocker/commands[]/五false，query400/匿名401/customer closure404/业务nonGET[]；不将隔离持久化、保存typed Receipt或空视图当当前Consent/Contact或经营准入。",
+        "evidence": "contact-native-identity-sdk-r1.json(me.subject:6f31cfdc.../org-org/dev-project/view频率0退订0/blockers:[CUSTOMER_CONTACT_GOVERNANCE_NOT_PREPARED]/ledger九项0/latestStart:null/allowedCommands:[]/permitRedemptionAllowed等五false)。deny:{query:400,closure:404},anonymousStatus:401。contact-native-geometry-deny-r1.json(businessNonGet:[],normalAuthPosts:[{POST /auth/token,200}])。report:“不操作其他标签”“真实保存空...不把它说成生产Start已产生”。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "实际三视口页签筛选几何与六图尺寸hash、实施者逐图检视和明确视觉差距只支持当前空态读取slice，未声称非空/a11y/八台或完整Goal完成；daily每次aos原卷full重启、唯一真人最终预算/部署/自然经营/安装与全部remaining保持。",
+        "evidence": "verify_contact_runtime_r1.py:三宽(1280/1440/1920)assert按钮height=32、filters四组/tab唯一4、无横向溢出，三reference+三actual.png读struct>II宽度高度校验并sha256记录inspected:true。contact-live-shas-r1.json(六图SHA+captureMethod+wholeVisualComplete:false)。contact-runtime-proof-r1.json(threeViewportsWithoutHorizontalOverflow/fourTabsAndFourFiltersSwitch/actualDataEmptyNotFixture:true;onlyApiSwitched:true/dailyFullPgApiWebRestartSubstitute:false/wholeGoalComplete:false)。报告:“不能宣称非空.../a11y/八台...达人1280裁切/参谋层级/Page失败假0等其他未完成项仍保留”。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "以AOS-002037基线继续：先按report所列未关闭项逐条审计customer closure辅助GET与受约束内容能力，再评审独立现场Prime以触发API/Web restart及八页浏览器验收。"
+  }
+}

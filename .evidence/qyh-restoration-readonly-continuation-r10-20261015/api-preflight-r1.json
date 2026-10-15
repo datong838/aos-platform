@@ -1,0 +1,41 @@
+{
+  "nativeManagementReadonly": {
+    "outcome": "RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY",
+    "identity": {
+      "database": "aos_meta_head",
+      "cluster": "7695302940039200809",
+      "schema": "a0v_161",
+      "orgId": "org-org",
+      "orgName": "\u6816\u6708\u6c47\u5546\u8d38\u6709\u9650\u516c\u53f8",
+      "projectId": "dev-project",
+      "tables": 650
+    },
+    "inventory": {
+      "installations": 136,
+      "configurations": 130,
+      "bindings": 127,
+      "enabledBindings": 0
+    },
+    "apiStartAuthorized": false,
+    "eightWorkbenchesVerified": false,
+    "runtimeHostEnabled": false,
+    "remainingGates": [
+      "current signed release and installation",
+      "current configuration and formal identity",
+      "API/Web restart and eight-page browser acceptance"
+    ],
+    "limitedLoginVerified": true,
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "databaseStartedAt": "2026-10-14T20:36:36.408087963Z",
+    "codeSchema": "a0v_162",
+    "pendingCodeCandidateNotApplied": true
+  },
+  "head": "17164dc7b71bdb897db501d03657741f42c8122b",
+  "apiPid": 15265,
+  "apiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-80b39a1a8d5f7b76e942c7005e8d4086980d215f",
+  "webPid": 89803,
+  "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+  "sourceGuard": true,
+  "ownedCodeHashesVerified": true,
+  "serviceEffects": false
+}

@@ -1,0 +1,49 @@
+{
+  "finalScreens": [
+    {
+      "file": "contact-reference-1280-r1.png",
+      "sha256": "984a055d4c5751e6e42ac9ce76156ee904c44751aa1c63b761299a58201b155e",
+      "width": 1280,
+      "height": 720,
+      "inspected": true
+    },
+    {
+      "file": "contact-actual-1280-r1.png",
+      "sha256": "18e26cb8000a4248f59fc571cf7e7a615a581fd5845afcff48981b8250475fb0",
+      "width": 1280,
+      "height": 720,
+      "inspected": true
+    },
+    {
+      "file": "contact-reference-1440-r1.png",
+      "sha256": "ff74c3ee54848f86c5fd432b8dec7f935ca4e9baf0afb741ccdbc5107e10e879",
+      "width": 1440,
+      "height": 900,
+      "inspected": true
+    },
+    {
+      "file": "contact-actual-1440-r1.png",
+      "sha256": "5b0b15f66bed8a536c1e8159a9001144dd147fefd8df1cdb5e8b841f4fdfd34d",
+      "width": 1440,
+      "height": 900,
+      "inspected": true
+    },
+    {
+      "file": "contact-reference-1920-r1.png",
+      "sha256": "a951ac923e0dd249246565bedac19f856fd6c8b4a694fdc936ac345535f6a357",
+      "width": 1920,
+      "height": 1080,
+      "inspected": true
+    },
+    {
+      "file": "contact-actual-1920-r1.png",
+      "sha256": "23bb0f2ed15c9490234cdecb034da8bcb64e65de2baa7acb1176cc7e902eae49",
+      "width": 1920,
+      "height": 1080,
+      "inspected": true
+    }
+  ],
+  "captureMethod": "actual native scale=css; reference stable paint then explicit CSS clip scale1",
+  "temporaryOverridesCleared": true,
+  "wholeVisualComplete": false
+}

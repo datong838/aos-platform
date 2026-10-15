@@ -1,0 +1,37 @@
+{
+  "before": {
+    "apiListener": "15265",
+    "apiCommand": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python -m uvicorn a0v_qyh_restored_http:management_app --factory --host 127.0.0.1 --port 18080 --workers 1 --no-access-log --log-level warning",
+    "webListener": "89803",
+    "webCommand": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015/price-visual-web-server.mjs",
+    "pgId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+    "apiEffectsArtifacts": {
+      "api-switch-intent-r1.json": false,
+      "api-old-stop-r1.json": false,
+      "api-started-r1.json": false,
+      "customer-contact-live-api-r1.log": false
+    }
+  },
+  "after": {
+    "apiListener": "15265",
+    "apiCommand": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python -m uvicorn a0v_qyh_restored_http:management_app --factory --host 127.0.0.1 --port 18080 --workers 1 --no-access-log --log-level warning",
+    "webListener": "89803",
+    "webCommand": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015/price-visual-web-server.mjs",
+    "pgId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+    "apiEffectsArtifacts": {
+      "api-switch-intent-r1.json": false,
+      "api-old-stop-r1.json": false,
+      "api-started-r1.json": false,
+      "customer-contact-live-api-r1.log": false
+    }
+  },
+  "statesExactlyEqual": true,
+  "returncode": 1,
+  "deniedBeforeIntentAndSignal": true,
+  "gateMissingReview": true,
+  "rawLogSha": "627f3e078950a29dde0f074d5d88d6b7e3463453ef2e5f7219897c1d40d98da7",
+  "notPostEffectProof": true,
+  "wholeGoalComplete": false
+}
