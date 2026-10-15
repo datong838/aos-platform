@@ -1,0 +1,23 @@
+{
+  "head": "0d0623496efc3f44c839a7172f39168a020008e0",
+  "authority": "AOS-002036",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "sha256": "f051c3cb511aa80874dda1468dbde603fcd83ade81e9c511de34016cc5f5ae26",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_customer_lifecycle.py",
+      "sha256": "0c1cb897d99b622d041d65688bedceedd5697da1fdd6152844fcd0e2bfa3ac4d",
+      "workingEqualsCommitted": true
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_customer_lifecycle_store.py",
+      "sha256": "b533cf7d759aa8f07ae4b3921ce17ae289114db31a2bb6c6abaa2d870c387f30",
+      "workingEqualsCommitted": true
+    }
+  ],
+  "productChanges": false,
+  "wholeGoalComplete": false
+}

@@ -1,0 +1,13 @@
+{
+  "head": "0d0623496efc3f44c839a7172f39168a020008e0",
+  "code": "04092c82f9dcaccf7b23ff6e61d536a9f650aa38",
+  "before": "AOS-002035",
+  "expected": "AOS-002036",
+  "tasks": [
+    "qyh-price-closure-read-admission-20261015",
+    "qyh-price-closure-bounded-reader-20261015",
+    "qyh-restoration-readonly-continuation-r8-20261015"
+  ],
+  "otherLeasesPreserved": 38,
+  "wholeGoalComplete": false
+}
