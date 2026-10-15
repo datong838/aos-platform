@@ -1,0 +1,14 @@
+{
+  "immediateReadFailure": "tab selected/panel mismatch after native input, before any state wait",
+  "afterObservation": {
+    "selected": [
+      "customer-tab-customer"
+    ],
+    "panel": "customer-panel-customer",
+    "focus": "",
+    "parentPointer": "none"
+  },
+  "completedWidths": 0,
+  "temporaryViewportCleared": true,
+  "wholeVisualComplete": false
+}

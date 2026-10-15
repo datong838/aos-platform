@@ -1,0 +1,9 @@
+{
+  "currentGitCommitSha1": "8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5",
+  "controllerFileSha256": "db7f244d0daa8ab0298303792b31514950505396bdec0db4e5dc81c81f5f633c",
+  "candidateReviewBaseCommitSha1": "bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a",
+  "candidateOverlayCssSha256": "e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604",
+  "currentCommittedCssSha256": "e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604",
+  "candidateCssExactlyEqualsCommittedCss": true,
+  "explanation": "Commit SHA1 is not a file SHA256. Review baseline.files entry is material package SHA256, not controller file SHA256. Different values are required because these are different byte objects. Product code review covered base bb7 plus this exact CSS overlay, now committed unchanged at8db. This NEW review r2 evaluates CURRENT controller before any action. Missing-review experiment is expected to fail before this request exists, proving ordering; not a failed deployment. Independent result/consumption for this current request cannot preexist this review. Old r1 NEED retained and NOT used as PASS."
+}

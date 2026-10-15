@@ -1,0 +1,374 @@
+PRE-EFFECT SOURCE QUALITY. Actual readonly preflight below TERMINATED0 with current controller SHA, current task/lease/HEAD/source/API/Web/PG readbacks. Claims do NOT include post-update acceptance or an already existing PASS of this controller. Earlier NEED_EVIDENCE results preserved and not used as PASS. Current source keeps future review legal consumption mandatory before new intent/signal.
+CONTROLLER_SHA 391e164df8e467a60e16b9633d708784b1f17ea652c883fabf59295776e48214
+FULL CURRENT FILE web-preflight-execution-r3.json SHA ad9e48c88ff229904befd137fe618faf402343d019970c482105ddace7a5c47f
+{
+  "observedAt": "2026-10-15T13:34:23.620559+00:00",
+  "preflightReturncode": 0,
+  "preflightStdout": "",
+  "preflightStderr": "",
+  "controllerSha256": "391e164df8e467a60e16b9633d708784b1f17ea652c883fabf59295776e48214",
+  "head": "8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5",
+  "authority": "AOS-002039",
+  "lease": {
+    "task_id": "qyh-restoration-readonly-continuation-r12-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "base_revision": "AOS-002039",
+    "lease_expires_at": "2026-10-15T16:00:00+00:00",
+    "scope": [
+      "aos-platform/.evidence/qyh-full-system-restoration-20261011",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/maintenance/qiyuehui-restored-api",
+      "aos-platform/maintenance/qiyuehui-restored-web",
+      "aos-platform/scripts/a0v_qyh_restored_http.py",
+      "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py",
+      "aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013",
+      "aos-platform/.evidence/qyh-daily-readonly-schema-compat-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r2-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r4-20261015",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r5-20261015",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r7-20261015",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r8-20261015",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r9-20261015",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r10-20261015",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r11-20261015",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r12-20261015"
+    ]
+  },
+  "apiListener": "54057",
+  "webListener": "89803",
+  "effectFiles": {
+    "pointer-web-switch-intent-r1.json": false,
+    "pointer-web-started-r1.json": false
+  },
+  "note": "Actual readonly preflight TERMINATED0. Not the web phase. No independent controller review PASS preexists; this is its pre-review evidence. No signal/spawn has occurred."
+}
+FULL CURRENT FILE web-preflight-r3.json SHA eb095371dd58a7e9402a2b8ae39b352936ea3c70ecae855233f69df4c8033dfe
+{
+  "head": "8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5",
+  "oldWebPid": 89803,
+  "apiPid": 54057,
+  "nativeManagementReadonly": {
+    "outcome": "RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY",
+    "identity": {
+      "database": "aos_meta_head",
+      "cluster": "7695302940039200809",
+      "schema": "a0v_161",
+      "orgId": "org-org",
+      "orgName": "\u6816\u6708\u6c47\u5546\u8d38\u6709\u9650\u516c\u53f8",
+      "projectId": "dev-project",
+      "tables": 650
+    },
+    "inventory": {
+      "installations": 136,
+      "configurations": 130,
+      "bindings": 127,
+      "enabledBindings": 0
+    },
+    "apiStartAuthorized": false,
+    "eightWorkbenchesVerified": false,
+    "runtimeHostEnabled": false,
+    "remainingGates": [
+      "current signed release and installation",
+      "current configuration and formal identity",
+      "API/Web restart and eight-page browser acceptance"
+    ],
+    "limitedLoginVerified": true,
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "databaseStartedAt": "2026-10-14T20:36:36.408087963Z",
+    "codeSchema": "a0v_162",
+    "pendingCodeCandidateNotApplied": true
+  },
+  "manifestVerifiedAgainstGit": true,
+  "oldSourceManifestVerified": true,
+  "sourceHashesVerified": true,
+  "otherServicesTouched": false
+}
+FULL CURRENT FILE pre-effect-gate-deny-result-r3.json SHA e6e55428c776bfa33cc28b56ef3fdd3cf5855211a63bc13758a6a14e37893253
+{
+  "before": {
+    "apiListener": "54057",
+    "apiCommand": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python -m uvicorn a0v_qyh_restored_http:management_app --factory --host 127.0.0.1 --port 18080 --workers 1 --no-access-log --log-level warning",
+    "webListener": "89803",
+    "webCommand": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015/price-visual-web-server.mjs",
+    "pgId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+    "effectFiles": {
+      "pointer-web-switch-intent-r1.json": false,
+      "pointer-web-old-stop-r1.json": false,
+      "pointer-web-started-r1.json": false,
+      "customer-pointer-live-web-r1.log": false
+    }
+  },
+  "after": {
+    "apiListener": "54057",
+    "apiCommand": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python -m uvicorn a0v_qyh_restored_http:management_app --factory --host 127.0.0.1 --port 18080 --workers 1 --no-access-log --log-level warning",
+    "webListener": "89803",
+    "webCommand": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015/price-visual-web-server.mjs",
+    "pgId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+    "effectFiles": {
+      "pointer-web-switch-intent-r1.json": false,
+      "pointer-web-old-stop-r1.json": false,
+      "pointer-web-started-r1.json": false,
+      "customer-pointer-live-web-r1.log": false
+    }
+  },
+  "statesExactlyEqual": true,
+  "returncode": 1,
+  "deniedBeforeIntentAndSignal": true,
+  "gateMissingReview": true,
+  "wholeGoalComplete": false
+}
+FULL CURRENT FILE pre-effect-gate-deny-raw-r3.log SHA 25cc955b4a6459cab44fa18a59590ff71dde7bd350060f99af1c6cb3718448a4
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r12-20261015/customer_pointer_web_switch_r1.py", line 116, in <module>
+    quality()
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r12-20261015/customer_pointer_web_switch_r1.py", line 98, in quality
+    request = read(E / 'web-controller-review-request-r3.json')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r12-20261015/customer_pointer_web_switch_r1.py", line 30, in read
+    def read(p): return json.loads(p.read_text())
+                                   ^^^^^^^^^^^^^
+  File "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py", line 1058, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r12-20261015/web-controller-review-request-r3.json'
+
+FULL CURRENT FILE customer_pointer_web_switch_r1.py SHA 391e164df8e467a60e16b9633d708784b1f17ea652c883fabf59295776e48214
+"""One exact reviewed Web switch; original API/PG/Chrome never signaled."""
+from pathlib import Path
+import argparse
+import datetime
+import hashlib
+import io
+import json
+import os
+import signal
+import subprocess
+import sys
+import tarfile
+import time
+
+E = Path(__file__).resolve().parent
+R = E.parents[1]
+HEAD = '8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5'
+OWNER = 'codex-01a13484-f019-7d82-94ce-812396db9124'
+OLD = 89803
+API = 54057
+NODE = '/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node'
+OLD_E = R / '.evidence/qyh-restoration-readonly-continuation-r6-20261015'
+CSS = 'apps/web/src/styles/45-ecommerce-workshop.css'
+sys.path.insert(0, str(R / 'scripts/long-task-watchdog'))
+import aos_review as gate
+sys.path.insert(0, str(R / 'scripts'))
+import a0v_qyh_restored_http as guard
+
+
+def read(p): return json.loads(p.read_text())
+def cmd(*args): return subprocess.check_output(args, cwd=R, text=True, timeout=30).strip()
+def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def save(name, value):
+    with (E / name).open('x') as stream:
+        json.dump(value, stream, indent=2)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def listeners(port): return sorted({int(x) for x in cmd('lsof', '-t', '-nP', f'-iTCP:{port}', '-sTCP:LISTEN').split()})
+def cwd(pid): return next(x[1:] for x in cmd('lsof', '-a', '-p', str(pid), '-d', 'cwd', '-Fn').splitlines() if x.startswith('n'))
+
+
+def legal(folder, prefix, version):
+    q = read(folder / f'{prefix}-request-{version}.json')
+    v = read(folder / f'{prefix}-result-{version}.json')
+    t = read(folder / f'{prefix}-result-{version}.transport.json')
+    assert v['result']['verdict'] == 'PASS'
+    assert gate.consumption_record(q, v, t, v['runner_sha256']) == read(folder / f'{prefix}-consumption-{version}.json')
+
+
+def disk_manifest(source):
+    return {str(p.relative_to(source)): sha(p) for p in source.rglob('*') if p.is_file()}
+
+
+def base():
+    assert cmd('git', 'rev-parse', 'HEAD') == HEAD and cmd('git', 'branch', '--show-current') == 'm1'
+    memory = R.parent / 'docs/palantier/AOS项目开发上下文/memory'
+    lease = read(memory / 'receipts/tasks' / (E.name + '.json'))
+    assert lease in read(memory / 'leases.json')['leases'] and lease['owner'] == OWNER
+    assert lease['base_revision'] == read(memory / 'authority.json')['project_revision'] == 'AOS-002039'
+    assert datetime.datetime.fromisoformat(lease['lease_expires_at']) > datetime.datetime.now(datetime.timezone.utc)
+    assert listeners(18080) == [API]
+    api_source = guard.require_api_source_candidate(R / '.evidence/qyh-full-system-restoration-20261011/customer-closure-api-20261015.json')
+    assert cwd(API) == str(api_source)
+    assert not cmd('git', 'diff', '0b0c88882ce6e9cdab168baf485ef50fa5baefb7', 'HEAD', '--', 'services/aos-api', 'scripts', 'bundles')
+    assert listeners(18434) == [OLD] and cwd(OLD) == str(R)
+    assert cmd('ps', '-p', str(OLD), '-o', 'command=') == NODE + ' ' + str(OLD_E / 'price-visual-web-server.mjs')
+    old = read(OLD_E / 'price-visual-web-source.json')
+    assert old['head'] == 'f036e46c643308651b415179e6e991870dbc26ab'
+    assert disk_manifest(Path(old['source'])) == old['manifest']
+    pg = json.loads(cmd('docker', '--context', 'colima-aos-extension', 'inspect', 'qyh-restored-pg-20261011'))[0]
+    assert pg['Id'] == '84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c'
+    assert pg['State']['Running'] and pg['State']['StartedAt'] == '2026-10-14T20:36:36.408087963Z'
+    assert len(pg['Mounts']) == 1 and pg['Mounts'][0]['Name'] == 'aos-qyh-history159-prepared-data-20261011'
+    product = R / '.evidence/qyh-customer-visual-pointer-20261015'
+    legal(product, 'code-review', 'r1')
+    proof = read(product / 'source-verification-r1.json')
+    assert all(x['returncode'] == 0 for x in proof['results'].values())
+    web = read(E / 'customer-pointer-web-source.json')
+    source = Path(web['source'])
+    assert web['head'] == HEAD and web['port'] == 18434 and web['apiTarget'] == 'http://127.0.0.1:18080'
+    assert disk_manifest(source) == web['manifest'] and sha(source / CSS) == proof['cssAfter']
+    git_manifest = {}
+    raw = subprocess.check_output(['git', 'archive', HEAD, 'apps/web', 'packages/ontology-sdk', 'packages/ui-kit'], cwd=R)
+    with tarfile.open(fileobj=io.BytesIO(raw)) as archive:
+        for item in archive.getmembers():
+            if item.isfile() and not any(x.startswith('.env') for x in Path(item.name).parts):
+                git_manifest[item.name] = hashlib.sha256(archive.extractfile(item).read()).hexdigest()
+    assert git_manifest == web['manifest']
+    assert sha(E / 'customer-pointer-web-server.mjs') == web['entrySha256']
+    return web, pg
+
+
+def quality():
+    request = read(E / 'web-controller-review-request-r3.json')
+    assert request['task_id'] == E.name and request['owner'] == OWNER
+    gate.validate_request(R, request)
+    legal(E, 'web-controller-review', 'r3')
+    assert 'CONTROLLER_SHA ' + sha(Path(__file__)) in (E / 'web-controller-review-package-r3.txt').read_text()
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--phase', choices=['preflight', 'web'], required=True)
+args = parser.parse_args()
+web, pg = base()
+if args.phase == 'preflight':
+    before = read(R / '.evidence/qyh-restoration-successor-latest-restart-20261013/customer-pointer-web-before-20261015.json')
+    assert before['containerId'] == pg['Id'] and before['pgStartedAt'] == pg['State']['StartedAt']
+    assert before['native']['schema'] == 'a0v_161' and before['native']['enabledBindings'] == 0 and len(before['fingerprints']) == 650
+    native = guard.preflight(R / '.evidence/qyh-full-system-restoration-20261011/private/restored-identity.json', management_readonly=True)
+    save('web-preflight-r3.json', dict(head=HEAD, oldWebPid=OLD, apiPid=API, nativeManagementReadonly=native, manifestVerifiedAgainstGit=True, oldSourceManifestVerified=True, sourceHashesVerified=True, otherServicesTouched=False))
+    sys.exit(0)
+quality()
+assert not (E / 'pointer-web-switch-intent-r1.json').exists() and not (E / 'pointer-web-started-r1.json').exists(), 'known intent: reconcile, no replay'
+assert read(E / 'web-preflight-r3.json')['head'] == HEAD
+save('pointer-web-switch-intent-r1.json', dict(head=HEAD, oldPid=OLD, oldEntry=str(OLD_E / 'price-visual-web-server.mjs'), source=web['source'], pgApiChromeTouched=False))
+os.kill(OLD, signal.SIGTERM)
+for _ in range(100):
+    result = subprocess.run(['lsof', '-t', '-nP', '-iTCP:18434', '-sTCP:LISTEN'], capture_output=True, text=True)
+    if not result.stdout.strip(): break
+    time.sleep(.2)
+else: raise RuntimeError('old Web stop unresolved: reconcile only')
+save('pointer-web-old-stop-r1.json', dict(oldPid=OLD, portFree=True))
+env = {k: v for k, v in os.environ.items() if not k.startswith(('AOS_', 'PG', 'VITE_'))}
+with (E / 'customer-pointer-live-web-r1.log').open('x') as stream:
+    process = subprocess.Popen([NODE, str(E / 'customer-pointer-web-server.mjs')], cwd=R, env=env, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
+save('pointer-web-started-r1.json', dict(head=HEAD, pid=process.pid, source=web['source'], spawnedOnly=True))
+print(dict(webPid=process.pid, spawnedOnly=True))
+
+FULL CURRENT FILE customer-pointer-web-server.mjs SHA affd93bfbcc5a931b5f4d75f754ca6440f202fdd8c200bc99b721a44e67c0dd0
+import { createServer } from '/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/node_modules/vite/dist/node/index.js';
+import fs from 'node:fs';
+import path from 'node:path';
+const task = path.dirname(new URL(import.meta.url).pathname);
+const frozen = JSON.parse(fs.readFileSync(path.join(task, 'customer-pointer-web-source.json')));
+process.env.VITE_AOS_API_PROXY_TARGET = frozen.apiTarget;
+delete process.env.VITE_AOS_API_BASE;
+const server = await createServer({
+  root: path.join(frozen.source, 'apps/web'),
+  configFile: path.join(frozen.source, 'apps/web/vite.config.ts'),
+  cacheDir: path.join(task, 'private/customer-pointer-vite-cache'),
+  server: { host: '127.0.0.1', port: frozen.port, strictPort: true },
+});
+await server.listen();
+console.log(JSON.stringify({ outcome: 'LOCAL_HUMAN_LOGIN_WEB_LISTENING', port: frozen.port, apiPort: 18080, head: frozen.head, eightPagesAccepted: false }));
+
+FULL CURRENT FILE customer-pointer-web-plan.md SHA 057dbe6c8c0fe1b5523a8889359978781b99dc1c7e6aca616e6ae4ac5b6bb906
+# 客户筛选透明区域指针修复：Web更新计划
+
+Rules：完整231Goal/原唯一真人授权、唯一m1写者、Authority2039/maintenance-r12及visual-pointer有效非重叠Lease。原DB只读/HostworkerProvider OFF/unknown旧12不重放/disabled Schedule不启/source不读/noPush/用户dirty保护。每日与每次实际aos最新m1原权威卷全面PGAPIWeb及aos2不重启保持，本Web-only读页修补不替代每日重启或经营首链。
+
+产品本波唯一修改45-ecommerce-workshop.css客户主视觉customer-tabs的pointer-events:none及其button的pointer-events:auto，组件/布局/原数据/权限门不改。独立设计r3已PASS合法消费；三宽原页面filter真实hittest RED、原生CDP正常pointer/keyboard四tab及focus可见证明组件无需改。旧locator.click输入未到达有效UI，不作产品失败修补；不force/DOMclick。候选一CSS overlay冻结407测试/typecheck/production build通过，代码质量review尚待消费，实际新CSS GREEN尚未证明。
+
+只有质量独立PASS合法消费后才精确提交产品与公共证据，使用该最新提交HEAD Git archive冻结apps/web+packages/ontology-sdk+ui-kit、排除.env和所有dirty，完整manifest/sourceSHA与当前Git逐blob相等，node_modules只链接原受支持依赖。新Vite入口固定原API18080、Web18434、cache在维护private，不拷贝凭据、不新增外部入口。
+
+前效控制器核最新HEAD/m1/Authority2039/有效同ownerTaskLease、visual独立质量及其exactCSS SHA、全部新源manifest、旧Web89803/18434/cwdrepo/准确price-visual-web-server.mjs命令与旧f036源manifest、API54057/18080/cwd原0b0c888且services/scripts/bundles与最新HEAD内容一致、原PG准确CID84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c/原命名卷aos-qyh-history159-prepared-data-20261011/Started2026-10-14T20:36:36.408087963Z。fresh650 before、原readonlymanagement预检；任何不一致不发信号。
+
+本次独立controller PASS与exact源码SHA消费置于新fsync意图、准确旧Web SIGTERM、端口释放、原受支持Node+Vite启动之前。先缺审负向拒绝证明无intent/signal且旧服务一致，之后独立前效复审。禁止PG/API/Chrome信号，unknown只读对账，不重跑意图。spawn不当完成。
+
+后效核实际18434监听/PID/cwd/新源manifest/实际CSScomputedpointer-events；在原owned target必要时一次正常reload加载新源，不复制token/storage。若正常登录页则原本机授权材料一次正常登录，不重放未知提交。普通原生CDP指针每次先中心hittest命中且未disabled，四filters实际唯一pressed及四tabs唯一selected/tabpanel一致，三宽1280x720/1440x900/1920x1080、正常键盘Arrow/Home/End/Enter及focus可见、空与blocked真实状态、32px/无横溢出。三宽新截图与原workshop-customer同CSS尺度对比，不填演示数据。fixture失败态如需额外离线页应单独登记Task/文件和禁外网接口，不能伪装原真实身份经营证据。
+
+正式原me/客户SDK身份/commands空/效果false、query400/匿名401及businessNonGET[]，fresh650 after全逐表行数/hash前后相等，同原PG身份与API原PID保持。现场独立Prime审查当前精确物证后准确Delivery/Authority七强及所有remaining接续。滤钮和四tab通过不等于客户计划日志产物/八台全视觉或经营完成；原完整fullC唯一真人最终预算/原部署、自然首链、安装全生命周期/八真实场景/持续观察发布继续。
+
+PRODUCT EXACT CSS CODE GATE code-review-result-r1.json
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "bb46b0bd79e45ce73b08b12c625f25a2a644ede6ee90f33ef1ff9c6e81bfbb3c",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-visual-pointer-20261015-code-r1",
+    "task_id": "qyh-customer-visual-pointer-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a",
+      "authority_revision": "AOS-002039",
+      "files": {
+        ".evidence/qyh-customer-visual-pointer-20261015/code-review-material-r1.txt": "ed440d0dcc8ce8d80d24dd658a2e8b1580a9c4e9dba07af16346abafc0e834c8"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Exact diff adds only customer primary tablist pointer-events none and button auto; transparent padding no longer intercepts by design, actual buttons/failure buttons remain targetable, layout/style/component/state/data/API/other module behavior unchanged. This is code consistency assessment, post-deploy actual browser GREEN remains pending.",
+        "evidence": "文件 apps/web/src/styles/45-ecommerce-workshop.css，diff 仅改动两处：.customer-tabs 新增 pointer-events: none，.customer-tabs button 新增 pointer-events: auto。组件 CustomerPage 与 CustomerFailureSurface 源码未变更。构建结果 workshop-cumulative-r1、web-typecheck-r1、web-production-build-r1 returncode 均为 0。几何验收 geometryAcceptance=pending。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Old-site real three-width pointer RED and normal native CDP tab/keyboard selected/focus proof distinguish true filter CSS defect from high-level locator input no-op. No component patch, forced or DOM click acceptance used; exact native hit-test gate and current scope are coherent.",
+        "evidence": "pointer-red-r1.json 显示 1280/1440/1920 三种宽度 filters 均为 hitInside=false，red=true 且 forceOrDomClickUsed=false。tab-native-input-proof-r2.json 显示原生 CDP 键盘 ArrowRight/End/ArrowLeft/Home 成功切换 selected/focused，productComponentUnchanged=true，forceOrDomClickUsed=false。input-channel-diagnosis-r2.md 明确原生指针导致 aria-selected 变化，无需改组件。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Recorded immutable oneCSS-overlay freeze407 existing tests/typecheck/build PASS/currentCSS SHA unchanged and unchanged original component support candidate quality; no JSDOM geometry or full visual/business/install/Goal completion claimed. Required current Web source/controller review/switch/real three-width filters/tabs/keyboard/PNG and live review gates remain.",
+        "evidence": "material 中 cssBefore=cssAfter=e9f83...，originalComponentUnchanged=true。test results 显示 407 tests passed (62 passed)，typecheck 与 build returncode=0。geometryAcceptance 明确为 pending actual browser after guarded Web update，无 JSDOM geometry claim，full visual/business/install/Goal completion 未声明。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "等待独立 guarded Web 更新后的真实浏览器验收；在 1280/1440/1920 三宽使用原生 CDP 指针与键盘回放，核 hitInside=true 且 aria-selected 切换，再产出 GREEN 物证。"
+  }
+}
+PRODUCT EXACT CSS CODE GATE code-review-consumption-r1.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-visual-pointer-20261015-code-r1",
+  "task_id": "qyh-customer-visual-pointer-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a",
+    "authority_revision": "AOS-002039",
+    "files": {
+      ".evidence/qyh-customer-visual-pointer-20261015/code-review-material-r1.txt": "ed440d0dcc8ce8d80d24dd658a2e8b1580a9c4e9dba07af16346abafc0e834c8"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "f565f3d40c3dcd78592918c76283aa85e4eb7439152dc9bfd6ad06b6a525da32",
+  "transport_sha256": "2570d41490614a5593264e944bac31a5ec37dfc4a896cbfb510bf4feb81e3bdc"
+}
+CURRENT CSS bytes equal legally reviewed candidate CSS: e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604; base commit bb7 plus one overlay was committed unchanged at current8db. Commit SHA1, CSS SHA256, controller SHA256 and material SHA256 name different objects.
+{"baseHead": "bb7a742849f9109ad4fc2f9ed9e9cfd55ffbac3a", "cssBefore": "e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604", "cssAfter": "e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604", "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-visual-pointer-20261015/private/candidate-source-r1", "onlyOneOwnedCSSOverlay": true, "originalComponentUnchanged": true, "noUserDirtyCopied": true, "privateBuildAndCache": true, "results": {"workshop-cumulative-r1": {"returncode": 0, "command": ["/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node", "node_modules/vitest/vitest.mjs", "run", "src/components/workshop", "src/api/ecommerceWorkshop", "--config", "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-visual-pointer-20261015/private/frozen-verification-config-r1.ts", "--no-cache"], "logSha": "1949bd74333c082c6553e1434612c3a32805a655f4c62761356091acb8abc300"}, "web-typecheck-r1": {"returncode": 0, "command": ["/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node", "node_modules/typescript/bin/tsc", "--noEmit"], "logSha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, "web-production-build-r1": {"returncode": 0, "command": ["/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node", "node_modules/vite/bin/vite.js", "build", "--config", "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-visual-pointer-20261015/private/frozen-verification-config-r1.ts"], "logSha": "b1b23abc9cd8d95153814444fbd199bf5815fde132ce35bdec525ed6aca4bfd0"}}, "startedAt": "2026-10-15T13:16:03.856476+00:00", "finishedAt": "2026-10-15T13:16:23.261760+00:00", "originalServicesTouched": false, "geometryAcceptance": "pending actual browser after guarded Web update; no JSDOM geometry claim"}
+CURRENT FREEZE REPORT SHA 2f9254a8f59bd0ca80e1ec6376e575749b8b5c9ef46976b46e06ec1b3d34ce2c
+{"head": "8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5", "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r12-20261015/private/customer-pointer-web-8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5", "sourceHashes": {"apps/web/src/styles/45-ecommerce-workshop.css": "e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604"}, "port": 18434, "apiTarget": "http://127.0.0.1:18080", "processEffects": false, "entrySha256": "affd93bfbcc5a931b5f4d75f754ca6440f202fdd8c200bc99b721a44e67c0dd0"}
+Full764 manifest verified against current Git archive and source disk by actual TERMINATED0 preflight above; retained in original report.

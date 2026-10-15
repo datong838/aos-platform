@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "5490da9b17acb263d036f0e869e3d0f6a3de8a2ac3b328f4debed74256b64f48",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r12-20261015-web-controller-r3",
+    "task_id": "qyh-restoration-readonly-continuation-r12-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5",
+      "authority_revision": "AOS-002039",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r12-20261015/web-controller-review-package-r3.txt": "2b6cc88a79eb48ccd5cf03caab0fa144ed6b0501d1b353e49167eb315c7f97be"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "控制器源码将未来独立复审PASS合法消费校验放在新意图与旧Web信号之前，且信号对象仅准确核验的旧Web89803；不声称该复审此刻已经通过。",
+        "evidence": "文件 customer_pointer_web_switch_r1.py 中，base() 函数在末尾调用 legal(product, 'code-review', 'r1') 校验代码审查，但在 quality() 函数中调用 legal(E, 'web-controller-review', 'r3') 校验控制器复审。control flow: preflight 阶段在 quality() 之前执行并 sys.exit(0)。当前执行的是 preflight 阶段，quality() 尚未运行。文件中明确声明 'Not the web phase. No independent controller review PASS preexists'。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "本机当前只读预检进程已正常退出0且未向Web/API/PG发信号，保留原数据只读和后续真实浏览器、650对账与完整Goal验收门。",
+        "evidence": "web-preflight-execution-r3.json 显示 preflightReturncode=0。pre-effect-gate-deny-result-r3.json 显示 statesExactlyEqual=true，effectFiles 中 pointer-web-switch-intent-r1.json=false, pointer-web-started-r1.json=false，deniedBeforeIntentAndSignal=true。oldWebPid=89803 仍存在于 nativeManagementReadonly 验证中。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "等待独立 web-controller-review r3 复审完成并获得 PASS 结果后，重新提交本控制器执行以通过质量门。"
+  }
+}

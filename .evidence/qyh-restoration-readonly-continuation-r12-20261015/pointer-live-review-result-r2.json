@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "5490da9b17acb263d036f0e869e3d0f6a3de8a2ac3b328f4debed74256b64f48",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r12-20261015-pointer-live-r2",
+    "task_id": "qyh-restoration-readonly-continuation-r12-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5",
+      "authority_revision": "AOS-002039",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r12-20261015/pointer-live-review-material-r2.txt": "78660422bf1df1db8209a0bb3fbb64d1d12c48f89565377c7bdfcece94b1a385"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "当前记录支持客户指针修复切片：真实三宽四tab/tabpanel、四filter唯一pressed、正常方向键HomeEnd及TabEnter/focus可见、32px和无横溢出；原生明确buttons1/0、中心命中与isTrusted事件，不用force/DOMclick。旧输入失败保留且未猜改客户组件。",
+        "evidence": "ACTUAL FULL NATIVE FILE SHA (指针诊断)：metrics含1280/1440/1920三视口，各四tab selected/focused匹配对应panel；四filters依次pressed；键盘ArrowRight/End/ArrowLeft/Home及Tab/Enter均verified focusVisible=true；filters height=32 hitInside=true；documentWidth=viewportWidth无横溢。explicitButtonsDown1Up0=true, forceOrDomClickUsed=false。 pointer-event-witness-r2.json: observed click isTrusted=true, tag=STRONG, clientX=448 clientY=318（居中命中）, protocol='mousePressed buttons1 / mouseReleased buttons0'。 report: '原普通高层点击...不能据此猜改组件'（旧输入失败保留），'不用force/DOMclick补过'。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前原真人me/正式customer-contact SDK与400/401、commands空和五false、业务nonGET空，以及Web61045新8dbb764源/API54057不变/原PG和主写者完整650前后全等记录一致；过期只读JWT失败与正常登录恢复如实区分，不称复审者亲读rawDB。",
+        "evidence": "FORMAL SDK FULL FILE SHA: me.subject/orgId/projectId; customer/contact views status='blocked'; contactAllowedCommands=[]; fiveFlags均为false; query400=400; anonymous401=401。 FULL764 SOURCE FREEZE: head=8dbb4c7c...apiTarget=54057 apiUnchanged=true; webPid=61045 webManifestCount=764。 MAIN WRITER RAW650: beforeSha/afterSha完整保留，allEqual=true，注释'not claimed directly read by material-only reviewer'。 FINAL NETWORK: expiredMe401Preserved=true, recoveryNormalLoginKnown200=true, businessNonGet=[]。 report: '后续独立只读me调用遇JWT Signature expired...再正式me/customer/contact SDK'，区分过期与恢复。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "六新同CSS尺寸图和原稿对照由主写者逐图检视，资料只支持本次交互修复及真实空态，客户计划日志产物/整屏像素/非空/全失败态/a11y与八台全视觉、经营、安装和完整Goal仍未完成；文本审查不冒称已看像素或授运营预算权限。",
+        "evidence": "pointer-live-shas-r2.json: 六张reference/actual PNG（1280/1440/1920各两组），manuallyInspected=true, temporaryViewportCleared=true。 report: '本波三张before已逐图检视...六张新图...实际与原workshop-customer三宽对照'；明确'修补不改三栏...原稿客户唤醒执行态和实际缺来源空态不同'。 eight-workbench-visual-tracker-r2.md: 仅客户关系行更新，其余七台标记'历史/仍未整体通过'；客户行末'导航/横幅/真实计划进度日志/产物分层360/宽屏空白/页脚语义与非空/全失败态/a11y未整体通过'。 Goal ACTIVE声明：'完整231Goal/原唯一真人授权/fullC最终预算原部署'，'本Web-only不替代daily或经营首链'；未称Pixel验收或预算授权。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "按r4控制器要求补入缺失的web-controller-review-request-r4.json至.evidence/目录后重跑r4 preflight；维持旧Web 89803/API 54057/PG冻结直至r4 PASS合法消费；后续接续八台视觉/整屏非空/a11y及完整Goal验收。"
+  }
+}

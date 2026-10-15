@@ -1,0 +1,48 @@
+{
+  "screens": [
+    {
+      "file": "pointer-reference-1280-r2.png",
+      "sha256": "984a055d4c5751e6e42ac9ce76156ee904c44751aa1c63b761299a58201b155e",
+      "width": 1280,
+      "height": 720,
+      "manuallyInspected": true
+    },
+    {
+      "file": "pointer-actual-1280-r2.png",
+      "sha256": "cfa60c98e8679d107672e780b7a750786d21408256d5c3ff8c11e6d0fbb2ee24",
+      "width": 1280,
+      "height": 720,
+      "manuallyInspected": true
+    },
+    {
+      "file": "pointer-reference-1440-r2.png",
+      "sha256": "57fe08bd38e663f94083349c494533b82139835547ba6f29c1687bcf1071ce7b",
+      "width": 1440,
+      "height": 900,
+      "manuallyInspected": true
+    },
+    {
+      "file": "pointer-actual-1440-r2.png",
+      "sha256": "8555f145f1c96d6c567f9f7ab60e86604552ec59e8542f259458030211f6f03e",
+      "width": 1440,
+      "height": 900,
+      "manuallyInspected": true
+    },
+    {
+      "file": "pointer-reference-1920-r2.png",
+      "sha256": "a951ac923e0dd249246565bedac19f856fd6c8b4a694fdc936ac345535f6a357",
+      "width": 1920,
+      "height": 1080,
+      "manuallyInspected": true
+    },
+    {
+      "file": "pointer-actual-1920-r2.png",
+      "sha256": "6ebeb417628f2499c63bd0f034a6bb6905080ee25432256960992ec87000599d",
+      "width": 1920,
+      "height": 1080,
+      "manuallyInspected": true
+    }
+  ],
+  "temporaryViewportCleared": true,
+  "wholeVisualComplete": false
+}

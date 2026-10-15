@@ -1,0 +1,462 @@
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "view": {
+    "schemaVersion": "aos.ecommerce-workshop.customer-view/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "resourceRevision": 1,
+    "evaluatedAt": "2026-10-15T13:59:31.164512Z",
+    "dataCutoff": "2026-10-15T13:59:31.164512Z",
+    "readiness": "degraded",
+    "views": [
+      {
+        "viewId": "customer",
+        "status": "blocked",
+        "resourceRevision": 1,
+        "dataCutoff": "2026-10-15T13:59:31.164512Z",
+        "readinessAxes": [
+          {
+            "axis": "customer_lite",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_CUSTOMER_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.customer_lite",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "consent",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_CUSTOMER_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.consent",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "segment",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_CUSTOMER_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.segment",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "journey",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_CUSTOMER_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.journey",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "dialogue",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_CUSTOMER_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.dialogue",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "outreach_batch",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_CUSTOMER_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.outreach_batch",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          }
+        ],
+        "items": [],
+        "authorityRefs": [],
+        "blockers": [
+          {
+            "code": "CUSTOMER_CUSTOMER_AUTHORITY_NOT_AVAILABLE",
+            "dependency": "workshop.customer.customer-authority",
+            "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+          }
+        ],
+        "countLedger": {
+          "input": 0,
+          "eligible": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        }
+      },
+      {
+        "viewId": "segment",
+        "status": "blocked",
+        "resourceRevision": 1,
+        "dataCutoff": "2026-10-15T13:59:31.164512Z",
+        "readinessAxes": [
+          {
+            "axis": "customer_lite",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_SEGMENT_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.customer_lite",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "consent",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_SEGMENT_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.consent",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "segment",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_SEGMENT_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.segment",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "journey",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_SEGMENT_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.journey",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "dialogue",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_SEGMENT_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.dialogue",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "outreach_batch",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_SEGMENT_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.outreach_batch",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          }
+        ],
+        "items": [],
+        "authorityRefs": [],
+        "blockers": [
+          {
+            "code": "CUSTOMER_SEGMENT_AUTHORITY_NOT_AVAILABLE",
+            "dependency": "workshop.customer.segment-authority",
+            "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+          }
+        ],
+        "countLedger": {
+          "input": 0,
+          "eligible": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        }
+      },
+      {
+        "viewId": "journey",
+        "status": "blocked",
+        "resourceRevision": 1,
+        "dataCutoff": "2026-10-15T13:59:31.164512Z",
+        "readinessAxes": [
+          {
+            "axis": "customer_lite",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_JOURNEY_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.customer_lite",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "consent",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_JOURNEY_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.consent",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "segment",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_JOURNEY_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.segment",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "journey",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_JOURNEY_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.journey",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "dialogue",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_JOURNEY_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.dialogue",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "outreach_batch",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_JOURNEY_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.outreach_batch",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          }
+        ],
+        "items": [],
+        "authorityRefs": [],
+        "blockers": [
+          {
+            "code": "CUSTOMER_JOURNEY_AUTHORITY_NOT_AVAILABLE",
+            "dependency": "workshop.customer.journey-authority",
+            "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+          }
+        ],
+        "countLedger": {
+          "input": 0,
+          "eligible": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        }
+      },
+      {
+        "viewId": "dialogue",
+        "status": "blocked",
+        "resourceRevision": 1,
+        "dataCutoff": "2026-10-15T13:59:31.164512Z",
+        "readinessAxes": [
+          {
+            "axis": "customer_lite",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_DIALOGUE_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.customer_lite",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "consent",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_DIALOGUE_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.consent",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "segment",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_DIALOGUE_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.segment",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "journey",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_DIALOGUE_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.journey",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "dialogue",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_DIALOGUE_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.dialogue",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          },
+          {
+            "axis": "outreach_batch",
+            "status": "blocked",
+            "exactRef": null,
+            "blockers": [
+              {
+                "code": "CUSTOMER_DIALOGUE_AUTHORITY_NOT_AVAILABLE",
+                "dependency": "customer.outreach_batch",
+                "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+              }
+            ]
+          }
+        ],
+        "items": [],
+        "authorityRefs": [],
+        "blockers": [
+          {
+            "code": "CUSTOMER_DIALOGUE_AUTHORITY_NOT_AVAILABLE",
+            "dependency": "workshop.customer.dialogue-authority",
+            "requiredAction": "provide tenant-bound purpose-scoped exact customer authority without protected contact"
+          }
+        ],
+        "countLedger": {
+          "input": 0,
+          "eligible": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        }
+      }
+    ],
+    "page": {
+      "limit": 100,
+      "count": 0,
+      "hasMore": false,
+      "nextCursor": null
+    }
+  },
+  "contact": {
+    "schemaVersion": "aos.ecommerce-workshop.customer-contact-governance/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "evaluatedAt": "2026-10-15T13:59:34.158017Z",
+    "atomicSkillIds": [
+      "build-evidence-pack",
+      "segment-entities",
+      "consent-and-purpose-check",
+      "needs-discovery",
+      "customer-journey-plan",
+      "response-or-outreach-draft",
+      "verify-claims",
+      "review-outcomes"
+    ],
+    "logicId": "ecommerce-customer-relationship",
+    "primaryColleague": "私域管家",
+    "collaboratorColleagues": [
+      "内容官",
+      "客服专员",
+      "导购顾问",
+      "数据参谋"
+    ],
+    "latestStart": null,
+    "ledger": {
+      "frozenEligible": 0,
+      "reserved": 0,
+      "skippedWithdrawn": 0,
+      "cancelled": 0,
+      "accepted": 0,
+      "applied": 0,
+      "failed": 0,
+      "unknown": 0,
+      "disputed": 0
+    },
+    "frequencyPolicyCount": 0,
+    "withdrawalCount": 0,
+    "blockers": [
+      "CUSTOMER_CONTACT_GOVERNANCE_NOT_PREPARED"
+    ],
+    "allowedCommands": [],
+    "permitRedemptionAllowed": false,
+    "contactResolutionAllowed": false,
+    "providerDispatchAllowed": false,
+    "sendAllowed": false,
+    "externalEffectsAllowed": false
+  },
+  "query400": 400,
+  "anonymous401": 401,
+  "normalRenewLoginStatus": 200
+}

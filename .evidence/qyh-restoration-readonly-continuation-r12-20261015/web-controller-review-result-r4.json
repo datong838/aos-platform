@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "619136093140b5943c090ddc7f7bde79866650ad4d0c85a454874e39e60ef24b",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r12-20261015-web-controller-r4",
+    "task_id": "qyh-restoration-readonly-continuation-r12-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5",
+      "authority_revision": "AOS-002039",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r12-20261015/web-controller-review-package-r4.txt": "3f7f12acf55595fd4a24c6d19111b22669d49ce7bc1dd60b8afe104dd0eeff1c"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "控制器源码将未来独立复审PASS合法消费校验放在新意图与旧Web信号之前，且信号对象仅准确核验的旧Web89803；不声称该复审此刻已经通过。",
+        "evidence": "customer_pointer_web_switch_r1.py:116 quality()读取web-controller-review-request-r4.json；line 98前base()已核验OLD=89803(listener/cwd/command)、API=54057、PG、lease/HEAD/manifest。assert len(findings)==2的意图在quality之后,line 119后才有intent写盘。package含review_controller_r4.py(含原gate.SYSTEM+阶段说明)、plan声明'独立controller PASS...置于新fsync意图之前'。r4 request文件未在包中，不声称r4已PASS。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前只读预检及缺审拒绝物证与控制器源码相符，原Web/API/PG状态未改，保留原数据只读和后续真实浏览器、650对账与完整Goal验收门。",
+        "evidence": "pre-effect-gate-deny-result-r4.json:statesExactlyEqual=true,deniedBeforeIntentAndSignal=true,gateMissingReview=true,returncode=1;effectFiles四项均为false。web-preflight-r4.json:nativeManagementReadonly.outcome='RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY',apiStartAuthorized=false,eightWorkbenchesVerified=false,remainingGates含'API/Web restart and eight-page browser acceptance'。log显示FileNotFoundError于web-controller-review-request-r4.json,与'不声称此刻通过'一致;original services未触。plan保留650/fresh650/完整231Goal。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "将缺失的web-controller-review-request-r4.json按包内review_controller_r4.py合同补入.evidence/qyh-restoration-readonly-continuation-r12-20261015/，再重跑r4 preflight;保持旧Web 89803/API 54057/PG冻结，直到r4结果经合法consumption并PASS后再执行意图。"
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "width": 1280,
+  "height": 720,
+  "tabs": [
+    {
+      "selected": [
+        "customer-tab-customer"
+      ],
+      "panel": "customer-panel-customer",
+      "focused": "customer-tab-customer"
+    },
+    {
+      "selected": [
+        "customer-tab-segment"
+      ],
+      "panel": "customer-panel-segment",
+      "focused": "customer-tab-segment"
+    },
+    {
+      "selected": [
+        "customer-tab-journey"
+      ],
+      "panel": "customer-panel-journey",
+      "focused": "customer-tab-journey"
+    },
+    {
+      "selected": [
+        "customer-tab-dialogue"
+      ],
+      "panel": "customer-panel-dialogue",
+      "focused": "customer-tab-dialogue"
+    }
+  ],
+  "filters": [
+    [
+      "可披露"
+    ],
+    [
+      "待复核"
+    ],
+    [
+      "已排除"
+    ],
+    [
+      "全部"
+    ]
+  ],
+  "keyboard": [
+    {
+      "key": "ArrowRight",
+      "selected": [
+        "customer-tab-segment"
+      ],
+      "focused": "customer-tab-segment",
+      "focusVisible": true
+    },
+    {
+      "key": "End",
+      "selected": [
+        "customer-tab-dialogue"
+      ],
+      "focused": "customer-tab-dialogue",
+      "focusVisible": true
+    },
+    {
+      "key": "ArrowLeft",
+      "selected": [
+        "customer-tab-journey"
+      ],
+      "focused": "customer-tab-journey",
+      "focusVisible": true
+    },
+    {
+      "key": "Home",
+      "selected": [
+        "customer-tab-customer"
+      ],
+      "focused": "customer-tab-customer",
+      "focusVisible": true
+    }
+  ],
+  "filterKeyboard": {
+    "tabFocus": {
+      "text": "可披露",
+      "visible": true
+    },
+    "enterActivatedDisclosureFilter": true
+  },
+  "geometry": {
+    "viewportWidth": 1280,
+    "documentWidth": 1280,
+    "dpr": 1,
+    "loading": false,
+    "parentPointer": "none",
+    "tabPointer": "auto",
+    "filters": [
+      {
+        "label": "全部",
+        "height": 32,
+        "hitInside": true
+      },
+      {
+        "label": "可披露",
+        "height": 32,
+        "hitInside": true
+      },
+      {
+        "label": "待复核",
+        "height": 32,
+        "hitInside": true
+      },
+      {
+        "label": "已排除",
+        "height": 32,
+        "hitInside": true
+      }
+    ]
+  }
+}

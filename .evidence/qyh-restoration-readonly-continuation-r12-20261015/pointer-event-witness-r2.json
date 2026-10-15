@@ -1,0 +1,15 @@
+{
+  "event": {
+    "observed": true,
+    "isTrusted": true,
+    "type": "click",
+    "tag": "STRONG",
+    "id": "",
+    "tab": "customer-tab-segment",
+    "clientX": 448,
+    "clientY": 318
+  },
+  "scope": "new CSS normal native pointer on customer segment tab, before full r2 acceptance",
+  "protocol": "mouseMoved buttons0, mousePressed left buttons1, mouseReleased left buttons0",
+  "forceOrDomClickUsed": false
+}

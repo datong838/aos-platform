@@ -1,0 +1,9 @@
+# 独立前效资料审查阶段澄清
+
+现有控制器复审r1/r2/r3均原样保留并消费NEED_EVIDENCE，绝不重标PASS。r3两个claims及所有findings已为supported，整体仍NEED，其next_safe_step要求等待该次审查自己的PASS，形成阶段混淆。尚无Web意图或signal，旧Web89803/API54057/原PG保持。
+
+只在本维护Task已登记证据目录新增review_controller_r4.py，保留原review_controller.py及全部request/raw/result/consumption。原aos_review.py/SYSTEM/parse_response/validate_request/validate_result/consumption_record均不修改；原工具关闭/无上下文/无副作用/严格JSON/无内部重试及原provider/model不改。不新增自动PASS或“全部supported则强制PASS”规则，不替换/修补模型原始JSON，不采纳旧NEED作为许可。
+
+新runner仅在原system prompt之后增加固定的“本次是施工前源码资料审查，不是在批准动作；不应要求本次结果在其自身之前已存在；真实缺证应定位到具体claim所缺事实”的阶段说明。保留审查者按实际代码/证据自由给REWORK/NEED/PASS的权力，原身份/租约/范围/哈希/只读/副作用等全部硬门不能放宽；PASS也不授运营权限。使用独立新request r4、新精确controller/runner SHA及当前只读preflight/缺审拒绝证据，结果必须经原validator与合法消费；之后才可满足原一次意图Web更新门。
+
+控制器只将当前review artifact版本指向r4、preflight版本指向r4，不改变源/租户/进程/数据/代码质量/PG/API/源manifest guard、quality先于intent/signal或unknown不重放逻辑。保留修改前controller字节。真实Web与视觉GREEN仍未完成，完整231Goal和原授权、所有数据与运行禁界照旧。

@@ -1,0 +1,6 @@
+{
+  "readOnlyMeRequestFailed": true,
+  "error": "invalid JWT: Signature has expired",
+  "businessMutationAttempted": false,
+  "recovery": "one owned-page reload then original normal login; no token copied"
+}

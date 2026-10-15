@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "5490da9b17acb263d036f0e869e3d0f6a3de8a2ac3b328f4debed74256b64f48",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r12-20261015-web-controller-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r12-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5",
+      "authority_revision": "AOS-002039",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r12-20261015/web-controller-review-package-r1.txt": "340e0d47ec4327874bf0c6380923d9f7690639d34493e66e3033698025442864"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "Exact Web controller binds current HEAD/Task/lease/Authority, current764 source manifest to Git archive and disk, reviewed CSS SHA/product PASS legal, exact oldWeb89803/entry/oldsource manifest, unchangedAPI54057/backend and original PG/CID/volume/StartedAt. Preflight/negative recorded with original services unchanged.",
+        "evidence": "material含customer_pointer_web_switch_r1.py（HEAD/m1/lease/Authority校验）与customer-pointer-web-source.json（head=8dbb4c7c，manifestCount=764，CSS SHA=e9f83...）。pre-effect-gate-deny-result-r1.json记录preflight与negative（effectFiles全false）。但：(1) 控制器SHA为61ec57ce...，基线为340e0d47...，未提供该SHA对应的审查物证；(2) 代码审查r1的baseline head=bb7a7428...，非当前HEAD=8dbb4c7c，仅声称PASS合法但非当前精确HEAD产物；(3) web-controller-review-request-r1.json文件缺失（见pre-effect-gate-deny-raw-r1.log FileNotFoundError），legal(E,'web-controller-review','r1')调用将失败。oldWeb89803/API54057/PG等原始服务状态的证据依赖已终止/拒绝流程，未证明当前精确绑定。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "Current controller requires THIS independent PASS/legal consumption/exact controller SHA before fresh fsynced intent and SIGTERM only oldWeb89803, then verifies port free and spawns fixed reviewed Vite entry. No API/PG/Chrome signal or reuse of old/unknown intents; spawn not completion and daily fullPGAPIWeb/business/fullvisual remain separate future gates.",
+        "evidence": "material中的pre-effect-gate-deny-raw-r1.log显示quality()在第116行因web-controller-review-request-r1.json缺失而FileNotFoundError异常退出，returncode=1且deniedBeforeIntentAndSignal=true。这证明当前控制器的独立PASS/legal消费前置条件未满足。虽pre-effect-gate-deny-result-r1.json记录statesExactlyEqual=true、effectFiles不变，表明原服务状态未变，但controller自身未获得PASS。spawn阶段（SIGTERM+端口释放+启动）仅在正常流程中执行，当前未到达。exact controller SHA（61ec57ce...）无独立审查记录。spawn不等于完成，daily/fullPGAPIWeb等未来门控仍独立。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "补充web-controller-review-request-r1.json及对应web-controller-review-result-consumption-r1.json物证，以证明当前独立控制器审查PASS；同时明确current764 manifest针对当前HEAD=8dbb4c7c的Git archive校验结果。"
+  }
+}

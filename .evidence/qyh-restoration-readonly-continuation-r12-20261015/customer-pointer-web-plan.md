@@ -1,0 +1,15 @@
+# 客户筛选透明区域指针修复：Web更新计划
+
+Rules：完整231Goal/原唯一真人授权、唯一m1写者、Authority2039/maintenance-r12及visual-pointer有效非重叠Lease。原DB只读/HostworkerProvider OFF/unknown旧12不重放/disabled Schedule不启/source不读/noPush/用户dirty保护。每日与每次实际aos最新m1原权威卷全面PGAPIWeb及aos2不重启保持，本Web-only读页修补不替代每日重启或经营首链。
+
+产品本波唯一修改45-ecommerce-workshop.css客户主视觉customer-tabs的pointer-events:none及其button的pointer-events:auto，组件/布局/原数据/权限门不改。独立设计r3已PASS合法消费；三宽原页面filter真实hittest RED、原生CDP正常pointer/keyboard四tab及focus可见证明组件无需改。旧locator.click输入未到达有效UI，不作产品失败修补；不force/DOMclick。候选一CSS overlay冻结407测试/typecheck/production build通过，代码质量review尚待消费，实际新CSS GREEN尚未证明。
+
+只有质量独立PASS合法消费后才精确提交产品与公共证据，使用该最新提交HEAD Git archive冻结apps/web+packages/ontology-sdk+ui-kit、排除.env和所有dirty，完整manifest/sourceSHA与当前Git逐blob相等，node_modules只链接原受支持依赖。新Vite入口固定原API18080、Web18434、cache在维护private，不拷贝凭据、不新增外部入口。
+
+前效控制器核最新HEAD/m1/Authority2039/有效同ownerTaskLease、visual独立质量及其exactCSS SHA、全部新源manifest、旧Web89803/18434/cwdrepo/准确price-visual-web-server.mjs命令与旧f036源manifest、API54057/18080/cwd原0b0c888且services/scripts/bundles与最新HEAD内容一致、原PG准确CID84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c/原命名卷aos-qyh-history159-prepared-data-20261011/Started2026-10-14T20:36:36.408087963Z。fresh650 before、原readonlymanagement预检；任何不一致不发信号。
+
+本次独立controller PASS与exact源码SHA消费置于新fsync意图、准确旧Web SIGTERM、端口释放、原受支持Node+Vite启动之前。先缺审负向拒绝证明无intent/signal且旧服务一致，之后独立前效复审。禁止PG/API/Chrome信号，unknown只读对账，不重跑意图。spawn不当完成。
+
+后效核实际18434监听/PID/cwd/新源manifest/实际CSScomputedpointer-events；在原owned target必要时一次正常reload加载新源，不复制token/storage。若正常登录页则原本机授权材料一次正常登录，不重放未知提交。普通原生CDP指针每次先中心hittest命中且未disabled，四filters实际唯一pressed及四tabs唯一selected/tabpanel一致，三宽1280x720/1440x900/1920x1080、正常键盘Arrow/Home/End/Enter及focus可见、空与blocked真实状态、32px/无横溢出。三宽新截图与原workshop-customer同CSS尺度对比，不填演示数据。fixture失败态如需额外离线页应单独登记Task/文件和禁外网接口，不能伪装原真实身份经营证据。
+
+正式原me/客户SDK身份/commands空/效果false、query400/匿名401及businessNonGET[]，fresh650 after全逐表行数/hash前后相等，同原PG身份与API原PID保持。现场独立Prime审查当前精确物证后准确Delivery/Authority七强及所有remaining接续。滤钮和四tab通过不等于客户计划日志产物/八台全视觉或经营完成；原完整fullC唯一真人最终预算/原部署、自然首链、安装全生命周期/八真实场景/持续观察发布继续。

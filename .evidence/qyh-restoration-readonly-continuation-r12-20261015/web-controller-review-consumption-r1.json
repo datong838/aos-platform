@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-restoration-readonly-continuation-r12-20261015-web-controller-r1",
+  "task_id": "qyh-restoration-readonly-continuation-r12-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5",
+    "authority_revision": "AOS-002039",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r12-20261015/web-controller-review-package-r1.txt": "340e0d47ec4327874bf0c6380923d9f7690639d34493e66e3033698025442864"
+    }
+  },
+  "status": "NEED_EVIDENCE",
+  "execution_authorized": false,
+  "result_sha256": "88ab3b46ffc8e598b40e6b3b16d1eebb74c4ce1ace3eda46a438eb0c77f1757b",
+  "transport_sha256": "33940ac24d8ea5307b6553f79c5f63bfa3fda3304cfbe517a757b8cbebf4234c"
+}
