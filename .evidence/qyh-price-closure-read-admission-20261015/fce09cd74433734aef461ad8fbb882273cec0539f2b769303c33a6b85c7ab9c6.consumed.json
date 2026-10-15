@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-closure-read-admission-20261015-route-quality-r1",
+  "task_id": "qyh-price-closure-read-admission-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "804a0279aa3d426a693504cb3336fb5a8ca4d149",
+    "authority_revision": "AOS-002035",
+    "files": {
+      ".evidence/qyh-price-closure-read-admission-20261015/route-quality-material-r1.txt": "5a73ad21d5b6912dcbea42af8b658967a29b231ae3d15db9042c6cc1c20152e2"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "1d28944df018a56225172063cf63ee98afc478231216d5dcebc2b74d17767a50",
+  "transport_sha256": "989faa7e43353aaf9f166d015e103ceb37bfd5c0bca0c5f3275cf5fe63ea4b64"
+}

@@ -107,6 +107,7 @@ from aos_api.ecommerce_creator_internal_workflow_readonly import (
 )
 from aos_api.ecommerce_three_module_closure_readonly import (
     CreatorClosureReadonlyError, CreatorClosureReadonlyReader,
+    PriceClosureReadonlyError, PriceClosureReadonlyReader,
 )
 from aos_api.ecommerce_creator_internal_workflow import (
     CreatorInternalWorkflowConflict,
@@ -695,6 +696,16 @@ def get_creator_closure_readonly() -> CreatorClosureReadonlyReader:
 
 CreatorClosureReadonlyDependency = Annotated[
     CreatorClosureReadonlyReader, Depends(get_creator_closure_readonly)
+]
+
+
+@lru_cache(maxsize=1)
+def get_price_closure_readonly() -> PriceClosureReadonlyReader:
+    return PriceClosureReadonlyReader()
+
+
+PriceClosureReadonlyDependency = Annotated[
+    PriceClosureReadonlyReader, Depends(get_price_closure_readonly)
 ]
 
 
@@ -2852,6 +2863,7 @@ def get_three_module_closure_contribution_view(
     read_catalog: ReadCatalogDependency,
     service: ThreeModuleClosureDependency,
     readonly: CreatorClosureReadonlyDependency,
+    price_readonly: PriceClosureReadonlyDependency,
 ) -> ThreeModuleClosureContributionView:
     _reject_query_parameters(request)
     if module is ThreeModule.CREATOR:
@@ -2864,6 +2876,21 @@ def get_three_module_closure_contribution_view(
                 return readonly.read(TenantScope(principal.org_id, principal.project_id))
             except CreatorClosureReadonlyError as exc:
                 raise ApiError(code=exc.code, message="当前闭环贡献暂不可读，请核对保存记录或读取范围。",
+                               status_code=503) from exc
+        return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+    if module is ThreeModule.PRICE:
+        admission = _invoke(lambda: read_catalog.get_readiness(
+            module_id="ecommerce.price-governance", org_id=principal.org_id,
+            project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
+        ))
+        if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+            raise ApiError(code="PRICE_CLOSURE_READ_ADMISSION_UNAVAILABLE",
+                           message="当前价格闭环读取准入不可核验。", status_code=503)
+        if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+            try:
+                return price_readonly.read(TenantScope(principal.org_id, principal.project_id))
+            except PriceClosureReadonlyError as exc:
+                raise ApiError(code=exc.code, message="当前价格闭环暂不可读，请核对保存记录或读取范围。",
                                status_code=503) from exc
         return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
     _require_three_module_installation(module, principal=principal, catalog=catalog)

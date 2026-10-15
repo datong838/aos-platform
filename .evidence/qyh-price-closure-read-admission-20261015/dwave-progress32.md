@@ -1,0 +1,15 @@
+## 进展32：价格闭环共享读取候选、五轴与原creator兼容（2026-10-15）
+
+Authority2035、唯一m1写者保留；price-closure-read-admission与maintenance-r8经受支持sameowner CAS续至08UTC，其他38历史Lease原样。额外price-closure-bounded-reader仅共享reader/test两文件与自身E登记，和parent router/read_http/Dwave不重叠。复习产品v2/08、技术57-W6-09全部含Aug25实施封板、原models/service/Store/DDL、前端parser与price调用链后先方案。设计r1 raw JSON extra data严格拒绝、transport/terminal保留不修复/不消费；fresh r2 PASS合法消费后才产品RED。
+
+原compiler合成price四记录probe核typed签名不同于JSON dump、partial条目/unknown usage null/accepted但immature effect/consumed且request_more Handoff五轴独立；原PRICE resolver对所有targets使用单个Observation，mixed-item probe只证明compiler合同，不冒称当前resolver真实经营能力。GET不调用compile/bind/resolve/consume。
+
+仅四产品/测试候选文件：共享ecommerce_three_module_closure_readonly.py及原test，router/read_http。原Creator公开类/默认creator保持；固定Price子类复用原hash/derived IDs/ledger/exact refs/64KiB SQLCASE/1MiB DTO，模块贯穿SQL/source/identity/row/DTO。price追加strict raw/有限数/tenant/time/隐私、outer id CASE门、statement/lock timeout及查询间10秒门，稳定PRICE_CLOSURE_READ_*，不把失败补null成功。Task/TaskRun revision原public ResourceRef为字符串，首轮strict递归误套int导致2失败/105通过保留；按原public模型分开后reader108通过。原creator正常/错误码、customer legacy、全部POST均保持；price仅typed installed readonly走新reader，legacy成功仍旧service。
+
+reader RED52失败4通过（包含-k price选中的旧参数场景），HTTP RED12失败4通过均原样保留。当前联合253通过，committed804a冻源仅4owned overlay累计335通过/源码前后SHA完全相同，排除全部用户dirty/凭据。首个quality材料超64KiB在request/attempt前拒绝；新有界材料保留fullreader/fulltests/full原service和diff SHA，reader code r2 PASS合法消费；route quality r1 PASS合法消费。历史其他波w6_006迁移head旧断言失败不伪称本波全suite通过，未改任何DDL。
+
+新独立tmpfs原w6_009 DDL及原compiler合成price/creator/foreign验证：一snapshot读旧fixture-decision，下一snapshot见price-after-cutoff；旧creator仍CreatorBatchStartDecisionRevision；FORCE RLS裸查询仅自tenant creator1/price2，写25006；超大payload SQLCASE NULL和稳定LIMIT、敏感actor拒绝。准确CID dd54a71de2e1b182b04a354dda9bb05a03bc09bde2b32a401d30bc8cb5ab8cfc已按owner停止；原卷未触碰。这不是生产审批/真实mixed-price cohort。
+
+当前原API95375/source4e、Web89803/f036、PG原CID/卷/schema161/650/绑定0未更新。接续先精确提交，再fresh最新后端冻结、maintenance-r8前效controller质量门及一次新意图API-only；原真人canonical price closure GET与正式SDK、query400/匿名401、原650全指纹不变、原稿三视口/核心只读，再独立现场Prime与准确两sliceDelivery/maintenance全部剩余接续/Authority七强。未部署/未Delivery，不提前称当前404已消除。
+
+完整231Goal/原唯一真人安装全恢复本机admin授权/fullC用户最终真预算及原部署/自然CaseRun有来源建议exact评审内部内容受约束能力产物人审续跑总控Wiki/安装全生命周期/八真实场景与全部视觉/连续观察发布全部保留。daily/every aos最新m1同原权威卷全面PG→API→Web与aos2不重启保持，本API读波不替代daily。原DBREADONLY/HostworkerProviderOFF/unknown旧12不重放/disabledSchedule不启用/source不读/noPush/个人Codex记忆不写，Goal ACTIVE。

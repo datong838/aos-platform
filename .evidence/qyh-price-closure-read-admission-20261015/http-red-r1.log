@@ -1,0 +1,317 @@
+FFFFFFFFF....FFF                                                         [100%]
+=================================== FAILURES ===================================
+____________ test_price_closure_selects_only_admitted_reader[True] _____________
+
+readonly = True
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_price_closure_selects_only_admitted_reader(readonly):
+        client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+        def admit(**scope):
+            assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+            return price_admission(readonly)
+        catalog.get_readiness = admit
+        kind = 'readonly' if readonly else 'legacy'
+>       with pytest.raises(ReadReached, match=kind + '-price-closure'): client.get(PRICE_CLOSURE_PATH)
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:776: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T03:56:50.474621+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:50.606075+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:50.606718+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions "HTTP/1.1 404 Not Found"
+____________ test_price_closure_selects_only_admitted_reader[False] ____________
+
+readonly = False
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_price_closure_selects_only_admitted_reader(readonly):
+        client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+        def admit(**scope):
+            assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+            return price_admission(readonly)
+        catalog.get_readiness = admit
+        kind = 'readonly' if readonly else 'legacy'
+>       with pytest.raises(ReadReached, match=kind + '-price-closure'): client.get(PRICE_CLOSURE_PATH)
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:776: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T03:56:50.663313+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:50.782890+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:50.783549+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions "HTTP/1.1 404 Not Found"
+________________ test_price_closure_denied_before_both_readers _________________
+
+    def test_price_closure_denied_before_both_readers():
+        client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+        assert client.get(PRICE_CLOSURE_PATH).status_code == 404
+>       assert not calls and not legacy.calls and len(catalog.calls) == 1
+E       AssertionError: assert (not [] and not [{'module_id': 'ecommerce.price-governance', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}])
+E        +  where [{'module_id': 'ecommerce.price-governance', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x11c550490>.calls
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:783: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T03:56:50.791518+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:50.912229+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:50.912798+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions "HTTP/1.1 404 Not Found"
+__________ test_price_closure_unknown_admission_is_unavailable[None] ___________
+
+admission = None
+
+    @pytest.mark.parametrize('admission', [None, object()])
+    def test_price_closure_unknown_admission_is_unavailable(admission):
+        client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+        catalog.get_readiness = lambda **scope: admission
+        response = client.get(PRICE_CLOSURE_PATH)
+>       assert response.status_code == 503 and 'PRICE_CLOSURE_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:791: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T03:56:50.921071+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:51.048908+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:51.049503+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions "HTTP/1.1 404 Not Found"
+_______ test_price_closure_unknown_admission_is_unavailable[admission1] ________
+
+admission = <object object at 0x11bb75c00>
+
+    @pytest.mark.parametrize('admission', [None, object()])
+    def test_price_closure_unknown_admission_is_unavailable(admission):
+        client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+        catalog.get_readiness = lambda **scope: admission
+        response = client.get(PRICE_CLOSURE_PATH)
+>       assert response.status_code == 503 and 'PRICE_CLOSURE_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:791: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T03:56:51.057976+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:51.177532+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:51.178090+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions "HTTP/1.1 404 Not Found"
+_ test_price_closure_failure_does_not_become_null_success[PRICE_CLOSURE_READ_AUTHORITY_DRIFT] _
+
+code = 'PRICE_CLOSURE_READ_AUTHORITY_DRIFT'
+
+    @pytest.mark.parametrize('code', ['PRICE_CLOSURE_READ_AUTHORITY_DRIFT', 'PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE',
+                                     'PRICE_CLOSURE_READ_UNAVAILABLE', 'PRICE_CLOSURE_READ_LIMIT_EXCEEDED'])
+    def test_price_closure_failure_does_not_become_null_success(code):
+        client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_CLOSURE_PATH)
+>       assert response.status_code == 503 and code in response.text and 'latestClosure' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:801: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T03:56:51.186030+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:51.302743+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:51.303382+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions "HTTP/1.1 404 Not Found"
+_ test_price_closure_failure_does_not_become_null_success[PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE] _
+
+code = 'PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE'
+
+    @pytest.mark.parametrize('code', ['PRICE_CLOSURE_READ_AUTHORITY_DRIFT', 'PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE',
+                                     'PRICE_CLOSURE_READ_UNAVAILABLE', 'PRICE_CLOSURE_READ_LIMIT_EXCEEDED'])
+    def test_price_closure_failure_does_not_become_null_success(code):
+        client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_CLOSURE_PATH)
+>       assert response.status_code == 503 and code in response.text and 'latestClosure' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:801: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T03:56:51.311292+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:51.428989+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:51.429488+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions "HTTP/1.1 404 Not Found"
+_ test_price_closure_failure_does_not_become_null_success[PRICE_CLOSURE_READ_UNAVAILABLE] _
+
+code = 'PRICE_CLOSURE_READ_UNAVAILABLE'
+
+    @pytest.mark.parametrize('code', ['PRICE_CLOSURE_READ_AUTHORITY_DRIFT', 'PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE',
+                                     'PRICE_CLOSURE_READ_UNAVAILABLE', 'PRICE_CLOSURE_READ_LIMIT_EXCEEDED'])
+    def test_price_closure_failure_does_not_become_null_success(code):
+        client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_CLOSURE_PATH)
+>       assert response.status_code == 503 and code in response.text and 'latestClosure' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:801: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T03:56:51.437428+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:51.554158+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:51.554727+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions "HTTP/1.1 404 Not Found"
+_ test_price_closure_failure_does_not_become_null_success[PRICE_CLOSURE_READ_LIMIT_EXCEEDED] _
+
+code = 'PRICE_CLOSURE_READ_LIMIT_EXCEEDED'
+
+    @pytest.mark.parametrize('code', ['PRICE_CLOSURE_READ_AUTHORITY_DRIFT', 'PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE',
+                                     'PRICE_CLOSURE_READ_UNAVAILABLE', 'PRICE_CLOSURE_READ_LIMIT_EXCEEDED'])
+    def test_price_closure_failure_does_not_become_null_success(code):
+        client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_CLOSURE_PATH)
+>       assert response.status_code == 503 and code in response.text and 'latestClosure' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:801: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T03:56:51.563429+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:52.004670+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T03:56:52.005126+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price/closure-contributions "HTTP/1.1 404 Not Found"
+_______________ test_price_closure_complete_http_dto[True-True] ________________
+
+readonly = True, nonempty = True
+
+    @pytest.mark.parametrize('readonly,nonempty', [(True, True), (True, False), (False, False)])
+    def test_price_closure_complete_http_dto(readonly, nonempty):
+        from aos_api.tenant_scope import TenantScope
+        from aos_api.ecommerce_workshop_three_module_closure import EcommerceWorkshopThreeModuleClosureService
+        from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyReader
+        from tests.test_ecommerce_three_module_closure_readonly import authority_rows, PriceConnection
+        scope = TenantScope('org-org', 'dev-project')
+        conn = PriceConnection(authority_rows('price', scope=scope) if nonempty else {}, scope=scope)
+        client, legacy, catalog = client_with_catalogs()
+        catalog.get_readiness = lambda **args: price_admission(readonly)
+        class EmptyStore:
+            def latest_bindings(self, scope, module):
+                assert scope.key == ('org-org', 'dev-project') and module.value == 'price'
+                return dict(closure=None, usage=None, effect=None, handoff=None)
+>       client.app.dependency_overrides[routes.get_price_closure_readonly] = lambda: PriceClosureReadonlyReader(connect_factory=lambda incoming: conn)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_price_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:826: AttributeError
+_______________ test_price_closure_complete_http_dto[True-False] _______________
+
+readonly = True, nonempty = False
+
+    @pytest.mark.parametrize('readonly,nonempty', [(True, True), (True, False), (False, False)])
+    def test_price_closure_complete_http_dto(readonly, nonempty):
+        from aos_api.tenant_scope import TenantScope
+        from aos_api.ecommerce_workshop_three_module_closure import EcommerceWorkshopThreeModuleClosureService
+        from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyReader
+        from tests.test_ecommerce_three_module_closure_readonly import authority_rows, PriceConnection
+        scope = TenantScope('org-org', 'dev-project')
+        conn = PriceConnection(authority_rows('price', scope=scope) if nonempty else {}, scope=scope)
+        client, legacy, catalog = client_with_catalogs()
+        catalog.get_readiness = lambda **args: price_admission(readonly)
+        class EmptyStore:
+            def latest_bindings(self, scope, module):
+                assert scope.key == ('org-org', 'dev-project') and module.value == 'price'
+                return dict(closure=None, usage=None, effect=None, handoff=None)
+>       client.app.dependency_overrides[routes.get_price_closure_readonly] = lambda: PriceClosureReadonlyReader(connect_factory=lambda incoming: conn)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_price_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:826: AttributeError
+______________ test_price_closure_complete_http_dto[False-False] _______________
+
+readonly = False, nonempty = False
+
+    @pytest.mark.parametrize('readonly,nonempty', [(True, True), (True, False), (False, False)])
+    def test_price_closure_complete_http_dto(readonly, nonempty):
+        from aos_api.tenant_scope import TenantScope
+        from aos_api.ecommerce_workshop_three_module_closure import EcommerceWorkshopThreeModuleClosureService
+        from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyReader
+        from tests.test_ecommerce_three_module_closure_readonly import authority_rows, PriceConnection
+        scope = TenantScope('org-org', 'dev-project')
+        conn = PriceConnection(authority_rows('price', scope=scope) if nonempty else {}, scope=scope)
+        client, legacy, catalog = client_with_catalogs()
+        catalog.get_readiness = lambda **args: price_admission(readonly)
+        class EmptyStore:
+            def latest_bindings(self, scope, module):
+                assert scope.key == ('org-org', 'dev-project') and module.value == 'price'
+                return dict(closure=None, usage=None, effect=None, handoff=None)
+>       client.app.dependency_overrides[routes.get_price_closure_readonly] = lambda: PriceClosureReadonlyReader(connect_factory=lambda incoming: conn)
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_price_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:826: AttributeError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_selects_only_admitted_reader[True]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_selects_only_admitted_reader[False]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_denied_before_both_readers
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_unknown_admission_is_unavailable[None]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_unknown_admission_is_unavailable[admission1]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_failure_does_not_become_null_success[PRICE_CLOSURE_READ_AUTHORITY_DRIFT]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_failure_does_not_become_null_success[PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_failure_does_not_become_null_success[PRICE_CLOSURE_READ_UNAVAILABLE]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_failure_does_not_become_null_success[PRICE_CLOSURE_READ_LIMIT_EXCEEDED]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_complete_http_dto[True-True]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_complete_http_dto[True-False]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_closure_complete_http_dto[False-False]
+12 failed, 4 passed, 102 deselected, 7 warnings in 2.13s

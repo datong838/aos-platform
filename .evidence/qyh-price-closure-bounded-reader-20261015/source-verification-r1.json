@@ -1,0 +1,40 @@
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py": "1083725c55b95bd755a74a64416cb1896a463c095992bc1154261af3ea41adcb",
+    "services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py": "87bfc832c922d935b74a10ea87b163816629813ef4fed6aa901adc951eed585b",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "f051c3cb511aa80874dda1468dbde603fcd83ade81e9c511de34016cc5f5ae26",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "210066111f1609fd7e2d403fdc87df88c58748fe6e7c99856b89d7bf8fdf7bb0"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py": "1083725c55b95bd755a74a64416cb1896a463c095992bc1154261af3ea41adcb",
+    "services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py": "87bfc832c922d935b74a10ea87b163816629813ef4fed6aa901adc951eed585b",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "f051c3cb511aa80874dda1468dbde603fcd83ade81e9c511de34016cc5f5ae26",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "210066111f1609fd7e2d403fdc87df88c58748fe6e7c99856b89d7bf8fdf7bb0"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/test_w6_009_three_module_closure.py"
+  ],
+  "baseHead": "804a0279aa3d426a693504cb3336fb5a8ca4d149",
+  "frozenWithOnlyFourOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T04:02:13.163930+00:00",
+  "finishedAt": "2026-10-15T04:02:43.302451+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "118c99f1597f820071b656a834e514c58986cf2a41267f846060fadb9d3b4da6"
+}

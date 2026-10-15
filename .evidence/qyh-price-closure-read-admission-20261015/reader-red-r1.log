@@ -1,0 +1,1177 @@
+....FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                 [100%]
+=================================== FAILURES ===================================
+____ test_price_closure_reads_original_producer_five_axes_without_commands _____
+
+    def test_price_closure_reads_original_producer_five_axes_without_commands():
+        conn = PriceConnection(authority_rows('price'))
+>       view = price_reader(conn).read(SCOPE)
+               ^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:284: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dcb5fd0>
+
+    def price_reader(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyReader
+E       ImportError: cannot import name 'PriceClosureReadonlyReader' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:270: ImportError
+_________________ test_price_true_empty_snapshot_has_four_gaps _________________
+
+    def test_price_true_empty_snapshot_has_four_gaps():
+>       view = price_reader(PriceConnection({})).read(SCOPE)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:301: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dcd1bd0>
+
+    def price_reader(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyReader
+E       ImportError: cannot import name 'PriceClosureReadonlyReader' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:270: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[org_id-foreign-closure] _
+
+kind = 'closure', field = 'org_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc5bc90>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[org_id-foreign-usage] __
+
+kind = 'usage', field = 'org_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbf08d0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[org_id-foreign-effect] _
+
+kind = 'effect', field = 'org_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dcb7b10>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[org_id-foreign-handoff] _
+
+kind = 'handoff', field = 'org_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dcdc9d0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[project_id-foreign-closure] _
+
+kind = 'closure', field = 'project_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc21090>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[project_id-foreign-usage] _
+
+kind = 'usage', field = 'project_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dcc4f10>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[project_id-foreign-effect] _
+
+kind = 'effect', field = 'project_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc79510>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[project_id-foreign-handoff] _
+
+kind = 'handoff', field = 'project_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc33cd0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[revision-True-closure] _
+
+kind = 'closure', field = 'revision', value = True
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbf2690>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+__ test_price_outer_drift_never_returns_an_empty_success[revision-True-usage] __
+
+kind = 'usage', field = 'revision', value = True
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dca5750>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[revision-True-effect] __
+
+kind = 'effect', field = 'revision', value = True
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbe2d50>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[revision-True-handoff] _
+
+kind = 'handoff', field = 'revision', value = True
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc23b10>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[resource_id-foreign-closure] _
+
+kind = 'closure', field = 'resource_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc16c90>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[resource_id-foreign-usage] _
+
+kind = 'usage', field = 'resource_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dcc52d0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[resource_id-foreign-effect] _
+
+kind = 'effect', field = 'resource_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc794d0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[resource_id-foreign-handoff] _
+
+kind = 'handoff', field = 'resource_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dcc6dd0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-closure] _
+
+kind = 'closure', field = 'content_hash'
+value = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc78cd0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-usage] _
+
+kind = 'usage', field = 'content_hash'
+value = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc09c90>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-effect] _
+
+kind = 'effect', field = 'content_hash'
+value = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbbd410>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-handoff] _
+
+kind = 'handoff', field = 'content_hash'
+value = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbd1e50>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[module-creator-closure] _
+
+kind = 'closure', field = 'module', value = 'creator'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc15810>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[module-creator-usage] __
+
+kind = 'usage', field = 'module', value = 'creator'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dcc7210>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[module-creator-effect] _
+
+kind = 'effect', field = 'module', value = 'creator'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dcb40d0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[module-creator-handoff] _
+
+kind = 'handoff', field = 'module', value = 'creator'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc33810>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[created_at-value6-closure] _
+
+kind = 'closure', field = 'created_at'
+value = datetime.datetime(2026, 10, 15, 1, 0, 11, tzinfo=datetime.timezone.utc)
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbf1710>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[created_at-value6-usage] _
+
+kind = 'usage', field = 'created_at'
+value = datetime.datetime(2026, 10, 15, 1, 0, 11, tzinfo=datetime.timezone.utc)
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc21450>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[created_at-value6-effect] _
+
+kind = 'effect', field = 'created_at'
+value = datetime.datetime(2026, 10, 15, 1, 0, 11, tzinfo=datetime.timezone.utc)
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbe0d50>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_outer_drift_never_returns_an_empty_success[created_at-value6-handoff] _
+
+kind = 'handoff', field = 'created_at'
+value = datetime.datetime(2026, 10, 15, 1, 0, 11, tzinfo=datetime.timezone.utc)
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'creator'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_price_outer_drift_never_returns_an_empty_success(kind, field, value):
+        rows = authority_rows('price'); rows[kind][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbd0fd0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_______________ test_price_payload_size_is_sql_guarded[closure] ________________
+
+kind = 'closure'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_price_payload_size_is_sql_guarded(kind):
+        rows = authority_rows('price'); rows[kind]['payload_bytes'] = 64 * 1024 + 1
+        rows[kind]['authority_data'] = None
+>       assert 'LIMIT' in price_denied(PriceConnection(rows)).code
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:319: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc14250>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+________________ test_price_payload_size_is_sql_guarded[usage] _________________
+
+kind = 'usage'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_price_payload_size_is_sql_guarded(kind):
+        rows = authority_rows('price'); rows[kind]['payload_bytes'] = 64 * 1024 + 1
+        rows[kind]['authority_data'] = None
+>       assert 'LIMIT' in price_denied(PriceConnection(rows)).code
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:319: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc42a90>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+________________ test_price_payload_size_is_sql_guarded[effect] ________________
+
+kind = 'effect'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_price_payload_size_is_sql_guarded(kind):
+        rows = authority_rows('price'); rows[kind]['payload_bytes'] = 64 * 1024 + 1
+        rows[kind]['authority_data'] = None
+>       assert 'LIMIT' in price_denied(PriceConnection(rows)).code
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:319: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc42550>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_______________ test_price_payload_size_is_sql_guarded[handoff] ________________
+
+kind = 'handoff'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_price_payload_size_is_sql_guarded(kind):
+        rows = authority_rows('price'); rows[kind]['payload_bytes'] = 64 * 1024 + 1
+        rows[kind]['authority_data'] = None
+>       assert 'LIMIT' in price_denied(PriceConnection(rows)).code
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:319: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc5ae50>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_raw_cannot_omit_producer_fields_even_if_defaults_would_match[usage-quantity] _
+
+kind = 'usage', field = 'quantity'
+
+    @pytest.mark.parametrize('kind,field', [('usage', 'quantity'), ('usage', 'adjustmentTotal'),
+        ('handoff', 'businessDecision')])
+    def test_price_raw_cannot_omit_producer_fields_even_if_defaults_would_match(kind, field):
+        rows = authority_rows('price'); del rows[kind]['authority_data'][field]
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:326: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbbd0d0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_raw_cannot_omit_producer_fields_even_if_defaults_would_match[usage-adjustmentTotal] _
+
+kind = 'usage', field = 'adjustmentTotal'
+
+    @pytest.mark.parametrize('kind,field', [('usage', 'quantity'), ('usage', 'adjustmentTotal'),
+        ('handoff', 'businessDecision')])
+    def test_price_raw_cannot_omit_producer_fields_even_if_defaults_would_match(kind, field):
+        rows = authority_rows('price'); del rows[kind]['authority_data'][field]
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:326: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc41ad0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_raw_cannot_omit_producer_fields_even_if_defaults_would_match[handoff-businessDecision] _
+
+kind = 'handoff', field = 'businessDecision'
+
+    @pytest.mark.parametrize('kind,field', [('usage', 'quantity'), ('usage', 'adjustmentTotal'),
+        ('handoff', 'businessDecision')])
+    def test_price_raw_cannot_omit_producer_fields_even_if_defaults_would_match(kind, field):
+        rows = authority_rows('price'); del rows[kind]['authority_data'][field]
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:326: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbaeb90>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_____ test_price_strict_numbers_cannot_be_coerced[effect-sampleCount-3.0] ______
+
+kind = 'effect', field = 'sampleCount', value = 3.0
+
+    @pytest.mark.parametrize('kind,field,value', [('effect', 'sampleCount', 3.0), ('effect', 'minSample', True),
+        ('handoff', 'disclosureRefCount', False), ('usage', 'adjustmentTotal', False),
+        ('usage', 'quantity', float('nan')), ('closure', 'revision', 1.0)])
+    def test_price_strict_numbers_cannot_be_coerced(kind, field, value):
+        rows = authority_rows('price'); rows[kind]['authority_data'][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:334: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11db8fcd0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+______ test_price_strict_numbers_cannot_be_coerced[effect-minSample-True] ______
+
+kind = 'effect', field = 'minSample', value = True
+
+    @pytest.mark.parametrize('kind,field,value', [('effect', 'sampleCount', 3.0), ('effect', 'minSample', True),
+        ('handoff', 'disclosureRefCount', False), ('usage', 'adjustmentTotal', False),
+        ('usage', 'quantity', float('nan')), ('closure', 'revision', 1.0)])
+    def test_price_strict_numbers_cannot_be_coerced(kind, field, value):
+        rows = authority_rows('price'); rows[kind]['authority_data'][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:334: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbf3910>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_strict_numbers_cannot_be_coerced[handoff-disclosureRefCount-False] _
+
+kind = 'handoff', field = 'disclosureRefCount', value = False
+
+    @pytest.mark.parametrize('kind,field,value', [('effect', 'sampleCount', 3.0), ('effect', 'minSample', True),
+        ('handoff', 'disclosureRefCount', False), ('usage', 'adjustmentTotal', False),
+        ('usage', 'quantity', float('nan')), ('closure', 'revision', 1.0)])
+    def test_price_strict_numbers_cannot_be_coerced(kind, field, value):
+        rows = authority_rows('price'); rows[kind]['authority_data'][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:334: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dba7710>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+___ test_price_strict_numbers_cannot_be_coerced[usage-adjustmentTotal-False] ___
+
+kind = 'usage', field = 'adjustmentTotal', value = False
+
+    @pytest.mark.parametrize('kind,field,value', [('effect', 'sampleCount', 3.0), ('effect', 'minSample', True),
+        ('handoff', 'disclosureRefCount', False), ('usage', 'adjustmentTotal', False),
+        ('usage', 'quantity', float('nan')), ('closure', 'revision', 1.0)])
+    def test_price_strict_numbers_cannot_be_coerced(kind, field, value):
+        rows = authority_rows('price'); rows[kind]['authority_data'][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:334: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11db82890>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_______ test_price_strict_numbers_cannot_be_coerced[usage-quantity-nan] ________
+
+kind = 'usage', field = 'quantity', value = nan
+
+    @pytest.mark.parametrize('kind,field,value', [('effect', 'sampleCount', 3.0), ('effect', 'minSample', True),
+        ('handoff', 'disclosureRefCount', False), ('usage', 'adjustmentTotal', False),
+        ('usage', 'quantity', float('nan')), ('closure', 'revision', 1.0)])
+    def test_price_strict_numbers_cannot_be_coerced(kind, field, value):
+        rows = authority_rows('price'); rows[kind]['authority_data'][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:334: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbacfd0>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+______ test_price_strict_numbers_cannot_be_coerced[closure-revision-1.0] _______
+
+kind = 'closure', field = 'revision', value = 1.0
+
+    @pytest.mark.parametrize('kind,field,value', [('effect', 'sampleCount', 3.0), ('effect', 'minSample', True),
+        ('handoff', 'disclosureRefCount', False), ('usage', 'adjustmentTotal', False),
+        ('usage', 'quantity', float('nan')), ('closure', 'revision', 1.0)])
+    def test_price_strict_numbers_cannot_be_coerced(kind, field, value):
+        rows = authority_rows('price'); rows[kind]['authority_data'][field] = value
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:334: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11db90f90>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+____________ test_price_cannot_read_creator_source_type_or_closure _____________
+
+    def test_price_cannot_read_creator_source_type_or_closure():
+>       price_denied(PriceConnection(authority_rows()))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:338: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc0a310>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_________ test_price_binding_requires_exact_same_saved_closure[usage] __________
+
+kind = 'usage'
+
+    @pytest.mark.parametrize('kind', ['usage', 'effect', 'handoff'])
+    def test_price_binding_requires_exact_same_saved_closure(kind):
+        rows = authority_rows('price'); rows[kind]['authority_data']['closureRef']['contentHash'] = 'sha256:' + 'b' * 64
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc4ff90>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_________ test_price_binding_requires_exact_same_saved_closure[effect] _________
+
+kind = 'effect'
+
+    @pytest.mark.parametrize('kind', ['usage', 'effect', 'handoff'])
+    def test_price_binding_requires_exact_same_saved_closure(kind):
+        rows = authority_rows('price'); rows[kind]['authority_data']['closureRef']['contentHash'] = 'sha256:' + 'b' * 64
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11db8d010>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+________ test_price_binding_requires_exact_same_saved_closure[handoff] _________
+
+kind = 'handoff'
+
+    @pytest.mark.parametrize('kind', ['usage', 'effect', 'handoff'])
+    def test_price_binding_requires_exact_same_saved_closure(kind):
+        rows = authority_rows('price'); rows[kind]['authority_data']['closureRef']['contentHash'] = 'sha256:' + 'b' * 64
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dcf8410>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+___________ test_price_database_failure_is_stable_and_does_not_leak ____________
+
+    def test_price_database_failure_is_stable_and_does_not_leak():
+        conn = PriceConnection({})
+        def fail(*args): raise psycopg.OperationalError('private database detail')
+        conn.execute = fail
+>       error = price_denied(conn)
+                ^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:351: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11d9b8590>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_public_projection_never_exposes_private_content[operator@example.invalid] _
+
+actor = 'operator@example.invalid'
+
+    @pytest.mark.parametrize('actor', ['operator@example.invalid', '13800138000', 'providerPayload-in-actor'])
+    def test_price_public_projection_never_exposes_private_content(actor):
+        rows = authority_rows('price'); rows['closure']['authority_data']['compiledBy'] = actor
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:358: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dc6fa90>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+___ test_price_public_projection_never_exposes_private_content[13800138000] ____
+
+actor = '13800138000'
+
+    @pytest.mark.parametrize('actor', ['operator@example.invalid', '13800138000', 'providerPayload-in-actor'])
+    def test_price_public_projection_never_exposes_private_content(actor):
+        rows = authority_rows('price'); rows['closure']['authority_data']['compiledBy'] = actor
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:358: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11db93750>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+_ test_price_public_projection_never_exposes_private_content[providerPayload-in-actor] _
+
+actor = 'providerPayload-in-actor'
+
+    @pytest.mark.parametrize('actor', ['operator@example.invalid', '13800138000', 'providerPayload-in-actor'])
+    def test_price_public_projection_never_exposes_private_content(actor):
+        rows = authority_rows('price'); rows['closure']['authority_data']['compiledBy'] = actor
+>       price_denied(PriceConnection(rows))
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:358: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dbae850>
+
+    def price_denied(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+E       ImportError: cannot import name 'PriceClosureReadonlyError' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:275: ImportError
+____________ test_price_view_does_not_rewrite_creator_default_entry ____________
+
+    def test_price_view_does_not_rewrite_creator_default_entry():
+>       price_reader(PriceConnection(authority_rows('price'))).read(SCOPE)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:362: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_three_module_closure_readonly.PriceConnection object at 0x11dd07f90>
+
+    def price_reader(conn):
+>       from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyReader
+E       ImportError: cannot import name 'PriceClosureReadonlyReader' from 'aos_api.ecommerce_three_module_closure_readonly' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py)
+
+services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py:270: ImportError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_closure_reads_original_producer_five_axes_without_commands
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_true_empty_snapshot_has_four_gaps
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[org_id-foreign-closure]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[org_id-foreign-usage]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[org_id-foreign-effect]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[org_id-foreign-handoff]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[project_id-foreign-closure]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[project_id-foreign-usage]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[project_id-foreign-effect]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[project_id-foreign-handoff]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[revision-True-closure]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[revision-True-usage]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[revision-True-effect]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[revision-True-handoff]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[resource_id-foreign-closure]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[resource_id-foreign-usage]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[resource_id-foreign-effect]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[resource_id-foreign-handoff]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-closure]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-usage]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-effect]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-handoff]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[module-creator-closure]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[module-creator-usage]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[module-creator-effect]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[module-creator-handoff]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[created_at-value6-closure]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[created_at-value6-usage]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[created_at-value6-effect]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_outer_drift_never_returns_an_empty_success[created_at-value6-handoff]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_payload_size_is_sql_guarded[closure]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_payload_size_is_sql_guarded[usage]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_payload_size_is_sql_guarded[effect]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_payload_size_is_sql_guarded[handoff]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_raw_cannot_omit_producer_fields_even_if_defaults_would_match[usage-quantity]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_raw_cannot_omit_producer_fields_even_if_defaults_would_match[usage-adjustmentTotal]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_raw_cannot_omit_producer_fields_even_if_defaults_would_match[handoff-businessDecision]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_strict_numbers_cannot_be_coerced[effect-sampleCount-3.0]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_strict_numbers_cannot_be_coerced[effect-minSample-True]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_strict_numbers_cannot_be_coerced[handoff-disclosureRefCount-False]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_strict_numbers_cannot_be_coerced[usage-adjustmentTotal-False]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_strict_numbers_cannot_be_coerced[usage-quantity-nan]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_strict_numbers_cannot_be_coerced[closure-revision-1.0]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_cannot_read_creator_source_type_or_closure
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_binding_requires_exact_same_saved_closure[usage]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_binding_requires_exact_same_saved_closure[effect]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_binding_requires_exact_same_saved_closure[handoff]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_database_failure_is_stable_and_does_not_leak
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_public_projection_never_exposes_private_content[operator@example.invalid]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_public_projection_never_exposes_private_content[13800138000]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_public_projection_never_exposes_private_content[providerPayload-in-actor]
+FAILED services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py::test_price_view_does_not_rewrite_creator_default_entry
+52 failed, 4 passed, 51 deselected, 7 warnings in 0.39s

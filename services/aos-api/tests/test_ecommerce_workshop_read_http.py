@@ -472,7 +472,7 @@ def test_creator_closure_denied_before_both_readers():
     assert not calls and not legacy.calls and len(catalog.calls) == 1
 
 
-@pytest.mark.parametrize('module', ['price', 'customer'])
+@pytest.mark.parametrize('module', ['customer'])
 def test_other_closure_modules_keep_legacy_catalog(module):
     client, legacy, catalog = client_with_catalogs()
     calls = closure_probes(client)
@@ -742,3 +742,99 @@ def test_price_disposition_full_http_serialization(readonly, nonempty):
         assert body['latestDisposition'] is body['latestObservation'] is None
     assert len(opened) == int(readonly) and conn.payload_calls == (4 if readonly else 0)
     assert not legacy.calls
+
+
+PRICE_CLOSURE_PATH = '/v1/ecommerce-workshop/views/price/closure-contributions'
+
+
+def price_closure_probes(client, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope, module):
+            calls.append(('legacy', scope.key, module.value))
+            raise ReadReached('legacy-price-closure')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key, 'price'))
+            if failure:
+                from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+                raise PriceClosureReadonlyError(failure)
+            raise ReadReached('readonly-price-closure')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+    client.app.dependency_overrides[getattr(routes, 'get_price_closure_readonly', Readonly)] = lambda: Readonly()
+    return calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_price_closure_selects_only_admitted_reader(readonly):
+    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+    def admit(**scope):
+        assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+        return price_admission(readonly)
+    catalog.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-price-closure'): client.get(PRICE_CLOSURE_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'), 'price')] and not legacy.calls
+
+
+def test_price_closure_denied_before_both_readers():
+    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+    assert client.get(PRICE_CLOSURE_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+
+
+@pytest.mark.parametrize('admission', [None, object()])
+def test_price_closure_unknown_admission_is_unavailable(admission):
+    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+    catalog.get_readiness = lambda **scope: admission
+    response = client.get(PRICE_CLOSURE_PATH)
+    assert response.status_code == 503 and 'PRICE_CLOSURE_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls
+
+
+@pytest.mark.parametrize('code', ['PRICE_CLOSURE_READ_AUTHORITY_DRIFT', 'PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE',
+                                 'PRICE_CLOSURE_READ_UNAVAILABLE', 'PRICE_CLOSURE_READ_LIMIT_EXCEEDED'])
+def test_price_closure_failure_does_not_become_null_success(code):
+    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client, code)
+    catalog.get_readiness = lambda **scope: price_admission()
+    response = client.get(PRICE_CLOSURE_PATH)
+    assert response.status_code == 503 and code in response.text and 'latestClosure' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'), 'price')] and not legacy.calls
+
+
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+def test_price_closure_query_cannot_change_scope(query):
+    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+    assert client.get(PRICE_CLOSURE_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+
+
+@pytest.mark.parametrize('readonly,nonempty', [(True, True), (True, False), (False, False)])
+def test_price_closure_complete_http_dto(readonly, nonempty):
+    from aos_api.tenant_scope import TenantScope
+    from aos_api.ecommerce_workshop_three_module_closure import EcommerceWorkshopThreeModuleClosureService
+    from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyReader
+    from tests.test_ecommerce_three_module_closure_readonly import authority_rows, PriceConnection
+    scope = TenantScope('org-org', 'dev-project')
+    conn = PriceConnection(authority_rows('price', scope=scope) if nonempty else {}, scope=scope)
+    client, legacy, catalog = client_with_catalogs()
+    catalog.get_readiness = lambda **args: price_admission(readonly)
+    class EmptyStore:
+        def latest_bindings(self, scope, module):
+            assert scope.key == ('org-org', 'dev-project') and module.value == 'price'
+            return dict(closure=None, usage=None, effect=None, handoff=None)
+    client.app.dependency_overrides[routes.get_price_closure_readonly] = lambda: PriceClosureReadonlyReader(connect_factory=lambda incoming: conn)
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: EcommerceWorkshopThreeModuleClosureService(EmptyStore())
+    response = client.get(PRICE_CLOSURE_PATH)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['module'] == 'price' and body['tenant'] == dict(orgId='org-org', projectId='dev-project')
+    assert body['allowedCommands'] == ([] if readonly else ['COMPILE_THREE_MODULE_CLOSURE', 'BIND_CANONICAL_USAGE', 'BIND_CANONICAL_EFFECT_REVIEW', 'BIND_CANONICAL_HANDOFF'])
+    assert body['handoffConsumeAllowed'] is body['memoryPromotionAllowed'] is body['externalEffectsAllowed'] is False
+    if nonempty:
+        assert body['latestClosure']['ledger']['state'] == 'partial'
+        assert body['latestUsage']['quantity'] is None and body['latestEffect']['maturityStatus'] == 'immature'
+        assert body['latestHandoff']['businessDecision'] == 'request_more'
+    else:
+        assert body['latestClosure'] is body['latestUsage'] is body['latestEffect'] is body['latestHandoff'] is None
+    assert bool(conn.queries) == readonly and not legacy.calls

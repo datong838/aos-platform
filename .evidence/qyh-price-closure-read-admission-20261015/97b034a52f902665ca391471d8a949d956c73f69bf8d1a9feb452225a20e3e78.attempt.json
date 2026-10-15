@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-price-closure-read-admission-20261015-design-r1",
+  "baseline": {
+    "head": "804a0279aa3d426a693504cb3336fb5a8ca4d149",
+    "authority_revision": "AOS-002035",
+    "files": {
+      ".evidence/qyh-price-closure-read-admission-20261015/design-review-material-r1.txt": "eef5d4b4423e7393a6c3448cbca83cd694ebaaa7514dcc7374dc885191f78b08"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "0f8584b45ea1d48f47b85a1db0d4791488fa7ff8fcb3c8f0f1eb59bdcb8b3ba9",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

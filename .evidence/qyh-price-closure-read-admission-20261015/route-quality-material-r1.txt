@@ -1,0 +1,938 @@
+ROUTE CODE QUALITY, not deployed. Shared-reader code r2 PASS legally consumed and current frozen335 PASS. Historical http-red-r1 was PRE-IMPLEMENTATION and is not current candidate evidence; no source changes after frozen335. Four product/test files only. No creator/customer/POST admission expansion beyond explicit price GET branch.
+
+
+FULL SELECTED AST FUNCTIONS services/aos-api/aos_api/routers/ecommerce_workshop.py fullfileSHA f051c3cb511aa80874dda1468dbde603fcd83ade81e9c511de34016cc5f5ae26
+
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_catalog() -> EcommerceWorkshopCatalog:
+    return build_ecommerce_workshop_catalog()
+
+def get_ecommerce_workshop_read_catalog(
+    legacy: Annotated[EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)],
+) -> EcommerceWorkshopReadCatalog:
+    from aos_api.ecommerce_installed_readonly_catalog import build_installed_readonly_catalog
+
+    return EcommerceWorkshopReadCatalog(
+        legacy=legacy,
+        installed_factory=build_installed_readonly_catalog,
+    )
+
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_three_module_closure() -> EcommerceWorkshopThreeModuleClosureService:
+    return EcommerceWorkshopThreeModuleClosureService(EcommerceWorkshopThreeModuleClosureStore())
+
+@lru_cache(maxsize=1)
+def get_creator_closure_readonly() -> CreatorClosureReadonlyReader:
+    return CreatorClosureReadonlyReader()
+
+@lru_cache(maxsize=1)
+def get_price_closure_readonly() -> PriceClosureReadonlyReader:
+    return PriceClosureReadonlyReader()
+
+def _reject_query_parameters(request: Request) -> None:
+    if request.query_params:
+        raise ApiError(
+            code="VALIDATION",
+            message="ecommerce Workshop reads do not accept query parameters",
+            status_code=400,
+        )
+
+def _invoke(operation: Callable[[], ResultT]) -> ResultT:
+    try:
+        return operation()
+    except AssetRegistryError as exc:
+        raise ApiError(
+            code=exc.code.value,
+            message=str(exc),
+            status_code=exc.http_status,
+            details=exc.details,
+        ) from exc
+
+def _require_creator_growth_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> EcommerceWorkshopModuleReadinessResponse:
+    return _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.creator-growth",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+
+def _require_three_module_installation(
+    module: ThreeModule, *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    checks = {
+        ThreeModule.CREATOR: _require_creator_growth_installation,
+        ThreeModule.PRICE: _require_price_governance_installation,
+        ThreeModule.CUSTOMER: _require_customer_installation,
+    }
+    checks[module](principal=principal, catalog=catalog)
+
+@router.get(
+    "/views/{module}/closure-contributions",
+    response_model=ThreeModuleClosureContributionView,
+    operation_id="ecommerceWorkshopThreeModuleClosureContributionViewGet",
+    responses=_ERRORS,
+)
+def get_three_module_closure_contribution_view(
+    request: Request,
+    module: ThreeModule,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    read_catalog: ReadCatalogDependency,
+    service: ThreeModuleClosureDependency,
+    readonly: CreatorClosureReadonlyDependency,
+    price_readonly: PriceClosureReadonlyDependency,
+) -> ThreeModuleClosureContributionView:
+    _reject_query_parameters(request)
+    if module is ThreeModule.CREATOR:
+        admission = _require_creator_growth_installation(principal=principal, catalog=read_catalog)
+        if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+            raise ApiError(code="CREATOR_CLOSURE_READ_ADMISSION_UNAVAILABLE",
+                           message="当前闭环贡献读取准入不可核验。", status_code=503)
+        if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+            try:
+                return readonly.read(TenantScope(principal.org_id, principal.project_id))
+            except CreatorClosureReadonlyError as exc:
+                raise ApiError(code=exc.code, message="当前闭环贡献暂不可读，请核对保存记录或读取范围。",
+                               status_code=503) from exc
+        return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+    if module is ThreeModule.PRICE:
+        admission = _invoke(lambda: read_catalog.get_readiness(
+            module_id="ecommerce.price-governance", org_id=principal.org_id,
+            project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
+        ))
+        if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+            raise ApiError(code="PRICE_CLOSURE_READ_ADMISSION_UNAVAILABLE",
+                           message="当前价格闭环读取准入不可核验。", status_code=503)
+        if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+            try:
+                return price_readonly.read(TenantScope(principal.org_id, principal.project_id))
+            except PriceClosureReadonlyError as exc:
+                raise ApiError(code=exc.code, message="当前价格闭环暂不可读，请核对保存记录或读取范围。",
+                               status_code=503) from exc
+        return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+    _require_three_module_installation(module, principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+
+EXACT FULL FILE DIFF
+diff --git a/services/aos-api/aos_api/routers/ecommerce_workshop.py b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+index 38c631a35..126c24775 100644
+--- a/services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+@@ -107,6 +107,7 @@ from aos_api.ecommerce_creator_internal_workflow_readonly import (
+ )
+ from aos_api.ecommerce_three_module_closure_readonly import (
+     CreatorClosureReadonlyError, CreatorClosureReadonlyReader,
++    PriceClosureReadonlyError, PriceClosureReadonlyReader,
+ )
+ from aos_api.ecommerce_creator_internal_workflow import (
+     CreatorInternalWorkflowConflict,
+@@ -698,6 +699,16 @@ CreatorClosureReadonlyDependency = Annotated[
+ ]
+ 
+ 
++@lru_cache(maxsize=1)
++def get_price_closure_readonly() -> PriceClosureReadonlyReader:
++    return PriceClosureReadonlyReader()
++
++
++PriceClosureReadonlyDependency = Annotated[
++    PriceClosureReadonlyReader, Depends(get_price_closure_readonly)
++]
++
++
+ CatalogDependency = Annotated[
+     EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)
+ ]
+@@ -2852,6 +2863,7 @@ def get_three_module_closure_contribution_view(
+     read_catalog: ReadCatalogDependency,
+     service: ThreeModuleClosureDependency,
+     readonly: CreatorClosureReadonlyDependency,
++    price_readonly: PriceClosureReadonlyDependency,
+ ) -> ThreeModuleClosureContributionView:
+     _reject_query_parameters(request)
+     if module is ThreeModule.CREATOR:
+@@ -2866,6 +2878,21 @@ def get_three_module_closure_contribution_view(
+                 raise ApiError(code=exc.code, message="当前闭环贡献暂不可读，请核对保存记录或读取范围。",
+                                status_code=503) from exc
+         return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
++    if module is ThreeModule.PRICE:
++        admission = _invoke(lambda: read_catalog.get_readiness(
++            module_id="ecommerce.price-governance", org_id=principal.org_id,
++            project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
++        ))
++        if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
++            raise ApiError(code="PRICE_CLOSURE_READ_ADMISSION_UNAVAILABLE",
++                           message="当前价格闭环读取准入不可核验。", status_code=503)
++        if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
++            try:
++                return price_readonly.read(TenantScope(principal.org_id, principal.project_id))
++            except PriceClosureReadonlyError as exc:
++                raise ApiError(code=exc.code, message="当前价格闭环暂不可读，请核对保存记录或读取范围。",
++                               status_code=503) from exc
++        return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+     _require_three_module_installation(module, principal=principal, catalog=catalog)
+     return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+ 
+
+
+FULL SELECTED AST FUNCTIONS services/aos-api/tests/test_ecommerce_workshop_read_http.py fullfileSHA 210066111f1609fd7e2d403fdc87df88c58748fe6e7c99856b89d7bf8fdf7bb0
+
+class RejectingCatalog:
+    def __init__(self):
+        self.calls = []
+
+    def get_readiness(self, **scope):
+        self.calls.append(scope)
+        raise AssetNotFoundError('not installed in current scoped catalog')
+
+def client_with_catalogs():
+    app = FastAPI()
+    register_exception_handlers(app)
+    app.include_router(routes.router)
+    legacy, reader = RejectingCatalog(), RejectingCatalog()
+    app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+    app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+    app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='scope-test', org_id='org-org', project_id='dev-project',
+        roles=['admin'], markings=[],
+    )
+    return TestClient(app), legacy, reader
+
+def test_read_dependency_only_reaches_explicit_audited_get_routes():
+    actual = set()
+    for route in routes.router.routes:
+        uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                        for d in route.dependant.dependencies)
+        if uses_read:
+            assert route.methods == {'GET'}
+            actual.add(route.path)
+    assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+        '/v1/ecommerce-workshop/source-readiness',
+        '/v1/ecommerce-workshop/views/operations/cases',
+        '/v1/ecommerce-workshop/commands/operations/readiness',
+        '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+        '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+        '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+        '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+        '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+        '/v1/ecommerce-workshop/views/creator-growth/contributions',
+        '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+        '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
+        '/v1/ecommerce-workshop/views/{module}/closure-contributions',
+        '/v1/ecommerce-workshop/views/price-governance/contributions',
+        '/v1/ecommerce-workshop/views/price-governance/dispositions',
+    }
+
+class ReadReached(RuntimeError):
+    pass
+
+def lifecycle_admission(*, readonly=True):
+    from tests.test_ecommerce_workshop_read_catalog import make, ARGS
+    catalog, _ = make()
+    result = catalog.get_readiness(**{**ARGS, 'module_id': 'ecommerce.creator-growth'})
+    if not readonly:
+        result = result.model_copy(update={'item': result.item.model_copy(update={
+            'blockers': [b for b in result.item.blockers if b.reason_code != 'INSTALLED_ASSET_READONLY'],
+        })})
+    return result
+
+def closure_probes(client, *, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope, module):
+            calls.append(('legacy', scope.key, module.value))
+            raise ReadReached('legacy-closure')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key, 'creator'))
+            if failure:
+                from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyError
+                raise CreatorClosureReadonlyError(failure)
+            raise ReadReached('readonly-closure')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+    client.app.dependency_overrides[routes.get_creator_closure_readonly] = lambda: Readonly()
+    return calls
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_creator_closure_selects_only_the_admitted_reader(readonly):
+    client, legacy, catalog = client_with_catalogs()
+    calls = closure_probes(client)
+    catalog.get_readiness = lambda **scope: lifecycle_admission(readonly=readonly)
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-closure'):
+        client.get(CLOSURE_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'), 'creator')]
+    assert not legacy.calls
+
+@pytest.mark.parametrize('module', ['customer'])
+def test_other_closure_modules_keep_legacy_catalog(module):
+    client, legacy, catalog = client_with_catalogs()
+    calls = closure_probes(client)
+    catalog.get_readiness = lambda **scope: lifecycle_admission()
+    assert client.get('/v1/ecommerce-workshop/views/' + module + '/closure-contributions').status_code == 404
+    assert not calls and legacy.calls and not catalog.calls
+
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+def test_creator_closure_query_cannot_change_scope_or_reader(query):
+    client, legacy, catalog = client_with_catalogs()
+    calls = closure_probes(client)
+    assert client.get(CLOSURE_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+
+def price_admission(readonly=True):
+    from tests.test_ecommerce_workshop_read_catalog import make, ARGS
+    catalog, _ = make()
+    result = catalog.get_readiness(**{**ARGS, 'module_id': 'ecommerce.price-governance'})
+    if not readonly:
+        result = result.model_copy(update={'item': result.item.model_copy(update={
+            'blockers': [b for b in result.item.blockers if b.reason_code != 'INSTALLED_ASSET_READONLY'],
+        })})
+    return result
+
+def price_closure_probes(client, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope, module):
+            calls.append(('legacy', scope.key, module.value))
+            raise ReadReached('legacy-price-closure')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key, 'price'))
+            if failure:
+                from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
+                raise PriceClosureReadonlyError(failure)
+            raise ReadReached('readonly-price-closure')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+    client.app.dependency_overrides[getattr(routes, 'get_price_closure_readonly', Readonly)] = lambda: Readonly()
+    return calls
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_price_closure_selects_only_admitted_reader(readonly):
+    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+    def admit(**scope):
+        assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+        return price_admission(readonly)
+    catalog.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-price-closure'): client.get(PRICE_CLOSURE_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'), 'price')] and not legacy.calls
+
+def test_price_closure_denied_before_both_readers():
+    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+    assert client.get(PRICE_CLOSURE_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+
+@pytest.mark.parametrize('admission', [None, object()])
+def test_price_closure_unknown_admission_is_unavailable(admission):
+    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+    catalog.get_readiness = lambda **scope: admission
+    response = client.get(PRICE_CLOSURE_PATH)
+    assert response.status_code == 503 and 'PRICE_CLOSURE_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls
+
+@pytest.mark.parametrize('code', ['PRICE_CLOSURE_READ_AUTHORITY_DRIFT', 'PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE',
+                                 'PRICE_CLOSURE_READ_UNAVAILABLE', 'PRICE_CLOSURE_READ_LIMIT_EXCEEDED'])
+def test_price_closure_failure_does_not_become_null_success(code):
+    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client, code)
+    catalog.get_readiness = lambda **scope: price_admission()
+    response = client.get(PRICE_CLOSURE_PATH)
+    assert response.status_code == 503 and code in response.text and 'latestClosure' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'), 'price')] and not legacy.calls
+
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+def test_price_closure_query_cannot_change_scope(query):
+    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
+    assert client.get(PRICE_CLOSURE_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+
+@pytest.mark.parametrize('readonly,nonempty', [(True, True), (True, False), (False, False)])
+def test_price_closure_complete_http_dto(readonly, nonempty):
+    from aos_api.tenant_scope import TenantScope
+    from aos_api.ecommerce_workshop_three_module_closure import EcommerceWorkshopThreeModuleClosureService
+    from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyReader
+    from tests.test_ecommerce_three_module_closure_readonly import authority_rows, PriceConnection
+    scope = TenantScope('org-org', 'dev-project')
+    conn = PriceConnection(authority_rows('price', scope=scope) if nonempty else {}, scope=scope)
+    client, legacy, catalog = client_with_catalogs()
+    catalog.get_readiness = lambda **args: price_admission(readonly)
+    class EmptyStore:
+        def latest_bindings(self, scope, module):
+            assert scope.key == ('org-org', 'dev-project') and module.value == 'price'
+            return dict(closure=None, usage=None, effect=None, handoff=None)
+    client.app.dependency_overrides[routes.get_price_closure_readonly] = lambda: PriceClosureReadonlyReader(connect_factory=lambda incoming: conn)
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: EcommerceWorkshopThreeModuleClosureService(EmptyStore())
+    response = client.get(PRICE_CLOSURE_PATH)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['module'] == 'price' and body['tenant'] == dict(orgId='org-org', projectId='dev-project')
+    assert body['allowedCommands'] == ([] if readonly else ['COMPILE_THREE_MODULE_CLOSURE', 'BIND_CANONICAL_USAGE', 'BIND_CANONICAL_EFFECT_REVIEW', 'BIND_CANONICAL_HANDOFF'])
+    assert body['handoffConsumeAllowed'] is body['memoryPromotionAllowed'] is body['externalEffectsAllowed'] is False
+    if nonempty:
+        assert body['latestClosure']['ledger']['state'] == 'partial'
+        assert body['latestUsage']['quantity'] is None and body['latestEffect']['maturityStatus'] == 'immature'
+        assert body['latestHandoff']['businessDecision'] == 'request_more'
+    else:
+        assert body['latestClosure'] is body['latestUsage'] is body['latestEffect'] is body['latestHandoff'] is None
+    assert bool(conn.queries) == readonly and not legacy.calls
+
+EXACT FULL FILE DIFF
+diff --git a/services/aos-api/tests/test_ecommerce_workshop_read_http.py b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+index c5fe8dc1c..da02ac23d 100644
+--- a/services/aos-api/tests/test_ecommerce_workshop_read_http.py
++++ b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+@@ -472,7 +472,7 @@ def test_creator_closure_denied_before_both_readers():
+     assert not calls and not legacy.calls and len(catalog.calls) == 1
+ 
+ 
+-@pytest.mark.parametrize('module', ['price', 'customer'])
++@pytest.mark.parametrize('module', ['customer'])
+ def test_other_closure_modules_keep_legacy_catalog(module):
+     client, legacy, catalog = client_with_catalogs()
+     calls = closure_probes(client)
+@@ -742,3 +742,99 @@ def test_price_disposition_full_http_serialization(readonly, nonempty):
+         assert body['latestDisposition'] is body['latestObservation'] is None
+     assert len(opened) == int(readonly) and conn.payload_calls == (4 if readonly else 0)
+     assert not legacy.calls
++
++
++PRICE_CLOSURE_PATH = '/v1/ecommerce-workshop/views/price/closure-contributions'
++
++
++def price_closure_probes(client, failure=None):
++    calls = []
++    class Legacy:
++        def contribution_view(self, scope, module):
++            calls.append(('legacy', scope.key, module.value))
++            raise ReadReached('legacy-price-closure')
++    class Readonly:
++        def read(self, scope):
++            calls.append(('readonly', scope.key, 'price'))
++            if failure:
++                from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyError
++                raise PriceClosureReadonlyError(failure)
++            raise ReadReached('readonly-price-closure')
++    client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
++    client.app.dependency_overrides[getattr(routes, 'get_price_closure_readonly', Readonly)] = lambda: Readonly()
++    return calls
++
++
++@pytest.mark.parametrize('readonly', [True, False])
++def test_price_closure_selects_only_admitted_reader(readonly):
++    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
++    def admit(**scope):
++        assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
++        return price_admission(readonly)
++    catalog.get_readiness = admit
++    kind = 'readonly' if readonly else 'legacy'
++    with pytest.raises(ReadReached, match=kind + '-price-closure'): client.get(PRICE_CLOSURE_PATH)
++    assert calls == [(kind, ('org-org', 'dev-project'), 'price')] and not legacy.calls
++
++
++def test_price_closure_denied_before_both_readers():
++    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
++    assert client.get(PRICE_CLOSURE_PATH).status_code == 404
++    assert not calls and not legacy.calls and len(catalog.calls) == 1
++
++
++@pytest.mark.parametrize('admission', [None, object()])
++def test_price_closure_unknown_admission_is_unavailable(admission):
++    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
++    catalog.get_readiness = lambda **scope: admission
++    response = client.get(PRICE_CLOSURE_PATH)
++    assert response.status_code == 503 and 'PRICE_CLOSURE_READ_ADMISSION_UNAVAILABLE' in response.text
++    assert not calls and not legacy.calls
++
++
++@pytest.mark.parametrize('code', ['PRICE_CLOSURE_READ_AUTHORITY_DRIFT', 'PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE',
++                                 'PRICE_CLOSURE_READ_UNAVAILABLE', 'PRICE_CLOSURE_READ_LIMIT_EXCEEDED'])
++def test_price_closure_failure_does_not_become_null_success(code):
++    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client, code)
++    catalog.get_readiness = lambda **scope: price_admission()
++    response = client.get(PRICE_CLOSURE_PATH)
++    assert response.status_code == 503 and code in response.text and 'latestClosure' not in response.text
++    assert calls == [('readonly', ('org-org', 'dev-project'), 'price')] and not legacy.calls
++
++
++@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
++def test_price_closure_query_cannot_change_scope(query):
++    client, legacy, catalog = client_with_catalogs(); calls = price_closure_probes(client)
++    assert client.get(PRICE_CLOSURE_PATH + '?' + query).status_code == 400
++    assert not calls and not legacy.calls and not catalog.calls
++
++
++@pytest.mark.parametrize('readonly,nonempty', [(True, True), (True, False), (False, False)])
++def test_price_closure_complete_http_dto(readonly, nonempty):
++    from aos_api.tenant_scope import TenantScope
++    from aos_api.ecommerce_workshop_three_module_closure import EcommerceWorkshopThreeModuleClosureService
++    from aos_api.ecommerce_three_module_closure_readonly import PriceClosureReadonlyReader
++    from tests.test_ecommerce_three_module_closure_readonly import authority_rows, PriceConnection
++    scope = TenantScope('org-org', 'dev-project')
++    conn = PriceConnection(authority_rows('price', scope=scope) if nonempty else {}, scope=scope)
++    client, legacy, catalog = client_with_catalogs()
++    catalog.get_readiness = lambda **args: price_admission(readonly)
++    class EmptyStore:
++        def latest_bindings(self, scope, module):
++            assert scope.key == ('org-org', 'dev-project') and module.value == 'price'
++            return dict(closure=None, usage=None, effect=None, handoff=None)
++    client.app.dependency_overrides[routes.get_price_closure_readonly] = lambda: PriceClosureReadonlyReader(connect_factory=lambda incoming: conn)
++    client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: EcommerceWorkshopThreeModuleClosureService(EmptyStore())
++    response = client.get(PRICE_CLOSURE_PATH)
++    assert response.status_code == 200
++    body = response.json()
++    assert body['module'] == 'price' and body['tenant'] == dict(orgId='org-org', projectId='dev-project')
++    assert body['allowedCommands'] == ([] if readonly else ['COMPILE_THREE_MODULE_CLOSURE', 'BIND_CANONICAL_USAGE', 'BIND_CANONICAL_EFFECT_REVIEW', 'BIND_CANONICAL_HANDOFF'])
++    assert body['handoffConsumeAllowed'] is body['memoryPromotionAllowed'] is body['externalEffectsAllowed'] is False
++    if nonempty:
++        assert body['latestClosure']['ledger']['state'] == 'partial'
++        assert body['latestUsage']['quantity'] is None and body['latestEffect']['maturityStatus'] == 'immature'
++        assert body['latestHandoff']['businessDecision'] == 'request_more'
++    else:
++        assert body['latestClosure'] is body['latestUsage'] is body['latestEffect'] is body['latestHandoff'] is None
++    assert bool(conn.queries) == readonly and not legacy.calls
+
+
+FULL SHARED READER
+"""Bounded saved closure evidence, never compile/bind/consume authority."""
+from datetime import datetime
+import json
+import math
+from time import monotonic
+
+import psycopg
+from psycopg import IsolationLevel
+
+from aos_api.aip_contracts import HandoffResourceRef, ResourceRef
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_workshop_three_module_closure import (
+    CompileThreeModuleClosureRequest, EcommerceWorkshopThreeModuleClosureService,
+    ThreeModule, ThreeModuleClosureRevision, ThreeModuleEffectBindingRevision,
+    ThreeModuleHandoffBindingRevision, ThreeModuleUsageBindingRevision,
+    _ledger, canonical_hash,
+)
+from aos_api.ecommerce_workshop_three_module_closure_store import _STATUS
+from aos_api.public_contracts import redact_sensitive
+
+MAX_ITEM_BYTES = 64 * 1024
+MAX_TOTAL_BYTES = 1024 * 1024
+_TABLES = {
+    'closure': ('ecommerce_three_module_closure_revision', ThreeModuleClosureRevision),
+    'usage': ('ecommerce_three_module_usage_binding_revision', ThreeModuleUsageBindingRevision),
+    'effect': ('ecommerce_three_module_effect_binding_revision', ThreeModuleEffectBindingRevision),
+    'handoff': ('ecommerce_three_module_handoff_binding_revision', ThreeModuleHandoffBindingRevision),
+}
+
+
+class CreatorClosureReadonlyError(RuntimeError):
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
+class PriceClosureReadonlyError(CreatorClosureReadonlyError):
+    """Stable price-specific boundary around the shared saved-record codec."""
+
+
+def _deny(suffix):
+    raise CreatorClosureReadonlyError('CREATOR_CLOSURE_READ_' + suffix)
+
+
+def _time(value, cutoff):
+    return isinstance(value, datetime) and value.utcoffset() is not None and value <= cutoff
+
+
+def _ref_revision(raw):
+    if type(raw) is not dict or type(raw.get('revision')) is not int or raw['revision'] < 1:
+        _deny('AUTHORITY_DRIFT')
+
+
+def _strict_price_raw(value):
+    integers = {'revision', 'total', 'inProgress', 'succeeded', 'failed', 'unknown',
+                'disputed', 'skipped', 'sampleCount', 'minSample', 'disclosureRefCount'}
+    if isinstance(value, dict):
+        for key, child in value.items():
+            # Task/TaskRun use the public ResourceRef contract with a STRING
+            # revision; the existing typed handoff validator checks them below.
+            if key in {'taskRef', 'taskRunRef'}: continue
+            if key in integers and type(child) is not int: _deny('AUTHORITY_DRIFT')
+            if key in {'accepted', 'effectCompleted'} and type(child) is not bool: _deny('AUTHORITY_DRIFT')
+            if key in {'quantity', 'adjustmentTotal'} and child is not None:
+                if type(child) not in (int, float) or not math.isfinite(child): _deny('AUTHORITY_DRIFT')
+            _strict_price_raw(child)
+    elif isinstance(value, list):
+        for child in value: _strict_price_raw(child)
+
+
+def _visible(value):
+    # Typed hashes and derived identities are checked separately; hash digits are
+    # not contact numbers. Every other public string retains the existing guard.
+    if isinstance(value, dict):
+        return {key: _visible(child) for key, child in value.items()
+                if key not in {'contentHash', 'closureId', 'bindingId'}}
+    if isinstance(value, list):
+        return [_visible(child) for child in value]
+    return value
+
+
+class _SavedBindings:
+    def __init__(self, bindings): self.bindings = bindings
+    def latest_bindings(self, scope, module): return self.bindings
+
+
+class CreatorClosureReadonlyReader:
+    _module = ThreeModule.CREATOR
+
+    def __init__(self, *, connect_factory=None):
+        self._connect = connect_factory or connect_read_only
+
+    @staticmethod
+    def _row(conn, scope, kind, closure_id=None, module=ThreeModule.CREATOR):
+        table, _ = _TABLES[kind]
+        identity = 'closure_id' if kind == 'closure' else 'binding_id'
+        source = 'source_id' if kind == 'closure' else 'NULL AS source_id'
+        resource = f'{identity} AS resource_id'
+        closure_column = 'closure_id'
+        if module is ThreeModule.PRICE:
+            resource = f'CASE WHEN length({identity})<=240 THEN {identity} ELSE NULL END AS resource_id'
+            closure_column = 'CASE WHEN length(closure_id)<=240 THEN closure_id ELSE NULL END AS closure_id'
+            if kind == 'closure': source = 'CASE WHEN length(source_id)<=240 THEN source_id ELSE NULL END AS source_id'
+        predicate = 'module=%s' if kind == 'closure' else 'closure_id=%s'
+        return conn.execute(
+            f'''SELECT org_id,project_id,{resource},{closure_column},
+                revision,module,{source},content_hash,created_at,
+                octet_length(authority_data::text) AS payload_bytes,
+                CASE WHEN octet_length(authority_data::text)<={MAX_ITEM_BYTES}
+                     THEN authority_data ELSE NULL END AS authority_data
+                FROM {table} WHERE org_id=%s AND project_id=%s AND {predicate}
+                ORDER BY created_at DESC,{identity} LIMIT 1''',
+            (*scope.key, module.value if kind == 'closure' else closure_id),
+        ).fetchone()
+
+    @staticmethod
+    def _decode(row, scope, kind, cutoff, closure=None, module=ThreeModule.CREATOR):
+        if (row['org_id'], row['project_id']) != scope.key:
+            _deny('AUTHORITY_DRIFT')
+        if (type(row['revision']) is not int or row['revision'] != 1
+                or not _time(row['created_at'], cutoff)):
+            _deny('AUTHORITY_DRIFT')
+        raw = row['authority_data']
+        if type(raw) is not dict or type(raw.get('revision')) is not int or raw['revision'] != 1:
+            _deny('AUTHORITY_DRIFT')
+        model = _TABLES[kind][1]
+        if module is ThreeModule.PRICE: _strict_price_raw(raw)
+        item = model.model_validate(raw)
+        if module is ThreeModule.PRICE and item.model_dump(mode='json', by_alias=True) != raw:
+            _deny('AUTHORITY_DRIFT')
+        if (item.tenant.org_id, item.tenant.project_id) != scope.key:
+            _deny('AUTHORITY_DRIFT')
+        if item.content_hash != row['content_hash']:
+            _deny('AUTHORITY_DRIFT')
+        if kind == 'closure':
+            _ref_revision(raw['sourceRef'])
+            CompileThreeModuleClosureRequest(module=module, sourceRef=item.source_ref)
+            identity = 'three-module-closure-' + canonical_hash(
+                [*scope.key, module, item.source_ref.resource_id])[:24]
+            if (item.module is not module or row['module'] != module.value
+                    or row['resource_id'] != identity or item.closure_id != identity
+                    or row['closure_id'] != identity or row['source_id'] != item.source_ref.resource_id
+                    or item.compiled_at != row['created_at'] or not _time(item.compiled_at, cutoff)
+                    or item.ledger != _ledger(item.items)):
+                _deny('AUTHORITY_DRIFT')
+            keys = set()
+            for original, source in zip(item.items, raw['items'], strict=True):
+                _ref_revision(source['originalRef'])
+                if source.get('receiptRef') is not None: _ref_revision(source['receiptRef'])
+                expected = item.source_ref.model_copy(update={
+                    'resource_id': item.source_ref.resource_id + ':' + original.item_key})
+                if (original.item_key in keys or original.original_ref != expected
+                        or _STATUS.get(original.original_status) != original.canonical_outcome):
+                    _deny('AUTHORITY_DRIFT')
+                keys.add(original.item_key)
+            payload = dict(module=item.module, sourceRef=item.source_ref, items=item.items)
+        else:
+            _ref_revision(raw['closureRef'])
+            exact = EcommerceWorkshopThreeModuleClosureService._ref(
+                'ThreeModuleClosureRevision', closure.closure_id, closure.content_hash)
+            if (row['module'] not in (None, module.value) or row['closure_id'] != closure.closure_id
+                    or item.closure_ref != exact or item.bound_at != row['created_at']
+                    or not _time(item.bound_at, cutoff) or item.bound_at < closure.compiled_at):
+                _deny('AUTHORITY_DRIFT')
+            payload = {'closureRef': item.closure_ref}
+            if kind == 'usage':
+                _ref_revision(raw['usageReceiptRef'])
+                if item.usage_receipt_ref.resource_type != 'UsageReceipt': _deny('AUTHORITY_DRIFT')
+                if module is ThreeModule.PRICE and item.settlement != item.quality: _deny('AUTHORITY_DRIFT')
+                payload.update(usageReceiptRef=item.usage_receipt_ref, lineageId=item.lineage_id,
+                               quality=item.quality, quantity=item.quantity, unit=item.unit,
+                               adjustmentTotal=item.adjustment_total, settlement=item.settlement)
+            elif kind == 'effect':
+                _ref_revision(raw['effectReviewRef'])
+                if item.effect_review_ref.resource_type != 'EffectReviewRevision': _deny('AUTHORITY_DRIFT')
+                if (not _time(item.observed_at, item.bound_at)
+                        or item.cutoff_at.utcoffset() is None
+                        or (item.maturity_status == 'mature' and item.cutoff_at > item.observed_at)
+                        or type(raw['accepted']) is not bool or type(raw['effectCompleted']) is not bool):
+                    _deny('AUTHORITY_DRIFT')
+                payload.update(effectReviewRef=item.effect_review_ref, maturityStatus=item.maturity_status,
+                               accepted=item.accepted, effectCompleted=item.effect_completed,
+                               sampleCount=item.sample_count, minSample=item.min_sample,
+                               cutoffAt=item.cutoff_at, observedAt=item.observed_at)
+            else:
+                _ref_revision(raw['handoffRef'])
+                if item.handoff_ref.resource_type != 'HandoffEnvelope': _deny('AUTHORITY_DRIFT')
+                for value, expected_type in [(item.task_ref, 'Task'), (item.task_run_ref, 'TaskRun')]:
+                    ref_model = HandoffResourceRef if 'contentHash' in value else ResourceRef
+                    public_ref = ref_model.model_validate(value)
+                    if public_ref.resource_type != expected_type:
+                        _deny('CONTENT_UNSUPPORTED')
+                payload.update(handoffRef=item.handoff_ref, transportStatus=item.transport_status,
+                               businessDecision=item.business_decision, taskRef=item.task_ref,
+                               taskRunRef=item.task_run_ref, disclosureRefCount=item.disclosure_ref_count)
+            identity = 'three-module-' + kind + '-' + canonical_hash(payload)[:24]
+            if row['resource_id'] != identity or item.binding_id != identity:
+                _deny('AUTHORITY_DRIFT')
+        if canonical_hash(payload) != item.content_hash:
+            _deny('AUTHORITY_DRIFT')
+        visible = _visible(item.model_dump(mode='json', by_alias=True))
+        if redact_sensitive(visible) != visible:
+            _deny('PRIVACY_UNAVAILABLE')
+        if module is ThreeModule.PRICE:
+            serialized = json.dumps(visible, ensure_ascii=False).lower()
+            if any(word in serialized for word in ('mobile', 'openid', 'email', 'address', 'contactvalue', 'providerpayload')):
+                _deny('CONTENT_UNSUPPORTED')
+        return item
+
+    def read(self, scope):
+        started = monotonic()
+        def deadline():
+            if self._module is ThreeModule.PRICE and monotonic() - started > 10: _deny('LIMIT_EXCEEDED')
+        try:
+            if self._module not in (ThreeModule.CREATOR, ThreeModule.PRICE): _deny('CONTENT_UNSUPPORTED')
+            with self._connect(scope) as conn:
+                if (conn.read_only is not True or conn.autocommit is not False
+                        or conn.isolation_level != IsolationLevel.REPEATABLE_READ):
+                    _deny('UNAVAILABLE')
+                if self._module is ThreeModule.PRICE:
+                    conn.execute("SET LOCAL statement_timeout='3000ms'")
+                    conn.execute("SET LOCAL lock_timeout='500ms'")
+                cutoff = conn.execute('SELECT transaction_timestamp() AS cutoff').fetchone()['cutoff']
+                if not _time(cutoff, cutoff): _deny('AUTHORITY_DRIFT')
+                bindings, total = dict(closure=None, usage=None, effect=None, handoff=None), 0
+                for kind in _TABLES:
+                    deadline()
+                    if kind != 'closure' and bindings['closure'] is None: break
+                    row = self._row(conn, scope, kind, getattr(bindings['closure'], 'closure_id', None), self._module)
+                    if row is None: continue
+                    size = row['payload_bytes']
+                    if type(size) is not int or size < 1: _deny('AUTHORITY_DRIFT')
+                    total += size
+                    if size > MAX_ITEM_BYTES or total > MAX_TOTAL_BYTES: _deny('LIMIT_EXCEEDED')
+                    bindings[kind] = self._decode(row, scope, kind, cutoff, bindings['closure'], self._module)
+                view = EcommerceWorkshopThreeModuleClosureService(_SavedBindings(bindings)).contribution_view(
+                    scope, self._module, now=cutoff)
+                # Revalidate a complete public DTO; no validation-bypassing copy.
+                data = view.model_dump(mode='json', by_alias=True)
+                data.update(allowedCommands=[], handoffConsumeAllowed=False,
+                            memoryPromotionAllowed=False, externalEffectsAllowed=False)
+                result = type(view).model_validate(data)
+                if len(result.model_dump_json(by_alias=True).encode()) > MAX_TOTAL_BYTES:
+                    _deny('LIMIT_EXCEEDED')
+                deadline()
+                return result
+        except CreatorClosureReadonlyError:
+            raise
+        except psycopg.Error:
+            _deny('UNAVAILABLE')
+        except (ValueError, KeyError, TypeError, AttributeError, OverflowError):
+            _deny('AUTHORITY_DRIFT')
+
+
+class PriceClosureReadonlyReader(CreatorClosureReadonlyReader):
+    _module = ThreeModule.PRICE
+
+    def read(self, scope):
+        try:
+            return super().read(scope)
+        except CreatorClosureReadonlyError as exc:
+            raise PriceClosureReadonlyError(exc.code.replace('CREATOR_CLOSURE_READ_', 'PRICE_CLOSURE_READ_', 1)) from exc
+
+
+EVIDENCE source-verification-r1.json
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py": "1083725c55b95bd755a74a64416cb1896a463c095992bc1154261af3ea41adcb",
+    "services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py": "87bfc832c922d935b74a10ea87b163816629813ef4fed6aa901adc951eed585b",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "f051c3cb511aa80874dda1468dbde603fcd83ade81e9c511de34016cc5f5ae26",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "210066111f1609fd7e2d403fdc87df88c58748fe6e7c99856b89d7bf8fdf7bb0"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py": "1083725c55b95bd755a74a64416cb1896a463c095992bc1154261af3ea41adcb",
+    "services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py": "87bfc832c922d935b74a10ea87b163816629813ef4fed6aa901adc951eed585b",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "f051c3cb511aa80874dda1468dbde603fcd83ade81e9c511de34016cc5f5ae26",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "210066111f1609fd7e2d403fdc87df88c58748fe6e7c99856b89d7bf8fdf7bb0"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/test_w6_009_three_module_closure.py"
+  ],
+  "baseHead": "804a0279aa3d426a693504cb3336fb5a8ca4d149",
+  "frozenWithOnlyFourOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T04:02:13.163930+00:00",
+  "finishedAt": "2026-10-15T04:02:43.302451+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "118c99f1597f820071b656a834e514c58986cf2a41267f846060fadb9d3b4da6"
+}
+
+EVIDENCE native-r1-result.json
+{
+  "containerId": "dd54a71de2e1b182b04a354dda9bb05a03bc09bde2b32a401d30bc8cb5ab8cfc",
+  "originalVolumeTouched": false,
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "e2be75ca114e98b188a1860e31b9db83e387abee715bfc54fbcd1c05d922014d",
+  "sourceSha": "1083725c55b95bd755a74a64416cb1896a463c095992bc1154261af3ea41adcb",
+  "originalCompilerWithSyntheticResolvers": true,
+  "productionAuthority": false,
+  "pricePartialProbeNotMixedSourceResolverClaim": true,
+  "snapshotSourceIds": [
+    "fixture-decision",
+    "price-after-cutoff"
+  ],
+  "fiveAxesPreserved": true,
+  "creatorStillCreator": true,
+  "foreignRowsHiddenWithoutWhere": true,
+  "visibleClosureCounts": {
+    "creator": 1,
+    "price": 2
+  },
+  "writeDeniedSqlstate": "25006",
+  "sqlCaseNull": true,
+  "oversizeError": "PRICE_CLOSURE_READ_LIMIT_EXCEEDED",
+  "privacyError": "PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE",
+  "connectionFacts": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "wholeGoalComplete": false
+}
+
+EVIDENCE code-review-result-r2.json
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "f6c04cfadd4e3f13e7761326da4886a39c57f29d9b132c81df46d3cbf277f1a5",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-closure-bounded-reader-20261015-code-r2",
+    "task_id": "qyh-price-closure-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "804a0279aa3d426a693504cb3336fb5a8ca4d149",
+      "authority_revision": "AOS-002035",
+      "files": {
+        ".evidence/qyh-price-closure-bounded-reader-20261015/code-review-material-r2.txt": "81a26b4d2714edbf9cb03dc2e55fc04e229e3c5503805062b3703f7aa94f54af"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "候选复用原closure及binding的typed签名/派生ID/ledger/原public refs，固定price子类贯穿SQL/module/source/DTO，creator默认入口正常行为和旧错误码保留。",
+        "evidence": "ecommerce_workshop_three_module_closure.py ThreeModule.CREATOR=creator, ThreeModule.PRICE=price; CompileThreeModuleClosureRequest校验CreatorBatchStartDecisionRevision/PriceDispositionRevision; closure_id/binding_id由canonical_hash派生; PriceClosureReadonlyReader继承CreatorClosureReadonlyReader且module=PRICE, 错误码CREATOR_CLOSURE_READ_*替换为PRICE_CLOSURE_READ_; test_price_view_does_not_rewrite_creator_default_entry验证creator入口不变.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "price只在已核实只读一致snapshot内有界SELECT，strict raw/time/tenant/module/exact/privacy及稳定price错误门有效，空命令且不compile/bind/resolve/consume或授当前权限。",
+        "evidence": "read()中检查conn.read_only=True/isolation_level=REPEATABLE_READ; SET LOCAL statement_timeout='3000ms'/lock_timeout='500ms'; _strict_price_raw校验所有整数/bool/数值字段类型; _time验证created_at/bound_at/observed_at/cutoff_at时效; _visible + redact_sensitive过滤私密字段; allowedCommands=[]/handoffConsumeAllowed=False等; test_price_database_failure_is_stable_and_does_not_leak验证UNAVAILABLE;",
+        "assessment": "supported"
+      },
+      {
+        "claim": "冻结仅四owned overlay累计335项及原W6-009隔离PG证明候选与creator兼容、snapshot/RLS/25006/SQLCASE及五轴，不将synthetic mixed价格合同探针当原resolver实际经营能力；未部署或完成全Goal。",
+        "evidence": "source-verification-r1.json: frozenWithOnlyFourOwnedOverlays=true, originalVolumeTouched=false, 335 passed; native-r1-result.json: productionAuthority=false, wholeGoalComplete=false, pricePartialProbeNotMixedSourceResolverClaim=true, writeDeniedSqlstate='25006', fiveAxesPreserved=true, creatorStillCreator=true, connectionFacts全部readonly+repeatable read; snapshotSourceIds=['fixture-decision','price-after-cutoff']",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留此READ-ONLY候选人作为独立只读层；如需正式服务化，先提交独立部署清单与权限边界审批，不得与现有writer路径混合上线。"
+  }
+}
+
+EVIDENCE code-review-consumption-r2.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-closure-bounded-reader-20261015-code-r2",
+  "task_id": "qyh-price-closure-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "804a0279aa3d426a693504cb3336fb5a8ca4d149",
+    "authority_revision": "AOS-002035",
+    "files": {
+      ".evidence/qyh-price-closure-bounded-reader-20261015/code-review-material-r2.txt": "81a26b4d2714edbf9cb03dc2e55fc04e229e3c5503805062b3703f7aa94f54af"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "109ace90cca1757f86f593be4c3d495c1671cba39c32bc571a2adf2b602320d1",
+  "transport_sha256": "7fbe69662665fec93208f61fd7b8af1ee2efe8c66d70c6f0a5f88b4fa44a0751"
+}
+
+CURRENT FROZEN FULL RAW LOG SHA 118c99f1597f820071b656a834e514c58986cf2a41267f846060fadb9d3b4da6 FINAL EXCERPT
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+335 passed, 7 warnings in 19.90s

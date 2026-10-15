@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-closure-bounded-reader-20261015-code-r2",
+  "task_id": "qyh-price-closure-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "804a0279aa3d426a693504cb3336fb5a8ca4d149",
+    "authority_revision": "AOS-002035",
+    "files": {
+      ".evidence/qyh-price-closure-bounded-reader-20261015/code-review-material-r2.txt": "81a26b4d2714edbf9cb03dc2e55fc04e229e3c5503805062b3703f7aa94f54af"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "109ace90cca1757f86f593be4c3d495c1671cba39c32bc571a2adf2b602320d1",
+  "transport_sha256": "7fbe69662665fec93208f61fd7b8af1ee2efe8c66d70c6f0a5f88b4fa44a0751"
+}

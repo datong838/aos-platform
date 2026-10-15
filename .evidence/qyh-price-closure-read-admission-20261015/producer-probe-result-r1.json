@@ -1,0 +1,27 @@
+{
+  "syntheticMemoryOnly": true,
+  "databaseOrHttpCalls": 0,
+  "productionAuthority": false,
+  "module": "price",
+  "originalProducerTypedHashVerified": true,
+  "jsonDumpHashIsDifferent": true,
+  "itemLedger": {
+    "total": 2,
+    "succeeded": 1,
+    "unknown": 1,
+    "state": "partial"
+  },
+  "usageQuantity": null,
+  "effectAccepted": true,
+  "effectCompleted": false,
+  "maturity": "immature",
+  "handoffTransport": "consumed",
+  "businessDecision": "request_more",
+  "bindingIds": {
+    "usage": "three-module-usage-ac209243302715cb18841b8a",
+    "effect": "three-module-effect-c426ad81d0c4e2da284ce526",
+    "handoff": "three-module-handoff-0764423beaee6335b7ecd014"
+  },
+  "originalServiceSha": "abb7798aae5fe3ca87ec0a05e2445bdbbf16cb54663009709bff20252458ea40",
+  "wholeGoalComplete": false
+}

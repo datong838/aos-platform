@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "f6c04cfadd4e3f13e7761326da4886a39c57f29d9b132c81df46d3cbf277f1a5",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-closure-bounded-reader-20261015-code-r2",
+    "task_id": "qyh-price-closure-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "804a0279aa3d426a693504cb3336fb5a8ca4d149",
+      "authority_revision": "AOS-002035",
+      "files": {
+        ".evidence/qyh-price-closure-bounded-reader-20261015/code-review-material-r2.txt": "81a26b4d2714edbf9cb03dc2e55fc04e229e3c5503805062b3703f7aa94f54af"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "候选复用原closure及binding的typed签名/派生ID/ledger/原public refs，固定price子类贯穿SQL/module/source/DTO，creator默认入口正常行为和旧错误码保留。",
+        "evidence": "ecommerce_workshop_three_module_closure.py ThreeModule.CREATOR=creator, ThreeModule.PRICE=price; CompileThreeModuleClosureRequest校验CreatorBatchStartDecisionRevision/PriceDispositionRevision; closure_id/binding_id由canonical_hash派生; PriceClosureReadonlyReader继承CreatorClosureReadonlyReader且module=PRICE, 错误码CREATOR_CLOSURE_READ_*替换为PRICE_CLOSURE_READ_; test_price_view_does_not_rewrite_creator_default_entry验证creator入口不变.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "price只在已核实只读一致snapshot内有界SELECT，strict raw/time/tenant/module/exact/privacy及稳定price错误门有效，空命令且不compile/bind/resolve/consume或授当前权限。",
+        "evidence": "read()中检查conn.read_only=True/isolation_level=REPEATABLE_READ; SET LOCAL statement_timeout='3000ms'/lock_timeout='500ms'; _strict_price_raw校验所有整数/bool/数值字段类型; _time验证created_at/bound_at/observed_at/cutoff_at时效; _visible + redact_sensitive过滤私密字段; allowedCommands=[]/handoffConsumeAllowed=False等; test_price_database_failure_is_stable_and_does_not_leak验证UNAVAILABLE;",
+        "assessment": "supported"
+      },
+      {
+        "claim": "冻结仅四owned overlay累计335项及原W6-009隔离PG证明候选与creator兼容、snapshot/RLS/25006/SQLCASE及五轴，不将synthetic mixed价格合同探针当原resolver实际经营能力；未部署或完成全Goal。",
+        "evidence": "source-verification-r1.json: frozenWithOnlyFourOwnedOverlays=true, originalVolumeTouched=false, 335 passed; native-r1-result.json: productionAuthority=false, wholeGoalComplete=false, pricePartialProbeNotMixedSourceResolverClaim=true, writeDeniedSqlstate='25006', fiveAxesPreserved=true, creatorStillCreator=true, connectionFacts全部readonly+repeatable read; snapshotSourceIds=['fixture-decision','price-after-cutoff']",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留此READ-ONLY候选人作为独立只读层；如需正式服务化，先提交独立部署清单与权限边界审批，不得与现有writer路径混合上线。"
+  }
+}

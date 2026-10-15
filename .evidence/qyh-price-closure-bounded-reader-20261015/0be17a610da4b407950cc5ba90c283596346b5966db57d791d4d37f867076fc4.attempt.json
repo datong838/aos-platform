@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-price-closure-bounded-reader-20261015-code-r2",
+  "baseline": {
+    "head": "804a0279aa3d426a693504cb3336fb5a8ca4d149",
+    "authority_revision": "AOS-002035",
+    "files": {
+      ".evidence/qyh-price-closure-bounded-reader-20261015/code-review-material-r2.txt": "81a26b4d2714edbf9cb03dc2e55fc04e229e3c5503805062b3703f7aa94f54af"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "f6c04cfadd4e3f13e7761326da4886a39c57f29d9b132c81df46d3cbf277f1a5",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

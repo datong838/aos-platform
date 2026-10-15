@@ -1,0 +1,63 @@
+{
+  "containerId": "dd54a71de2e1b182b04a354dda9bb05a03bc09bde2b32a401d30bc8cb5ab8cfc",
+  "originalVolumeTouched": false,
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "e2be75ca114e98b188a1860e31b9db83e387abee715bfc54fbcd1c05d922014d",
+  "sourceSha": "1083725c55b95bd755a74a64416cb1896a463c095992bc1154261af3ea41adcb",
+  "originalCompilerWithSyntheticResolvers": true,
+  "productionAuthority": false,
+  "pricePartialProbeNotMixedSourceResolverClaim": true,
+  "snapshotSourceIds": [
+    "fixture-decision",
+    "price-after-cutoff"
+  ],
+  "fiveAxesPreserved": true,
+  "creatorStillCreator": true,
+  "foreignRowsHiddenWithoutWhere": true,
+  "visibleClosureCounts": {
+    "creator": 1,
+    "price": 2
+  },
+  "writeDeniedSqlstate": "25006",
+  "sqlCaseNull": true,
+  "oversizeError": "PRICE_CLOSURE_READ_LIMIT_EXCEEDED",
+  "privacyError": "PRICE_CLOSURE_READ_PRIVACY_UNAVAILABLE",
+  "connectionFacts": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "wholeGoalComplete": false
+}

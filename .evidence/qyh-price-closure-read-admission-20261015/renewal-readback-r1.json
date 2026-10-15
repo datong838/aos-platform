@@ -1,0 +1,81 @@
+{
+  "authority": "AOS-002035",
+  "renewed": [
+    {
+      "base_revision": "AOS-002035",
+      "created_at": "2026-10-15T11:05:03+08:00",
+      "excluded_scope": [
+        "aos-platform/maintenance/current-preview-database",
+        "aos-platform/maintenance/current-preview-api",
+        "aos-platform/maintenance/current-preview-web",
+        "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+        "aos-platform/services/aos-api/aos_api/aip_action_execution.py"
+      ],
+      "expected_outputs": [
+        "Carry all incomplete original restoration requirements and same original data/approval/identity into new-owner maintenance;no whole completion claim",
+        "Latest committed freeze excludes dirty; original role readonly native root8;fresh same-volume PG/API/Web restart, same-cutoff full fingerprint/no-effect/owned real OIDC SPA/browser reads then continue business Loop",
+        "Unknown effects read-only reconcile; keep Host/worker/Provider OFF,no old Run/mall source/manual execution/duplicate scripts or credentials disclosure",
+        "Recover latest management READONLY API for exact161db/162closedcandidate without migration or runtime override;strict runtime/unknownschema deny,fullreview;then latestPG/API/Web real8page/visual/deny-entry",
+        "Carry unchanged entire longGoal/user original install/fullrestore authorization, latest actual API87013/head110 and Web78346/head6c equalcurrenttrees plus originalPG; daily/aos latestoriginalvolume fullPG/API/Web, aos-2 no restart; maintain readonly/HostworkerProviderOFF; do not replay failed/unknown intents.",
+        "All earlier fullrestore pending original requirements remain; no fullrestoration/visual/business completion from previous handoff; sameowner unique m1 writer and supported Goal/reminders preserved",
+        "Carry complete remaining original recovery/daily fullPG/API/Web and sole originaluser authorization; actualAPI7645/head23e76 Web78346/head6c identicalfrontendtrees, schema161/650 originalvolume readonly; prior maintenancehandoff not whole completion; no replay/privateGoal/reminder edits",
+        "Carry ALL original remaining maintenance/currentAPI25389f005 currentWeb78346/6c PGoriginal161650bindings0 and daily latestcommittedfullPG/API/Web; this handoff not whole completion",
+        "Carry ALL original remaining restoration/complete231Goal/daily originalvolume PG/API/Web/aos2 noRestart/soleoriginaluser authorization. CurrentAPI64550 andWeb64614/source6bf codeeq2f latest, originalPGStarted20:36:36/schema161/650/bindings0; today onlymaintenance proof, fullbudget/business/install/8visual/release pending.",
+        "Carry ALL original remaining restoration/user authorization/full231Goal. Current API72678/source53 and Web76677/source1627 trees equal f1a1f51, original PG started20:36:36/schema161/650/bindings0. Future daily/every aos latest committed m1 original-volume fullPG/API/Web preserved; aos2 no restart. Read wave handoff is not full completion.",
+        "Carry ALL original remaining restoration/user authorization/full231Goal/daily and every aos latest m1 original-volume fullPG/API/Web; aos2 no restart. Actual API80779/source246d830, Web76677/source1627 code equal c1860a9, originalPGStarted20:36:36/schema161/650/bindings0. Only saved price read slice verified; all business/install/visual/observe goals remain.",
+        "ALL original remaining requirements/user authorization/full231Goal retained. Current runtime statement SUPERSEDES every older historical PID/head assertion: Web89803/sourcef036, API80779/source246 backend-equal current, originalPGStarted20:36:36/schema161/650/bindings0. Latest daily/every aos same-volume fullPGAPIWeb and aos2 noRestart remain; only single price sizing P1 delivered.",
+        "ALL original remaining restoration/full231Goal/user authorization retained. Current runtime SUPERSEDES every older PID/head assertion: API95375/source4e,Web89803/f036,originalPGStarted20:36:36/schema161/650/bindings0. Only saved disposition readonly slice delivered; fullC/userbudget/natural business/install/eightvisual/release continue; daily/every aos latest original-volume fullPGAPIWeb and aos2 noRestart preserved."
+      ],
+      "lease_expires_at": "2026-10-15T08:00:00+00:00",
+      "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/.evidence/qyh-full-system-restoration-20261011",
+        "aos-platform/maintenance/qiyuehui-restored-data-volume",
+        "aos-platform/maintenance/qiyuehui-restored-api",
+        "aos-platform/maintenance/qiyuehui-restored-web",
+        "aos-platform/scripts/a0v_qyh_restored_http.py",
+        "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py",
+        "aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013",
+        "aos-platform/.evidence/qyh-daily-readonly-schema-compat-20261014",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-20261014",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r2-20261014",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r4-20261015",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r5-20261015",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r7-20261015",
+        "aos-platform/.evidence/qyh-restoration-readonly-continuation-r8-20261015"
+      ],
+      "status": "ACTIVE",
+      "task_id": "qyh-restoration-readonly-continuation-r8-20261015"
+    },
+    {
+      "base_revision": "AOS-002035",
+      "created_at": "2026-10-15T11:05:03+08:00",
+      "excluded_scope": [
+        "aos-platform/apps/web",
+        "aos-platform/maintenance/qiyuehui-restored-data-volume",
+        "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+        "aos-platform/services/aos-api/aos_api/aip_action_store.py"
+      ],
+      "expected_outputs": [
+        "Full231Goal and original authorization retained. Audit canonical GET views/price/closure-contributions defaultproducer/Store/DTO/tenant/privacy/consistent cutoff/bounds/error before planPrime/admission.",
+        "Any extra reader/shared rules or Web files separately register before code; do not bulk switch Catalog. Original no-effects/source/budget/unknown boundaries; applicable visual comparison; frozen regression/native/genuine SDK/650/live/accurate Delivery."
+      ],
+      "lease_expires_at": "2026-10-15T08:00:00+00:00",
+      "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+      "schema": "aos-memory-task-receipt/v1",
+      "scope": [
+        "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+        "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+        "docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/\u5fae\u5546\u57ce\u7535\u5546\u63a5\u5165\u65b9\u6848/D-waves/2026-10-13-QYH-\u516b\u53f0\u53ea\u8bfb\u5165\u53e3\u6062\u590d\u4e0e\u7ecf\u8425\u94fe\u63a5\u7eed\u6e05\u5355.md",
+        "aos-platform/.evidence/qyh-price-closure-read-admission-20261015"
+      ],
+      "status": "ACTIVE",
+      "task_id": "qyh-price-closure-read-admission-20261015"
+    }
+  ],
+  "otherLeasesPreserved": 38,
+  "nonOverlapping": true
+}

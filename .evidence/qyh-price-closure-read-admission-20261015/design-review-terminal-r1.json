@@ -1,0 +1,8 @@
+{
+  "priorRequestId": "qyh-price-closure-read-admission-20261015-design-r1",
+  "terminalOutcome": "RAW_JSON_EXTRA_DATA_STRICT_PARSE_REJECTED",
+  "transportSha": "fea937bdd2b372d0635f0bd750a61e54c7f53e77b228a0aa15dbb0469c25a004",
+  "noLegalConsumption": true,
+  "productCodeChanged": false,
+  "rawNeverRepaired": true
+}

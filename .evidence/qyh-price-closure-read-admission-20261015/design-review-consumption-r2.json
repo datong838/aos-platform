@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-closure-read-admission-20261015-design-r2",
+  "task_id": "qyh-price-closure-read-admission-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "804a0279aa3d426a693504cb3336fb5a8ca4d149",
+    "authority_revision": "AOS-002035",
+    "files": {
+      ".evidence/qyh-price-closure-read-admission-20261015/design-review-material-r2.txt": "ab93e156afca51e79710e19a54bd6211dfce72148724a9a1e0aa28cb819d0d45"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "fdf754bcaef6a60144105d5ef5af474ce02e3af6c4ceade4dc5bfda49233b1c3",
+  "transport_sha256": "37d9fa61f6e1952427e61c89e1236d8a961b3b614fcbeb2c6631f16a1cea6353"
+}

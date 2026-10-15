@@ -1,0 +1,7 @@
+# 实施合同复核：两种 revision 不能混用
+
+价格严格数值门的首轮实现将递归key=revision一律要求int，导致原producer handoff正例失败。已读`aip_contracts.py`原ResourceRef/HandoffResourceRef：其revision为`str | None`；ThreeModule ClosureExactRef的revision才是int。原Task/TaskRun来自前者，必须交给原public模型验证，不能套ClosureExactRef数值门。
+
+修复仅让strict计数遍历跳过taskRef/taskRunRef两个子对象，仍由原ResourceRef/HandoffResourceRef的extra=forbid、类型/身份及Task/TaskRun资源种类校验约束；其他ClosureExactRef与ledger/sample/disclosure计数严格int，bool/非有限number仍拒绝。首轮2失败/105通过原日志保留；修复后完整reader专项108通过。
+
+本说明落实原方案“原public ResourceRef/HandoffResourceRef合同”，不改变writer或为任意嵌套JSON放行。合成price partial探针只证明原compiler typed合同/五轴，不宣称现有PRICE resolver能产生mixed-item真实经营数据；当前resolver使用同一个处置Observation映射全部targets，这一producer能力边界保留，读取GET不调用它。
