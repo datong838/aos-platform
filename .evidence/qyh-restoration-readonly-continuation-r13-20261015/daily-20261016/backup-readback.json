@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-10-15T16:25:38.824460+00:00",
+  "files": {
+    "current.dump": {
+      "sha256": "adc70a6e198f9572ba3faf8516c64dc872246baa040b25ccfcc6d46993ebbea9",
+      "bytes": 16113710
+    },
+    "globals.sql.second": {
+      "sha256": "ffa68e846726c4a0d1e9051aa714862bd668c5bab9cc56f04a3de3d88df65b50",
+      "bytes": 8164
+    },
+    "current.dump.second": {
+      "sha256": "adc70a6e198f9572ba3faf8516c64dc872246baa040b25ccfcc6d46993ebbea9",
+      "bytes": 16113710
+    },
+    "globals.sql": {
+      "sha256": "ffa68e846726c4a0d1e9051aa714862bd668c5bab9cc56f04a3de3d88df65b50",
+      "bytes": 8164
+    }
+  },
+  "existingTwoBackupCopiesReadbackEqual": true,
+  "existingCompleteRestoreEvidence": ".evidence/qyh-host-oid-durable-full-restore-20261013/verification.json",
+  "restoreEvidenceSha256": "8dc2f691cd30d771f1ebd4a83b17785efcef8c7e2971876e62c6fc6f0c9ed36c",
+  "newRestoreOrMigrationPerformed": false
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "width": 1280,
+    "height": 720,
+    "documentWidth": 1280,
+    "panel": {
+      "left": 308,
+      "right": 1280,
+      "width": 972
+    },
+    "filters": [],
+    "selected": "客户最小投影等待条件 · 正式来源 0"
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "documentWidth": 1440,
+    "panel": {
+      "left": 308,
+      "right": 1440,
+      "width": 1132
+    },
+    "filters": [],
+    "selected": "客户最小投影等待条件 · 正式来源 0"
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "documentWidth": 1920,
+    "panel": {
+      "left": 308,
+      "right": 1920,
+      "width": 1612
+    },
+    "filters": [],
+    "selected": "客户最小投影等待条件 · 正式来源 0"
+  }
+]

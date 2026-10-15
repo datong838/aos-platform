@@ -1,0 +1,217 @@
+[
+  {
+    "route": "cockpit",
+    "module": "task-cockpit",
+    "method": "getTaskCockpitCore",
+    "read": {
+      "who": {
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "tokenKind": "oidc"
+      },
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
+      "readiness": "degraded"
+    },
+    "dom": {
+      "moduleId": "ecommerce.task-cockpit",
+      "text": "跳到模块主内容\n\n已安装电商工作台\n\n电商日常任务总控大屏\n\n菜单名：日常任务总控大屏\n\n已停用\n专注模式\n技术与数据诊断\necommerce.task-cockpit · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n2\n今日经营任务\n已排除系统验收记录\n0\n执行中\n活跃状态\n1\n已绑定执行记录\n不补造缺失记录\n0\n待补条件\n影响任务执行\n1\n待规划\n尚未进入执行\n2\n待接入\n需要补充数据\n00:31\n评估截止\n2026/10/16\nϟ\n下达\n暂无可验证推荐任务\n任务状态\n全部状态\n待规划\n规划中\n待审批\n已批准\n执行中\n已暂停\n已完成\n失败\n已取消\n已回滚\n重新读取\n执行组\n客服专员\n状态待核对\n私域管家\n状态待核对\n导购顾问\n状态待核对\n当日经营任务流 · 执行进度\n2 项\n业务任务\n全店经营基线分析\n已取消\n业务任务\n执行记录：已取消 · 第 4 版\n业务任务\n栖月汇全店基线与商品尖刀验证\n待规划\n业务任务\n尚无执行记录\n策划组\n数据参谋\n状态待核对\n内容官\n状态待核对\n活动策划师\n状态待核对\n复盘 · 经验沉淀\n2026/10/16\n今日复盘\n\n今日没有可回读的终结任务\n不使用静态复盘结果或伪成功状态。\n\n复盘所需数据缺口 2 项\nAI 改进建议\n\n今日没有可回读的改进观察\n不复制视觉稿示例建议。\n\n经验沉淀 Wiki · 今日入库\n\n今日没有入库记录\n不复制视觉稿示例 SOP 条目。\n\n共享技能 AGENT\n素材采集\n暂不可用\n策略规划\n暂不可用\n文案生成\n暂不可用\n脚本撰写\n暂不可用\n语音合成\n暂不可用\n视频合成\n暂不可用\n内容审核\n暂不可用\n直播编排\n暂不可用\n平台适配\n暂不可用\n数据复盘\n暂不可用\n明日预告 · 仅显示已排期业务任务\n1 项待规划\n内容评审后的经营反馈\n\n原评审通过后形成的复盘、效果观察与方法候选；这里只读，不代表当前可执行授权。\n\n当前没有可回读的内容评审反馈。\n\n运行、发布与审计上下文\n保持原完整功能；默认收起以恢复视觉稿首屏结构",
+      "documentOverflow": false
+    },
+    "screenshot": "actual-cockpit-1440-r1.png",
+    "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+  },
+  {
+    "route": "content-campaign",
+    "module": "content-campaign",
+    "method": "getContentCampaignView",
+    "read": {
+      "who": {
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "tokenKind": "oidc"
+      },
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.content-campaign-view/v1",
+      "readiness": "degraded",
+      "dataCutoff": "2026-10-15T16:33:16.016256Z"
+    },
+    "dom": {
+      "moduleId": "ecommerce.content-campaign",
+      "text": "跳到模块主内容\n\n已安装电商工作台\n\n内容与活动工作台\n已停用\n专注模式\n技术与数据诊断\necommerce.content-campaign · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n活动策划\n内容日历\n日常模板\n栖月汇微商城\n＋ 新建活动\n暂无数据\n服务已返回空集合，没有使用示例数据填充。\n数据截止：2026-10-15T16:33:15.095722Z\n活动列表\n筛选\n当前数据范围\n3 个视图可读取\n活动计划\n活动目标与节奏\n可读取 · 0/0\n内容日历\n日期、渠道与负责人\n可读取 · 0/0\n主内容与变体\n主内容与渠道版本\n可读取 · 0/0\n没有活动记录？\n\n填写中央活动目标即可生成内部草稿；对外发布仍需独立审批。\n\nAI 策划助手\n仅消费当前正式业务数据\n生成方案\n基于当前数据：\n读取正式活动计划\n核对内容日历\n关联主内容与渠道版本\n当前正式数据可供审阅\n只读呈现正式业务事实，不代表已批准或发布。\n只读\n当前业务视图\n活动概览\n正式数据可读\n\n活动计划\n正式业务数据已挂接\n\n可评估\n0\n已挂接\n0\n未匹配\n0\n冲突\n0\n\n当前没有可展示的活动计划\n页面不会用演示活动填充；请补充正式业务数据后重新读取。\n\n可创建内部草稿\n草稿操作形成版本与业务回执；对外发布仍需独立审批。\n保存为草稿\n重新生成\n批准并发布\nAI 策划助手\n基于正式数据实时核对\n可审阅\n活动计划已读取\n\n已完成数量与来源核对；需要人工审阅后才能进入后续内部流程。\n\n风险决策\n先生成草稿\n折扣与毛利边界\n\n确认活动折扣不突破正式审批的毛利边界。\n\n经营约束\n采纳建议并重算\n保持当前方案\n暂缓决策\n尚未写入草稿；不会自动采用数值或修改业务数据。\n库存与供给边界\n\n确认选品与承诺量不超过当前正式可售库存。\n\n经营约束\n采纳建议并重算\n保持当前方案\n暂缓决策\n尚未写入草稿；不会自动采用数值或修改业务数据。\n撤销最近一次风险决策\n证据链 · 边界\n0 项待补条件\n可信空集合\n\n只证明当前数据截止面的正式读取结果，不授权内容生产、排期或发布。\n\n专业贡献与数据审计\n租户 org-org/dev-project\n评估 2026/10/16 00:33:15\n无后续页：是\n重新读取",
+      "documentOverflow": false
+    },
+    "screenshot": "actual-content-campaign-1440-r1.png",
+    "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+  },
+  {
+    "route": "operations",
+    "module": "operations",
+    "method": "getOperationsView",
+    "read": {
+      "who": {
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "tokenKind": "oidc"
+      },
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.operations-view/v1",
+      "readiness": "degraded",
+      "dataCutoff": "2026-10-15T16:33:28.275679Z"
+    },
+    "dom": {
+      "moduleId": "ecommerce.operations",
+      "text": "跳到模块主内容\n\n已安装电商工作台\n\n统一运营驾驶舱\n已停用\n专注模式\n技术与数据诊断\necommerce.operations · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n统一运营 · 正式业务处理视图\n重新读取\n业务待办\n7\n七类正式视图\n正式可读\n7\n来源闭合\n需业务复核\n0\n不替代为已处理\n来源总量\n219\n七类业务合计\n已挂接\n169\n当前页 169\n数据差异\n50\n未匹配 + 冲突\n数据截止\n2026/10/16 00:33:27\n评估 2026/10/16 00:33:27\nAI\n跨域运营分诊\n\n按正式订单、库存、履约、支付、售后和运营工单核对待办，并形成可审计的内部处理提案。\n\n外部动作需独立审批\n⌕\n全部\n7\n订单与履约\n4\n库存与告警\n1\n售后与工单\n2\n统一待办 · 内部处理\n50 项建议处理\n库存资料待核对\nProductSku · niushop:1:68\n1\n优先核对\n库存资料待核对\nProductSku · niushop:1:67\n2\n优先核对\n库存资料待核对\nProductSku · niushop:1:74\n3\n优先核对\n库存资料待核对\nProductSku · niushop:1:60\n4\n优先核对\n库存资料待核对\nProductSku · niushop:1:59\n5\n优先核对\n库存资料待核对\nProductSku · niushop:1:58\n6\n优先核对\n库存资料待核对\nProductSku · niushop:1:57\n7\n优先核对\n库存资料待核对\nProductSku · niushop:1:56\n8\n优先核对\n库存资料待核对\nProductSku · niushop:1:54\n9\n优先核对\n库存资料待核对\nProductSku · niushop:1:48\n10\n优先核对\n库存资料待核对\nProductSku · niushop:1:47\n11\n优先核对\n库存资料待核对\nProductSku · niushop:1:38\n12\n优先核对\n库存资料待核对\nProductSku · niushop:1:29\n13\n优先核对\n库存资料待核对\nProductSku · niushop:1:30\n14\n优先核对\n库存资料待核对\nProductSku · niushop:1:31\n15\n优先核对\n库存资料待核对\nProductSku · niushop:1:32\n16\n优先核对\n库存资料待核对\nProductSku · niushop:1:33\n17\n优先核对\n库存资料待核对\nProductSku · niushop:1:34\n18\n优先核对\n库存资料待核对\nProductSku · niushop:1:73\n19\n优先核对\n库存资料待核对\nProductSku · niushop:1:72\n20\n优先核对\n库存资料待核对\nProductSku · niushop:1:28\n21\n优先核对\n库存资料待核对\nProductSku · niushop:1:66\n22\n优先核对\n库存资料待核对\nProductSku · niushop:1:65\n23\n优先核对\n库存资料待核对\nProductSku · niushop:1:64\n24\n优先核对\n库存资料待核对\nProductSku · niushop:1:26\n25\n优先核对\n库存资料待核对\nProductSku · niushop:1:71\n26\n优先核对\n库存资料待核对\nProductSku · niushop:1:70\n27\n优先核对\n库存资料待核对\nProductSku · niushop:1:69\n28\n优先核对\n库存资料待核对\nProductSku · niushop:1:61\n29\n优先核对\n库存资",
+      "documentOverflow": false
+    },
+    "screenshot": "actual-operations-1440-r1.png",
+    "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+  },
+  {
+    "route": "creator-growth",
+    "module": "creator-growth",
+    "method": "getCreatorGrowthView",
+    "read": {
+      "who": {
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "tokenKind": "oidc"
+      },
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.creator-growth-view/v1",
+      "readiness": "degraded",
+      "dataCutoff": "2026-10-15T16:33:46.423560Z"
+    },
+    "dom": {
+      "moduleId": "ecommerce.creator-growth",
+      "text": "跳到模块主内容\n\n已安装电商工作台\n\n达人邀约与签约驾驶舱\n\n菜单名：达人邀约驾驶舱\n\n已停用\n专注模式\n技术与数据诊断\necommerce.creator-growth · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n达人库\n招募漏斗\n商务签约\n履约效果\n长期关系\n达人与机构\n0 条正式记录\n导入准备\n全部\n个人达人\n机构\n有合作记录\n\n全部 · 全部关键词 · 0 条\n\n栖月汇商品\n正式商品 57\n独特宽松时尚慵懒软糯毛衣半裙两件套\n¥1.00 · 库存 20\n来源更新 2026/9/17\n跨年氛围感穿搭姐系贵感小香风本命年红色翻领收腰外套裙裤套装女\n¥1.00 · 库存 100\n来源更新 2026/9/17\n狐狸毛大毛领温柔气质千金长款收腰羊毛大衣\n¥1.00 · 库存 100\n来源更新 2026/9/17\n面膜套餐\n¥99.00 · 库存 3\n来源更新 2026/9/17\n候选\n0\n达人与品牌、商品和受众的匹配\n邀约\n0\n候选去重、准备、批准与回复\n合作\n0\n意向、条款、签约与生效\n交付\n0\n内容交付、效果窗口与异常\n关系\n0\n分层、复邀窗口与关系事件\n没有匹配记录\n\n调整关键词或先准备候选来源与筛选条件。\n\n0\n候选总量\n0\n符合条件\n0\n需要复核\n0\n已去重\n0\n当前选中\n达人库\n候选匹配概览\n0 条正式记录\n当前达人库为空\n\n栖月汇当前数据截止面没有可回链的达人或机构记录。可以先整理候选来源和筛选条件，再进入正式导入流程。\n\n准备候选条件\nAI 匹配分析 · 导购顾问\n0 条依据\n当前判断\n当前没有可验证业务对象\n\n核对候选与商品、内容领域和受众是否匹配。没有正式记录时不生成姓名、联系方式、匹配分或经营结果。\n\n下一步动作\n补充候选条件\n补充预算权益\n补充交付物证据\n准备候选条件\n重新读取业务数据\n页面准备不会自动触达达人，也不会代替合同、履约或关系记录。\n共享数字同事\n导购顾问\n数据参谋\n活动策划师\n内容官\n私域管家\n技术与数据诊断\n数据截止 2026/10/16 00:33:45\n重新读取",
+      "documentOverflow": false
+    },
+    "screenshot": "actual-creator-growth-1440-r1.png",
+    "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+  },
+  {
+    "route": "media-studio",
+    "module": "media-studio",
+    "method": "getMediaStudioView",
+    "read": {
+      "who": {
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "tokenKind": "oidc"
+      },
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.media-studio-view/v6",
+      "readiness": "degraded",
+      "dataCutoff": "2026-10-15T16:34:08.438911Z"
+    },
+    "dom": {
+      "moduleId": "ecommerce.media-studio",
+      "text": "跳到模块主内容\n\n已安装电商工作台\n\n多媒体任务全过程闭环工作台\n\n菜单名：多媒体内容生产\n\n已停用\n专注模式\n技术与数据诊断\necommerce.media-studio · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n重新读取\n栖月汇微商城\n内容官（负责人未绑定）\n场景：未绑定\n数据截止 2026/10/16 00:34:07\n今日计划：待核对\n部分数据可用\n仅展示已确认部分，缺失范围不会以零值代替。\n数据截止：2026-10-15T16:34:07.074641Z\n全过程治理与累计审计\n种草文案\n待核对\n数据来源未闭合\n短视频\n待核对\n数据来源未闭合\n数字人直播\n0\n正式引用可回链\n整体成交贡献\n待核对\n当前合同未提供该指标\n种草文案\n等待条件\n短视频\n等待条件\n数字人直播\n可读取\n当前内容类型\n交付与复盘\n正式数据可读\n\n当前生产任务尚无交付成果。\n\n当前没有复核事项；可信空不等于已发布。\n\n当前工作区\n生产中心 · 数字人直播\n历史版本\n导出清单\n样片准备\n选择模板\n安排生产\n直播控制\n业务模块\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n生产能力\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n负责人\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n生产服务\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n预算\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n发布条件\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n\n当前没有可挂接的媒体业务数据；空数据与待补条件分开表达。\n\n内容官建议\n先补齐可信生产上下文\n\n建议只来自当前租户可验证数据，不用演示内容代替。\n\n证据与版本\n\n集中查看素材依据、内容版本和评审记录。\n\n补充生产证据\n查看版本\n交付准备\n\n发布审批只进入内部审核，不执行任何外部平台动作。\n\n创建交付草稿\n评审清单\n提交发布审批\n所需条件与下一步\n已选择 0 项\n全选当前页\n批量生产准备\n导出清单\n所有动作仅准备当前工作台内部草稿或发布审批，不执行外部发布\n租户 org-org/dev-project\n统一数据截止 2026/10/16 00:34:07\n当前为单页视图",
+      "documentOverflow": false
+    },
+    "screenshot": "actual-media-studio-1440-r1.png",
+    "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+  },
+  {
+    "route": "analyst",
+    "module": "analyst",
+    "method": "getAnalystView",
+    "read": {
+      "who": {
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "tokenKind": "oidc"
+      },
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.analyst-view/v2",
+      "readiness": "degraded",
+      "dataCutoff": "2026-10-15T16:34:19.016596Z"
+    },
+    "dom": {
+      "moduleId": "ecommerce.analyst",
+      "text": "跳到模块主内容\n渠道未选择 · 数据截止未验证\n经营参谋（负责人未绑定）\n数据截止未验证 · 新鲜度待核对\n业务操作：只读\n专注模式\n技术与数据诊断\necommerce.analyst · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n经营计划 · 正式业务数据只读视图\n重新读取\n部分数据可用\n仅展示已确认部分，缺失范围不会以零值代替。\n数据截止：2026-10-15T16:34:18.085651Z\n经营参谋说明\n只读 · 指标、证据与质量同截止面\n跨域贡献与学习治理说明\n正式业务能力 → 数字同事 → 工作台贡献\n生意探究\n只读\n经营总览\n等待条件\n驱动因素\n等待条件\n问题诊断\n等待条件\n增长计划\n等待条件\n效果复盘\n等待条件\n证据链\n等待条件\n数据质量\n可读取\n经营分析 · 证据驱动\n生意探究\n只读\n只读边界\n仅当前租户可见的正式分析记录\n按渠道、经营实体与分析记录三级选择\n当前为只读模式；周期计划、评审与交接未开启\n查看数据审计信息\n1 · 渠道视角\nniushop:1\n来自 Case 的 exact ChannelRevision，不推测渠道名称。\n2 · 经营实体\nniushop:1:1\nniushop:1\n同名实体按渠道隔离；上游切换后旧实体内容立即清空。\n3 · 分析记录\n栖月汇经营参谋首次全店基线分析 · 首次全店经营分析\n栖月汇全店基线与商品尖刀验证 · 首次全店经营分析\nCase revision、生命周期和运行记录均来自 canonical authority。\ninitial_store_analysis\n栖月汇经营参谋首次全店基线分析\nACTIVE\nCase\ncase-qyh-advisor-baseline-20260917 · r4\n渠道\nniushop:1\n经营实体\nniushop:1:1\n创建时间\n2026/9/17 07:47:54\n\n当前 Case 尚无 Run；不生成演示记录。重新读取 Run\n\n租户 org-org/dev-project · 只读 · 未读取真实源系统\n租户 org-org/dev-project\n统一数据截止 2026/10/16 00:34:18\n待核对项不显示为 0\n经营研究 · 只读\n研究任务与业务进度\n重新读取\n\n研究、查询与知识整理任务分别展示；阶段结果、待核对状态和正式回读结果均以当前租户数据为准。\n\n可信空集合\n当前租户没有可读取的异步任务。",
+      "documentOverflow": false
+    },
+    "screenshot": "actual-analyst-1440-r1.png",
+    "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+  },
+  {
+    "route": "price-governance",
+    "module": "price-governance",
+    "method": "getPriceGovernanceView",
+    "read": {
+      "who": {
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "tokenKind": "oidc"
+      },
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.price-governance-view/v2",
+      "readiness": "degraded",
+      "dataCutoff": "2026-10-15T16:34:43.774818Z"
+    },
+    "dom": {
+      "moduleId": "ecommerce.price-governance",
+      "text": "跳到模块主内容\n\n已安装电商工作台\n\n价格治理驾驶舱\n已停用\n专注模式\n技术与数据诊断\necommerce.price-governance · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n栖月汇 · 品牌待核对 · 核心商品待核对\n数据参谋（负责人未绑定）+ 活动策划师 + 导购顾问\n价格治理视图已读取\n3 个视图待复核\n刷新数据\n等待必要条件\n页面保持可浏览；补齐所需数据后可继续处理。\n数据截止：2026-10-15T16:34:42.425322Z\n价格治理全过程与累计审计\n同款价格治理\n等待条件\n竞品比价\n等待条件\n调度控制台\n等待条件\n当前业务视图\n同款价格治理\n等待数据\n价格治理流程\n价格治理任务链\n采集证据\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n同款判定\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n策略与业务事项\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n通知就绪\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n建议交接\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n自动调价\n待核对\n\n专业调价能力未开启\n\n查看数据审计信息\n全部\n可比\n待复核\n已排除\n核心商品列表\n待核对\n异常候选\n未挂接\n待复核商品\n未挂接\n可比报价\n待核对\n\n当前没有可挂接的价格观察；可信空与待补条件分开表达。\n\nMonitoringPolicy → Action Proposal\n内部价格策略\n尚未提交\n\n请选择当前视图中的价格观察；没有 exact 来源时不生成策略。\n\n新建监测策略\n对比预览\n执行结果\n批准预览\n撤回策略\n立即采集预检\n数字同事\n数字同事协作\n数据参谋主责 · 正式数据待挂接\n\n活动策划师与导购顾问只读校验，不生成价格结论。\n\n所需条件与下一步\n补充正式价格数据\n租户 org-org/dev-project\n统一数据截止 2026/10/16 00:34:42\n自动调价关闭",
+      "documentOverflow": false
+    },
+    "screenshot": "actual-price-governance-1440-r1.png",
+    "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+  },
+  {
+    "route": "customer",
+    "module": "customer",
+    "method": "getCustomerView",
+    "read": {
+      "who": {
+        "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+        "orgId": "org-org",
+        "projectId": "dev-project",
+        "tokenKind": "oidc"
+      },
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "schemaVersion": "aos.ecommerce-workshop.customer-view/v1",
+      "readiness": "degraded",
+      "dataCutoff": "2026-10-15T16:34:57.738264Z"
+    },
+    "dom": {
+      "moduleId": "ecommerce.customer",
+      "text": "跳到模块主内容\n\n已安装电商工作台\n\n客户关系工作台\n已停用\n专注模式\n技术与数据诊断\necommerce.customer · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n重新读取\n栖月汇 · 客户状态待核对\n私域管家（负责人未绑定）\n任务驱动 · 只读计划 · 客户产物\n高价值待核对 · 潜力待核对 · 活跃待核对\n沉睡待核对 · 流失预警待核对\n等待必要条件\n页面保持可浏览；补齐所需数据后可继续处理。\n数据截止：2026-10-15T16:34:56.510961Z\n客户治理全过程与累计审计\n客户最小投影\n等待条件 · 正式来源 0\n客户分群\n等待条件 · 正式来源 0\n生命周期旅程\n等待条件 · 正式来源 0\n对话与批次\n等待条件 · 正式来源 0\n客户关系视图\n客户最小投影\n等待必要条件\n客户最小集\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n同意依据\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n分群投影\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n旅程投影\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n对话摘要\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n触达批次\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n全部\n可披露\n待复核\n已排除\n\n已读取正式来源 0 条；允许披露 0 条，0 条因同意、目的或留存条件未闭合而不展示客户明细。\n\nSegment → Journey → Dialogue Draft\n内部客户经营计划\n尚未提交\n\n请选择当前视图中的最小客户投影；无 exact ref 时不生成计划。\n\n新建经营计划\n影响预览\n执行记录\n审批预览\n撤回计划\n导入客户预检\n发送预检\n所需条件与下一步\n补充同租户、同数据截止的客户最小化正式数据\n客户关系正式数据来源\n查看审计状态码\n租户 org-org/dev-project\n统一数据截止 2026/10/16 00:34:56\n同意与留存规则已执行",
+      "documentOverflow": false
+    },
+    "screenshot": "actual-customer-1440-r1.png",
+    "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+  }
+]

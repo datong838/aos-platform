@@ -1,0 +1,27 @@
+{
+  "route": "price-governance",
+  "module": "price-governance",
+  "method": "getPriceGovernanceView",
+  "read": {
+    "who": {
+      "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+      "orgId": "org-org",
+      "projectId": "dev-project",
+      "tokenKind": "oidc"
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "schemaVersion": "aos.ecommerce-workshop.price-governance-view/v2",
+    "readiness": "degraded",
+    "dataCutoff": "2026-10-15T16:34:43.774818Z"
+  },
+  "dom": {
+    "moduleId": "ecommerce.price-governance",
+    "text": "跳到模块主内容\n\n已安装电商工作台\n\n价格治理驾驶舱\n已停用\n专注模式\n技术与数据诊断\necommerce.price-governance · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n栖月汇 · 品牌待核对 · 核心商品待核对\n数据参谋（负责人未绑定）+ 活动策划师 + 导购顾问\n价格治理视图已读取\n3 个视图待复核\n刷新数据\n等待必要条件\n页面保持可浏览；补齐所需数据后可继续处理。\n数据截止：2026-10-15T16:34:42.425322Z\n价格治理全过程与累计审计\n同款价格治理\n等待条件\n竞品比价\n等待条件\n调度控制台\n等待条件\n当前业务视图\n同款价格治理\n等待数据\n价格治理流程\n价格治理任务链\n采集证据\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n同款判定\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n策略与业务事项\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n通知就绪\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n建议交接\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n自动调价\n待核对\n\n专业调价能力未开启\n\n查看数据审计信息\n全部\n可比\n待复核\n已排除\n核心商品列表\n待核对\n异常候选\n未挂接\n待复核商品\n未挂接\n可比报价\n待核对\n\n当前没有可挂接的价格观察；可信空与待补条件分开表达。\n\nMonitoringPolicy → Action Proposal\n内部价格策略\n尚未提交\n\n请选择当前视图中的价格观察；没有 exact 来源时不生成策略。\n\n新建监测策略\n对比预览\n执行结果\n批准预览\n撤回策略\n立即采集预检\n数字同事\n数字同事协作\n数据参谋主责 · 正式数据待挂接\n\n活动策划师与导购顾问只读校验，不生成价格结论。\n\n所需条件与下一步\n补充正式价格数据\n租户 org-org/dev-project\n统一数据截止 2026/10/16 00:34:42\n自动调价关闭",
+    "documentOverflow": false
+  },
+  "screenshot": "actual-price-governance-1440-r1.png",
+  "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+}

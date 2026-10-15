@@ -1,0 +1,26 @@
+{
+  "route": "cockpit",
+  "module": "task-cockpit",
+  "method": "getTaskCockpitCore",
+  "read": {
+    "who": {
+      "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+      "orgId": "org-org",
+      "projectId": "dev-project",
+      "tokenKind": "oidc"
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
+    "readiness": "degraded"
+  },
+  "dom": {
+    "moduleId": "ecommerce.task-cockpit",
+    "text": "跳到模块主内容\n\n已安装电商工作台\n\n电商日常任务总控大屏\n\n菜单名：日常任务总控大屏\n\n已停用\n专注模式\n技术与数据诊断\necommerce.task-cockpit · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n2\n今日经营任务\n已排除系统验收记录\n0\n执行中\n活跃状态\n1\n已绑定执行记录\n不补造缺失记录\n0\n待补条件\n影响任务执行\n1\n待规划\n尚未进入执行\n2\n待接入\n需要补充数据\n00:31\n评估截止\n2026/10/16\nϟ\n下达\n暂无可验证推荐任务\n任务状态\n全部状态\n待规划\n规划中\n待审批\n已批准\n执行中\n已暂停\n已完成\n失败\n已取消\n已回滚\n重新读取\n执行组\n客服专员\n状态待核对\n私域管家\n状态待核对\n导购顾问\n状态待核对\n当日经营任务流 · 执行进度\n2 项\n业务任务\n全店经营基线分析\n已取消\n业务任务\n执行记录：已取消 · 第 4 版\n业务任务\n栖月汇全店基线与商品尖刀验证\n待规划\n业务任务\n尚无执行记录\n策划组\n数据参谋\n状态待核对\n内容官\n状态待核对\n活动策划师\n状态待核对\n复盘 · 经验沉淀\n2026/10/16\n今日复盘\n\n今日没有可回读的终结任务\n不使用静态复盘结果或伪成功状态。\n\n复盘所需数据缺口 2 项\nAI 改进建议\n\n今日没有可回读的改进观察\n不复制视觉稿示例建议。\n\n经验沉淀 Wiki · 今日入库\n\n今日没有入库记录\n不复制视觉稿示例 SOP 条目。\n\n共享技能 AGENT\n素材采集\n暂不可用\n策略规划\n暂不可用\n文案生成\n暂不可用\n脚本撰写\n暂不可用\n语音合成\n暂不可用\n视频合成\n暂不可用\n内容审核\n暂不可用\n直播编排\n暂不可用\n平台适配\n暂不可用\n数据复盘\n暂不可用\n明日预告 · 仅显示已排期业务任务\n1 项待规划\n内容评审后的经营反馈\n\n原评审通过后形成的复盘、效果观察与方法候选；这里只读，不代表当前可执行授权。\n\n当前没有可回读的内容评审反馈。\n\n运行、发布与审计上下文\n保持原完整功能；默认收起以恢复视觉稿首屏结构",
+    "documentOverflow": false
+  },
+  "screenshot": "actual-cockpit-1440-r1.png",
+  "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+}

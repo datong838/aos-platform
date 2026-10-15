@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "d936d41ed62324085ba99229dbe53b090423a2407fb8c6a2b2feba4baab07705",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-creator-visual-narrow-layout-20261015-design-r2",
+    "task_id": "qyh-creator-visual-narrow-layout-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+      "authority_revision": "AOS-002040",
+      "files": {
+        ".evidence/qyh-creator-visual-narrow-layout-20261015/design-review-material-r2.txt": "6a8fa6a6b539cf37378edc1536a538470e63653d0bc38441299a9aa075ccf500"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "方案以当前真实1280与1180列宽超可用宽及hidden裁切为依据，仅达人主视觉base和既有media中栏minmax下限归0，保留左右栏/内部滚动/五阶段/业务边界/客户pointer，机制与原中栏flex产品合同一致。",
+        "evidence": "材料EVIDENCE initial-three-width-red-r1.json：1280时gridColumns=260px 520px 320px、boardScrollWidth=1100 > boardClientWidth=972、overflowX=hidden；EVIDENCE adjacent-breakpoint-red-r1.json：1180时columns=225px 460px 285px、右界1278。源码文件apps/web/src/styles/45-ecommerce-workshop.css：.creator-growth-board grid-template-columns含minmax(520px,1fr)，@media(max-width:1180px)含minmax(460px,1fr)。方案仅提改minmax下限归0；STAGES五阶段、preparation panel、contract/delivery等边界保留，客户trusted pointer不变。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "方案要求中栏收缩后长表文本/指标/内部末尾/右侧关键控件及普通输入可达、三宽及1180原稿对照；不隐藏右栏、不填演示、不放开发送签约或用document无横滚代替子区完整可见，风险和回滚充分。",
+        "evidence": "文件45-ecommerce-workshop.css中.creator-growth-main/.creator-growth-analysis/.creator-growth-directory均有min-width:0/overflow:auto，metrics/grid与preparation panel已存在；material风险段明确'不隐藏右栏、不填演示、不放开发送签约'，并列出内部滚动可达性、键盘焦点、普通native输入buttons1/0回读、回滚仅本CSS两处值等验证门。证据文件initial-three-width-red-r1.json与adjacent-breakpoint-red-r1.json提供1280/1440/1920/1180四宽几何与原稿参照。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前受支持同owner非重叠续期与Git源码字节证明完整，方案先独立审查再最小代码/冻结测试类型构建/独立质量/精确Web维护门/原真人和650及现场复审后交付；均为未来门，不声称代码测试已完成，完整231Goal和daily/aos2原边界保留。",
+        "evidence": "EVIDENCE same-owner-lease-renewal-r1.json：owner codex-01a13484-f019-7d82-94ce-812396db9124下qyh-creator-visual-narrow-layout-20261015与qyh-restoration-readonly-continuation-r13-20261015均ACTIVE至2026-10-16T08:00:00Z，excluded_scope非重叠，noExpiredReviewRevived=true，otherLeasesPreserved=38。材料HEAD=40100ba60a3d08375e59d8e3ddfec38c8fc5e51c，CSS SHA=e9f83bab...，明确'为未来门，不声称代码测试已完成'，验证门1-7及maintenance-r13/Web764/PG Started/650一致性与daily/aos2保留陈述完整。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前设计复核PASS基线等待开码；执行前需Prime合法消费本复核结果，随后按门1-7依次最小改CSS、冻结snapshot、跑类型/构建/组件累计、独立质量与精确Web维护、原真人及650与现场复审后交付，全程不改非声明文件。"
+  }
+}

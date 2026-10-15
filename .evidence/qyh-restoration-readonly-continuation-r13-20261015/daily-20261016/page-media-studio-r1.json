@@ -1,0 +1,27 @@
+{
+  "route": "media-studio",
+  "module": "media-studio",
+  "method": "getMediaStudioView",
+  "read": {
+    "who": {
+      "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+      "orgId": "org-org",
+      "projectId": "dev-project",
+      "tokenKind": "oidc"
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "schemaVersion": "aos.ecommerce-workshop.media-studio-view/v6",
+    "readiness": "degraded",
+    "dataCutoff": "2026-10-15T16:34:08.438911Z"
+  },
+  "dom": {
+    "moduleId": "ecommerce.media-studio",
+    "text": "跳到模块主内容\n\n已安装电商工作台\n\n多媒体任务全过程闭环工作台\n\n菜单名：多媒体内容生产\n\n已停用\n专注模式\n技术与数据诊断\necommerce.media-studio · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n重新读取\n栖月汇微商城\n内容官（负责人未绑定）\n场景：未绑定\n数据截止 2026/10/16 00:34:07\n今日计划：待核对\n部分数据可用\n仅展示已确认部分，缺失范围不会以零值代替。\n数据截止：2026-10-15T16:34:07.074641Z\n全过程治理与累计审计\n种草文案\n待核对\n数据来源未闭合\n短视频\n待核对\n数据来源未闭合\n数字人直播\n0\n正式引用可回链\n整体成交贡献\n待核对\n当前合同未提供该指标\n种草文案\n等待条件\n短视频\n等待条件\n数字人直播\n可读取\n当前内容类型\n交付与复盘\n正式数据可读\n\n当前生产任务尚无交付成果。\n\n当前没有复核事项；可信空不等于已发布。\n\n当前工作区\n生产中心 · 数字人直播\n历史版本\n导出清单\n样片准备\n选择模板\n安排生产\n直播控制\n业务模块\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n生产能力\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n负责人\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n生产服务\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n预算\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n发布条件\n本期无记录\n\n已完成数据校验，本期没有对应业务记录\n\n正式数据来源已校验\n查看数据审计信息\n\n当前没有可挂接的媒体业务数据；空数据与待补条件分开表达。\n\n内容官建议\n先补齐可信生产上下文\n\n建议只来自当前租户可验证数据，不用演示内容代替。\n\n证据与版本\n\n集中查看素材依据、内容版本和评审记录。\n\n补充生产证据\n查看版本\n交付准备\n\n发布审批只进入内部审核，不执行任何外部平台动作。\n\n创建交付草稿\n评审清单\n提交发布审批\n所需条件与下一步\n已选择 0 项\n全选当前页\n批量生产准备\n导出清单\n所有动作仅准备当前工作台内部草稿或发布审批，不执行外部发布\n租户 org-org/dev-project\n统一数据截止 2026/10/16 00:34:07\n当前为单页视图",
+    "documentOverflow": false
+  },
+  "screenshot": "actual-media-studio-1440-r1.png",
+  "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+}

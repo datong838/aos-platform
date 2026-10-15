@@ -1,0 +1,27 @@
+{
+  "route": "content-campaign",
+  "module": "content-campaign",
+  "method": "getContentCampaignView",
+  "read": {
+    "who": {
+      "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+      "orgId": "org-org",
+      "projectId": "dev-project",
+      "tokenKind": "oidc"
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "schemaVersion": "aos.ecommerce-workshop.content-campaign-view/v1",
+    "readiness": "degraded",
+    "dataCutoff": "2026-10-15T16:33:16.016256Z"
+  },
+  "dom": {
+    "moduleId": "ecommerce.content-campaign",
+    "text": "跳到模块主内容\n\n已安装电商工作台\n\n内容与活动工作台\n已停用\n专注模式\n技术与数据诊断\necommerce.content-campaign · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n活动策划\n内容日历\n日常模板\n栖月汇微商城\n＋ 新建活动\n暂无数据\n服务已返回空集合，没有使用示例数据填充。\n数据截止：2026-10-15T16:33:15.095722Z\n活动列表\n筛选\n当前数据范围\n3 个视图可读取\n活动计划\n活动目标与节奏\n可读取 · 0/0\n内容日历\n日期、渠道与负责人\n可读取 · 0/0\n主内容与变体\n主内容与渠道版本\n可读取 · 0/0\n没有活动记录？\n\n填写中央活动目标即可生成内部草稿；对外发布仍需独立审批。\n\nAI 策划助手\n仅消费当前正式业务数据\n生成方案\n基于当前数据：\n读取正式活动计划\n核对内容日历\n关联主内容与渠道版本\n当前正式数据可供审阅\n只读呈现正式业务事实，不代表已批准或发布。\n只读\n当前业务视图\n活动概览\n正式数据可读\n\n活动计划\n正式业务数据已挂接\n\n可评估\n0\n已挂接\n0\n未匹配\n0\n冲突\n0\n\n当前没有可展示的活动计划\n页面不会用演示活动填充；请补充正式业务数据后重新读取。\n\n可创建内部草稿\n草稿操作形成版本与业务回执；对外发布仍需独立审批。\n保存为草稿\n重新生成\n批准并发布\nAI 策划助手\n基于正式数据实时核对\n可审阅\n活动计划已读取\n\n已完成数量与来源核对；需要人工审阅后才能进入后续内部流程。\n\n风险决策\n先生成草稿\n折扣与毛利边界\n\n确认活动折扣不突破正式审批的毛利边界。\n\n经营约束\n采纳建议并重算\n保持当前方案\n暂缓决策\n尚未写入草稿；不会自动采用数值或修改业务数据。\n库存与供给边界\n\n确认选品与承诺量不超过当前正式可售库存。\n\n经营约束\n采纳建议并重算\n保持当前方案\n暂缓决策\n尚未写入草稿；不会自动采用数值或修改业务数据。\n撤销最近一次风险决策\n证据链 · 边界\n0 项待补条件\n可信空集合\n\n只证明当前数据截止面的正式读取结果，不授权内容生产、排期或发布。\n\n专业贡献与数据审计\n租户 org-org/dev-project\n评估 2026/10/16 00:33:15\n无后续页：是\n重新读取",
+    "documentOverflow": false
+  },
+  "screenshot": "actual-content-campaign-1440-r1.png",
+  "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+}

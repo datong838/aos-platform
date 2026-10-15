@@ -1,0 +1,23 @@
+{
+  "api": {
+    "pid": 72057,
+    "port": 18080,
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+    "command": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python -m uvicorn a0v_qyh_restored_http:management_app --factory --host 127.0.0.1 --port 18080 --workers 1 --no-access-log --log-level warning",
+    "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c"
+  },
+  "web": {
+    "pid": 72110,
+    "port": 18434,
+    "cwd": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "command": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/web-server.mjs",
+    "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c"
+  },
+  "pg": {
+    "id": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "startedAt": "2026-10-15T16:28:04.112157693Z"
+  },
+  "readyListenersOnly": true,
+  "wholeGoalComplete": false
+}

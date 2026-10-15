@@ -1,0 +1,1468 @@
+{
+  "network": [
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "method": "GET",
+      "status": 400
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/auth/oidc",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/memories",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/candidates",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/improvement-observations",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/capability-catalog",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/agent-registry",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/candidates",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/memories",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/memory-authority/improvement-observations",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/capability-catalog",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/agent-registry",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit/feedback",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/task-cockpit",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/auth/oidc",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/auth/oidc",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations/cases",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations/cases",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/operations",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/auth/oidc",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/creator-growth",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/auth/oidc",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/media-studio",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/auth/oidc",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/async-jobs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/aip/async-jobs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce/investigations/cases",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce/investigations/cases",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce/investigations/cases/case-qyh-advisor-baseline-20260917/runs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/analyst",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/auth/oidc",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/auth/oidc",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "businessNonGet": [],
+  "normalAuthPosts": [
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    }
+  ],
+  "unknownOrBusinessEffectsRetried": false
+}

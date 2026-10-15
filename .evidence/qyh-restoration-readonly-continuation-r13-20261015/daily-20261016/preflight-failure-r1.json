@@ -1,0 +1,7 @@
+{
+  "checkedAt": "2026-10-15T16:26:42.687425+00:00",
+  "terminalExitCode": 1,
+  "reason": "Prepared report filename daily-web-source.json differed from configured web-source.json",
+  "resolved": "Rename the prepared report only; no source change; no phase effect or intent existed",
+  "serviceEffects": false
+}

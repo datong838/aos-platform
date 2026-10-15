@@ -1,0 +1,341 @@
+
+FILE implementation-plan-r3.md
+# 达人窄窗右栏裁切：同原稿对照与最小实施方案
+
+## Rules 与完整目标
+
+使用AOS工程交付闭环、Product Design audit/CDP Bridge、231完整串行计划及228达人邀约与签约驾驶舱。Authority2040，唯一写者codex-01a13484-f019-7d82-94ce-812396db9124，当前Task qyh-creator-visual-narrow-layout-20261015及maintenance-r13已受支持同owner CAS续期至2026-10-16T08:00:00Z，其他38租约保持非重叠；其他38租约不动。完整自然有来源经营首链/安装配置禁入恢复卸载重装/八真实场景全部视觉/持续观察发布目标不缩小，原唯一真人授权及fullC真预算最终人审边界保持。原DB只读/HostworkerProvider OFF/unknown旧12不重放/disabled Schedule不启/商城源不读/noPush/用户dirty保护；daily每次实际aos最新m1原卷全面PGAPIWeb与aos2不重启不变。
+
+## 已核实的当前事实
+
+审计起始m1 HEAD90a440c1ae825d6d220c35a001399530666b3ba5；当前HEAD40100ba60a3d08375e59d8e3ddfec38c8fc5e51c，产品源码逐字节相同，实际Web61045/8dbb764源、API54057/0b0c888 backend与当前一致、原PG同权威卷/Started20:36:36/schema161/650/绑定0。上一波客户两处pointer修复已交付并保留，不重新跑407/SDK代替本波证据。当前CSS及CreatorGrowthPage/test无用户dirty，本波尚未改任何产品文件。
+
+原owned target通过原真人正常登录/me核身份org-org/dev-project/subject6f31...c657。首次侧栏普通指针导航未确认URL变化，回读仍客户页，保存失败；随后沿可见链接exact href一次GET，正常表单登录200，首次board可见等待超时，后续fresh DOM明确板面为visible grid、根及四辅助GET200，无业务nonGET。原稿首次goto观察超时后回读URL已到creator，未重复导航。所有失败/等待观察保留，不能把尝试当成功。
+
+真实三宽截图及原workshop-creator-outreach.html同CSS截图共六图已逐组检视。1280时board client972/scroll1100，CSS列260+520+320，右边界1408，overflow:hidden把右128px裁掉；1440为260+552+320、右界1440，1920为260+1032+320、右界1920，均不出现此项裁切。document宽度不溢出不能作为内容未裁切的证明。1180既有media断点另证实client872/scroll970、列225+460+285、右界1278，裁98px；因此不能只修base而留下断点min460。首次采样遇CDP句柄关闭及页面重新出现登录门，已只读核同一原target、正常表单恢复后取到当前证据，未重启Chrome。原稿在1280仍可看完整右栏，中央宽表允许内部滚动而非裁右栏。
+
+## 产品方案军规
+
+达人库、招募、商务签约、履约、长期关系五阶段均保留。默认Draft-only，拒绝/退订服务端阻断复邀、平台接受不等于SIGNED合同、PRELIMINARY不晋升长期核心达人；不抓私有联系方式，不放开邀约发送/合同/履约/审批预算或回执门。当前实际是无正式达人空态，原稿147达人/GMV/匹配分等演示不填实际。原产品中栏flex自适应，与固定520下限冲突；修补应允许中栏在可用宽度内收缩而非隐藏右栏/缩放全页/移除导航或业务条件。
+
+## 文件级实施
+
+首选唯一产品修改 /Users/ddt/work/projects/ai_agent/aos-platform/apps/web/src/styles/45-ecommerce-workshop.css：客户主视觉pointer规则不动；仅creator主视觉.creator-growth-board的base minmax(520px,1fr)改minmax(0,1fr)，以及既有max-width1180断点minmax(460px,1fr)同样改0。保留base左右260/320、断点225/285、现有高度/内部overflow/字号/色彩。三子区已有min-width:0/overflow:auto，允许中间必要内部滚动；右侧说明与控件要完整可见。
+
+仅在实际子区overflow证据证明上述不足时才补最小creator选择器，并先追加方案/独立审查；不猜改组件逻辑。CreatorGrowthPage.tsx及.test.tsx已登记供必要诊断/回归，默认不修改。其他额外共享文件/测试先扩Task Lease。
+
+## 验证与交付门
+
+1. 独立方案Prime PASS合法消费后才开码。当前真实1280几何/原图已为RED；1180既有断点真实邻接反例亦已取得，不用JSDOM无布局测试伪装。
+2. 最小CSS改动后冻结最新Git archive+唯一CSS overlay，不复制用户dirty/.env；运行现有工作台/API组件累计、类型检查和生产构建，保留前后SHA。核客户两pointer声明和他台规则不变。
+3. 若需非空长表/长文本几何，应用明确隔离的原组件fixture，禁止调用原API/执行Actions，不把fixture当真实身份经营证据；额外文件先登记。真实当前页面本波空态先验。
+4. 冻结独立代码质量PASS合法消费后精确提交。maintenance-r13新鲜最新commit Web764完整Git/disk manifest、原PG/API/旧Web61045准确PID/source/entry/租约/head/原650before、独立前效控制器门和一次Web意图更新，unknown只对账，不signal原PG/API/Chrome；不替代daily全面重启。
+5. 同原真人实际1280/1440/1920及1180边界：board三子区right全部不超board/viewport、board scrollWidth不因列最小宽度超client、右栏关键controls可见且普通中心hittest可达、内部滚动可到末尾；核五tabs/搜索筛选只读状态和正常键盘焦点（不点击会产生业务POST的按钮），current empty/blocked文案保留；header/metrics长文不得覆盖相邻格。普通native输入明确buttons1/0并回读状态，不能force/DOMclick。
+6. 同CSS尺寸actual/reference当前截图逐图对照；保留原稿非空与实际空态差异，不称像素全一致/五阶段全经营/a11y完成。必要时正常登录恢复已知expired JWT，不读/导出会话密钥，不重放未知动作。
+7. 当前me/正式只读SDK/匿名与scope deny/businessNonGET[]、fresh650after全表行数hash与before相等及实际版本/卷/端口核验；现场独立Prime→精确Delivery/m1/Authority/Prime七强及下一已登记波。
+
+## 风险与未完成
+
+中栏可收缩后，五项指标、长单词或内表可能产生内部滚动；应明确验证可达性和换行，不用隐藏内容消掉overflow。只承诺本断点裁切切片，手机/任意极窄窗口、非空五阶段、其他台原视觉差距/辅助失败假0/客户任务日志产物与页脚语义、完整经营/预算人审/安装/观察发布全部继续。回滚仅本creator CSS两处值，不改原数据、API、权限、发送或客户已交付pointer。
+
+## 2026-10-16 最新运行基线补充（替代上述旧PID/启动epoch）
+
+每日完整同原卷PG→API→Web已按独立controller r1 PASS合法消费执行，当前PG Started2026-10-15T16:28:04.112157693Z/API72057/Web72110，API8700/Web764均冻结40100ba最新已提交源码，产品CSS/Creator组件与原RED审计逐字节相同。650before/afterPG/final精确一致、八原页面正式SDK200、真实身份和匿名401/未知query400、无业务nonGET；客户真实trusted指针及End/Home焦点已核。维护现场独立复审与Delivery仍待。Authority2040及两个有效Lease不变。此维护完成不替代本Creator波设计/代码/非空布局/原稿对照/正常输入及独立现场复审，不缩小完整Goal。
+
+原design-r1为已知terminal格式失败，raw transport和terminal-invalid完整保留，未合法PASS/未开码；新design-r2复核相同最小方案与最新运行基线，绝不复用旧请求或修写模型输出。
+
+FILE minimal-css-change-r1.json
+{
+  "file": "apps/web/src/styles/45-ecommerce-workshop.css",
+  "before": "e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604",
+  "after": "7e121bbbcf984d2000918a1a703b45bb2f35dc887cdc806d0c2c5e6f13b791b0",
+  "twoCreatorMinWidthsOnly": true,
+  "componentAndBusinessLogicChanged": false,
+  "originalServicesTouched": false
+}
+FILE verify_frozen_web_r1.py
+"""Commit archive plus one CSS overlay; isolated existing tests, type and build."""
+from pathlib import Path, PurePosixPath
+import datetime
+import hashlib
+import io
+import json
+import os
+import subprocess
+import tarfile
+
+E = Path(__file__).resolve().parent
+R = E.parents[1]
+HEAD = '40100ba60a3d08375e59d8e3ddfec38c8fc5e51c'
+CSS = 'apps/web/src/styles/45-ecommerce-workshop.css'
+NODE = '/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node'
+assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=R, text=True).strip() == HEAD
+before = hashlib.sha256((R / CSS).read_bytes()).hexdigest()
+source = E / 'private/candidate-source-r1'
+assert not source.exists() and not (E / 'candidate-freeze-intent-r1.json').exists()
+raw = subprocess.check_output(['git', 'archive', HEAD, 'apps/web', 'packages/ontology-sdk', 'packages/ui-kit'], cwd=R)
+members = {}
+with tarfile.open(fileobj=io.BytesIO(raw)) as archive:
+    for item in archive.getmembers():
+        path = PurePosixPath(item.name)
+        assert not path.is_absolute() and '..' not in path.parts and (item.isfile() or item.isdir())
+        if item.isfile() and not any(x.startswith('.env') for x in path.parts):
+            members[item.name] = archive.extractfile(item).read()
+members[CSS] = (R / CSS).read_bytes()
+with (E / 'candidate-freeze-intent-r1.json').open('x') as stream:
+    json.dump(dict(head=HEAD, source=str(source), overlay={CSS: before}, onlyOneOwnedCSSOverlay=True, userDirtyCopied=False, originalServicesTouched=False), stream, indent=2)
+    stream.flush()
+    os.fsync(stream.fileno())
+source.mkdir(parents=True, mode=0o700)
+for name, body in members.items():
+    path = source / name
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    path.write_bytes(body)
+    path.chmod(0o600)
+manifest = {name: hashlib.sha256(body).hexdigest() for name, body in members.items()}
+assert {str(p.relative_to(source)): hashlib.sha256(p.read_bytes()).hexdigest() for p in source.rglob('*') if p.is_file()} == manifest
+(source / 'apps/web/node_modules').symlink_to(R / 'apps/web/node_modules', target_is_directory=True)
+config = E / 'private/frozen-verification-config-r1.ts'
+with config.open('x') as stream:
+    stream.write('import base from ' + json.dumps(str(source / 'apps/web/vite.config.ts')) + ';\nexport default {...base,cacheDir:' + json.dumps(str(E / 'private/verification-cache-r1')) + ',envDir:' + json.dumps(str(E / 'private/no-env')) + ',test:{...base.test,cache:false}};\n')
+commands = {
+    'workshop-cumulative-r1': [NODE, 'node_modules/vitest/vitest.mjs', 'run', 'src/components/workshop', 'src/api/ecommerceWorkshop', '--config', str(config), '--no-cache'],
+    'web-typecheck-r1': [NODE, 'node_modules/typescript/bin/tsc', '--noEmit'],
+    'web-production-build-r1': [NODE, 'node_modules/vite/bin/vite.js', 'build', '--config', str(config)],
+}
+env = {k: v for k, v in os.environ.items() if not k.startswith(('AOS_', 'PG', 'VITE_', 'OPENAI_'))}
+env.update(CI='1', NO_COLOR='1')
+results = {}
+started = datetime.datetime.now(datetime.timezone.utc).isoformat()
+for name, command in commands.items():
+    with (E / (name + '.log')).open('x') as stream:
+        process = subprocess.run(command, cwd=source / 'apps/web', env=env, stdout=stream, stderr=subprocess.STDOUT)
+    results[name] = dict(returncode=process.returncode, command=command, logSha=hashlib.sha256((E / (name + '.log')).read_bytes()).hexdigest())
+after = hashlib.sha256((R / CSS).read_bytes()).hexdigest()
+assert before == after
+assert all(hashlib.sha256((source / n).read_bytes()).hexdigest() == h for n, h in manifest.items())
+with (E / 'source-verification-r1.json').open('x') as stream:
+    json.dump(dict(baseHead=HEAD, cssBefore=before, cssAfter=after, source=str(source), manifest=manifest, onlyOneOwnedCSSOverlay=True, originalComponentUnchanged=True, noUserDirtyCopied=True, privateBuildAndCache=True, results=results, startedAt=started, finishedAt=datetime.datetime.now(datetime.timezone.utc).isoformat(), originalServicesTouched=False, geometryAcceptance='pending actual browser after guarded Web update; no JSDOM geometry claim'), stream, indent=2)
+print(json.dumps({k: v['returncode'] for k, v in results.items()}))
+assert all(v['returncode'] == 0 for v in results.values())
+
+FILE design-review-result-r2.json
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "d936d41ed62324085ba99229dbe53b090423a2407fb8c6a2b2feba4baab07705",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-creator-visual-narrow-layout-20261015-design-r2",
+    "task_id": "qyh-creator-visual-narrow-layout-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+      "authority_revision": "AOS-002040",
+      "files": {
+        ".evidence/qyh-creator-visual-narrow-layout-20261015/design-review-material-r2.txt": "6a8fa6a6b539cf37378edc1536a538470e63653d0bc38441299a9aa075ccf500"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "方案以当前真实1280与1180列宽超可用宽及hidden裁切为依据，仅达人主视觉base和既有media中栏minmax下限归0，保留左右栏/内部滚动/五阶段/业务边界/客户pointer，机制与原中栏flex产品合同一致。",
+        "evidence": "材料EVIDENCE initial-three-width-red-r1.json：1280时gridColumns=260px 520px 320px、boardScrollWidth=1100 > boardClientWidth=972、overflowX=hidden；EVIDENCE adjacent-breakpoint-red-r1.json：1180时columns=225px 460px 285px、右界1278。源码文件apps/web/src/styles/45-ecommerce-workshop.css：.creator-growth-board grid-template-columns含minmax(520px,1fr)，@media(max-width:1180px)含minmax(460px,1fr)。方案仅提改minmax下限归0；STAGES五阶段、preparation panel、contract/delivery等边界保留，客户trusted pointer不变。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "方案要求中栏收缩后长表文本/指标/内部末尾/右侧关键控件及普通输入可达、三宽及1180原稿对照；不隐藏右栏、不填演示、不放开发送签约或用document无横滚代替子区完整可见，风险和回滚充分。",
+        "evidence": "文件45-ecommerce-workshop.css中.creator-growth-main/.creator-growth-analysis/.creator-growth-directory均有min-width:0/overflow:auto，metrics/grid与preparation panel已存在；material风险段明确'不隐藏右栏、不填演示、不放开发送签约'，并列出内部滚动可达性、键盘焦点、普通native输入buttons1/0回读、回滚仅本CSS两处值等验证门。证据文件initial-three-width-red-r1.json与adjacent-breakpoint-red-r1.json提供1280/1440/1920/1180四宽几何与原稿参照。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前受支持同owner非重叠续期与Git源码字节证明完整，方案先独立审查再最小代码/冻结测试类型构建/独立质量/精确Web维护门/原真人和650及现场复审后交付；均为未来门，不声称代码测试已完成，完整231Goal和daily/aos2原边界保留。",
+        "evidence": "EVIDENCE same-owner-lease-renewal-r1.json：owner codex-01a13484-f019-7d82-94ce-812396db9124下qyh-creator-visual-narrow-layout-20261015与qyh-restoration-readonly-continuation-r13-20261015均ACTIVE至2026-10-16T08:00:00Z，excluded_scope非重叠，noExpiredReviewRevived=true，otherLeasesPreserved=38。材料HEAD=40100ba60a3d08375e59d8e3ddfec38c8fc5e51c，CSS SHA=e9f83bab...，明确'为未来门，不声称代码测试已完成'，验证门1-7及maintenance-r13/Web764/PG Started/650一致性与daily/aos2保留陈述完整。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保持当前设计复核PASS基线等待开码；执行前需Prime合法消费本复核结果，随后按门1-7依次最小改CSS、冻结snapshot、跑类型/构建/组件累计、独立质量与精确Web维护、原真人及650与现场复审后交付，全程不改非声明文件。"
+  }
+}
+FILE design-review-consumption-r2.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-creator-visual-narrow-layout-20261015-design-r2",
+  "task_id": "qyh-creator-visual-narrow-layout-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+    "authority_revision": "AOS-002040",
+    "files": {
+      ".evidence/qyh-creator-visual-narrow-layout-20261015/design-review-material-r2.txt": "6a8fa6a6b539cf37378edc1536a538470e63653d0bc38441299a9aa075ccf500"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "9709ca0138fe0617b557593824e44b64338de8db92df1ce7f8d77801a4351575",
+  "transport_sha256": "b9c7b3cbc1acd829edbd2dc18f4a6bdcf7d6d24a63d3a8db661293470a17a997"
+}
+Exact git diff
+diff --git a/apps/web/src/styles/45-ecommerce-workshop.css b/apps/web/src/styles/45-ecommerce-workshop.css
+index f7f30b2db..651f855cc 100644
+--- a/apps/web/src/styles/45-ecommerce-workshop.css
++++ b/apps/web/src/styles/45-ecommerce-workshop.css
+@@ -2070,7 +2070,7 @@
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-toolbar > div { gap: 8px; }
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-toolbar button { min-width: 102px; padding: 0 18px; cursor: pointer; font-size: 13px; }
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-read-model { min-height: 0; }
+-.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-board { display: grid; grid-template-columns: 260px minmax(520px, 1fr) 320px; height: calc(100vh - 134px); min-height: 560px; overflow: hidden; border-top: 0; background: #fff; }
++.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-board { display: grid; grid-template-columns: 260px minmax(0, 1fr) 320px; height: calc(100vh - 134px); min-height: 560px; overflow: hidden; border-top: 0; background: #fff; }
+ .creator-growth-directory, .creator-growth-main, .creator-growth-analysis { min-width: 0; overflow: auto; }
+ .creator-growth-directory { border-right: 1px solid #dfe5ec; background: #f8fafc; }
+ .creator-growth-directory > header, .creator-growth-analysis > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 54px; box-sizing: border-box; padding: 10px 14px; border-bottom: 1px solid #dfe5ec; background: #fff; }
+@@ -2126,7 +2126,7 @@
+ .creator-growth-business-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }.creator-growth-business-fields label:last-child:nth-child(odd) { grid-column: 1 / -1; }
+ 
+ @media (max-width: 1180px) {
+-  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-board { grid-template-columns: 225px minmax(460px, 1fr) 285px; }
++  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-board { grid-template-columns: 225px minmax(0, 1fr) 285px; }
+ }
+ @media (max-width: 900px) {
+   .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-page { overflow: auto; }
+
+CURRENT CSS lines 2053-2142
+.creator-lifecycle-authority > header span, .creator-lifecycle-authority small { color: var(--aos-text-tertiary); font-size: 10px; }
+.creator-lifecycle-authority > header h2 { margin: 5px 0 0; font-size: 16px; }
+.creator-lifecycle-authority > header > strong { color: var(--aos-accent); font-size: 12px; white-space: nowrap; }
+.creator-lifecycle-ledger { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 14px; border: 1px solid var(--aos-border); background: var(--aos-border); }
+.creator-lifecycle-ledger > div { min-width: 0; padding: 12px; background: var(--aos-surface); }
+.creator-lifecycle-ledger span, .creator-lifecycle-ledger small, .creator-lifecycle-ledger strong { display: block; overflow-wrap: anywhere; }
+.creator-lifecycle-ledger span { color: var(--aos-text-tertiary); font-size: 10px; }
+.creator-lifecycle-ledger strong { margin: 5px 0; font-size: 18px; }
+.creator-lifecycle-lanes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+.creator-lifecycle-lanes li { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); }
+.creator-lifecycle-lanes li > * { overflow-wrap: anywhere; }
+.creator-lifecycle-lanes li span { color: var(--aos-accent); font-size: 11px; }
+.creator-lifecycle-authority > footer { margin-top: 12px; color: var(--aos-text-secondary); font-size: 11px; }
+
+/* R5-D01 · 达人邀约视觉稿三栏工作区 */
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-page { position: relative; display: grid; grid-template-rows: 46px minmax(0, 1fr); overflow: hidden; background: #f3f5f8; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-toolbar { min-height: 46px; height: 46px; padding: 0 18px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-toolbar > div { gap: 8px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-toolbar button { min-width: 102px; padding: 0 18px; cursor: pointer; font-size: 13px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-read-model { min-height: 0; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-board { display: grid; grid-template-columns: 260px minmax(0, 1fr) 320px; height: calc(100vh - 134px); min-height: 560px; overflow: hidden; border-top: 0; background: #fff; }
+.creator-growth-directory, .creator-growth-main, .creator-growth-analysis { min-width: 0; overflow: auto; }
+.creator-growth-directory { border-right: 1px solid #dfe5ec; background: #f8fafc; }
+.creator-growth-directory > header, .creator-growth-analysis > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 54px; box-sizing: border-box; padding: 10px 14px; border-bottom: 1px solid #dfe5ec; background: #fff; }
+.creator-growth-directory > header h2, .creator-growth-analysis > header h2 { margin: 0; font-size: 14px; }
+.creator-growth-directory > header span, .creator-growth-analysis > header span { display: block; margin-top: 3px; color: #8b98aa; font-size: 10px; }
+.creator-growth-directory > header button, .creator-growth-workspace-section > header button { min-height: 29px; padding: 0 10px; border: 1px solid #b8d8f1; border-radius: 3px; background: #fff; color: #2b6cb0; cursor: pointer; font-size: 10px; }
+.creator-growth-search { display: block; padding: 12px 13px 8px; }
+.creator-growth-search input { width: 100%; min-height: 34px; box-sizing: border-box; padding: 0 10px; border: 1px solid #d8e0e9; border-radius: 3px; background: #fff; color: #334155; }
+.creator-growth-filters { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 13px; }
+.creator-growth-filters button { min-height: 25px; padding: 0 8px; border: 1px solid #d8e0e9; border-radius: 14px; background: #fff; color: #64748b; cursor: pointer; font-size: 9px; }
+.creator-growth-filters button.is-selected { border-color: #4299e1; background: #ebf8ff; color: #2b6cb0; }
+.creator-growth-range { margin: 8px 13px 12px; color: #8b98aa; font-size: 9px; }
+.creator-growth-products { display: grid; gap: 6px; margin: 0 13px 12px; padding: 10px; border: 1px solid #dbe4ee; background: #fff; }
+.creator-growth-products > header { display: flex; justify-content: space-between; gap: 8px; color: #64748b; font-size: 9px; }.creator-growth-products > header strong { color: #334155; font-size: 11px; }
+.creator-growth-products article { display: grid; gap: 3px; padding-top: 7px; border-top: 1px solid #edf2f7; }.creator-growth-products article strong { overflow: hidden; color: #334155; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }.creator-growth-products article span, .creator-growth-products article small { color: #718096; font-size: 8px; }
+.creator-growth-products > button { min-height: 28px; border: 1px solid #b8d8f1; background: #fff; color: #2b6cb0; cursor: pointer; font-size: 9px; }
+.creator-growth-stage-list { display: grid; border-top: 1px solid #e4e9ef; }
+.creator-growth-stage-list .content-campaign-slice { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; min-height: 70px; padding: 12px 14px; border: 0; border-bottom: 1px solid #e4e9ef; border-left: 3px solid transparent; background: #fff; color: #334155; text-align: left; cursor: pointer; }
+.creator-growth-stage-list .content-campaign-slice.is-selected { border-left-color: #3182ce; background: #eaf4ff; }
+.creator-growth-stage-list .content-campaign-slice strong { font-size: 12px; }
+.creator-growth-stage-list .content-campaign-slice > span { color: #2b6cb0; font-size: 11px; font-weight: 700; }
+.creator-growth-stage-list .content-campaign-slice small { grid-column: 1 / -1; color: #8b98aa; font-size: 9px; line-height: 1.45; }
+.creator-growth-directory-empty { margin: 14px; padding: 13px; border: 1px dashed #cbd5e1; background: #fff; text-align: center; }
+.creator-growth-directory-empty strong { font-size: 11px; }.creator-growth-directory-empty p { margin: 6px 0 0; color: #8b98aa; font-size: 9px; line-height: 1.5; }
+.creator-growth-main { background: #fff; }
+.creator-growth-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-bottom: 1px solid #dfe5ec; background: #fff; }
+.creator-growth-metrics > div { min-width: 0; min-height: 76px; box-sizing: border-box; padding: 12px 14px; border-right: 1px solid #e5eaf0; }
+.creator-growth-metrics > div:last-child { border-right: 0; }
+.creator-growth-metrics strong, .creator-growth-metrics span, .creator-growth-metrics small { display: block; overflow-wrap: anywhere; }
+.creator-growth-metrics strong { color: #172033; font-size: 20px; }.creator-growth-metrics span { margin-top: 5px; color: #718096; font-size: 10px; }.creator-growth-metrics small { margin-top: 3px; color: #38a169; font-size: 8px; }
+.creator-growth-workspace-section { padding: 18px; }
+.creator-growth-workspace-section > header { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-bottom: 13px; border-bottom: 1px solid #e4e9ef; }
+.creator-growth-workspace-section > header span { color: #8b98aa; font-size: 9px; letter-spacing: .06em; }.creator-growth-workspace-section > header h2 { margin: 3px 0 0; font-size: 16px; }.creator-growth-workspace-section > header > strong { color: #2b6cb0; font-size: 10px; }
+.creator-growth-empty { display: grid; justify-items: center; gap: 8px; margin-top: 18px; padding: 48px 26px; border: 1px dashed #cbd5e1; background: #f8fafc; text-align: center; }
+.creator-growth-empty strong { font-size: 14px; }.creator-growth-empty p { max-width: 440px; margin: 0; color: #718096; font-size: 11px; line-height: 1.65; }.creator-growth-empty button, .creator-growth-batch-empty button { min-height: 31px; padding: 0 13px; border: 1px solid #3182ce; border-radius: 3px; background: #3182ce; color: #fff; cursor: pointer; }
+.creator-growth-records { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }.creator-growth-records article { display: grid; gap: 5px; padding: 12px; border: 1px solid #dfe5ec; }.creator-growth-records article span, .creator-growth-records article small { color: #718096; font-size: 9px; }
+.creator-growth-funnel { display: grid; gap: 9px; margin-top: 18px; }.creator-growth-funnel > div { display: grid; grid-template-columns: 84px minmax(0, 1fr) 34px; align-items: center; gap: 10px; }.creator-growth-funnel span { color: #64748b; font-size: 10px; }.creator-growth-funnel i { height: 18px; background: #edf2f7; }.creator-growth-funnel b { display: block; height: 100%; background: #4299e1; }.creator-growth-funnel strong { font-size: 11px; text-align: right; }
+.creator-growth-batch-empty { margin-top: 18px; padding: 14px; border: 1px solid #dbeafe; background: #f7fbff; }.creator-growth-batch-empty h3 { margin: 0; font-size: 13px; }.creator-growth-batch-empty p { margin: 7px 0 10px; color: #718096; font-size: 10px; line-height: 1.55; }
+.creator-growth-kanban { display: grid; grid-template-columns: repeat(5, minmax(110px, 1fr)); gap: 1px; margin-top: 16px; overflow-x: auto; border: 1px solid #dfe5ec; background: #dfe5ec; }.creator-growth-kanban section { min-height: 190px; padding: 10px; background: #f8fafc; }.creator-growth-kanban header { display: flex; justify-content: space-between; }.creator-growth-kanban header strong { font-size: 10px; }.creator-growth-kanban header span { color: #2b6cb0; font-size: 10px; }.creator-growth-kanban p { margin-top: 36px; color: #a0aec0; font-size: 9px; text-align: center; }
+.creator-growth-table { margin-top: 16px; border: 1px solid #dfe5ec; }.creator-growth-table > div { display: grid; grid-template-columns: repeat(5, minmax(100px, 1fr)); }.creator-growth-table .is-head { background: #f8fafc; }.creator-growth-table .is-head span { padding: 10px; border-right: 1px solid #e5eaf0; color: #64748b; font-size: 9px; }.creator-growth-table .is-empty { display: block; padding: 48px 16px; color: #a0aec0; font-size: 10px; text-align: center; }
+.creator-growth-business-note { margin: 12px 0 0; padding: 10px 12px; border-left: 3px solid #ecc94b; background: #fffaf0; color: #744210; font-size: 10px; line-height: 1.55; }.creator-growth-timeline { margin-top: 18px; padding: 14px; border: 1px solid #dfe5ec; }.creator-growth-timeline h3 { margin: 0; font-size: 12px; }.creator-growth-timeline p { margin: 8px 0 0; color: #8b98aa; font-size: 10px; }
+.creator-growth-analysis { border-left: 1px solid #dfe5ec; background: #f8fafc; }
+.creator-growth-analysis-summary, .creator-growth-next-actions, .creator-growth-colleagues { margin: 12px; padding: 13px; border: 1px solid #dfe5ec; border-left: 3px solid #4299e1; border-radius: 0; background: #fff; }
+.creator-growth-analysis-summary span, .creator-growth-analysis-summary strong { display: block; }.creator-growth-analysis-summary span { color: #8b98aa; font-size: 9px; }.creator-growth-analysis-summary strong { margin-top: 5px; color: #2b6cb0; font-size: 12px; }.creator-growth-analysis-summary p { margin: 8px 0 0; color: #64748b; font-size: 10px; line-height: 1.6; }
+.creator-growth-next-actions h3, .creator-growth-colleagues h3 { margin: 0 0 9px; font-size: 11px; }.creator-growth-next-actions button { width: 100%; min-height: 31px; margin-top: 6px; border: 1px solid #b8d8f1; border-radius: 3px; background: #fff; color: #2b6cb0; cursor: pointer; font-size: 10px; }.creator-growth-next-actions button:first-of-type { background: #3182ce; color: #fff; }.creator-growth-next-actions small { display: block; margin-top: 9px; color: #8b98aa; font-size: 9px; line-height: 1.5; }
+.creator-growth-colleagues > div { display: flex; flex-wrap: wrap; gap: 6px; }.creator-growth-colleagues span { padding: 5px 8px; border: 1px solid #b7ebc6; border-radius: 13px; background: #f0fff4; color: #27834f; font-size: 9px; }
+.creator-growth-analysis .creator-growth-audit-context { margin: 12px; border: 1px solid #dfe5ec; background: #fff; }.creator-growth-analysis .creator-growth-audit-context > summary { padding: 10px 12px; color: #64748b; cursor: pointer; font-size: 10px; }.creator-growth-audit-context dl { margin: 0; padding: 0 12px 10px; }.creator-growth-audit-context dl > div { display: grid; grid-template-columns: 70px 1fr; gap: 8px; padding: 5px 0; font-size: 9px; }.creator-growth-audit-context dt { color: #8b98aa; }.creator-growth-audit-context dd { margin: 0; overflow-wrap: anywhere; }.creator-growth-audit-context ul { margin: 0; padding: 8px 12px 12px 28px; border-top: 1px solid #edf2f7; color: #8b98aa; font-size: 8px; overflow-wrap: anywhere; }
+.creator-growth-analysis > footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 12px; padding: 10px 0; border-top: 1px solid #dfe5ec; color: #8b98aa; font-size: 8px; }.creator-growth-analysis > footer button { border: 0; background: transparent; color: #2b6cb0; cursor: pointer; font-size: 9px; }
+.creator-growth-notice { position: sticky; bottom: 10px; margin: 12px; padding: 10px 12px; border: 1px solid #9ae6b4; background: #f0fff4; color: #276749; font-size: 10px; }
+.creator-growth-preparation { position: absolute; z-index: 20; top: 58px; right: 18px; width: min(420px, calc(100% - 36px)); max-height: calc(100% - 76px); overflow-y: auto; box-sizing: border-box; padding: 16px; border: 1px solid #90cdf4; background: #fff; box-shadow: 0 12px 34px rgba(30, 64, 175, .18); }
+.creator-growth-preparation > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5eaf0; }.creator-growth-preparation > header span { color: #8b98aa; font-size: 9px; }.creator-growth-preparation > header h2 { margin: 4px 0 0; font-size: 16px; }.creator-growth-preparation > header button { border: 0; background: transparent; color: #64748b; cursor: pointer; }
+.creator-growth-preparation label { display: grid; gap: 6px; margin-top: 12px; color: #475569; font-size: 10px; }.creator-growth-preparation input, .creator-growth-preparation select, .creator-growth-preparation textarea { width: 100%; min-height: 34px; box-sizing: border-box; padding: 8px 10px; border: 1px solid #d8e0e9; border-radius: 3px; background: #fff; color: #334155; font: inherit; }.creator-growth-preparation textarea { min-height: 72px; resize: vertical; }.creator-growth-preparation > p { color: #8b98aa; font-size: 9px; line-height: 1.5; }.creator-growth-preparation > button.is-primary { width: 100%; min-height: 36px; border: 1px solid #3182ce; border-radius: 3px; background: #3182ce; color: #fff; cursor: pointer; }
+.creator-growth-business-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }.creator-growth-business-fields label:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+@media (max-width: 1180px) {
+  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-board { grid-template-columns: 225px minmax(0, 1fr) 285px; }
+}
+@media (max-width: 900px) {
+  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-page { overflow: auto; }
+  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-board { grid-template-columns: 210px minmax(480px, 1fr); height: auto; overflow: visible; }
+  .creator-growth-analysis { grid-column: 1 / -1; max-height: none; }
+}
+.content-campaign-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; border: 1px solid var(--aos-border); background: var(--aos-surface); color: var(--aos-text-secondary); }
+.content-campaign-toolbar button { cursor: pointer; border: 1px solid var(--aos-border); padding: 7px 11px; background: var(--aos-surface); color: var(--aos-text); }
+.content-campaign-metrics { display: grid; grid-template-columns: repeat(5, minmax(105px, 1fr)) minmax(220px, 1.5fr); border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.content-campaign-metrics > div { min-width: 0; padding: 13px 14px; border-right: 1px solid var(--aos-border); }
+.content-campaign-metrics > div:last-child { border-right: 0; }
+.content-campaign-metrics span,
+.content-campaign-metrics small { display: block; color: var(--aos-text-tertiary); }
+Frozen source verification summary {"baseHead": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c", "cssBefore": "7e121bbbcf984d2000918a1a703b45bb2f35dc887cdc806d0c2c5e6f13b791b0", "cssAfter": "7e121bbbcf984d2000918a1a703b45bb2f35dc887cdc806d0c2c5e6f13b791b0", "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-creator-visual-narrow-layout-20261015/private/candidate-source-r1", "onlyOneOwnedCSSOverlay": true, "originalComponentUnchanged": true, "noUserDirtyCopied": true, "privateBuildAndCache": true, "results": {"workshop-cumulative-r1": {"returncode": 0, "command": ["/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node", "node_modules/vitest/vitest.mjs", "run", "src/components/workshop", "src/api/ecommerceWorkshop", "--config", "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-creator-visual-narrow-layout-20261015/private/frozen-verification-config-r1.ts", "--no-cache"], "logSha": "30155ffb010ee8e2e7b046607a2384b6eedb632e7006f78875b4290fc0bfd303"}, "web-typecheck-r1": {"returncode": 0, "command": ["/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node", "node_modules/typescript/bin/tsc", "--noEmit"], "logSha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, "web-production-build-r1": {"returncode": 0, "command": ["/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node", "node_modules/vite/bin/vite.js", "build", "--config", "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-creator-visual-narrow-layout-20261015/private/frozen-verification-config-r1.ts"], "logSha": "eefa21b93a13d945367a6cf022d0d4d41846d4bbd52933c3ed39aa846730b80d"}}, "startedAt": "2026-10-15T16:42:11.253916+00:00", "finishedAt": "2026-10-15T16:42:29.384281+00:00", "originalServicesTouched": false, "geometryAcceptance": "pending actual browser after guarded Web update; no JSDOM geometry claim"}
+Actual workshop-cumulative-r1 log tail
+ ✓ src/api/ecommerceWorkshop/creatorContributionClient.test.ts (1 test) 5ms
+ ✓ src/api/ecommerceWorkshop/contentCampaignClient.test.ts (1 test) 5ms
+ ✓ src/components/workshop/WorkshopOperationalReleaseDecisionCard.test.tsx (1 test) 22ms
+ ✓ src/api/ecommerceWorkshop/creatorGrowthClient.test.ts (1 test) 5ms
+ ✓ src/components/workshop/workshopViewState.test.ts (3 tests) 1ms
+ ✓ src/components/workshop/WorkshopDisasterRecoveryCard.test.tsx (1 test) 19ms
+stderr | src/components/workshop/ThreeModuleClosureCard.test.tsx > ThreeModuleClosureCard > 分开展示五轴并保持零副作用
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+ ✓ src/components/workshop/ThreeModuleClosureCard.test.tsx (1 test) 13ms
+ ✓ src/components/workshop/WorkshopOperatingReadinessCard.test.tsx (1 test) 18ms
+
+ Test Files  62 passed (62)
+      Tests  407 passed (407)
+   Start at  00:42:11
+   Duration  3.63s (transform 3.51s, setup 0ms, collect 9.27s, tests 5.12s, environment 19.74s, prepare 2.61s)
+
+Actual web-typecheck-r1 log tail
+
+Actual web-production-build-r1 log tail
+dist/assets/core.esm-aYy9KMBc.js                        43.70 kB │ gzip:  14.51 kB
+dist/assets/IntegrationCasesPage-MT0ea3rB.js            46.67 kB │ gzip:  14.22 kB
+dist/assets/data-D1VVy2JR.js                            47.03 kB │ gzip:  15.91 kB
+dist/assets/ProductionContractsPage-DE35u2AN.js         54.65 kB │ gzip:  18.27 kB
+dist/assets/DraftInboxPage-S6cjHpgw.js                  58.57 kB │ gzip:  18.74 kB
+dist/assets/CapacityPage-DMd0Od-E.js                    63.56 kB │ gzip:  19.05 kB
+dist/assets/AssetBundlesPage-CSTLZiAg.js                88.21 kB │ gzip:  25.61 kB
+dist/assets/LogicCanvasPage-DaCWc6Bq.js                102.83 kB │ gzip:  33.02 kB
+dist/assets/aip-CPBHwOXT.js                            112.74 kB │ gzip:  35.55 kB
+dist/assets/CanvasPage-BxlZymHJ.js                     157.71 kB │ gzip:  42.67 kB
+dist/assets/vendor-router-BH4iFUci.js                  164.65 kB │ gzip:  53.74 kB
+dist/assets/index-DVAbeQ1T.js                          934.81 kB │ gzip: 249.41 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.82s
+CSS CURRENT_SHA 7e121bbbcf984d2000918a1a703b45bb2f35dc887cdc806d0c2c5e6f13b791b0
+CSS full frozen manifest sha 7e121bbbcf984d2000918a1a703b45bb2f35dc887cdc806d0c2c5e6f13b791b0
+Original component SHA c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e
+NOTE no production Web switch or genuine current after-fix geometry yet. Existing original RED remains evidence. Customer pointer rules unchanged, only two exact creator grid min widths changed. No runtime/business/visual overall completion claimed.

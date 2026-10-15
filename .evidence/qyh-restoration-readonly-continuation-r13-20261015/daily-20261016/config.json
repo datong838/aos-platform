@@ -1,0 +1,14 @@
+{
+  "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+  "oldApiPid": 54057,
+  "oldApiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-0b0c88882ce6e9cdab168baf485ef50fa5baefb7",
+  "oldApiCommand": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python -m uvicorn a0v_qyh_restored_http:management_app --factory --host 127.0.0.1 --port 18080 --workers 1 --no-access-log --log-level warning",
+  "oldWebPid": 61045,
+  "oldWebCommand": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r12-20261015/customer-pointer-web-server.mjs",
+  "apiReport": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/daily-current-api-20261016.json",
+  "webReport": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/web-source.json",
+  "beforeFingerprint": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013/daily-before-20261016.json",
+  "afterPgFingerprint": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013/daily-after-pg-20261016.json",
+  "reviewRunner": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/review_controller_r1.py",
+  "webServerSha256": "79d9e1cd43ceabb84a52e18e92816e437685286cb41654b2bfb8175502744202"
+}

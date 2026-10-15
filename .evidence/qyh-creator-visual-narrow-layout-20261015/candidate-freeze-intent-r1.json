@@ -1,0 +1,10 @@
+{
+  "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-creator-visual-narrow-layout-20261015/private/candidate-source-r1",
+  "overlay": {
+    "apps/web/src/styles/45-ecommerce-workshop.css": "7e121bbbcf984d2000918a1a703b45bb2f35dc887cdc806d0c2c5e6f13b791b0"
+  },
+  "onlyOneOwnedCSSOverlay": true,
+  "userDirtyCopied": false,
+  "originalServicesTouched": false
+}

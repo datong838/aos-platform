@@ -1,0 +1,125 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+vite v5.4.21 building for production...
+transforming...
+✓ 415 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                          0.54 kB │ gzip:   0.33 kB
+dist/assets/SnapshotSchedulesPanel-Bv1tcOY0.css          2.10 kB │ gzip:   0.75 kB
+dist/assets/CanonicalTaskRunPanel-D7IOvora.css           3.40 kB │ gzip:   0.91 kB
+dist/assets/OntologyGraphCanvas-Bl1aZxoy.css             3.80 kB │ gzip:   1.13 kB
+dist/assets/LogicCanvasPage-CzHXzPaQ.css                 7.27 kB │ gzip:   1.64 kB
+dist/assets/index-D86eJsEY.css                         502.76 kB │ gzip:  68.37 kB
+dist/assets/vendor-react-BV4usX2D.js                     0.04 kB │ gzip:   0.06 kB
+dist/assets/AgentImportPage-CVXz4XR4.js                  0.23 kB │ gzip:   0.19 kB
+dist/assets/CapabilityImportPage-X6SCRFfa.js             0.24 kB │ gzip:   0.19 kB
+dist/assets/BpBadge-W26C3PD0.js                          0.64 kB │ gzip:   0.34 kB
+dist/assets/ontologyHooks-CbU-qjhc.js                    0.76 kB │ gzip:   0.40 kB
+dist/assets/BpToolbar-olpTDhAK.js                        1.08 kB │ gzip:   0.52 kB
+dist/assets/aipExactContext-D8zGLBku.js                  1.38 kB │ gzip:   0.69 kB
+dist/assets/ontologyRecent-C-TEahtA.js                   1.56 kB │ gzip:   0.77 kB
+dist/assets/shared-rLs9YHNJ.js                           1.60 kB │ gzip:   0.92 kB
+dist/assets/ConfigSecretsPage-DLUzIGo4.js                1.69 kB │ gzip:   1.16 kB
+dist/assets/InviteAcceptPage-CzoxfhLf.js                 1.80 kB │ gzip:   1.05 kB
+dist/assets/SpokeDetailPage-CUA1nxjF.js                  1.82 kB │ gzip:   1.23 kB
+dist/assets/BpArchitectureBar-Bl4Zcc1a.js                1.87 kB │ gzip:   1.02 kB
+dist/assets/AipReadinessActionCard-D_rgRcYQ.js           2.16 kB │ gzip:   1.09 kB
+dist/assets/ontologyClient-BkESNr_p.js                   2.25 kB │ gzip:   1.08 kB
+dist/assets/pipelineMeta-UdDmf7y9.js                     2.27 kB │ gzip:   1.35 kB
+dist/assets/MyProfilePage-CPoCDjt1.js                    2.27 kB │ gzip:   1.17 kB
+dist/assets/FerryPage-C7rRfVUx.js                        2.35 kB │ gzip:   1.41 kB
+dist/assets/HubFleetPage--ny_QXUQ.js                     2.59 kB │ gzip:   1.28 kB
+dist/assets/dataConnectionUi-D31TKaY0.js                 2.69 kB │ gzip:   1.37 kB
+dist/assets/ChangeOrdersPage-B3pcP_dG.js                 2.70 kB │ gzip:   1.52 kB
+dist/assets/SaasProvisioningPage-DJVdhvKd.js             3.16 kB │ gzip:   1.65 kB
+dist/assets/ReleasesPage-BPP-wpSs.js                     3.16 kB │ gzip:   1.44 kB
+dist/assets/ObjectTypeDetailPage-D29ngKDw.js             3.30 kB │ gzip:   1.60 kB
+dist/assets/ontologyExplorationAssets-B9CIqVNz.js        4.22 kB │ gzip:   1.68 kB
+dist/assets/AnalystMethodPage-DZn8Blz0.js                4.49 kB │ gzip:   2.62 kB
+dist/assets/LocalPlatformPage-Cr2vEzCH.js                4.54 kB │ gzip:   1.99 kB
+dist/assets/WikiIndexPage-9ZYhU7oa.js                    4.67 kB │ gzip:   2.23 kB
+dist/assets/CodeRepositoriesPage-BZM3GtyQ.js             4.74 kB │ gzip:   2.31 kB
+dist/assets/AipOperationalProjectionStrip-DVclpsTA.js    4.76 kB │ gzip:   2.27 kB
+dist/assets/DataConnectionPage-c9isTcGB.js               4.78 kB │ gzip:   2.41 kB
+dist/assets/BuddyPage-RRPdc0pL.js                        5.10 kB │ gzip:   2.32 kB
+dist/assets/OpsStartGuidePage-ByxRFbFq.js                5.12 kB │ gzip:   3.50 kB
+dist/assets/WorkspaceMembersPage-Dagh4A4c.js             5.32 kB │ gzip:   2.40 kB
+dist/assets/WorkshopModulePage-DcLNKViG.js               5.70 kB │ gzip:   2.17 kB
+dist/assets/PermissionManagerPage-DFMQ5jxV.js            5.78 kB │ gzip:   2.26 kB
+dist/assets/AuditLogPage-DbNLbybK.js                     5.91 kB │ gzip:   2.27 kB
+dist/assets/AgentMarketplacePage-wjYbnj9V.js             6.03 kB │ gzip:   2.95 kB
+dist/assets/CanonicalTaskRunPanel-CdCCZtXW.js            6.18 kB │ gzip:   2.82 kB
+dist/assets/aipChineseLabels-D6gVNThn.js                 6.89 kB │ gzip:   4.57 kB
+dist/assets/UserSettingsPage-BDZTBp9p.js                 7.38 kB │ gzip:   2.18 kB
+dist/assets/ProviderDetailPage-DuDdKxdB.js               7.68 kB │ gzip:   3.34 kB
+dist/assets/DataHealthPage-DUWjXv7f.js                   7.73 kB │ gzip:   3.32 kB
+dist/assets/CanonicalCapabilityPage-3KCl72Oq.js          7.79 kB │ gzip:   3.61 kB
+dist/assets/WorkshopListPage-CPZlSrPs.js                 7.94 kB │ gzip:   3.27 kB
+dist/assets/MediaSetsPage-CD5Ylher.js                    7.94 kB │ gzip:   3.65 kB
+dist/assets/OrgMembershipPage-CbwbEyN0.js                8.21 kB │ gzip:   2.98 kB
+dist/assets/SyncRoutesPage-DWuqw97s.js                   8.23 kB │ gzip:   3.47 kB
+dist/assets/index-CzbKeQL8.js                            9.00 kB │ gzip:   2.93 kB
+dist/assets/CanonicalAgentsPage-CwjJAjLw.js              9.49 kB │ gzip:   3.94 kB
+dist/assets/WidgetRegistryPage-CE9g07CY.js               9.50 kB │ gzip:   3.78 kB
+dist/assets/BuildModalPage-DZQtXHZ7.js                   9.51 kB │ gzip:   4.12 kB
+dist/assets/SyncConfigPage-CSHHsjjJ.js                   9.66 kB │ gzip:   3.54 kB
+dist/assets/DataLineagePage-CeTQL7jK.js                  9.90 kB │ gzip:   3.87 kB
+dist/assets/PublishPage-DBF4upA5.js                     10.38 kB │ gzip:   4.22 kB
+dist/assets/SkillPublishPage-DwaDckrj.js                10.42 kB │ gzip:   4.65 kB
+dist/assets/RiskAlertPage-C1GkO4QS.js                   10.62 kB │ gzip:   4.22 kB
+dist/assets/GovernedImportPreview-BmU0ku-n.js           10.99 kB │ gzip:   4.29 kB
+dist/assets/client-DQBs7g6-.js                          11.23 kB │ gzip:   3.30 kB
+dist/assets/OntologyGraphCanvas-6RlI9WaH.js             12.08 kB │ gzip:   5.20 kB
+dist/assets/DatasetPreviewPage-B7V2Zudo.js              12.54 kB │ gzip:   5.63 kB
+dist/assets/VariablesPage-CI4PwePa.js                   12.64 kB │ gzip:   4.73 kB
+dist/assets/InboxPage-iKQNiXRP.js                       13.11 kB │ gzip:   4.50 kB
+dist/assets/client-DqVdvabP.js                          13.35 kB │ gzip:   4.48 kB
+dist/assets/ObservabilityPage-CwI0hNvC.js               14.04 kB │ gzip:   5.47 kB
+dist/assets/WorkshopCreatePage-JVQHrNLH.js              16.33 kB │ gzip:   5.78 kB
+dist/assets/FunctionEditorPage-BumEyivE.js              16.47 kB │ gzip:   5.83 kB
+dist/assets/analytics-C-euhg5E.js                       16.89 kB │ gzip:   5.49 kB
+dist/assets/WikiDiffPage-CXv-fC8x.js                    17.14 kB │ gzip:   5.41 kB
+dist/assets/OntologyPage-Blc0Ws4p.js                    17.54 kB │ gzip:   5.81 kB
+dist/assets/sourceDetailPage-C9ldpZZ0.js                17.79 kB │ gzip:   6.62 kB
+dist/assets/AipAssistPage-DtQATpbd.js                   18.49 kB │ gzip:   7.47 kB
+dist/assets/LinkTypeEditorPage-BKX1iOJq.js              18.68 kB │ gzip:   6.12 kB
+dist/assets/objectTypeDetail-Bw0Bfzgd.js                19.43 kB │ gzip:   6.78 kB
+dist/assets/PropertyEditorPage-iyGq1GEV.js              20.08 kB │ gzip:   6.54 kB
+dist/assets/StylesPage-C_drAaC3.js                      20.62 kB │ gzip:   6.81 kB
+dist/assets/index-CwVhLnOB.js                           20.87 kB │ gzip:   5.86 kB
+dist/assets/WikiDetailPage-CSUObeNT.js                  22.76 kB │ gzip:   7.39 kB
+dist/assets/ActionTypeEditorPage-BBx0icuU.js            22.81 kB │ gzip:   7.08 kB
+dist/assets/extras-CD06ct9b.js                          22.97 kB │ gzip:   8.21 kB
+dist/assets/EventsPage-DlDwGEcC.js                      24.09 kB │ gzip:   8.10 kB
+dist/assets/workshop-vGKWDNlo.js                        25.60 kB │ gzip:   9.98 kB
+dist/assets/DataPage-8XsSJENg.js                        26.23 kB │ gzip:   9.13 kB
+dist/assets/AipAnalystPage-DPJOj8c0.js                  27.75 kB │ gzip:  10.72 kB
+dist/assets/ontology-BgL51G7j.js                        28.24 kB │ gzip:  10.87 kB
+dist/assets/SnapshotSchedulesPanel-BMXRoUeb.js          28.33 kB │ gzip:   9.70 kB
+dist/assets/ModelCatalogPage-DqI1uIqx.js                30.46 kB │ gzip:  10.76 kB
+dist/assets/StudioPage-PHPikDal.js                      32.05 kB │ gzip:  10.94 kB
+dist/assets/remainder-DM9LnnWw.js                       33.69 kB │ gzip:  11.28 kB
+dist/assets/ModelRuntimePage-3J5e2HCy.js                34.74 kB │ gzip:  11.80 kB
+dist/assets/MemoryGovernancePage-DWbvOvC-.js            39.50 kB │ gzip:  13.43 kB
+dist/assets/CanonicalAgentRegistryPage-JkWBe0zZ.js      40.69 kB │ gzip:  13.07 kB
+dist/assets/pipelineCanvas-C5YwCQ2x.js                  40.71 kB │ gzip:  13.53 kB
+dist/assets/DocumentIntelligencePage-B48zpIwx.js        40.75 kB │ gzip:  13.67 kB
+dist/assets/index-0-BZBgim.js                           42.16 kB │ gzip:   9.63 kB
+dist/assets/core.esm-aYy9KMBc.js                        43.70 kB │ gzip:  14.51 kB
+dist/assets/IntegrationCasesPage-MT0ea3rB.js            46.67 kB │ gzip:  14.22 kB
+dist/assets/data-D1VVy2JR.js                            47.03 kB │ gzip:  15.91 kB
+dist/assets/ProductionContractsPage-DE35u2AN.js         54.65 kB │ gzip:  18.27 kB
+dist/assets/DraftInboxPage-S6cjHpgw.js                  58.57 kB │ gzip:  18.74 kB
+dist/assets/CapacityPage-DMd0Od-E.js                    63.56 kB │ gzip:  19.05 kB
+dist/assets/AssetBundlesPage-CSTLZiAg.js                88.21 kB │ gzip:  25.61 kB
+dist/assets/LogicCanvasPage-DaCWc6Bq.js                102.83 kB │ gzip:  33.02 kB
+dist/assets/aip-CPBHwOXT.js                            112.74 kB │ gzip:  35.55 kB
+dist/assets/CanvasPage-BxlZymHJ.js                     157.71 kB │ gzip:  42.67 kB
+dist/assets/vendor-router-BH4iFUci.js                  164.65 kB │ gzip:  53.74 kB
+dist/assets/index-DVAbeQ1T.js                          934.81 kB │ gzip: 249.41 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.82s

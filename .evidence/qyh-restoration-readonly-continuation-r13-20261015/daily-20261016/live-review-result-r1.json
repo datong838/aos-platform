@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "06296dd013c2329b6debc96d2a7dc831833e098306b243fafc9c035c85c5d920",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r13-20261015-daily20261016-live-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r13-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+      "authority_revision": "AOS-002040",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/live-review-package-r1.txt": "c7315b2973104af7b623d59cbeed902434c8022f9551fc861d72a58431af917c"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "本次独立控制器PASS合法消费后按同原CID卷PG→最新40100ba只读API72057→Web72110顺序一次维护，当前监听命令cwd及完整Web Git磁盘764manifest一致；650before/afterPG/final完整字典相等，原cluster/schema161/绑定0保持。",
+        "evidence": "controller-review-consumption.json显示status=CONSUMED_MATERIAL_REVIEW；api-started.json pid=72057/head=40100ba；web-started.json pid=72110/head=40100ba；verify_daily_live_r1.py断言pg/cwd/manifest/650相等；pg-terminal.json containerId/volume/startedAfter匹配current-runtime-listeners-r1.json",
+        "assessment": "supported"
+      },
+      {
+        "claim": "新版本原真实OIDC身份租户下八正式SDK和原页面root200、未知查询400匿名401、客户普通trusted指针与键盘焦点已实证且无业务nonGET；报告保留导航未通过、空采样和视觉/经营/安装/预算全目标未完成边界，不将本维护验收代替经营闭环。",
+        "evidence": "native-core-read-deny-r1.json who=真实OIDC/unknownQuery.status=400/anonymousStatus=401；8 current real pages含nativeEightRoots200及exactOriginalOidcTenant；native-core-interaction-r1.json homeRestored=true/keyboardEnd.focused/focusVisible=true/nativePointerSelected含'客户分群'；customer-three-width-r1.json 11张PNG尺寸SHA验证；daily-live-verification-r1.json allVisualPassed=wholeGoalComplete=false",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前只读冻结状态；启动完整231Goal独立复审及真人授权流程以推进经营闭环。"
+  }
+}

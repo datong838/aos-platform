@@ -1,0 +1,43 @@
+{
+  "nativePointerSelected": "客户分群\n等待条件 · 正式来源 0",
+  "keyboardEnd": {
+    "text": "对话与批次等待条件 · 正式来源 0",
+    "focused": true,
+    "focusVisible": true
+  },
+  "homeRestored": true,
+  "witness": [
+    {
+      "type": "pointerdown",
+      "trusted": true,
+      "target": "客户分群等待条件 · 正式来源 0"
+    },
+    {
+      "type": "mousedown",
+      "trusted": true,
+      "target": "客户分群等待条件 · 正式来源 0"
+    },
+    {
+      "type": "mouseup",
+      "trusted": true,
+      "target": "客户分群等待条件 · 正式来源 0"
+    },
+    {
+      "type": "click",
+      "trusted": true,
+      "target": "客户分群等待条件 · 正式来源 0"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "target": "客户分群等待条件 · 正式来源 0",
+      "key": "End"
+    },
+    {
+      "type": "keydown",
+      "trusted": true,
+      "target": "对话与批次等待条件 · 正式来源 0",
+      "key": "Home"
+    }
+  ]
+}

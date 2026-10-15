@@ -1,0 +1,98 @@
+{
+  "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+  "apiPid": 72057,
+  "webPid": 72110,
+  "pgStartedAt": "2026-10-15T16:28:04.112157693Z",
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "apiSourceGuard": true,
+  "webGitManifestDisk764Equal": true,
+  "full650BeforeAfterPgFinalEqual": true,
+  "nativeEightRoots200": true,
+  "exactOriginalOidcTenant": true,
+  "unknownQuery400Anonymous401": true,
+  "corePointerTrustedAndKeyboard": true,
+  "customerThreeWidthNoDocumentOverflow": true,
+  "businessNonGet": [],
+  "images": {
+    "actual-cockpit-1440-r1.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "471614360d54e0b16f0ae91eb79febd3abffbf10016b90d1e1a06d41e3034bf6"
+    },
+    "actual-operations-1440-r1.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "4ffa39819bf262bbb624f27709a736ec1752e288eb84fa3414c7049a4fcc12ef"
+    },
+    "actual-creator-growth-1440-r1.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "5b176a7274c7989606175814e7c7e32f7a712fd96efa167e14b4d14264abee02"
+    },
+    "actual-analyst-1440-r1.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "d929fa69f929feeb8e6fb405e3bf61e7d016f0efde8f2153354444e400bca7a9"
+    },
+    "actual-price-governance-1440-r1.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "2ff3e02b1e84e029d219e7abc7035f53077a243e29031c16c11ff5ee6955e212"
+    },
+    "actual-media-studio-1440-r1.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "afa65cb8be265ddc5e93ee34f549ff85d41d90404fd30fb7aa5930d1026915e4"
+    },
+    "actual-content-campaign-1440-r1.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "0dfee109d60615e8af71d225293b8de234d6819149f1e882bf5b35f35750501e"
+    },
+    "actual-customer-1440-r1.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "d8433b1fa74b5ea161a9430bb9dbcf98898907883bd8fd24084afef90b327d6a"
+    },
+    "customer-core-1440-r1.png": {
+      "size": [
+        1440,
+        900
+      ],
+      "sha256": "82e57b0bf5ce318a1b5040510c9dc14806b21df78af90c5a765eb286b97135ed"
+    },
+    "customer-core-1280-r1.png": {
+      "size": [
+        1280,
+        720
+      ],
+      "sha256": "adb4595a0a34cf826babe33043d28e6082900bf9d607c5ecd01828981ab4e85a"
+    },
+    "customer-core-1920-r1.png": {
+      "size": [
+        1920,
+        1080
+      ],
+      "sha256": "1b11d741849649e549ec1c5969f769e336e323299bc7b74f68ee88fa4831e881"
+    }
+  },
+  "allVisualPassed": false,
+  "sidebarPointerNavigationPassed": false,
+  "wholeGoalComplete": false
+}

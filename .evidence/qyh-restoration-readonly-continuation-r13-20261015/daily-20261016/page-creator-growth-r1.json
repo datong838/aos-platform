@@ -1,0 +1,27 @@
+{
+  "route": "creator-growth",
+  "module": "creator-growth",
+  "method": "getCreatorGrowthView",
+  "read": {
+    "who": {
+      "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+      "orgId": "org-org",
+      "projectId": "dev-project",
+      "tokenKind": "oidc"
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "schemaVersion": "aos.ecommerce-workshop.creator-growth-view/v1",
+    "readiness": "degraded",
+    "dataCutoff": "2026-10-15T16:33:46.423560Z"
+  },
+  "dom": {
+    "moduleId": "ecommerce.creator-growth",
+    "text": "跳到模块主内容\n\n已安装电商工作台\n\n达人邀约与签约驾驶舱\n\n菜单名：达人邀约驾驶舱\n\n已停用\n专注模式\n技术与数据诊断\necommerce.creator-growth · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n达人库\n招募漏斗\n商务签约\n履约效果\n长期关系\n达人与机构\n0 条正式记录\n导入准备\n全部\n个人达人\n机构\n有合作记录\n\n全部 · 全部关键词 · 0 条\n\n栖月汇商品\n正式商品 57\n独特宽松时尚慵懒软糯毛衣半裙两件套\n¥1.00 · 库存 20\n来源更新 2026/9/17\n跨年氛围感穿搭姐系贵感小香风本命年红色翻领收腰外套裙裤套装女\n¥1.00 · 库存 100\n来源更新 2026/9/17\n狐狸毛大毛领温柔气质千金长款收腰羊毛大衣\n¥1.00 · 库存 100\n来源更新 2026/9/17\n面膜套餐\n¥99.00 · 库存 3\n来源更新 2026/9/17\n候选\n0\n达人与品牌、商品和受众的匹配\n邀约\n0\n候选去重、准备、批准与回复\n合作\n0\n意向、条款、签约与生效\n交付\n0\n内容交付、效果窗口与异常\n关系\n0\n分层、复邀窗口与关系事件\n没有匹配记录\n\n调整关键词或先准备候选来源与筛选条件。\n\n0\n候选总量\n0\n符合条件\n0\n需要复核\n0\n已去重\n0\n当前选中\n达人库\n候选匹配概览\n0 条正式记录\n当前达人库为空\n\n栖月汇当前数据截止面没有可回链的达人或机构记录。可以先整理候选来源和筛选条件，再进入正式导入流程。\n\n准备候选条件\nAI 匹配分析 · 导购顾问\n0 条依据\n当前判断\n当前没有可验证业务对象\n\n核对候选与商品、内容领域和受众是否匹配。没有正式记录时不生成姓名、联系方式、匹配分或经营结果。\n\n下一步动作\n补充候选条件\n补充预算权益\n补充交付物证据\n准备候选条件\n重新读取业务数据\n页面准备不会自动触达达人，也不会代替合同、履约或关系记录。\n共享数字同事\n导购顾问\n数据参谋\n活动策划师\n内容官\n私域管家\n技术与数据诊断\n数据截止 2026/10/16 00:33:45\n重新读取",
+    "documentOverflow": false
+  },
+  "screenshot": "actual-creator-growth-1440-r1.png",
+  "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+}

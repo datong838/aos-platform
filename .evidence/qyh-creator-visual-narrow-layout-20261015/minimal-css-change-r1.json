@@ -1,0 +1,8 @@
+{
+  "file": "apps/web/src/styles/45-ecommerce-workshop.css",
+  "before": "e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604",
+  "after": "7e121bbbcf984d2000918a1a703b45bb2f35dc887cdc806d0c2c5e6f13b791b0",
+  "twoCreatorMinWidthsOnly": true,
+  "componentAndBusinessLogicChanged": false,
+  "originalServicesTouched": false
+}

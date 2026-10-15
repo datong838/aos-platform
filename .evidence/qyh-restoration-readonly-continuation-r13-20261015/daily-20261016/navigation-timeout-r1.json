@@ -1,0 +1,6 @@
+{
+  "routeAttempt": "cockpit",
+  "url": "http://127.0.0.1:18434/workshop/creator-growth",
+  "effectUnknown": false,
+  "observation": "native navigation did not reach expected route; no business command issued"
+}

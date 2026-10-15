@@ -1,0 +1,27 @@
+{
+  "route": "analyst",
+  "module": "analyst",
+  "method": "getAnalystView",
+  "read": {
+    "who": {
+      "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+      "orgId": "org-org",
+      "projectId": "dev-project",
+      "tokenKind": "oidc"
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "schemaVersion": "aos.ecommerce-workshop.analyst-view/v2",
+    "readiness": "degraded",
+    "dataCutoff": "2026-10-15T16:34:19.016596Z"
+  },
+  "dom": {
+    "moduleId": "ecommerce.analyst",
+    "text": "跳到模块主内容\n渠道未选择 · 数据截止未验证\n经营参谋（负责人未绑定）\n数据截止未验证 · 新鲜度待核对\n业务操作：只读\n专注模式\n技术与数据诊断\necommerce.analyst · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n经营计划 · 正式业务数据只读视图\n重新读取\n部分数据可用\n仅展示已确认部分，缺失范围不会以零值代替。\n数据截止：2026-10-15T16:34:18.085651Z\n经营参谋说明\n只读 · 指标、证据与质量同截止面\n跨域贡献与学习治理说明\n正式业务能力 → 数字同事 → 工作台贡献\n生意探究\n只读\n经营总览\n等待条件\n驱动因素\n等待条件\n问题诊断\n等待条件\n增长计划\n等待条件\n效果复盘\n等待条件\n证据链\n等待条件\n数据质量\n可读取\n经营分析 · 证据驱动\n生意探究\n只读\n只读边界\n仅当前租户可见的正式分析记录\n按渠道、经营实体与分析记录三级选择\n当前为只读模式；周期计划、评审与交接未开启\n查看数据审计信息\n1 · 渠道视角\nniushop:1\n来自 Case 的 exact ChannelRevision，不推测渠道名称。\n2 · 经营实体\nniushop:1:1\nniushop:1\n同名实体按渠道隔离；上游切换后旧实体内容立即清空。\n3 · 分析记录\n栖月汇经营参谋首次全店基线分析 · 首次全店经营分析\n栖月汇全店基线与商品尖刀验证 · 首次全店经营分析\nCase revision、生命周期和运行记录均来自 canonical authority。\ninitial_store_analysis\n栖月汇经营参谋首次全店基线分析\nACTIVE\nCase\ncase-qyh-advisor-baseline-20260917 · r4\n渠道\nniushop:1\n经营实体\nniushop:1:1\n创建时间\n2026/9/17 07:47:54\n\n当前 Case 尚无 Run；不生成演示记录。重新读取 Run\n\n租户 org-org/dev-project · 只读 · 未读取真实源系统\n租户 org-org/dev-project\n统一数据截止 2026/10/16 00:34:18\n待核对项不显示为 0\n经营研究 · 只读\n研究任务与业务进度\n重新读取\n\n研究、查询与知识整理任务分别展示；阶段结果、待核对状态和正式回读结果均以当前租户数据为准。\n\n可信空集合\n当前租户没有可读取的异步任务。",
+    "documentOverflow": false
+  },
+  "screenshot": "actual-analyst-1440-r1.png",
+  "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+}

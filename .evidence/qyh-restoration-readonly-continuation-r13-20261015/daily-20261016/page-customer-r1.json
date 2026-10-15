@@ -1,0 +1,27 @@
+{
+  "route": "customer",
+  "module": "customer",
+  "method": "getCustomerView",
+  "read": {
+    "who": {
+      "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+      "orgId": "org-org",
+      "projectId": "dev-project",
+      "tokenKind": "oidc"
+    },
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "schemaVersion": "aos.ecommerce-workshop.customer-view/v1",
+    "readiness": "degraded",
+    "dataCutoff": "2026-10-15T16:34:57.738264Z"
+  },
+  "dom": {
+    "moduleId": "ecommerce.customer",
+    "text": "跳到模块主内容\n\n已安装电商工作台\n\n客户关系工作台\n已停用\n专注模式\n技术与数据诊断\necommerce.customer · 模块能力已停用 · 安装目录截止 2026-10-12T12:59:53.700561Z\n重新读取\n栖月汇 · 客户状态待核对\n私域管家（负责人未绑定）\n任务驱动 · 只读计划 · 客户产物\n高价值待核对 · 潜力待核对 · 活跃待核对\n沉睡待核对 · 流失预警待核对\n等待必要条件\n页面保持可浏览；补齐所需数据后可继续处理。\n数据截止：2026-10-15T16:34:56.510961Z\n客户治理全过程与累计审计\n客户最小投影\n等待条件 · 正式来源 0\n客户分群\n等待条件 · 正式来源 0\n生命周期旅程\n等待条件 · 正式来源 0\n对话与批次\n等待条件 · 正式来源 0\n客户关系视图\n客户最小投影\n等待必要条件\n客户最小集\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n同意依据\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n分群投影\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n旅程投影\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n对话摘要\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n触达批次\n等待条件\n\n暂无可验证来源\n\n查看数据审计信息\n全部\n可披露\n待复核\n已排除\n\n已读取正式来源 0 条；允许披露 0 条，0 条因同意、目的或留存条件未闭合而不展示客户明细。\n\nSegment → Journey → Dialogue Draft\n内部客户经营计划\n尚未提交\n\n请选择当前视图中的最小客户投影；无 exact ref 时不生成计划。\n\n新建经营计划\n影响预览\n执行记录\n审批预览\n撤回计划\n导入客户预检\n发送预检\n所需条件与下一步\n补充同租户、同数据截止的客户最小化正式数据\n客户关系正式数据来源\n查看审计状态码\n租户 org-org/dev-project\n统一数据截止 2026/10/16 00:34:56\n同意与留存规则已执行",
+    "documentOverflow": false
+  },
+  "screenshot": "actual-customer-1440-r1.png",
+  "navigation": "visible href direct GET; normal original login; sidebar pointer did not pass"
+}

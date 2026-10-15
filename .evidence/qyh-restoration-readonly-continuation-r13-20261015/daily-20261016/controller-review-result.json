@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "c39bfb4a35ed25c90139416bd7a9dd36eb6816714fd483b2a86eccd150ca453f",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r13-20261015-daily20261016-controller-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r13-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+      "authority_revision": "AOS-002040",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/controller-review-package.txt": "17389d0b17e099d7a29bd2084f20b266ea233cecc3f266b5ffef962068e86128"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "控制器源码将未来独立复审PASS合法消费及当前HEAD、Authority、有效同owner租约、精确源码与原CID卷身份校验放在新阶段意图与效果之前；分阶段同卷PG→API→Web且旧PID命令核验、完整650比较和未知不重放门保留，不声称本次复审此刻已通过。",
+        "evidence": "restart_controller.py:base()校验HEAD/AOS-002040/租约;quality()要求controller-review-result.json PASS且consumption CONSUMED;preflight后调用quality()才放行pg/api/web;--phase断言intent/terminal不存在;650指纹比较;PID/cwd命令核验。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前最新已提交API/Web冻结、原两份备份回读、650表只读指纹、只读预检通过及缺复审拒绝物证与源码相符；未实施今日重启，原数据只读/HostworkerProvider关闭和后续真实八页面、650及独立现场复审门保留。",
+        "evidence": "daily-current-api-20261016.json:outcome CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START,migration disabled,host disabled;backup-readback.json:existingTwoBackupCopiesReadbackEqual=true,newRestoreOrMigrationPerformed=false;fresh650 label=daily-before-20261016,tables 650;preflight-terminal.json serviceEffects=false;missing-review-rejection-r1.json确认无controller-review-request.json时拒绝",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续当前只读冻结状态;等待controller-review-request.json就绪后由review_controller_r1.py发起独立复审;复审PASS后方可按phase顺序执行pg→api→web重启。"
+  }
+}

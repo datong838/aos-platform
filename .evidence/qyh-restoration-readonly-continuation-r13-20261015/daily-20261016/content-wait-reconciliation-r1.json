@@ -1,0 +1,6 @@
+{
+  "url": "http://127.0.0.1:18434/workshop/content-campaign",
+  "terminalObservation": "Normal login form became visible after initial form count was sampled; no shell yet",
+  "correctedObserver": "wait for normal form or module shell before deciding login",
+  "productEffect": false
+}

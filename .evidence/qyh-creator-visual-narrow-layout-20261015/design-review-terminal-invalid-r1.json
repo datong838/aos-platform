@@ -1,0 +1,11 @@
+{
+  "returncode": 0,
+  "rawTransportSha256": "6c5fe4501772ddcb95f84df37afe6eeaa4c7bdbca5040d27d6cc113676b9fdcb",
+  "stdoutSha256": "81aa22a72ac0cadaf2ec42fdf98c2b30ad8bf422c48dff38459c5a9d8441396b",
+  "stdoutLength": 158932,
+  "strictParserFailure": "REVIEW_UNAVAILABLE: model ended without a valid response",
+  "validResultCreated": false,
+  "legallyConsumedAsPass": false,
+  "productChanged": false,
+  "phase": "terminal known, no resend of request r1"
+}

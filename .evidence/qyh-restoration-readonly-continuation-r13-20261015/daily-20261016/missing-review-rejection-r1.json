@@ -1,0 +1,12 @@
+{
+  "command": [
+    "restart_controller.py",
+    "--phase",
+    "pg"
+  ],
+  "returncode": 1,
+  "stdout": "",
+  "stderr": "Traceback (most recent call last):\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/restart_controller.py\", line 59, in <module>\n    quality();assert read(P/'preflight-terminal.json')['head']==cfg['head']\n    ^^^^^^^^^\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/restart_controller.py\", line 29, in quality\n    request=read(P/'controller-review-request.json');assert request['task_id']==TASK and request['owner']==OWNER and request['kind']=='quality'\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/restart_controller.py\", line 8, in read\n    def read(p):return json.loads(p.read_text())\n                                  ^^^^^^^^^^^^^\n  File \"/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py\", line 1058, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py\", line 1044, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/controller-review-request.json'\n",
+  "effectIntentAbsent": true,
+  "serviceEffects": false
+}

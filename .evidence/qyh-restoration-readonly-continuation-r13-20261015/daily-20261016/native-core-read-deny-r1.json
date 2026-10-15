@@ -1,0 +1,43 @@
+{
+  "who": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "creator": {
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "readiness": "degraded",
+    "count": 0,
+    "slices": [
+      {
+        "businessStage": "candidate",
+        "status": "ready"
+      },
+      {
+        "businessStage": "outreach",
+        "status": "ready"
+      },
+      {
+        "businessStage": "contract",
+        "status": "ready"
+      },
+      {
+        "businessStage": "delivery",
+        "status": "ready"
+      },
+      {
+        "businessStage": "relationship",
+        "status": "ready"
+      }
+    ]
+  },
+  "unknownQuery": {
+    "status": 400,
+    "message": "ecommerce Workshop reads do not accept query parameters"
+  },
+  "anonymousStatus": 401
+}

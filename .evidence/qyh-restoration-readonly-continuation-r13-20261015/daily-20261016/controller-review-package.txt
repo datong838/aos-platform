@@ -1,0 +1,351 @@
+
+FILE plan.md
+# 2026-10-16 原权威卷最新 m1 全面重启方案
+
+Rules：AGENTS.md、AOS工程交付闭环、231完整Goal及原唯一真人安装全恢复/每日与实际aos授权。唯一writer/owner不变；Authority AOS-002040，maintenance-r13及creator任务均有效至2026-10-16T08:00:00Z。保护27项原tracked dirty，不复制其内容、不覆盖；aos-2不重启。
+
+## 基线与文件
+
+m1已提交40100ba60a3d08375e59d8e3ddfec38c8fc5e51c。API54057/18080/source0b0c888，Web61045/18434/source8dbb，原PG/CID84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c/volume aos-qyh-history159-prepared-data-20261011/18446/Started2026-10-14T20:36:36.408087963Z。当前未执行今日重启。
+
+仅新增本目录plan.md、source-freeze.py、web-source.json、web-server.mjs、config.json、restart_controller.py、独立review请求/原始transport/消费与当前只读及后效证据；调用原freeze_current_api.py生成parent独立daily-current-api-20261016候选/私有完整Git源；调用原fingerprint_snapshot.py以全新daily-before-20261016/daily-after-pg-20261016/daily-after-final-20261016标签采样。全部在maintenance-r13既有Lease范围。无产品代码改动。
+
+## 串行执行与门
+
+1. 当前HEAD/Authority/Lease、精确PID/cwd/command/listener及同CID/volume/端口回读；原两份dump/globals逐字节SHA回读，与既有完整恢复演练证据核对，不重新恢复。
+2. Git archive最新已提交API/services/scripts/bundles与Web/apps/packages，完整manifest磁盘与Git对账，排除用户dirty/.env/凭据；原迁移disabled、Host/worker/Provider OFF、原OIDC/签名包/安装只读入口保持。
+3. fresh650before与原cluster/schema161/绑定0；控制器readonly preflight及缺review/坏消费反例在intent/signal前拒绝。控制器/runner/validator/材料精确哈希绑定，独立Prime原strictJSON/PASS合法消费后才有一次效果；阶段审查不要求其自身未来PASS预先存在。
+4. 原PG同CID同卷restart；核新StartedAt并fresh650afterPG与before完整字典相等；再准确旧API停止与最新冻源readonly启动、确认实际监听/cwd/source；最后准确旧Web停止与最新冻源启动。每phase独立durable intent/terminal，任何已存在或unknown只读对账，不重放。已知失败可修复新方案但不能复用效果意图。
+5. 核实际PG/API/Web版本/卷/端口/原身份/禁入，原owned Chrome目标八台原组件和核心只读交互；按当前三宽原稿/真实空态核布局。fresh650final与before完整一致，独立现场Prime复审，准确维护切片交付及Authority/Prime/ALL remaining接续。若更新Authority，creator未完成范围须受支持同owner交接新base后才复审开码。
+
+## 不变边界与后续
+
+当前DB只读，原12未知Run不重放、disabled Schedule不启、不读商城源、无迁移/业务写/新审批/外部发布/push；不signal Chrome或其他容器。重启/200/页面/测试不是自然经营闭环。保留完整安装配置禁入恢复卸载重装、有来源CaseRun→建议exact评审→内部内容受约束能力→产物真人评审续跑总控Wiki、八真实场景及观察发布。维护后继续已登记达人窄窗裁切：1280裁128px、1180裁98px；独立方案先于两处CSS最小改动，其他八台视觉差距逐台持续对照。
+
+FILE restart_controller.py
+"""Daily same-volume PG->API->Web; fresh durable intents, never replay."""
+from pathlib import Path
+import argparse,datetime,hashlib,json,os,signal,subprocess,sys,time
+sys.dont_write_bytecode=True
+P=Path(__file__).resolve().parent;E=P.parent;R=P.parents[2];F=R/'.evidence/qyh-full-system-restoration-20261011'
+TASK=E.name;OWNER='codex-01a13484-f019-7d82-94ce-812396db9124';PG='qyh-restored-pg-20261011';CID='84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c';VOL='aos-qyh-history159-prepared-data-20261011'
+NODE='/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node';PY=R/'services/aos-api/.venv/bin/python'
+def read(p):return json.loads(p.read_text())
+def command(*a):return subprocess.check_output(list(a),cwd=R,text=True,timeout=30).strip()
+def record(n,v):
+ with (P/n).open('x') as f:json.dump(v,f,indent=2);f.flush();os.fsync(f.fileno())
+def listeners(port):
+ r=subprocess.run(['lsof','-t','-nP',f'-iTCP:{port}','-sTCP:LISTEN'],capture_output=True,text=True);return sorted({int(x) for x in r.stdout.split()})
+def cwd(pid):return next(x[1:] for x in command('lsof','-a','-p',str(pid),'-d','cwd','-Fn').splitlines() if x.startswith('n'))
+def pg():
+ x=readjson= json.loads(command('docker','--context','colima-aos-extension','inspect',PG))[0]
+ assert x['Id']==CID and x['State']['Running'] and len(x['Mounts'])==1 and x['Mounts'][0]['Name']==VOL and x['NetworkSettings']['Ports']['5432/tcp']==[dict(HostIp='127.0.0.1',HostPort='18446')]
+ return x
+def stop(pid,port,path):
+ assert listeners(port)==[pid] and cwd(pid)==path
+ assert command('ps','-p',str(pid),'-o','command=')==cfg['oldApiCommand' if port==18080 else 'oldWebCommand']
+ os.kill(pid,signal.SIGTERM)
+ for _ in range(100):
+  if not listeners(port):return
+  time.sleep(.2)
+ raise RuntimeError('stop unresolved; reconcile only')
+def quality():
+ sys.path.insert(0,str(R/'scripts/long-task-watchdog'));import aos_review as gate
+ request=read(P/'controller-review-request.json');assert request['task_id']==TASK and request['owner']==OWNER and request['kind']=='quality'
+ assert request['materials'][str((P/'controller-review-package.txt').relative_to(R))]==(P/'controller-review-package.txt').read_text()
+ gate.validate_request(R,request)
+ r=read(P/'controller-review-result.json');c=read(P/'controller-review-consumption.json')
+ transport=read(P/'controller-review-result.transport.json')
+ runner=Path(cfg['reviewRunner']);assert runner.is_file() and runner.resolve().is_relative_to(E.resolve())
+ assert r['validator_sha256']==hashlib.sha256(Path(gate.__file__).read_bytes()).hexdigest()
+ assert gate.consumption_record(request,r,transport,hashlib.sha256(runner.read_bytes()).hexdigest())==c
+ assert r['result']['verdict']=='PASS' and c['status']=='CONSUMED_MATERIAL_REVIEW'
+ assert 'CONTROLLER_SHA '+hashlib.sha256(Path(__file__).read_bytes()).hexdigest() in (P/'controller-review-package.txt').read_text()
+def fingerprint(report,started):
+ assert report['containerId']==CID and report['volume']==VOL and report['pgStartedAt']==started
+ assert report['native']['cluster']=='7695302940039200809' and report['native']['schema']=='a0v_161' and report['native']['enabledBindings']==0 and len(report['fingerprints'])==650
+def base():
+ cfg=read(P/'config.json');assert cfg['head']==command('git','rev-parse','HEAD') and command('git','branch','--show-current')=='m1'
+ m=R.parent/'docs/palantier/AOS项目开发上下文/memory';lease=[x for x in read(m/'leases.json')['leases'] if x['task_id']==TASK];assert len(lease)==1 and lease[0]['owner']==OWNER and lease[0]['base_revision']==read(m/'authority.json')['project_revision']=='AOS-002040' and datetime.datetime.fromisoformat(lease[0]['lease_expires_at'])>datetime.datetime.now(datetime.timezone.utc)
+ sys.path.insert(0,str(R/'scripts'));import a0v_qyh_restored_http as guard
+ report=Path(cfg['apiReport']);source=guard.require_api_source_candidate(report);r=read(report);assert r['head']==cfg['head'] and r['startupFlags']['AOS_DB_MIGRATION_MODE']=='disabled' and r['startupFlags']['AOS_EXTENSION_RUNTIME_HOST_ENABLED']=='0'
+ web=read(Path(cfg['webReport']));w=Path(web['source']);assert web['head']==cfg['head'] and web['port']==18434 and web['apiTarget']=='http://127.0.0.1:18080';assert {str(p.relative_to(w)):hashlib.sha256(p.read_bytes()).hexdigest() for p in w.rglob('*') if p.is_file()}==web['manifest']
+ assert hashlib.sha256((P/'web-server.mjs').read_bytes()).hexdigest()==cfg['webServerSha256']
+ return cfg,source,web
+parser=argparse.ArgumentParser();parser.add_argument('--phase',choices=['preflight','pg','api','web'],required=True);a=parser.parse_args();cfg,source,web=base();x=pg()
+assert not (P/(a.phase+'-intent.json')).exists() and not (P/(a.phase+'-terminal.json')).exists(),'known phase: reconcile never replay'
+if a.phase=='preflight':
+ assert listeners(18080)==[cfg['oldApiPid']] and cwd(cfg['oldApiPid'])==cfg['oldApiCwd'];assert listeners(18434)==[cfg['oldWebPid']] and cwd(cfg['oldWebPid'])==str(R)
+ assert command('ps','-p',str(cfg['oldApiPid']),'-o','command=')==cfg['oldApiCommand'] and command('ps','-p',str(cfg['oldWebPid']),'-o','command=')==cfg['oldWebCommand']
+ before=read(Path(cfg['beforeFingerprint']));fingerprint(before,x['State']['StartedAt'])
+ backup=read(P/'backup-readback.json');assert backup['existingTwoBackupCopiesReadbackEqual'] and not backup['newRestoreOrMigrationPerformed'];backupRoot=R/'.evidence/qyh-host-oid-durable-full-restore-20261013/private'
+ for name,entry in backup['files'].items():assert hashlib.sha256((backupRoot/name).read_bytes()).hexdigest()==entry['sha256']
+ record('preflight-terminal.json',dict(head=cfg['head'],containerId=CID,volume=VOL,apiPid=cfg['oldApiPid'],webPid=cfg['oldWebPid'],fullSourceGuard=True,serviceEffects=False));sys.exit(0)
+quality();assert read(P/'preflight-terminal.json')['head']==cfg['head']
+if a.phase=='pg':
+ fingerprint(read(Path(cfg['beforeFingerprint'])),x['State']['StartedAt'])
+ assert listeners(18080)==[cfg['oldApiPid']] and cwd(cfg['oldApiPid'])==cfg['oldApiCwd'] and command('ps','-p',str(cfg['oldApiPid']),'-o','command=')==cfg['oldApiCommand']
+ assert listeners(18434)==[cfg['oldWebPid']] and cwd(cfg['oldWebPid'])==str(R) and command('ps','-p',str(cfg['oldWebPid']),'-o','command=')==cfg['oldWebCommand']
+ record('pg-intent.json',dict(containerId=CID,volume=VOL,startedBefore=x['State']['StartedAt'],noMigration=True))
+ res=subprocess.run(['docker','--context','colima-aos-extension','restart','--time','30',PG],capture_output=True,text=True,timeout=60);assert res.returncode==0
+ y=pg();assert y['State']['StartedAt']!=x['State']['StartedAt'];record('pg-terminal.json',dict(containerId=CID,volume=VOL,startedAfter=y['State']['StartedAt'],noMigration=True))
+elif a.phase=='api':
+ terminal=read(P/'pg-terminal.json');assert terminal['containerId']==CID and terminal['volume']==VOL and terminal['startedAfter']==x['State']['StartedAt']
+ before=read(Path(cfg['beforeFingerprint']));after=read(Path(cfg['afterPgFingerprint']));fingerprint(before,read(P/'pg-intent.json')['startedBefore']);fingerprint(after,terminal['startedAfter']);assert before['fingerprints']==after['fingerprints']
+ record('api-intent.json',dict(oldPid=cfg['oldApiPid'],head=cfg['head'],source=str(source),readonly=True));stop(cfg['oldApiPid'],18080,cfg['oldApiCwd']);record('api-old-stop.json',dict(portFree=True))
+ args=[str(PY),str(R/'scripts/a0v_qyh_restored_http.py'),'--api-identity-file',str(F/'private/restored-identity.json'),'--serve-management-readonly','--bundle-root',str(F/'selected-public-bundles'),'--trust-roots-file',str(F/'restoration-public-trust-roots.json'),'--source-candidate',cfg['apiReport'],'--management-oidc-config','/Users/ddt/.aos-local-identities/qyh-20261013/aos-management-oidc.json','--installed-readonly-installation','ab2fd72f-d81c-400d-bbbc-e1589a159d6b']
+ with (P/'live-api.log').open('x') as log:proc=subprocess.Popen(args,cwd=R,env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'},stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ record('api-started.json',dict(pid=proc.pid,head=cfg['head'],source=str(source),spawnedOnly=True));print(dict(apiPid=proc.pid,spawnedOnly=True))
+else:
+ api=read(P/'api-started.json');assert listeners(18080)==[api['pid']] and cwd(api['pid'])==str(source)
+ server=P/'web-server.mjs';assert hashlib.sha256(server.read_bytes()).hexdigest()==cfg['webServerSha256']
+ record('web-intent.json',dict(oldPid=cfg['oldWebPid'],head=cfg['head'],source=web['source']));stop(cfg['oldWebPid'],18434,str(R));record('web-old-stop.json',dict(portFree=True))
+ env={k:v for k,v in os.environ.items() if not k.startswith(('AOS_','PG','VITE_'))};env['PYTHONDONTWRITEBYTECODE']='1'
+ with (P/'live-web.log').open('x') as log:proc=subprocess.Popen([NODE,str(server)],cwd=R,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ record('web-started.json',dict(pid=proc.pid,head=cfg['head'],source=web['source'],spawnedOnly=True));print(dict(webPid=proc.pid,spawnedOnly=True))
+
+FILE review_controller_r1.py
+"""Prime supported system-prompt adapter; unchanged strict AOS result gates."""
+import argparse,hashlib,json,os,subprocess,sys,tempfile
+from pathlib import Path
+REPO=Path(__file__).resolve().parents[3]
+sys.path.insert(0,str(REPO/'scripts/long-task-watchdog'))
+import aos_review as gate
+
+def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def save(path,value):
+    with path.open('x') as stream:
+        os.chmod(path,0o600);json.dump(value,stream,ensure_ascii=False,indent=2)
+        stream.flush();os.fsync(stream.fileno())
+
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--request',required=True);parser.add_argument('--output',required=True)
+    parser.add_argument('--consume')
+    args=parser.parse_args()
+    request=gate.json.loads(gate.exact_file(REPO,args.request,('.evidence',)).read_text())
+    assert request['task_id']=='qyh-restoration-readonly-continuation-r13-20261015'
+    prefix='.evidence/'+request['task_id']+'/'
+    assert args.request.startswith(prefix) and args.output.startswith(prefix)
+    output=Path(args.output)
+    assert not output.is_absolute() and '..' not in output.parts and output.suffix=='.json'
+    parent=REPO
+    for part in output.parts[:-1]:
+        parent=parent/part
+        assert not parent.is_symlink() and parent.is_dir()
+    target=REPO/output;assert target.parent.is_dir() and not target.exists()
+    gate.validate_request(REPO,request)
+    own_sha=digest(Path(__file__));validator_sha=digest(Path(gate.__file__))
+    if args.consume:
+        assert args.consume.startswith(prefix)
+        envelope=json.loads(gate.exact_file(REPO,args.consume,('.evidence',)).read_text())
+        transport=json.loads(gate.exact_file(REPO,str(Path(args.consume).with_suffix('.transport.json')),('.evidence',),max_bytes=8*1024*1024).read_text())
+        assert envelope['validator_sha256']==validator_sha
+        record=gate.consumption_record(request,envelope,transport,own_sha)
+        gate.validate_request(REPO,request)
+        marker=target.parent/(hashlib.sha256(request['request_id'].encode()).hexdigest()+'.consumed.json')
+        save(marker,record);save(target,record)
+        print(json.dumps({'consumption':str(target),'status':record['status'],'execution_authorized':False}));return
+    for prior in target.parent.glob('*.attempt.json'):
+        assert json.loads(prior.read_text())['request_id']!=request['request_id'],'existing attempt: reconcile, do not resend'
+    marker=target.parent/(hashlib.sha256(request['request_id'].encode()).hexdigest()+'.attempt.json')
+    save(marker,{'request_id':request['request_id'],'baseline':request['baseline'],'status':'ATTEMPTED_UNKNOWN','runner_sha256':own_sha,'validator_sha256':validator_sha})
+    template={k:request[k] for k in ('request_id','task_id','owner','kind','baseline')}
+    template.update(verdict='<choose PASS/REWORK/NEED_EVIDENCE/NEED_DECISION>',
+        findings=[{'claim':c,'evidence':'<actual supplied file/function/field evidence; do not invent>','assessment':'<choose supported/contradicted/insufficient>'} for c in request['claims']],
+        next_safe_step='<required concrete nonempty safe suggestion, even for PASS>')
+    system=gate.SYSTEM+'\n本次是施工前控制器源码资料复核。审阅对象是给定程序及已有只读预检物证，不是批准业务动作。不要把本次复核结果尚未产生当作代码或物证缺口，不要求本次结果在其自身之前已PASS。若证据确实不足，请指出对应claim缺少的具体事实。本说明不保证任何claim成立、不授执行权，不得放宽身份、范围、租约、哈希、只读、副作用等原硬门；仍按原SYSTEM独立作出判定。\n'+'\n篇幅合同：每个findings.evidence不超过600个字符，next_safe_step不超过250个字符；只保留定位与核心依据，不重复列出整份源码或叙述全部测试。不得省略任何claims的实际审阅或改变判断门。\n'+'\n输出协议硬要求：整个assistant文本第一个字符必须是{、最后一个字符必须是}。不要输出```或json代码围栏，不能输出JSON之前或之后的解释。以下仅为输出字段框架，标识/claims需逐字复制；它不是已经证明的事实，判定与证据必须实际审阅填写，不得将占位符原样输出。next_safe_step不可遗漏。\n'+json.dumps(template,ensure_ascii=False)
+    with tempfile.TemporaryDirectory(prefix='aos-review-b-system-') as cwd:
+        gate.prepare_review_directory(cwd)
+        command=gate.prime_command(cwd)
+        command[1:1]=['--dns-result-order=ipv4first','--require',str(REPO/'.evidence/qyh-creator-workflow-read-failure-ui-20261014/prime-undici-fetch-r2.cjs')]
+        command[command.index('--system-prompt')+1]=system
+        proc=subprocess.run(command,input=json.dumps(request,ensure_ascii=False),env={'HOME':str(Path.home()),'PATH':str(Path(gate.NODE).parent)+':/usr/bin:/bin','PRIME_AGENT_INTERNAL_LEGACY_OWNED_WORKER_FRONTEND':'1'},capture_output=True,text=True,timeout=120)
+    gate.scan_secrets(proc.stdout);gate.scan_secrets(proc.stderr)
+    transport={'returncode':proc.returncode,'stdout':proc.stdout,'stderr':proc.stderr}
+    save(target.with_suffix('.transport.json'),transport)
+    assert proc.returncode==0,'terminal failure; reconcile, no automatic retry'
+    result=gate.parse_response(proc.stdout)  # Exact raw JSON; NEVER strip fences or repair.
+    gate.validate_result(request,result);gate.validate_request(REPO,request)
+    assert digest(Path(__file__))==own_sha and digest(Path(gate.__file__))==validator_sha
+    save(target,{'schema':'aos-material-review-result/v1','mode':'tools-disabled-material-only',
+        'runner_sha256':own_sha,'validator_sha256':validator_sha,'execution_authorized':False,'network_connect_timeout_ms':60000,'review_model':'agnes-2.5-flash','result':result})
+    print(json.dumps({'result':str(target),'verdict':result['verdict'],'execution_authorized':False}))
+
+if __name__=='__main__':main()
+
+FILE web-server.mjs
+import { createServer } from '/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/node_modules/vite/dist/node/index.js';
+import fs from 'node:fs';
+import path from 'node:path';
+const task = path.dirname(new URL(import.meta.url).pathname);
+const frozen = JSON.parse(fs.readFileSync(path.join(task, 'web-source.json')));
+process.env.VITE_AOS_API_PROXY_TARGET = frozen.apiTarget;
+delete process.env.VITE_AOS_API_BASE;
+const server = await createServer({
+  root: path.join(frozen.source, 'apps/web'),
+  configFile: path.join(frozen.source, 'apps/web/vite.config.ts'),
+  cacheDir: path.join(task, 'private/daily-vite-cache'),
+  server: { host: '127.0.0.1', port: frozen.port, strictPort: true },
+});
+await server.listen();
+console.log(JSON.stringify({ outcome: 'LOCAL_HUMAN_LOGIN_WEB_LISTENING', port: frozen.port, apiPort: 18080, head: frozen.head, eightPagesAccepted: false }));
+
+FILE config.json
+{
+  "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+  "oldApiPid": 54057,
+  "oldApiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-0b0c88882ce6e9cdab168baf485ef50fa5baefb7",
+  "oldApiCommand": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python -m uvicorn a0v_qyh_restored_http:management_app --factory --host 127.0.0.1 --port 18080 --workers 1 --no-access-log --log-level warning",
+  "oldWebPid": 61045,
+  "oldWebCommand": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r12-20261015/customer-pointer-web-server.mjs",
+  "apiReport": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/daily-current-api-20261016.json",
+  "webReport": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/web-source.json",
+  "beforeFingerprint": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013/daily-before-20261016.json",
+  "afterPgFingerprint": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013/daily-after-pg-20261016.json",
+  "reviewRunner": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/review_controller_r1.py",
+  "webServerSha256": "79d9e1cd43ceabb84a52e18e92816e437685286cb41654b2bfb8175502744202"
+}
+FILE preflight-terminal.json
+{
+  "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+  "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "volume": "aos-qyh-history159-prepared-data-20261011",
+  "apiPid": 54057,
+  "webPid": 61045,
+  "fullSourceGuard": true,
+  "serviceEffects": false
+}
+FILE backup-readback.json
+{
+  "checkedAt": "2026-10-15T16:25:38.824460+00:00",
+  "files": {
+    "current.dump": {
+      "sha256": "adc70a6e198f9572ba3faf8516c64dc872246baa040b25ccfcc6d46993ebbea9",
+      "bytes": 16113710
+    },
+    "globals.sql.second": {
+      "sha256": "ffa68e846726c4a0d1e9051aa714862bd668c5bab9cc56f04a3de3d88df65b50",
+      "bytes": 8164
+    },
+    "current.dump.second": {
+      "sha256": "adc70a6e198f9572ba3faf8516c64dc872246baa040b25ccfcc6d46993ebbea9",
+      "bytes": 16113710
+    },
+    "globals.sql": {
+      "sha256": "ffa68e846726c4a0d1e9051aa714862bd668c5bab9cc56f04a3de3d88df65b50",
+      "bytes": 8164
+    }
+  },
+  "existingTwoBackupCopiesReadbackEqual": true,
+  "existingCompleteRestoreEvidence": ".evidence/qyh-host-oid-durable-full-restore-20261013/verification.json",
+  "restoreEvidenceSha256": "8dc2f691cd30d771f1ebd4a83b17785efcef8c7e2971876e62c6fc6f0c9ed36c",
+  "newRestoreOrMigrationPerformed": false
+}
+FILE missing-review-rejection-r1.json
+{
+  "command": [
+    "restart_controller.py",
+    "--phase",
+    "pg"
+  ],
+  "returncode": 1,
+  "stdout": "",
+  "stderr": "Traceback (most recent call last):\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/restart_controller.py\", line 59, in <module>\n    quality();assert read(P/'preflight-terminal.json')['head']==cfg['head']\n    ^^^^^^^^^\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/restart_controller.py\", line 29, in quality\n    request=read(P/'controller-review-request.json');assert request['task_id']==TASK and request['owner']==OWNER and request['kind']=='quality'\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/restart_controller.py\", line 8, in read\n    def read(p):return json.loads(p.read_text())\n                                  ^^^^^^^^^^^^^\n  File \"/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py\", line 1058, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/pathlib.py\", line 1044, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/controller-review-request.json'\n",
+  "effectIntentAbsent": true,
+  "serviceEffects": false
+}
+FILE preflight-failure-r1.json
+{
+  "checkedAt": "2026-10-15T16:26:42.687425+00:00",
+  "terminalExitCode": 1,
+  "reason": "Prepared report filename daily-web-source.json differed from configured web-source.json",
+  "resolved": "Rename the prepared report only; no source change; no phase effect or intent existed",
+  "serviceEffects": false
+}
+FILE controller binding
+CONTROLLER_SHA c601c22b138922dcc6930db9e5df66cff819d2c9982e78f7411482207be02c16
+FILE .evidence/qyh-full-system-restoration-20261011/daily-current-api-20261016.json
+{
+  "outcome": "CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START",
+  "head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-40100ba60a3d08375e59d8e3ddfec38c8fc5e51c",
+  "fileCount": 8700,
+  "manifestSha256": "b19cd0e3c94a24325b688d9b13b00b6e4017ceec76d690522b04f9a1d0f2f455",
+  "repositoryBundleFileCount": 1827,
+  "repositoryBundleManifestSha256": "1e857c0dc55fc06c77888c021ad990babbd2b2f6dc194134981125b11b678735",
+  "mainSha256": "2d97ff3dbb84d8d948110b38bb7b8ae3c3462b5d7661d2cf1c1c830c85e32b4f",
+  "originalPreviewEntrySha256": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4",
+  "explicitStartupEnabledSwitches": [
+    "AOS_AIP_LOGIC_AUTOMATION_ENABLED",
+    "AOS_ECOM_CONTENT_AGENTRUN_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_CAPACITY_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_STEP_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_TASKRUN_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_WORKER_ENABLED",
+    "AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED",
+    "AOS_ECOM_FEEDBACK_WORKER_ENABLED",
+    "AOS_ECOM_IMPROVEMENT_WORKER_ENABLED",
+    "AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED",
+    "AOS_JDBC_SSH_PREBUILD_ENABLED",
+    "AOS_QYH_CRON_ENABLED",
+    "AOS_SNAPSHOT_GROUP_WORKER_ENABLED"
+  ],
+  "startupFlags": {
+    "AOS_DOTENV_DISABLED": "1",
+    "AOS_DB_MIGRATION_MODE": "disabled",
+    "AOS_AIP_BINDING_REQUIRE_PRIVATE": "1",
+    "AOS_QYH_CRON_ENABLED": "false",
+    "AOS_AIP_LOGIC_AUTOMATION_ENABLED": "false",
+    "AOS_SNAPSHOT_GROUP_WORKER_ENABLED": "false",
+    "AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED": "false",
+    "AOS_EXTENSION_RUNTIME_HOST_ENABLED": "0",
+    "AOS_JDBC_SSH_PREBUILD_ENABLED": "false",
+    "AOS_ECOM_CONTENT_TASKRUN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_AGENTRUN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_CAPACITY_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED": "false",
+    "AOS_ECOM_FEEDBACK_WORKER_ENABLED": "false",
+    "AOS_ECOM_IMPROVEMENT_WORKER_ENABLED": "false",
+    "AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED": "false",
+    "AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_STEP_WORKER_ENABLED": "false",
+    "AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED": "false",
+    "AOS_AUTH_ALLOW_DEV": "0",
+    "AOS_AUTH_EXTERNAL_ONLY": "1",
+    "AOS_REST_CONNECTOR_MOCK": "0"
+  },
+  "exactGitArchiveFilesVerified": true,
+  "sourcePrivate0700Files0600": true,
+  "uncommittedWorktreeChangesCopied": false,
+  "credentialsCopied": false,
+  "apiStarted": false,
+  "runtimeAuthorized": false,
+  "eightPagesAccepted": false,
+  "remaining": [
+    "real independent publisher",
+    "current four-package installation",
+    "formal OIDC settings and current Owner",
+    "current configuration approval",
+    "guarded PG/API/Web restart and actual eight-page browser acceptance"
+  ]
+}
+
+FILE web-source summary
+{"head": "40100ba60a3d08375e59d8e3ddfec38c8fc5e51c", "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015/daily-20261016/private/daily-web-40100ba60a3d08375e59d8e3ddfec38c8fc5e51c", "sourceHashes": {"apps/web/src/styles/45-ecommerce-workshop.css": "e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604"}, "port": 18434, "apiTarget": "http://127.0.0.1:18080", "processEffects": false}
+manifestFileCount 764
+reportSHA 43ef388a54695386fea4804ea5e0f21d6683c82b0f57a861d142dbcd340bbe6c
+FILE fresh650 snapshot summary
+{"label": "daily-before-20261016", "native": {"cluster": "7695302940039200809", "schema": "a0v_161", "enabledBindings": 0, "otherActiveClients": 0}, "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c", "volume": "aos-qyh-history159-prepared-data-20261011", "pgStartedAt": "2026-10-14T20:36:36.408087963Z", "elapsedSeconds": 2.815, "dbWrites": false, "scriptSha256": "397383d7f9620f57ed5bb9cfb1e2cb5a9f685b3fdb623e6deac7d50b23d3fc31", "originalFingerprintFunctionSourceSha256": "c73eb170859d043efa94c9b99dedb24bfe00e69c3af1a366a33f066c95a795c1"}
+tables 650
+fileSHA ac74dc7bc598eba8d7c13e9f43b3293c760691edf10f88cdda30300c9ceb0c5c
+FILE current lease exact
+{"base_revision": "AOS-002040", "created_at": "2026-10-15T22:11:53+08:00", "excluded_scope": ["aos-platform/maintenance/current-preview-database", "aos-platform/maintenance/current-preview-api", "aos-platform/maintenance/current-preview-web", "aos-platform/services/aos-api/aos_api/aip_action_store.py", "aos-platform/services/aos-api/aos_api/aip_action_execution.py"], "expected_outputs": ["Carry all incomplete original restoration requirements and same original data/approval/identity into new-owner maintenance;no whole completion claim", "Latest committed freeze excludes dirty; original role readonly native root8;fresh same-volume PG/API/Web restart, same-cutoff full fingerprint/no-effect/owned real OIDC SPA/browser reads then continue business Loop", "Unknown effects read-only reconcile; keep Host/worker/Provider OFF,no old Run/mall source/manual execution/duplicate scripts or credentials disclosure", "Recover latest management READONLY API for exact161db/162closedcandidate without migration or runtime override;strict runtime/unknownschema deny,fullreview;then latestPG/API/Web real8page/visual/deny-entry", "Carry unchanged entire longGoal/user original install/fullrestore authorization, latest actual API87013/head110 and Web78346/head6c equalcurrenttrees plus originalPG; daily/aos latestoriginalvolume fullPG/API/Web, aos-2 no restart; maintain readonly/HostworkerProviderOFF; do not replay failed/unknown intents.", "All earlier fullrestore pending original requirements remain; no fullrestoration/visual/business completion from previous handoff; sameowner unique m1 writer and supported Goal/reminders preserved", "Carry complete remaining original recovery/daily fullPG/API/Web and sole originaluser authorization; actualAPI7645/head23e76 Web78346/head6c identicalfrontendtrees, schema161/650 originalvolume readonly; prior maintenancehandoff not whole completion; no replay/privateGoal/reminder edits", "Carry ALL original remaining maintenance/currentAPI25389f005 currentWeb78346/6c PGoriginal161650bindings0 and daily latestcommittedfullPG/API/Web; this handoff not whole completion", "Carry ALL original remaining restoration/complete231Goal/daily originalvolume PG/API/Web/aos2 noRestart/soleoriginaluser authorization. CurrentAPI64550 andWeb64614/source6bf codeeq2f latest, originalPGStarted20:36:36/schema161/650/bindings0; today onlymaintenance proof, fullbudget/business/install/8visual/release pending.", "Carry ALL original remaining restoration/user authorization/full231Goal. Current API72678/source53 and Web76677/source1627 trees equal f1a1f51, original PG started20:36:36/schema161/650/bindings0. Future daily/every aos latest committed m1 original-volume fullPG/API/Web preserved; aos2 no restart. Read wave handoff is not full completion.", "Carry ALL original remaining restoration/user authorization/full231Goal/daily and every aos latest m1 original-volume fullPG/API/Web; aos2 no restart. Actual API80779/source246d830, Web76677/source1627 code equal c1860a9, originalPGStarted20:36:36/schema161/650/bindings0. Only saved price read slice verified; all business/install/visual/observe goals remain.", "ALL original remaining requirements/user authorization/full231Goal retained. Current runtime statement SUPERSEDES every older historical PID/head assertion: Web89803/sourcef036, API80779/source246 backend-equal current, originalPGStarted20:36:36/schema161/650/bindings0. Latest daily/every aos same-volume fullPGAPIWeb and aos2 noRestart remain; only single price sizing P1 delivered.", "ALL original remaining restoration/full231Goal/user authorization retained. Current runtime SUPERSEDES every older PID/head assertion: API95375/source4e,Web89803/f036,originalPGStarted20:36:36/schema161/650/bindings0. Only saved disposition readonly slice delivered; fullC/userbudget/natural business/install/eightvisual/release continue; daily/every aos latest original-volume fullPGAPIWeb and aos2 noRestart preserved.", "ALL original remaining restoration/full231Goal/user authorization retained. Current runtime SUPERSEDES every older PID/head assertion: API8498/source04092,Web89803/f036,originalPGStarted20:36:36/schema161/650/bindings0. Only saved price closure readonly slice delivered; fullC/userbudget/natural business/install/eightvisual/release continue; daily/every aos latest original-volume fullPGAPIWeb and aos2 noRestart preserved.", "ALL remaining original231Goal/user authorization retained. Current runtime supersedes all older identities: API15265/source80b39,Web89803/f036,originalPGStarted20:36:36/schema161/650/bindings0. Only saved customer contributions delivered; fullC/user final budget/deployment/naturalbusiness/install/eightvisual/observe release continue; daily/every actual aos original-volume latest fullPGAPIWeb and aos2 noRestart.", "ALL original remaining231Goal/sole human authorization retained. Current runtime supersedes all older identities: API44093/source17164,Web89803/f036,originalPGStarted20:36:36/schema161/650/bindings0. Only contact saved-read and signing code contract delivered; fullC/user final budget/deployment/naturalbusiness/install/eightvisual/observe release remain; daily/every actual aos latest original-volume fullPGAPIWeb and aos2 noRestart.", "ALL original remaining231Goal/user authorization retained. Latest runtime supersedes all older identities: API54057/source0b0c888, Web89803/f036, originalPGStarted20:36:36/schema161/650/bindings0. Saved closure read only delivered; customer pointer failure and tabs unverified/fullvisual/business/install/fullC final genuine budget/deployment/release remain. Daily every actual aos original-volume latest fullPGAPIWeb; aos2 noRestart.", "ALL original remaining231Goal/user authorization/daily every actual aos latest original-volume fullPGAPIWeb/aos2 noRestart retained. Latest runtime supersedes all older identities: Web61045/source8dbb764, API54057/source0b0c888 backend equal latest, originalPGStarted20:36:36/schema161/650/bindings0. Only customer native input slice verified; fullvisual/business/install/fullC final genuine budget/deployment/continuous release remain."], "lease_expires_at": "2026-10-16T08:00:00+00:00", "owner": "codex-01a13484-f019-7d82-94ce-812396db9124", "schema": "aos-memory-task-receipt/v1", "scope": ["aos-platform/.evidence/qyh-full-system-restoration-20261011", "aos-platform/maintenance/qiyuehui-restored-data-volume", "aos-platform/maintenance/qiyuehui-restored-api", "aos-platform/maintenance/qiyuehui-restored-web", "aos-platform/scripts/a0v_qyh_restored_http.py", "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py", "aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013", "aos-platform/.evidence/qyh-daily-readonly-schema-compat-20261014", "aos-platform/.evidence/qyh-restoration-readonly-continuation-20261014", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r2-20261014", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r4-20261015", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r5-20261015", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r7-20261015", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r8-20261015", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r9-20261015", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r10-20261015", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r11-20261015", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r12-20261015", "aos-platform/.evidence/qyh-restoration-readonly-continuation-r13-20261015"], "status": "ACTIVE", "task_id": "qyh-restoration-readonly-continuation-r13-20261015"}
+FILE verification scope
+This is pre-effect source review and actual READONLY preflight, NOT completed PG/API/Web restart or business completion. Final live source/8pages/native identity/650 equality/independent post-effect review pending. Same full231Goal remains active. Global validator unchanged. Prior filename failure terminal reconciled before any intent, source report renamed only; freeze script original retained as execution record.
