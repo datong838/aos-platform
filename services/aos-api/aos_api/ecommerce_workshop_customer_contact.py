@@ -18,6 +18,7 @@ from aos_api.ecommerce_workshop_customer_lifecycle import (
     canonical_hash,
 )
 from aos_api.tenant_scope import TenantScope
+from aos_api.public_contracts import redact_sensitive
 
 
 CUSTOMER_CONTACT_SCHEMA_VERSION = "aos.ecommerce-workshop.customer-contact-governance/v1"
@@ -223,6 +224,34 @@ class CustomerBatchStartDecisionRevision(AipContractModel):
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     started_by: str
     started_at: datetime
+    # Original signing input, private to persistence/reconstruction. Legacy rows
+    # may lack it; never infer or backfill a reason for an existing decision.
+    reason: str | None = Field(default=None, min_length=1, max_length=500, exclude=True, repr=False)
+
+
+def customer_start_authority_data(item: CustomerBatchStartDecisionRevision) -> dict[str, Any]:
+    payload = item.model_dump(mode="json", by_alias=True)
+    if item.reason is not None:
+        payload["reason"] = item.reason
+    return payload
+
+
+def customer_start_signing_hash(item: CustomerBatchStartDecisionRevision) -> str:
+    """Reconstruct the original production UTC typed-repr signing recipe."""
+    if item.reason is None:
+        raise CustomerContactBlocked("CUSTOMER_START_SIGNING_MATERIAL_UNAVAILABLE")
+    bindings = []
+    for binding in item.items:
+        if binding.reservation is None:
+            bindings.append(binding)
+            continue
+        at = binding.reservation.created_at
+        if at.utcoffset() is None:
+            raise CustomerContactBlocked("CUSTOMER_START_SIGNING_MATERIAL_UNAVAILABLE")
+        reservation = binding.reservation.model_copy(update={"created_at": at.astimezone(UTC)})
+        bindings.append(binding.model_copy(update={"reservation": reservation}))
+    return canonical_hash({"batchRef": item.batch_ref, "startSequence": item.start_sequence,
+                           "exactRefs": item.exact_refs, "items": bindings, "reason": item.reason})
 
 
 class RecordCustomerDispatchObservationRequest(AipContractModel):
@@ -326,6 +355,8 @@ class EcommerceWorkshopCustomerContactService:
         return self.store.append_withdrawal(scope, item)
 
     def start_batch(self, scope: TenantScope, batch_id: str, request: StartCustomerDialogueBatchRequest, actor: str, *, now: datetime | None = None) -> CustomerBatchStartDecisionRevision:
+        if redact_sensitive(request.reason) != request.reason:
+            raise CustomerContactBlocked("CUSTOMER_START_SIGNING_REASON_SENSITIVE")
         at = now or datetime.now(UTC)
         batch = self.batch_store.latest_batch(scope, batch_id)
         if batch.lifecycle != "frozen":
@@ -397,7 +428,7 @@ class EcommerceWorkshopCustomerContactService:
             lifecycle="governance_prepared", batchRef=self._batch_ref(batch), startSequence=request.start_sequence,
             exactRefs=exact_refs, items=bindings, ledger=_ledger(bindings),
             operationalBlockers=["CUSTOMER_CONTACT_PERMIT_REDEMPTION_NOT_AUTHORIZED", "CUSTOMER_PROVIDER_DISPATCH_NOT_AUTHORIZED", "CUSTOMER_EXTERNAL_EFFECT_NOT_AUTHORIZED"],
-            contentHash=content_hash, startedBy=actor, startedAt=at,
+            contentHash=content_hash, startedBy=actor, startedAt=at, reason=request.reason,
         )
         return self.store.append_start(scope, batch_id, item)
 

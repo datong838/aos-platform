@@ -1,0 +1,16 @@
+{
+  "designPrototypeOnly": true,
+  "productCodeChanged": false,
+  "databaseOrHttpCalls": 0,
+  "publicWireExactlyEqual": true,
+  "serializationSchemaOmitsReason": true,
+  "validationSchemaAcceptsPrivateReason": true,
+  "reprOmitsReason": true,
+  "legacyWithoutReasonStillDecodes": true,
+  "privateRoundtripRebuildsOriginalHash": true,
+  "originalSensitiveValueRedactorAvailable": true,
+  "actualStoreImplementationNotClaimed": true,
+  "typedReservationDatetimeRequiresUtcReconstruction": true,
+  "productionDefaultUtcSignatureReconstructed": true,
+  "wholeGoalComplete": false
+}

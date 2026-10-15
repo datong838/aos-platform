@@ -1,0 +1,31 @@
+{
+  "authority": "AOS-002037",
+  "task": {
+    "schema": "aos-memory-task-receipt/v1",
+    "task_id": "qyh-customer-start-signing-material-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "base_revision": "AOS-002037",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/ecommerce_workshop_customer_contact.py",
+      "aos-platform/services/aos-api/aos_api/ecommerce_workshop_customer_contact_store.py",
+      "aos-platform/services/aos-api/tests/test_customer_start_signing_material.py",
+      "aos-platform/.evidence/qyh-customer-start-signing-material-20261015"
+    ],
+    "excluded_scope": [
+      "aos-platform/apps/web",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py"
+    ],
+    "expected_outputs": [
+      "Prerequisite only: persist original Start reason as private signing material; preserve original hash recipe/public wire/legacy decode/no effects, refuse sensitive reason before reservations. No original DB rewrite or resolver enable.",
+      "Independent design/RED/frozen/original W6-08+adjacent/native isolated Store roundtrip/quality and accurate code-contract-only Delivery; full customer reader and full231Goal remain."
+    ],
+    "lease_expires_at": "2026-10-15T08:00:00+00:00",
+    "status": "ACTIVE",
+    "created_at": "2026-10-15T14:32:10+08:00"
+  },
+  "otherLeasesPreserved": 40,
+  "nonOverlapping": true,
+  "wholeGoalComplete": false
+}

@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-customer-start-signing-material-20261015-design-r1",
+  "baseline": {
+    "head": "b91134970d94fb1eab83556d3b98c7324711596f",
+    "authority_revision": "AOS-002037",
+    "files": {
+      ".evidence/qyh-customer-start-signing-material-20261015/design-review-material-r1.txt": "004043a5bfff1cd789fde39b85fd9c95e1446033d07aed56c2aa31ba0f87f49a"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "3756a549a48d6fd0164594e2e762c47ea4b79abec6a4d5f8dc3551435ecf822a",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

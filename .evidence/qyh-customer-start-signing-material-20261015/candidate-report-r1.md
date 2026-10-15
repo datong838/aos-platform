@@ -1,0 +1,15 @@
+# Start私有签名材料：前置代码合同候选
+
+Rules：完整231Goal/原唯一真人安装全恢复本机授权/唯一m1写者、Authority2037保留。contact parent/maintenance-r10/signing Task scope非重叠；本轮过期发现后通过原renew_task按sameowner/expected_task逐一续期至16UTC，其他38历史Lease不动，未私改文件。原DB只读、HostworkerProviderOFF/unknown旧12不重放/disabledSchedule/source/noPush/daily每次实际aos最新原卷fullPGAPIWeb及aos2不重启不变。
+
+原producer纯内存探针证明原Start签名包括request.reason，但旧保存模型遗漏它。贡献投影还会变更items/ledger而保留原hash；这些必须在后续reader中先验证原保存物证再作投影。进一步模型探针首版hash断言失败，定位为typed reservation.created_at JSON回读TzInfo(0)与生产datetime.timezone.utc的repr不同。r2在item副本规范化UTC表示后复原原生产默认UTC签名，公开JSON保持完全一致。不会猜未知旧timezone、旧reason或修改历史hash。
+
+方案r1 NEED_EVIDENCE合法消费后，r2独立设计PASS于当时有效Lease下合法消费，才RED与最小实现。恰好三个产品测试文件：domain模型增加reason(defaultNone/exclude/reprFalse)、私有serializer及原生产UTC纯签名重建helper；start在任何Store/reservation访问前用原redact_sensitive拒绝敏感reason且不echo，新Start传入原reason。原hash配方/idempotency、原生产Start/Receipt resolver与零效果保持。原Store仅序列化Start时保存私有reason，其他记录和SQL/事务不改；旧payload可decode，ON CONFLICT既有row不补写reason，缺材料重建稳定拒绝。新专项test验证这些行为及unknown held/原Start不可变。
+
+RED为8失败1通过；新专项加原W6-08/Store为20通过；Git archive b9113497加恰好三owned overlay冻结407通过，完整manifest与source before/after hash一致，不复制用户dirty。独立原w6_008临时PG真实Store往返：raw authority含私有reason、回读重建原hash、public wire/repr不泄露、同hash幂等、旧row不补写、RLS裸查询仅本tenant2行、只读写25006；准确CID5bac66701308e3161260c218e871298963ba101a1a78437a2f0dc0aae89d9366按owner/task核已停止，原卷未触碰。额外真实in-process FastAPI Start与贡献响应均200且公开无reason，实际OpenAPI输出schema也无reason。全部使用合成内存resolver，不是实际Consent/Receipt/Contact授权。
+
+初次code-quality-r1准备在过期Lease处拒绝，只有material draft，无request/attempt/模型调用。只读对账source hashes仍同冻结、临时CID停止、原API15265/Web89803/PG身份保持后，受支持续期。没有通过续期恢复旧结果效力；fresh design compliance r3对三claim均supported但verdict NEED_EVIDENCE请求独立代码质量，照原结论合法消费。fresh code-quality r2实际审当前完整源码/测试/407/原PG/真实framework序列化及r2方案一致性，PASS并合法消费。没有把r3 NEED改成PASS或消费过期结果。
+
+此为未部署前置代码候选，不是contact GET、当前Consent/Contact、经营或完整Goal交付。原实际API15265/source80b39、Web89803/f036、原PG同CID/卷/Started20:36:36/schema161/650/绑定0保持；router/read_http/Web/DDL/AIP未改。Task仍ACTIVE，待后续完整reader波联合作准确Delivery，不提前提高Authority或缩小目标。下一支持登记独立contact reader/test，补完整读取方案并fresh独立设计门，之后RED/冻结/native/codequality/精确提交/fresh维护/原真人SDK650/适用原稿视觉/livePrime。
+
+fullC唯一真人最终真预算/原部署、自然有来源CaseRun建议exact评审内部内容受约束能力可读产物人审续跑总控Wiki/安装全生命周期/八真实场景全部视觉/连续观察发布继续，完整Goal ACTIVE。

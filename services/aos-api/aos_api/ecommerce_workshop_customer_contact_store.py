@@ -16,6 +16,7 @@ from aos_api.ecommerce_workshop_customer_contact import (
     CustomerFrequencyPolicyRevision,
     CustomerFrequencyReservationRevision,
     StartCustomerDialogueBatchRequest,
+    customer_start_authority_data,
 )
 from aos_api.ecommerce_workshop_customer_contracts import CustomerExactRef
 from aos_api.ecommerce_workshop_customer_lifecycle import CustomerConsentPolicyRevision
@@ -52,10 +53,12 @@ class EcommerceWorkshopCustomerContactStore:
         self._assert_tenant(scope, item)
         columns = f",{extra_columns}" if extra_columns else ""
         placeholders = "," + ",".join("%s" for _ in extra_values) if extra_values else ""
+        payload = (customer_start_authority_data(item) if isinstance(item, CustomerBatchStartDecisionRevision)
+                   else item.model_dump(mode="json", by_alias=True))
         with self._connect(scope) as conn:
             conn.execute(
                 f"INSERT INTO {table}(org_id,project_id,{identity_column},revision{columns},content_hash,authority_data,created_at) VALUES (%s,%s,%s,%s{placeholders},%s,%s::jsonb,%s) ON CONFLICT DO NOTHING",
-                (*scope.key, identity, revision, *extra_values, content_hash, self._json(item.model_dump(mode="json", by_alias=True)), created_at),
+                (*scope.key, identity, revision, *extra_values, content_hash, self._json(payload), created_at),
             )
             row = conn.execute(
                 f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",

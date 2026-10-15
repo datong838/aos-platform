@@ -1,0 +1,54 @@
+{
+  "containerId": "5bac66701308e3161260c218e871298963ba101a1a78437a2f0dc0aae89d9366",
+  "originalVolumeTouched": false,
+  "fixtureOnlyNotOriginalSchema": true,
+  "originalProducerSyntheticResolvers": true,
+  "actualConsentOrReceiptAuthority": false,
+  "exactDdlSha": "5865d6b7781a5c7f5b6cd6c02c475d18c935f6fb6e49f1cc5b31a0bc2eb6f166",
+  "sourceHashes": {
+    "services/aos-api/aos_api/ecommerce_workshop_customer_contact.py": "afae8d6baf95c977a176efa67b56ca3877351dd1c819fb8723d28dc68a06a9b3",
+    "services/aos-api/aos_api/ecommerce_workshop_customer_contact_store.py": "c75d0d378df875b38c4f5a86d5b21d2f61a3433cf5614e0fcdb8929b409164c9"
+  },
+  "rawAuthorityContainsPrivateReason": true,
+  "publicWireUnchanged": true,
+  "reprOmitsReason": true,
+  "originalTypedHashReconstructed": true,
+  "sameHashIdempotent": true,
+  "legacyWithoutReasonNotRewritten": true,
+  "legacySigningMaterialUnavailable": true,
+  "foreignRowsHiddenWithoutWhere": true,
+  "visibleOwnRows": 2,
+  "writeDeniedSqlstate": "25006",
+  "originalFourEffectsZero": true,
+  "connectionFacts": [
+    {
+      "role": "aos_runtime",
+      "readonly": "off"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "off"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "off"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "off"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on"
+    }
+  ],
+  "wholeGoalComplete": false
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-start-signing-material-20261015-design-r1",
+  "task_id": "qyh-customer-start-signing-material-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "b91134970d94fb1eab83556d3b98c7324711596f",
+    "authority_revision": "AOS-002037",
+    "files": {
+      ".evidence/qyh-customer-start-signing-material-20261015/design-review-material-r1.txt": "004043a5bfff1cd789fde39b85fd9c95e1446033d07aed56c2aa31ba0f87f49a"
+    }
+  },
+  "status": "NEED_EVIDENCE",
+  "execution_authorized": false,
+  "result_sha256": "a6c7d935597ab3500ccd74f261e52e6b88d0f33f185014dbd14d68d43b953617",
+  "transport_sha256": "75f6923be56d7c3fbc726fcbe92ed9e558c011045844c4e4536dcd71c115ef38"
+}

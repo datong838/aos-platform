@@ -1,0 +1,13 @@
+{
+  "syntheticFixtureOnly": true,
+  "databaseOrExternalHttpCalls": 0,
+  "inProcessFastApiStatus": [
+    200,
+    200
+  ],
+  "privateReasonAbsentFromBothPublicBodies": true,
+  "responseEqualsOriginalPublicDump": true,
+  "actualFastApiOpenapiOutputOmitsReason": true,
+  "frozenSourceUsed": true,
+  "wholeGoalComplete": false
+}

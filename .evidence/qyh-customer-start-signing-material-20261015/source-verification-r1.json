@@ -1,0 +1,44 @@
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_workshop_customer_contact.py": "afae8d6baf95c977a176efa67b56ca3877351dd1c819fb8723d28dc68a06a9b3",
+    "services/aos-api/aos_api/ecommerce_workshop_customer_contact_store.py": "c75d0d378df875b38c4f5a86d5b21d2f61a3433cf5614e0fcdb8929b409164c9",
+    "services/aos-api/tests/test_customer_start_signing_material.py": "8fad90fa9d58a19c231fab485eb89e2df1506cb42c8b73b296039138896c869c"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_workshop_customer_contact.py": "afae8d6baf95c977a176efa67b56ca3877351dd1c819fb8723d28dc68a06a9b3",
+    "services/aos-api/aos_api/ecommerce_workshop_customer_contact_store.py": "c75d0d378df875b38c4f5a86d5b21d2f61a3433cf5614e0fcdb8929b409164c9",
+    "services/aos-api/tests/test_customer_start_signing_material.py": "8fad90fa9d58a19c231fab485eb89e2df1506cb42c8b73b296039138896c869c"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_customer_start_signing_material.py",
+    "tests/aip/test_w6_08_customer_contact.py",
+    "tests/aip/test_w6_08_customer_contact_store.py",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_customer_lifecycle_readonly.py",
+    "tests/test_w6_009_three_module_closure.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/aip/test_w6_07_customer_lifecycle.py",
+    "tests/aip/test_w6_07_customer_lifecycle_store.py"
+  ],
+  "baseHead": "b91134970d94fb1eab83556d3b98c7324711596f",
+  "frozenWithOnlyThreeOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T07:47:13.235358+00:00",
+  "finishedAt": "2026-10-15T07:47:47.043633+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "091f0c833eb152d5a673e446d623bc142fd9802ab17fce2aad35faf79e25847f"
+}

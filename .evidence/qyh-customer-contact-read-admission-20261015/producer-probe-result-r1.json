@@ -1,0 +1,17 @@
+{
+  "syntheticMemoryOnly": true,
+  "databaseOrHttpCalls": 0,
+  "originalProducerUsed": true,
+  "actualConsentOrReceiptAuthority": false,
+  "originalStartSignatureWithTypedItemsAndReasonVerified": true,
+  "storedModelOmitsReason": true,
+  "withoutReasonHashDifferent": true,
+  "bindingHashVerified": true,
+  "contributionProjectionChangesItemsWithoutChangingOriginalHash": true,
+  "originalStoredStartUnchanged": true,
+  "unknownPreserved": true,
+  "reservationRemainsHeld": true,
+  "originalFourEffectsZero": true,
+  "sourceSha": "f8b745746782cc9ff9fa648b97787cb1bc06680db4f51f87baaab9c28a1354a6",
+  "wholeGoalComplete": false
+}

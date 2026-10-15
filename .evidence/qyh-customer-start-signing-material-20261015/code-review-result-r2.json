@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "3756a549a48d6fd0164594e2e762c47ea4b79abec6a4d5f8dc3551435ecf822a",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-start-signing-material-20261015-code-r2",
+    "task_id": "qyh-customer-start-signing-material-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "b91134970d94fb1eab83556d3b98c7324711596f",
+      "authority_revision": "AOS-002037",
+      "files": {
+        ".evidence/qyh-customer-start-signing-material-20261015/code-review-material-r2.txt": "f72e514908f5f77dce33c669a5550083a2a68f4bc477ad76e47561a2278e4461"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "当前三文件候选符合r2最小修复方案：新Start私有reason保存与原生产UTC typed签名重建可行，原producer签名配方/幂等不改，旧row不猜不补写，原Start/Receipt resolver及零效果保持。",
+        "evidence": "contact.py:197 `reason` field has exclude=True repr=False; contact.py:217 `customer_start_signing_hash` normalizes reservation.created_at to UTC before canonical_hash; store.py:102 calls customer_start_authority_data for Start only; store.py:188 raises START_AUTHORITY_RESOLVER_UNAVAILABLE; store.py:227 raises ACTION_RECEIPT_RESOLVER_UNAVAILABLE; tests:0-200 verify idempotency and zero effects.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前源码和专项/实际in-process FastAPI响应及OpenAPI输出证明private reason不出公开wire/schema/repr，Store回读可复原原hash；敏感reason先于任何Store访问拒绝且不echo，unknown投影held及原Start不变。",
+        "evidence": "tests:test_original_hash_and_public_wire_remain_unchanged asserts 'reason' not in wire and not in schema mode='serialization'; tests:test_sensitive_reason_denied_before_any_store_or_batch_access verifies Forbidden() raises before store access; tests:test_projection_keeps_private_material_off_public_dto_and_original_start_immutable asserts view.latest_start.reason preserved but not in JSON and state='unknown' with held reservation; in-process HTTP evidence confirms privateReasonAbsentFromBothPublicBodies.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原失败RED、三owned overlay冻结407、原w6_008临时PG持久化往返/幂等/旧row/RLS/25006且停止CID物证支持此前置代码候选的当前独立质量判定；未部署、未放行GET、未声称当前Consent/Contact或完整Goal完成。",
+        "evidence": "source-verification-r1.json shows 407 passed with frozenWithOnlyThreeOwnedOverlays:true; native-r1-result.json shows fixtureOnlyNotOriginalSchema:true, writeDeniedSqlstate:'25006', wholeGoalComplete:false; raw log red-r1.log captured initial failures resolved in green-r1.log; source hashes unchanged across before/after.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "确认三文件已提交至目标分支，准备后续完整contact reader/SDK650/视觉测试套件以推进Full231Goal完成。"
+  }
+}

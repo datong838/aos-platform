@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "3756a549a48d6fd0164594e2e762c47ea4b79abec6a4d5f8dc3551435ecf822a",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-start-signing-material-20261015-design-r2",
+    "task_id": "qyh-customer-start-signing-material-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "b91134970d94fb1eab83556d3b98c7324711596f",
+      "authority_revision": "AOS-002037",
+      "files": {
+        ".evidence/qyh-customer-start-signing-material-20261015/design-review-material-r2.txt": "d6457051a4ff4ea4515d7d31f84da702763fc3e5d041ce73537a1334c76cddd1"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "原producer签名遗漏reason及typed reservation时间回读表示差异均由探针证明；方案对新Start私有保存原reason并用纯UTC表示重建helper保持原生产默认UTC hash，旧row不猜不补写且后续reader不弱验签的前置修复方向一致、可实施。本断言不声称产品修复已实现。",
+        "evidence": "1. 探针证明：文件 `.evidence/qyh-customer-contact-read-admission-20261015/producer-probe-result-r1.json` 中 `originalStartSignatureWithTypedItemsAndReasonVerified: true`, `storedModelOmitsReason: true`, `withoutReasonHashDifferent: true`。2. 差异证明：原型探针文件 `model-contract-probe-result-r2.json` 中 `privateRoundtripRebuildsOriginalHash: true` 和 `typedReservationDatetimeRequiresUtcReconstruction: true`。3. 方案设计：`implementation-plan-r1.md` 明确 '新增customer_start_authority_data纯serializer...不猜旧reason，不更改hash配方' 以及 '历史缺reason或非原生产UTC表示无法验证的记录稳定拒绝'。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "独立模型设计探针支持exclude/repr false可选字段、私有往返与原public wire/schema不变的可行性；方案的敏感理由先于reservation拒绝和原resolver/零效果边界保持位置明确，须由未来RED和代码质量验证实现。",
+        "evidence": "1. 探针可行性证据：`model-contract-probe-result-r2.json` 显示 `publicWireExactlyEqual: true`, `serializationSchemaOmitsReason: true`, `validationSchemaAcceptsPrivateReason: true`, `reprOmitsReason: true`, `legacyWithoutReasonStillDecodes: true`。2. 敏感性与边界：当前代码 `services/aos-api/aos_api/ecommerce_workshop_customer_contact.py` 的 `start_batch` 方法中，现有 idempotency/contentHash/decision ID 逻辑保持不变。`implementation-plan-r1.md` 规定 '敏感则稳定CUSTOMER_START_SIGNING_REASON_SENSITIVE且不echo' 且 '原production resolvers仍恒拒绝'。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "三个产品测试文件已登记非重叠；方案明确未来先RED、最小实现、冻结/原DDL隔离PG往返/公开schema/独立代码质量，再准确只交付前置代码合同；此前设计审阅不要求未来产物已存在，不授经营权限或宣称完整Goal完成。",
+        "evidence": "1. 文件登记：`implementation-plan-r1.md` 列出三个确切文件：`ecommerce_workshop_customer_contact.py`、`ecommerce_workshop_customer_contact_store.py`、`tests/test_customer_start_signing_material.py`。2. 非重叠性：`signing-task-readback-r1.json` 显示 `nonOverlapping: true`。3. 顺序与范围：`design-review-material-r2.txt` 开篇声明 '这是 DESIGN coherence/implementability review... NOT code quality or claims future tests exist' 且 '独立方案Prime PASS并合法消费后RED'。4. 目标状态：所有证据文件（如 `producer-probe-result-r1.json`）均包含 `wholeGoalComplete: false`。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "启动 RED（Redteam）流程。由指定 owner 针对 `implementation-plan-r1.md` 的改动点（特别是 `reason` 字段的 exclude/repr 处理及 UTC 归一化 helper）执行代码质量与安全审查，确保产品代码在最小实现后符合设计规格，且未引入新的验证弱点。"
+  }
+}

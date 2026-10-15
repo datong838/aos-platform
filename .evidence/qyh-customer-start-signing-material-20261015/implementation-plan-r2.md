@@ -1,0 +1,26 @@
+# Start原签名材料私有持久化：前置文件计划
+
+基线b9113497/m1、Authority2037、同owner有效非重叠Lease至08UTC。复习产品v2/09及技术56-W6-08含8/25封板。上位contact parent implementation-plan-r1明确完整231Goal及后续完整读取，不把此前置当读取/经营交付。原用户安装全恢复授权、唯一真人、原DB只读、HostworkerProviderOFF、unknown旧12不重放、disabledSchedule/source/noPush、daily每次实际aos最新原卷fullPGAPIWeb及aos2不重启保留。
+
+原producer纯内存probe-r1已证明：start contentHash按typed batchRef/exactRefs/items/request.reason签名，保存Start模型却没有reason；无reason的hash不同。贡献投影再改items/ledger但保留原hash。这两件事不通过弱校验绕过。本前置先保存新记录的签名材料；后续reader再独立验证原记录和观察后复用投影。
+
+## 精确三个产品/测试文件
+
+1. services/aos-api/aos_api/ecommerce_workshop_customer_contact.py：CustomerBatchStartDecisionRevision增加可选私有reason字段，默认None、min1/max500、Field(exclude=True,repr=False)。旧payload无reason仍可decode；public model_dump/JSON/API与前端exact keys不加字段，repr不泄露。新增customer_start_authority_data纯serializer只给Start持久化：原public dump加非None reason，不猜旧reason，不更改hash配方。原start_batch在任何reservation之前用原redact_sensitive检查request.reason，敏感则稳定CUSTOMER_START_SIGNING_REASON_SENSITIVE且不echo，之后新Start传入原reason。现有idempotency/contentHash/decision ID/零效果与start/receipt resolver原门不改。
+
+2. services/aos-api/aos_api/ecommerce_workshop_customer_contact_store.py：仅原_append序列化Start时使用上述私有serializer，其他记录仍原model_dump；原tenant/append-only/ON CONFLICT/hash/idempotency/事务与所有SELECT/solver不改。回读type(item).model_validate接收reason，但外部序列化仍排除。不改DDL、旧authority_data或任何原业务记录。
+
+3. services/aos-api/tests/test_customer_start_signing_material.py：原producer合成fixture，签名仍原typed公式；新Store往返后能从持久化记录重建完整hash；公开wire/repr无reason；旧记录缺reason仍能decode且明确缺材料、不补写；敏感reason在任何reservation/withdrawal读取前拒绝且错误不echo。原production resolvers仍恒拒绝，所有发送/联系/Provider次数0。
+
+## Loop与证据
+
+独立方案Prime PASS并合法消费后RED；最小实现后原W6-08、Store、W6-07/customer reader/HTTP/相邻冻结Git archive+恰好三owned overlay，manifest前后hash一致、不复制用户dirty。独立tmpfs原w6_008 DDL真实Store append_start→raw JSON含reason→回读能验原hash→公开wire无reason，旧row无需改写、同hash幂等/RLS/READONLY25006；准确CID按owner/task核停止，不触碰原卷。独立代码质量后可精确提交代码保存合同；不得声称原业务POST/GET或完整安装/经营/视觉已交付。后续parent继续有界reader/现场SDK650与适用视觉/独立复审。
+
+reason只作为原签名必要的私有authority材料保存在既有tenant JSONB中，敏感值前置拒绝且GET后续仍全量隐私检查；不输出reason文本到日志/错误/DTO。Field exclude会影响OpenAPI输出schema，必须通过实际序列化schema/原HTTP回归核对，不能只凭意图声称兼容。旧不可完整验签Start后续reader稳定拒绝，不进行历史推断或hash迁移。任何测试失败先定位再改，完整Goal ACTIVE。
+
+
+## r2设计探针补记：typed嵌套时间与阶段边界
+
+首轮独立设计NEED_EVIDENCE已合法消费，未据此编码。它要求实现后证据，本轮明确当前是实施前方案复审，RED/代码质量/原PG等均为未来强制步骤，不能倒置顺序。独立Prototype模型探针（非产品修改）已验证public dump完全相等、serialization schema无reason/validation schema接收reason、repr不含reason、旧记录None、私有往返原生产默认UTC签名可完整复原。
+
+探针首版在私有往返原hash断言失败，定位为typed reservation.created_at：原producer datetime.timezone.utc，Pydantic JSON回读为TzInfo(0)，default=str造成repr不同。r2用typed item副本把reservation.created_at.astimezone(UTC)后原hash完全相等，公开JSON仍完全一致。因此domain另加customer_start_signing_hash纯重建helper供测试和未来reader复用：要求非None reason，复制items/仅规范化嵌套reservation时间的UTC表示，再调用原canonical_hash原batchRef/startSequence/exactRefs/typed items/reason配方。原start_batch签名计算本身不改，生产公开入口默认datetime.now(UTC)已满足该表示；历史缺reason或非原生产UTC表示无法验证的记录稳定拒绝，不猜原timezone或改旧hash，不声称支持任意旧非UTC注入时钟。这个helper不发起任何authority读取/写入或授权。专项需验证未规范化会不同、规范化等于原签名，wrong reason/hash/time不会通过，且helper不改变item/公开wire。

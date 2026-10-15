@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "3756a549a48d6fd0164594e2e762c47ea4b79abec6a4d5f8dc3551435ecf822a",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-start-signing-material-20261015-design-r1",
+    "task_id": "qyh-customer-start-signing-material-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "b91134970d94fb1eab83556d3b98c7324711596f",
+      "authority_revision": "AOS-002037",
+      "files": {
+        ".evidence/qyh-customer-start-signing-material-20261015/design-review-material-r1.txt": "004043a5bfff1cd789fde39b85fd9c95e1446033d07aed56c2aa31ba0f87f49a"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "原Start签名含request.reason但保存模型遗漏的缺口由原producer探针证明；方案仅对新Start私有保存必要材料、原hash/idempotency不变，旧row缺材料不猜不补写，后续完整reader不降级弱校验。",
+        "evidence": "producer-probe-result-r1.json 已证明 originalStartSignatureWithTypedItemsAndReasonVerified=true 与 storedModelOmitsReason=true（无 DB 调用、纯内存）。design-review-material-r1.txt 明确 reason 以 Field(exclude=True,repr=False) 可选私有保存，新 Start 用私有 serializer 保留原 hash，旧 row 不补写。但不兼容 claim：contact.py 当前 `CustomerBatchStartDecisionRevision` 和 `start_batch` 实现均未包含 reason/私有 serializer/敏感拒绝逻辑（代码真源），仅有计划。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "可选exclude/repr false字段与仅Start专用serializer设计保持公开wire/原frontend exact keys及旧payload decode；敏感理由在reservation之前拒绝且不echo，原生产resolver和零效果边界保留。",
+        "evidence": "design plan 声称使用 `Field(exclude=True, repr=False)` 与 `private_start_serializer`，并在 `start_batch` reservation 前做 `redact_sensitive` 拒绝 `CUSTOMER_START_SIGNING_REASON_SENSITIVE`。但 contact.py 当前 no reason field/serializer/redact 存在；frontend `parseCustomerContactStart` `exact()` 显式列出的 keys 不含 reason，故新 wire 不加字段需实现支持；敏感错误不 echo 需代码验证。材料仅有设计断言，无实现证据。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "三个产品测试文件已非重叠登记，RED/冻结原W6-08及相邻/原DDL隔离PG持久化往返/公开schema与独立质量门明确；此前置不冒充GET、当前Consent/Contact或完整Goal完成。",
+        "evidence": "signing-task-readback-r1.json 非重叠=true、scope 限定三文件；plan 明确当前 Consent/Contact/完整 Goal 未完成。但 claim 中的 'RED/冻结原 W6-08 及相邻'、'原 DDL 隔离 PG 持久化往返'、'公开 schema'、'独立质量门' 为实施后证据，审阅时点只有 design plan，无 RED/冻结/测试通过状态证据。lease 截止 08UTC 且 status ACTIVE，表明尚未完成隔离验证闭环。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "在实现并产出 test_customer_start_signing_material.py 通过后，提交补充证据：证明 reason 在 reservation 前拒绝且不 echo、公开 JSON/前端 exact keys 不含 reason、旧 row 仍可 decode 且 hash 幂等一致。随后重新提交复核。"
+  }
+}

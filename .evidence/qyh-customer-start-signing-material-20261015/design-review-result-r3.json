@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "3756a549a48d6fd0164594e2e762c47ea4b79abec6a4d5f8dc3551435ecf822a",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-start-signing-material-20261015-design-r3",
+    "task_id": "qyh-customer-start-signing-material-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "b91134970d94fb1eab83556d3b98c7324711596f",
+      "authority_revision": "AOS-002037",
+      "files": {
+        ".evidence/qyh-customer-start-signing-material-20261015/design-review-material-r3.txt": "ed17e5cf0513828c2d3a11d4543e32cf4ab74020029daeb24919502c21b3be5b"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "当前已登记三文件候选与r2方案一致：新Start私有保存原reason、只按原生产UTC typed签名纯重建，不改原签名配方；旧记录缺材料不猜不补写，后续完整reader不弱验签，前置修复设计仍可实施。",
+        "evidence": "文件ecommerce_workshop_customer_contact.py中CustomerBatchStartDecisionRevision已有reason: str | None=Field(default=None, min_length=1, max_length=500, exclude=True, repr=False)（私有字段，公共序列化排除）；helper customer_start_signing_hash存在且要求非None reason，规范化reservation.created_at为UTC后调用canonical_hash；旧payload无reason仍可decode（model_validate接受legacy）。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "可选exclude/repr false字段、仅Start serializer和敏感reason先于任何Store访问的布局保留公开wire/旧payload decode及生产resolver/零效果边界；所供当前源码与模型探针支持方案兼容性，未部署。",
+        "evidence": "ecommerce_workshop_customer_contact.py中start_batch在reservations前调用redact_sensitive(request.reason)检查敏感reason；store.py中_append对Start使用customer_start_authority_data而非默认model_dump；模型探针result.json声明designPrototypeOnly:true、productCodeChanged:false、publicWireExactlyEqual:true、legacyWithoutReasonStillDecodes:true、actualStoreImplementationNotClaimed:true；原生native summary仅报告fixtureOnlyNotOriginalSchema:true，sourceHashes未变。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "受支持同owner续期后该NEW r3独立方案一致性复审不恢复旧结果效力；三文件冻结407与原DDL临时PG已留物证，未来仍须fresh独立代码质量及完整contact reader/SDK650/视觉后才能宣称相应交付，完整Goal不缩小。",
+        "evidence": "material声明R2被'legally consumed'且是'NEW request'；manifest显示frozenWithOnlyThreeOwnedOverlays:true、originalVolumeTouched:false、noUserDirtyCopied:true；native summary中originalFourEffectsZero:true、exactDdlSha存在但只测fixture、wholeGoalComplete:false；producer-probe-result-r1.json也标记wholeGoalComplete:false。但尚未提供独立代码质量复审证据及future consumer reader/SDK650/visual的规划/执行证明。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "执行RED并建立独立代码质量复审门；准备完整contact reader/SDK650/视觉测试套件后提交fresh独立复审。"
+  }
+}
