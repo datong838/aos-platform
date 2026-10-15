@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "71de56217762d959bdc8e4f8e85018a8f81e9cd4e12e33dfc698ce604d5cd81e",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r7-20261015-api-controller-r4",
+    "task_id": "qyh-restoration-readonly-continuation-r7-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "4e038063368cc41fe17aec7b9f6148fa66bd7192",
+      "authority_revision": "AOS-002034",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r7-20261015/api-controller-review-package-r4.txt": "31cf88dd07cdf63fa396200525f64d34268e5e3e6878173e7d89c85ed3e4953d"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "控制器源码把quality合法消费核对放在新意图与信号之前；本机负向实验已证明NEED_EVIDENCE在legal处拒绝，旧API/Web/PG及意图缺失状态前后一致。",
+        "evidence": "文件 price_disposition_api_switch_r4.py：quality() 在 line 42 调用，其内部 first calls legal(E,'api-controller-review-request-r4.json','api-controller-review-result-r4.json','api-controller-review-consumption-r4.json')（line 35-37）。assert not (E/'api-switch-intent-r1.json').exists() and not (E/'api-started-r1.json').exists() 紧接 quality() 之后（line 42）。负向实验 pre-effect-gate-deny-result-r4.json 显示 statesExactlyEqual=true, deniedBeforeIntentAndSignal=true, returncode=1。raw log 显示 AssertionError in legal() 函数。before/after 的 apiEffectsArtifacts 全部为 false。旧API(pid 80779)/Web(pid 89803)/PG(c ID 84989681...) 保持不变。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "所供前效代码与当前预检支持其精确版本及范围：后续信号仅指定旧API，启动使用原readonly wrapper且保留单次意图；本项仅审代码，尚无部署或经营完成声明。",
+        "evidence": "文件 price_disposition_api_switch_r4.py：spawn 命令 args 包含 --serve-management-readonly, --installed-readonly-installation=ab2fd72f-d81c-400d-bbbc-e1589a159d6b, --source-candidate=REPORT (指向 price-disposition-api-20261015.json)。只 signal old API via os.kill(OLD, signal.SIGTERM)。启动后 save('api-started-r1.json', dict(pid=proc.pid,head=HEAD,source=str(source),spawnedOnly=True)) 表明单次意图。文件 api-preflight-r3.json 显示 apiStartAuthorized=false, eightWorkbenchesVerified=false, runtimeHostEnabled=false, wholeGoalComplete=false。package r4 txt 头明确：actual preflight has succeeded, but no API signal/spawn. Do not require post-effect proof to permit pre-effect control review.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前 candidate 隔离状态，不执行 spawn 信号；等待 parent controller quality gate 完成并合法消费，再决定是否推进。"
+  }
+}

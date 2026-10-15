@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r7-20261015/price_disposition_api_switch_r3.py", line 42, in <module>
+    quality();assert not (E/'api-switch-intent-r1.json').exists() and not (E/'api-started-r1.json').exists(),'known intent: reconcile no replay'
+    ^^^^^^^^^
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r7-20261015/price_disposition_api_switch_r3.py", line 35, in quality
+    legal(E,'api-controller-review-request-r3.json','api-controller-review-result-r3.json','api-controller-review-consumption-r3.json')
+  File "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r7-20261015/price_disposition_api_switch_r3.py", line 16, in legal
+    req=read(folder/request);env=read(folder/result);transport=read((folder/result).with_suffix('.transport.json'));assert gate.consumption_record(req,env,transport,env['runner_sha256'])==read(folder/consume) and env['result']['verdict']=='PASS'
+                                                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

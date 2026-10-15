@@ -1,0 +1,50 @@
+{
+  "finalScreens": [
+    {
+      "file": "disposition-actual-1280-r2.png",
+      "sha256": "df3ca9a554d1cb319676ce4bd11de1dd32549046e8837bf4b4be13bcfce63bc4",
+      "width": 1280,
+      "height": 720,
+      "inspected": true
+    },
+    {
+      "file": "disposition-reference-1280-r3.png",
+      "sha256": "c28c32af1390c82b6581d10ccc928c078b27fbfdcd8b7b1e3279510a642d3526",
+      "width": 1280,
+      "height": 720,
+      "inspected": true
+    },
+    {
+      "file": "disposition-actual-1440-r2.png",
+      "sha256": "3c34013e2770d3bdc7f1028bc877a58dd2de496af09c600f31b22ac0472796b0",
+      "width": 1440,
+      "height": 900,
+      "inspected": true
+    },
+    {
+      "file": "disposition-reference-1440-r3.png",
+      "sha256": "5c93306ba6780bda5f57edd8ca0c535c160359d2aeae1f223df837506beb1de3",
+      "width": 1440,
+      "height": 900,
+      "inspected": true
+    },
+    {
+      "file": "disposition-actual-1920-r2.png",
+      "sha256": "3bce693c212769b8a74f4566286db954ec1f538113136d3455378a17709e278b",
+      "width": 1920,
+      "height": 1080,
+      "inspected": true
+    },
+    {
+      "file": "disposition-reference-1920-r3.png",
+      "sha256": "fe998fd3b0c83ce831903d50d39e7be0d2b48a6bf510a1647fec0bbcb5265821",
+      "width": 1920,
+      "height": 1080,
+      "inspected": true
+    }
+  ],
+  "finalPair": "actual r2 native CSS-scale captures / reference r3 stable paint + explicit CSS clip(scale1)",
+  "preservedInvalidCaptures": "actual r1 device-pixel dimensions; reference r1 native-view aspect ratio, r2 surface scale/crop, r4 experimental half-scale padding; never use as same-size acceptance.",
+  "reference1280r3Confirmed": true,
+  "postCaptureViewportOverridesCleared": true
+}

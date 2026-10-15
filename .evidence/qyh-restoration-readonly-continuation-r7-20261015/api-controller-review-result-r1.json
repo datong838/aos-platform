@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "71de56217762d959bdc8e4f8e85018a8f81e9cd4e12e33dfc698ce604d5cd81e",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r7-20261015-api-controller-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r7-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "4e038063368cc41fe17aec7b9f6148fa66bd7192",
+      "authority_revision": "AOS-002034",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r7-20261015/api-controller-review-package-r1.txt": "43d719bda3f79ae1b824dad43e4604e6ecae855fe4d4b8f7dd4b4a4afa752030"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "新控制器与实际预检核对精确m1/Authority/Lease、原API/Web身份、原PG卷和源manifest及已消费代码门；只允许一次准确API更新。",
+        "evidence": "price_disposition_api_switch_r1.py 中 base() 硬编码 HEAD/OWNER/CID；legal() 调 route-quality-consumption-r2.json 与 code-review-consumption-r2.json；但本批次 package 未包含 api-controller-review-result-r1.json 或 api-controller-review-consumption-r1.json。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "新意图、原只读wrapper及异常只读对账边界保留；不重启PG/Web/Chrome、不替代每日完整重启，不把spawn或代码PASS当实际业务或视觉完成。",
+        "evidence": "price_disposition_api_switch_r1.py 含 PG/Web/lsof 断言、api-preflight-r1.json 记录 serviceEffects=false、未触碰 PG/Web/Chrome。仅 source-guard 与 wrapper 文档，缺独立 readonly 对账结果。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "补交 .evidence/qyh-restoration-readonly-continuation-r7-20261015/api-controller-review-result-r1.json 及对应 consumption，验证 preflight 与 intent 独立审核通过。"
+  }
+}

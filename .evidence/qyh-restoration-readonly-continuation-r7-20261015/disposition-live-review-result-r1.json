@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "71de56217762d959bdc8e4f8e85018a8f81e9cd4e12e33dfc698ce604d5cd81e",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r7-20261015-disposition-live-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r7-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "4e038063368cc41fe17aec7b9f6148fa66bd7192",
+      "authority_revision": "AOS-002034",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r7-20261015/disposition-live-review-material-r1.txt": "8480f5f533611d3374e6756461347124968807fe92e761ec98606813b9ec6e07"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "真实API监听及cwd对应最新已提交4e冻源，原Web和原PG卷/StartedAt保持；fresh原650表完整指纹逐表相等，证据不宣称全恢复或经营完成。",
+        "evidence": "verify_disposition_runtime_r1.py断言HEAD=4e03806、lsof端口18080 PID=95375、cwd含api-source-4e03806；Web 89803/f036无diff。disposition-runtime-proof-r1.json确认pgStartedAt 2026-10-14T20:36:36、volume aos-qyh-history159-prepared-data-20261011、all650BeforeAfterEqual=true、wholeGoalComplete=false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原真人org-org/dev-project正式处置SDK由404变200可信空及空命令/外部false，query400与新匿名401、实际canonical价格closure404保留，业务nonGet为空且没有未知登录重放。",
+        "evidence": "disposition-native-identity-sdk-r1.json：me.orgId/org-org、projectId/dev-project、caseCount=0、allowedCommands=[]、externalEffectsAllowed=false。disposition-live-shas-r1.json与report：query400、anonymous401、canonicalPriceClosureStill404=true、businessNonGet=[]；loginTimeoutReconciled记录仅一次正常POST200。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "三个实际视口的DOM四筛选32px和切换状态已核，最终六份原稿/实际PNG尺寸及SHA已记录并区分无效采集；不宣称全页或八台视觉和真实业务完成。",
+        "evidence": "verify_disposition_runtime_r1.py循环(1280,720)/(1440,900)/(1920,1080)，断言buttons height=32、documentWidth<=width、filters=[可比],[待复核],[已排除],[全部]。disposition-live-shas-r1.json列出六张actual r2/reference r3 PNG的宽高与SHA，并标注preservedInvalidCaptures与viewportOverridesCleared。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续下一登记helper：按AOS-002034独立发起daily full PG→API→Web重启校验与剩余scope接续评审；保留只读冻结集与650指纹基线。"
+  }
+}

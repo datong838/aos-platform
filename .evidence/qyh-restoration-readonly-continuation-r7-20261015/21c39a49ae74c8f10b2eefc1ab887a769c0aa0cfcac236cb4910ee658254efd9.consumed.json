@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-restoration-readonly-continuation-r7-20261015-api-controller-r4",
+  "task_id": "qyh-restoration-readonly-continuation-r7-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "4e038063368cc41fe17aec7b9f6148fa66bd7192",
+    "authority_revision": "AOS-002034",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r7-20261015/api-controller-review-package-r4.txt": "31cf88dd07cdf63fa396200525f64d34268e5e3e6878173e7d89c85ed3e4953d"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "a36f17766816629f148c3665faef2dc6d555288be25c40cc965ae67211162973",
+  "transport_sha256": "94c049b0e4c0fd8a018a2baf8b2604dda9ea5d5ad426322af2f7a19917be320b"
+}

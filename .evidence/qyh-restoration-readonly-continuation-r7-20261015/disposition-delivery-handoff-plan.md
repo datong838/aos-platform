@@ -1,0 +1,9 @@
+# 处置读取精确交付及全部剩余接续
+
+正式Delivery只包含六文件已提交代码4e、冻结267与专项/原W6-006隔离证据、真实API95375/SDK可信空/commands[]/400/401/650字典全等/三尺寸滤钮32px、各独立code/controller/live PASS合法消费。不声明自然经营链、当前gate/预算批准、全恢复、八台视觉或发布完成。
+
+先精确提交本E公共静态证据、原source freeze报告和before/after650及意图；排除private及动态API日志。随后fresh HEAD/Authority2034/有效sameowner三Task及Lease/代码树相等/API95375 Web89803原PG身份与各合法消费校验，新fsync交付意图后仅通过memoryctl完成root与reader切片及maintenance-r7的全部remaining交接；原其他38Lease逐项保留。
+
+Authority2034→2035保留原全部历史/硬边界/不完整目标，只标价格处置可信保存读取slice已交付。同步七强Prime；不写个人Codex记忆或私有Goal/提醒。维护新r8继承全部原scope和remaining/原用户授权/每日每次aos最新同原卷完整PG→API→Web/aos2不重启。新price-closure-read-admission登记router/read_http/本D-wave及自身E，另reader/shared规则必须先额外登记；逐条读审计而非直接准入。
+
+回读所有Delivery、原其他38Lease、七强CURRENT、新r8与priceclosure同owner不重叠/base2035后再继续priceclosure实际审计。任何部分未知只读对账不重跑helper；完整Goal ACTIVE，不因review建议或本读取交付自行重跑full restart或未知操作。

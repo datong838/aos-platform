@@ -1,0 +1,315 @@
+PRE-EFFECT CONTROLLER QUALITY: actual preflight has succeeded, but no API signal/spawn. Do not require post-effect proof to permit pre-effect control review. Whole Goal remains active; only this exact readonly API switch is considered.
+
+CONTROLLER_SHA 5d9800b8445cf42c703316c6efbe456257688696587e67656451132ea3e18de1
+
+FILE price-disposition-api-plan.md
+# 价格处置只读贡献：实际 API 更新方案
+
+Rules：231完整Goal、AOS工程交付、唯一写者、先方案和独立Prime再信号、精确新意图与未知只读对账、保护原数据和用户dirty、同尺寸原稿比较。Authority2034，maintenance-r7同owner有效至04UTC。
+
+价格处置六文件已精确提交4e038063368cc41fe17aec7b9f6148fa66bd7192。方案、reader代码、route代码均独立PASS合法消费；冻结267通过、当前路由17逐例通过、原w6_006隔离PG快照/RLS/25006/SQL载荷门与隐私通过。r1路线REWORK及历史RED、过大草稿、陈旧迁移head断言失败全部保留，不宣称全suite GREEN。当前实际仍API80779/冻源246、Web89803/f036。
+
+先通过原freeze_current_api.py受支持参数冻结最新已提交HEAD，完整manifest排除dirty/凭据，guard核对全部实际Git文件与六文件SHA；同时fresh原650 READONLY before快照，核原CID/卷/cluster/schema161/绑定0与PGStartedAt2026-10-14T20:36:36.408087963Z。
+
+新控制器复核HEAD/m1/Authority/有效sameowner Lease、两个code合法消费与源hash、旧API准确PID/cwd/command/18080、Web89803/18434/准确entry及前端树与f036相同、PG准确CID/原卷/StartedAt。独立controller quality PASS合法消费后新fsync intent，才能向旧API一次SIGTERM；port free后原readonly wrapper/私有身份/原OIDC/原安装/原bundles-trust及最新冻源启动。spawn不当监听证据，未知结果只读对账，禁止重跑旧controller或旧意图。
+
+实际监听/cwd/source/公开健康后，原真人登录既有9244准确owned target，原SPA价格页GET dispositions及正式SDK应由404变可信保存空态或真实记录，不制造Case/审批/任何业务写。query400、匿名401、allowedCommands[]/外部false、原650 after完整逐表等于fresh before；原价格三尺寸原稿比对保留32px筛选及真实unknown门。独立现场Prime后才准确Delivery/Authority七强和下一登记波。
+
+只更新API，不signal PG/Web/Chrome；本读取波不能替代每日和每次aos最新m1同原卷完整PG→API→Web，aos2不重启。原DBREADONLY/HostworkerProviderOFF/fullC最终真人预算/原部署/自然经营首链/安装全生命周期/八真实场景与全视觉/观察发布均保留。无商城源、unknown旧12不重放、disabledSchedule不启用/noPush、不改个人Codex记忆或私有Goal/提醒。
+
+
+FILE price_disposition_api_switch_r1.py
+"""Fresh original-scope API-only readonly switch, no PG/Web/Chrome signal."""
+from pathlib import Path
+import argparse,datetime,hashlib,json,os,signal,subprocess,sys,time
+E=Path(__file__).resolve().parent;R=E.parents[1];F=R/'.evidence/qyh-full-system-restoration-20261011';HEAD='4e038063368cc41fe17aec7b9f6148fa66bd7192';OWNER='codex-01a13484-f019-7d82-94ce-812396db9124';OLD=80779;WEB=89803
+OLD_SOURCE=F/'private/api-source-246d8305332c143bd281cc6aedb013649b81f7d6';REPORT=F/'price-disposition-api-20261015.json';CID='84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c'
+def read(p):return json.loads(p.read_text())
+def cmd(*args):return subprocess.check_output(args,cwd=R,text=True,timeout=30).strip()
+def save(n,v):
+ with (E/n).open('x') as f:json.dump(v,f,indent=2);f.flush();os.fsync(f.fileno())
+def listeners(port):return sorted({int(x) for x in cmd('lsof','-t','-nP',f'-iTCP:{port}','-sTCP:LISTEN').split()})
+def cwd(pid):return next(x[1:] for x in cmd('lsof','-a','-p',str(pid),'-d','cwd','-Fn').splitlines() if x.startswith('n'))
+sys.path.insert(0,str(R/'scripts/long-task-watchdog'));import aos_review as gate
+sys.path.insert(0,str(R/'scripts'));import a0v_qyh_restored_http as guard
+
+def legal(folder,request,result,consume):
+ req=read(folder/request);env=read(folder/result);transport=read((folder/result).with_suffix('.transport.json'));assert gate.consumption_record(req,env,transport,env['runner_sha256'])==read(folder/consume) and env['result']['verdict']=='PASS'
+def base():
+ assert cmd('git','rev-parse','HEAD')==HEAD and cmd('git','branch','--show-current')=='m1'
+ m=R.parent/'docs/palantier/AOS项目开发上下文/memory';lease=read(m/'receipts/tasks'/(E.name+'.json'));assert lease in read(m/'leases.json')['leases'] and lease['owner']==OWNER and lease['base_revision']==read(m/'authority.json')['project_revision']=='AOS-002034' and datetime.datetime.fromisoformat(lease['lease_expires_at'])>datetime.datetime.now(datetime.timezone.utc)
+ source=guard.require_api_source_candidate(REPORT);assert read(REPORT)['head']==HEAD
+ legal(R/'.evidence/qyh-price-disposition-read-admission-r2-20261015','route-quality-request-r2.json','route-quality-result-r2.json','route-quality-consumption-r2.json')
+ legal(R/'.evidence/qyh-price-disposition-bounded-reader-20261015','code-review-request-r2.json','code-review-result-r2.json','code-review-consumption-r2.json')
+ hashes=read(R/'.evidence/qyh-price-disposition-bounded-reader-20261015/source-verification-r1.json')['sourceAfter'];assert all(hashlib.sha256((source/f).read_bytes()).hexdigest()==sha for f,sha in hashes.items())
+ pg=json.loads(cmd('docker','--context','colima-aos-extension','inspect','qyh-restored-pg-20261011'))[0];assert pg['Id']==CID and pg['State']['Running'] and len(pg['Mounts'])==1 and pg['Mounts'][0]['Name']=='aos-qyh-history159-prepared-data-20261011' and pg['State']['StartedAt']=='2026-10-14T20:36:36.408087963Z'
+ assert cmd('ps','-p',str(WEB),'-o','command=')==str(Path('/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node'))+' '+str(R/'.evidence/qyh-restoration-readonly-continuation-r6-20261015/price-visual-web-server.mjs')
+ assert listeners(18434)==[WEB] and cwd(WEB)==str(R) and not cmd('git','diff','f036e46c643308651b415179e6e991870dbc26ab','HEAD','--','apps/web')
+ return source,pg
+
+def old():
+ assert listeners(18080)==[OLD] and cwd(OLD)==str(OLD_SOURCE)
+ assert cmd('ps','-p',str(OLD),'-o','command=')==str(R/'services/aos-api/.venv/bin/python')+' -m uvicorn a0v_qyh_restored_http:management_app --factory --host 127.0.0.1 --port 18080 --workers 1 --no-access-log --log-level warning'
+
+def quality():
+ req=read(E/'api-controller-review-request-r1.json');assert req['task_id']==E.name and req['owner']==OWNER;gate.validate_request(R,req)
+ legal(E,'api-controller-review-request-r1.json','api-controller-review-result-r1.json','api-controller-review-consumption-r1.json')
+ assert 'CONTROLLER_SHA '+hashlib.sha256(Path(__file__).read_bytes()).hexdigest() in (E/'api-controller-review-package-r1.txt').read_text()
+parser=argparse.ArgumentParser();parser.add_argument('--phase',choices=['preflight','api'],required=True);a=parser.parse_args();source,pg=base();old()
+if a.phase=='preflight':
+ before=read(R/'.evidence/qyh-restoration-successor-latest-restart-20261013/price-disposition-before-20261015.json');assert before['containerId']==CID and before['pgStartedAt']==pg['State']['StartedAt'] and before['native']['schema']=='a0v_161' and before['native']['enabledBindings']==0 and len(before['fingerprints'])==650
+ save('api-preflight-r1.json',dict(head=HEAD,apiPid=OLD,apiCwd=str(OLD_SOURCE),webPid=WEB,pgStartedAt=pg['State']['StartedAt'],sourceGuard=True,ownedCodeHashesVerified=True,serviceEffects=False));sys.exit(0)
+quality();assert not (E/'api-switch-intent-r1.json').exists() and not (E/'api-started-r1.json').exists(),'known intent: reconcile no replay'
+assert read(E/'api-preflight-r1.json')['head']==HEAD
+save('api-switch-intent-r1.json',dict(head=HEAD,oldPid=OLD,oldCwd=str(OLD_SOURCE),source=str(source),pgWebChromeTouched=False))
+os.kill(OLD,signal.SIGTERM)
+for _ in range(100):
+ result=subprocess.run(['lsof','-t','-nP','-iTCP:18080','-sTCP:LISTEN'],capture_output=True,text=True)
+ if not result.stdout.strip():break
+ time.sleep(.2)
+else:raise RuntimeError('stop unresolved; reconcile no resend')
+save('api-old-stop-r1.json',dict(oldPid=OLD,portFree=True))
+args=[str(R/'services/aos-api/.venv/bin/python'),str(R/'scripts/a0v_qyh_restored_http.py'),'--api-identity-file',str(F/'private/restored-identity.json'),'--serve-management-readonly','--bundle-root',str(F/'selected-public-bundles'),'--trust-roots-file',str(F/'restoration-public-trust-roots.json'),'--source-candidate',str(REPORT),'--management-oidc-config','/Users/ddt/.aos-local-identities/qyh-20261013/aos-management-oidc.json','--installed-readonly-installation','ab2fd72f-d81c-400d-bbbc-e1589a159d6b']
+with (E/'price-disposition-live-api-r1.log').open('x') as log:proc=subprocess.Popen(args,cwd=R,env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'},stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+save('api-started-r1.json',dict(pid=proc.pid,head=HEAD,source=str(source),spawnedOnly=True));print(dict(apiPid=proc.pid,spawnedOnly=True))
+
+
+FILE api-preflight-r1.json
+{
+  "head": "4e038063368cc41fe17aec7b9f6148fa66bd7192",
+  "apiPid": 80779,
+  "apiCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-246d8305332c143bd281cc6aedb013649b81f7d6",
+  "webPid": 89803,
+  "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+  "sourceGuard": true,
+  "ownedCodeHashesVerified": true,
+  "serviceEffects": false
+}
+
+UNCHANGED WRAPPER FULL SOURCE SHA c73f72cfa7f062c1a6119c0b45918abe6dc47ebc11c8cd0592af2c9f9950150e
+
+def require_api_source_candidate(report_path):
+    task = ROOT / '.evidence/qyh-full-system-restoration-20261011'
+    if (report_path.is_symlink() or not report_path.is_file()
+        or report_path.resolve().parent != task.resolve()
+        or report_path.stat().st_uid != os.getuid()):
+        raise RestorationBlocked('RESTORED_API_SOURCE_CANDIDATE_INVALID')
+    report = json.loads(report_path.read_text())
+    head = report.get('head', '')
+    if (type(head) is not str or len(head) != 40
+        or any(c not in '0123456789abcdef' for c in head)
+        or report.get('outcome') != 'CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START'):
+        raise RestorationBlocked('RESTORED_API_SOURCE_CANDIDATE_INVALID')
+    source = task / 'private' / ('api-source-' + head)
+    if report.get('source') != str(source) or source.resolve() != source or not source.is_dir():
+        raise RestorationBlocked('RESTORED_API_SOURCE_CANDIDATE_INVALID')
+    manifest_path = _private(source.parent / ('api-manifest-' + head + '.json'))
+    raw = manifest_path.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != report.get('manifestSha256'):
+        raise RestorationBlocked('RESTORED_API_SOURCE_MANIFEST_DRIFT')
+    manifest = json.loads(raw)
+    observed = {}
+    for path in [source, *source.rglob('*')]:
+        mode = stat.S_IMODE(path.stat().st_mode)
+        if (path.is_symlink() or path.stat().st_uid != os.getuid()
+            or (not path.is_file() and not path.is_dir())
+            or mode != (0o600 if path.is_file() else 0o700)):
+            raise RestorationBlocked('RESTORED_API_SOURCE_PERMISSION_DRIFT')
+        if path.is_file():
+            observed[str(path.relative_to(source))] = hashlib.sha256(path.read_bytes()).hexdigest()
+    if observed != manifest or len(observed) != report.get('fileCount'):
+        raise RestorationBlocked('RESTORED_API_SOURCE_FILES_DRIFT')
+    def git(*args):
+        return subprocess.check_output(['git', *args], cwd=ROOT, timeout=30)
+    if git('branch', '--show-current').strip() != b'm1' or git('rev-parse', '--show-object-format').strip() != b'sha1':
+        raise RestorationBlocked('RESTORED_API_SOURCE_BRANCH_OR_FORMAT_DRIFT')
+    tree = git('ls-tree', '-rz', 'HEAD', '--', 'services/aos-api',
+               'scripts/a0v_current_preview_http.py', 'scripts/a0v_qyh_restored_http.py')
+    api_paths = set()
+    for item in tree.split(b'\0'):
+        if not item:
+            continue
+        metadata, raw_path = item.split(b'\t', 1)
+        mode, kind, oid = metadata.split()
+        name = raw_path.decode('utf-8')
+        if mode not in {b'100644', b'100755'} or kind != b'blob' or name not in manifest:
+            raise RestorationBlocked('RESTORED_CURRENT_API_SOURCE_DRIFT')
+        data = (source / name).read_bytes()
+        actual_oid = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest().encode()
+        if actual_oid != oid:
+            raise RestorationBlocked('RESTORED_CURRENT_API_SOURCE_DRIFT')
+        if name.startswith('services/aos-api/'):
+            api_paths.add(name)
+    if not api_paths or api_paths != {p for p in manifest if p.startswith('services/aos-api/')}:
+        raise RestorationBlocked('RESTORED_CURRENT_API_SOURCE_DRIFT')
+    if Path(previous.__file__).read_bytes() != (source / 'scripts/a0v_current_preview_http.py').read_bytes():
+        raise RestorationBlocked('RESTORED_CURRENT_STARTUP_FLAGS_SOURCE_DRIFT')
+    return source
+
+def installed_readonly_environment(installation_id, *, management_oidc_config):
+    """Explicit viewing selection; never a runtime-start or approval flag."""
+    if installation_id is None:
+        return {}
+    from uuid import UUID
+    try:
+        if not isinstance(installation_id, str) or str(UUID(installation_id)) != installation_id:
+            raise ValueError('Canonical UUID required')
+    except (ValueError, TypeError, AttributeError):
+        raise RestorationBlocked('INSTALLED_READONLY_SELECTION_INVALID') from None
+    if management_oidc_config is None:
+        raise RestorationBlocked('INSTALLED_READONLY_REAL_LOGIN_REQUIRED')
+    return {'AOS_INSTALLED_READONLY_CATALOG': json.dumps({
+        'installationId': installation_id, 'orgId': 'org-org', 'projectId': 'dev-project'})}
+
+def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, source_candidate,
+                              management_oidc_config=None, installed_readonly_installation=None):
+    """Attach preserved local management data without enabling formal execution."""
+    if not previous._port_free(LIMITED_PORT):
+        raise RestorationBlocked('RESTORED_HTTP_PORT_OCCUPIED')
+    source = require_api_source_candidate(source_candidate)
+    oidc_environment = load_management_oidc_config(management_oidc_config) if management_oidc_config is not None else None
+    readonly_catalog_environment = installed_readonly_environment(
+        installed_readonly_installation, management_oidc_config=management_oidc_config)
+    if installed_readonly_installation is not None:
+        select_current_installation(identity_file=identity_file, bundle_root=bundle_root,
+            trust_roots_file=trust_roots_file, installation_id=installed_readonly_installation,
+            management_readonly=True)
+    preflight(identity_file,management_readonly=True)
+    identity = _identity_parameters(identity_file)
+    from psycopg import connect
+    from psycopg.conninfo import make_conninfo
+    dsn = make_conninfo(host=identity['host'], port=identity['port'],
+        dbname=identity['dbname'], user=identity['user'],
+        options='-c default_transaction_read_only=on')
+    with connect(dsn, passfile=identity['pgpassFile']) as conn:
+        if conn.execute('SHOW transaction_read_only').fetchone() != ('on',):
+            raise RestorationBlocked('RESTORED_MANAGEMENT_DATABASE_NOT_READONLY')
+    # Never inherit separate protected command/owner/provider identities.
+    environment = {k: v for k, v in os.environ.items()
+                   if not k.startswith(('AOS_', 'PG')) and k not in {'PYTHONPATH', 'PYTHONHOME'}}
+    environment.update(previous.FLAGS)
+    environment.update({'AOS_AUTH_ALLOW_DEV': '1', 'AOS_AUTH_EXTERNAL_ONLY': '0',
+        'AOS_REST_CONNECTOR_MOCK': '0', 'PYTHONDONTWRITEBYTECODE': '1',
+        'PGPASSFILE': identity['pgpassFile'], 'AOS_DATABASE_URL': dsn,
+        'AOS_BUNDLE_ROOT': str(bundle_root.resolve(strict=True)),
+        'AOS_BUNDLE_TRUST_ROOTS_FILE': str(trust_roots_file.resolve(strict=True))})
+    environment.update(readonly_catalog_environment)
+    environment['PYTHONPATH'] = os.pathsep.join([str(source / 'services/aos-api'), str(source / 'scripts')])
+    if oidc_environment is not None:
+        environment.update(oidc_environment)
+        environment['AOS_LOCAL_MANAGEMENT_OIDC_CONFIG'] = str(management_oidc_config)
+    print(json.dumps({'outcome': 'RESTORED_LOCAL_MANAGEMENT_READONLY_STARTING',
+        'port': LIMITED_PORT, 'databaseReadOnly': True, 'mutationRequestsAllowed': False,
+        'passwordLoginRequestsAllowed': oidc_environment is not None,
+        'formalIdentityVerified': False, 'runtimeAuthorized': False, 'eightPagesAccepted': False}), flush=True)
+    os.chdir(source)
+    command = management_command()
+    os.execve(sys.executable, command, environment)
+
+def management_command():
+    # Schema preflight imports migration modules. A fresh interpreter prevents
+    # those working-tree imports from contaminating frozen API source loading.
+    return [sys.executable, '-m', 'uvicorn',
+            'a0v_qyh_restored_http:management_app', '--factory', '--host', '127.0.0.1',
+            '--port', str(LIMITED_PORT), '--workers', '1', '--no-access-log', '--log-level', 'warning']
+
+def management_app():
+    config = os.environ.get('AOS_LOCAL_MANAGEMENT_OIDC_CONFIG')
+    if config:
+        os.environ.update(load_management_oidc_config(config))
+    from aos_api.main import app
+    api_file = Path(sys.modules['aos_api.main'].__file__).resolve()
+    if api_file != Path.cwd() / 'services/aos-api/aos_api/main.py':
+        raise RestorationBlocked('RESTORED_MANAGEMENT_SOURCE_IMPORT_DRIFT')
+    return ReadOnlyManagementApp(app, allow_password_login=bool(config))
+
+FRESH FULL650 BEFORE SUMMARY (full table file retained, not omitted from authority)
+{"label": "price-disposition-before-20261015", "native": {"cluster": "7695302940039200809", "schema": "a0v_161", "enabledBindings": 0, "otherActiveClients": 0}, "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c", "volume": "aos-qyh-history159-prepared-data-20261011", "pgStartedAt": "2026-10-14T20:36:36.408087963Z", "elapsedSeconds": 1.814, "dbWrites": false, "scriptSha256": "397383d7f9620f57ed5bb9cfb1e2cb5a9f685b3fdb623e6deac7d50b23d3fc31", "originalFingerprintFunctionSourceSha256": "c73eb170859d043efa94c9b99dedb24bfe00e69c3af1a366a33f066c95a795c1"}
+full650FileSha 54ff9e59ccad78bb8b6f692728b9c6d86b308c96e7e20917af3135b4b57b7850
+
+EVIDENCE .evidence/qyh-price-disposition-bounded-reader-20261015/source-verification-r1.json
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+    "services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py": "9709476c1d1a8a0f0fa03c700a823f53a53639a0ecc707e0dc639d81a4d1f873",
+    "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py": "52fb937b078a18390961a0274167fd054dce4ac6f5c90d06991ecf238136d8bb",
+    "services/aos-api/tests/aip/test_w6_06_price_disposition.py": "bf57c3c488312e354aebf1f0d95a3fa23e451d16799d47979123228a141e7dfa",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "6c6c9cccd083280e888aea4134e8724169cd89601d665d483e4805170391d1fa"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+    "services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py": "9709476c1d1a8a0f0fa03c700a823f53a53639a0ecc707e0dc639d81a4d1f873",
+    "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py": "52fb937b078a18390961a0274167fd054dce4ac6f5c90d06991ecf238136d8bb",
+    "services/aos-api/tests/aip/test_w6_06_price_disposition.py": "bf57c3c488312e354aebf1f0d95a3fa23e451d16799d47979123228a141e7dfa",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "6c6c9cccd083280e888aea4134e8724169cd89601d665d483e4805170391d1fa"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/test_w6_009_three_module_closure.py"
+  ],
+  "baseHead": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+  "frozenWithOnlySixOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T02:06:29.117294+00:00",
+  "finishedAt": "2026-10-15T02:06:55.045908+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "973fca8793b9a25f7abb95691a84f9f5026f46f9f5a19caf806759985855a963"
+}
+
+EVIDENCE .evidence/qyh-price-disposition-bounded-reader-20261015/code-review-consumption-r2.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-disposition-bounded-reader-20261015-code-r2",
+  "task_id": "qyh-price-disposition-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+    "authority_revision": "AOS-002034",
+    "files": {
+      ".evidence/qyh-price-disposition-bounded-reader-20261015/code-review-material-r2.txt": "777cc2da6a276b6ec2af8dc25417d38c0d6f77403530d8fe004f511112109e78"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "477df6d9dae9f5bfd22fe77934b1158c8d617add0d5b98ab9e5cc688f1a297eb",
+  "transport_sha256": "dc32a7a03577bc5ad0a1378b3a49b611b524899e94e30e0d25760b685ee720a2"
+}
+
+EVIDENCE .evidence/qyh-price-disposition-read-admission-r2-20261015/route-quality-consumption-r2.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-disposition-read-admission-r2-20261015-route-quality-r2",
+  "task_id": "qyh-price-disposition-read-admission-r2-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+    "authority_revision": "AOS-002034",
+    "files": {
+      ".evidence/qyh-price-disposition-read-admission-r2-20261015/route-quality-material-r2.txt": "965d4f3992cbcff68fbbac4189816178823807bd7f6742fbfe1a68c0914742f5"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "f6e0d24495e8dcc55ab7c829aa591a3b3fe32188141708307c7300f3bbe5d6c8",
+  "transport_sha256": "a29f8f803eb7df4445c57335cff765824f867016eeb8611ee21e2218d2074468"
+}
+
+ACTUAL SOURCE FREEZE REPORT
+{"outcome": "CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START", "head": "4e038063368cc41fe17aec7b9f6148fa66bd7192", "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-4e038063368cc41fe17aec7b9f6148fa66bd7192", "fileCount": 8693, "manifestSha256": "80263244a8635fe7b6ab34a91435db99aab8cb866da7b9607c64033688e6ffdc", "repositoryBundleFileCount": 1827, "repositoryBundleManifestSha256": "1e857c0dc55fc06c77888c021ad990babbd2b2f6dc194134981125b11b678735", "mainSha256": "2d97ff3dbb84d8d948110b38bb7b8ae3c3462b5d7661d2cf1c1c830c85e32b4f", "originalPreviewEntrySha256": "5f684010ba7c6876a9e9718f1a48aeb44d3ac4f0bc6074b8c060b417ccd638b4", "explicitStartupEnabledSwitches": ["AOS_AIP_LOGIC_AUTOMATION_ENABLED", "AOS_ECOM_CONTENT_AGENTRUN_WORKER_ENABLED", "AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED", "AOS_ECOM_CONTENT_CAPACITY_WORKER_ENABLED", "AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED", "AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED", "AOS_ECOM_CONTENT_STEP_WORKER_ENABLED", "AOS_ECOM_CONTENT_TASKRUN_WORKER_ENABLED", "AOS_ECOM_CONTENT_WORKER_ENABLED", "AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED", "AOS_ECOM_FEEDBACK_WORKER_ENABLED", "AOS_ECOM_IMPROVEMENT_WORKER_ENABLED", "AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED", "AOS_JDBC_SSH_PREBUILD_ENABLED", "AOS_QYH_CRON_ENABLED", "AOS_SNAPSHOT_GROUP_WORKER_ENABLED"], "startupFlags": {"AOS_DOTENV_DISABLED": "1", "AOS_DB_MIGRATION_MODE": "disabled", "AOS_AIP_BINDING_REQUIRE_PRIVATE": "1", "AOS_QYH_CRON_ENABLED": "false", "AOS_AIP_LOGIC_AUTOMATION_ENABLED": "false", "AOS_SNAPSHOT_GROUP_WORKER_ENABLED": "false", "AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED": "false", "AOS_EXTENSION_RUNTIME_HOST_ENABLED": "0", "AOS_JDBC_SSH_PREBUILD_ENABLED": "false", "AOS_ECOM_CONTENT_TASKRUN_WORKER_ENABLED": "false", "AOS_ECOM_CONTENT_AGENTRUN_WORKER_ENABLED": "false", "AOS_ECOM_CONTENT_CAPACITY_WORKER_ENABLED": "false", "AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED": "false", "AOS_ECOM_FEEDBACK_WORKER_ENABLED": "false", "AOS_ECOM_IMPROVEMENT_WORKER_ENABLED": "false", "AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED": "false", "AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED": "false", "AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED": "false", "AOS_ECOM_CONTENT_WORKER_ENABLED": "false", "AOS_ECOM_CONTENT_STEP_WORKER_ENABLED": "false", "AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED": "false", "AOS_AUTH_ALLOW_DEV": "0", "AOS_AUTH_EXTERNAL_ONLY": "1", "AOS_REST_CONNECTOR_MOCK": "0"}, "exactGitArchiveFilesVerified": true, "sourcePrivate0700Files0600": true, "uncommittedWorktreeChangesCopied": false, "credentialsCopied": false, "apiStarted": false, "runtimeAuthorized": false, "eightPagesAccepted": false, "remaining": ["real independent publisher", "current four-package installation", "formal OIDC settings and current Owner", "current configuration approval", "guarded PG/API/Web restart and actual eight-page browser acceptance"]}
