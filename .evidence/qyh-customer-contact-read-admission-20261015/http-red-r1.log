@@ -1,0 +1,452 @@
+FFFFFFFFFFFFF...FFFF                                                     [100%]
+=================================== FAILURES ===================================
+___________ test_customer_contact_selects_only_admitted_reader[True] ___________
+
+readonly = True
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_customer_contact_selects_only_admitted_reader(readonly):
+        client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+        def admit(**scope):
+            assert scope == dict(module_id='ecommerce.customer', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+            return contact_admission(readonly)
+        catalog.get_readiness = admit
+        kind = 'readonly' if readonly else 'legacy'
+>       with pytest.raises(ReadReached, match=kind + '-customer-contact'): client.get(CUSTOMER_CONTACT_PATH)
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:985: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:24.670947+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:24.784556+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:24.786154+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+__________ test_customer_contact_selects_only_admitted_reader[False] ___________
+
+readonly = False
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_customer_contact_selects_only_admitted_reader(readonly):
+        client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+        def admit(**scope):
+            assert scope == dict(module_id='ecommerce.customer', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+            return contact_admission(readonly)
+        catalog.get_readiness = admit
+        kind = 'readonly' if readonly else 'legacy'
+>       with pytest.raises(ReadReached, match=kind + '-customer-contact'): client.get(CUSTOMER_CONTACT_PATH)
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:985: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:24.840956+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:24.947957+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:24.948443+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+______________ test_customer_contact_denied_before_business_read _______________
+
+    def test_customer_contact_denied_before_business_read():
+        client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+        assert client.get(CUSTOMER_CONTACT_PATH).status_code == 404
+>       assert not calls and not legacy.calls and len(catalog.calls) == 1
+E       AssertionError: assert (not [] and not [{'module_id': 'ecommerce.customer', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}])
+E        +  where [{'module_id': 'ecommerce.customer', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x11a850610>.calls
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:992: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:24.957882+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:25.072579+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:25.073153+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+__________ test_customer_contact_unknown_admission_fails_closed[None] __________
+
+value = None
+
+    @pytest.mark.parametrize('value', [None, {}, {'item': {'blockers': []}}, 'wrong_module', 'wrong_tenant'])
+    def test_customer_contact_unknown_admission_fails_closed(value):
+        client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+        if value == 'wrong_module': value = price_admission()
+        elif value == 'wrong_tenant':
+            value = contact_admission(); value = value.model_copy(update={'tenant': value.tenant.model_copy(update={'org_id': 'foreign'})})
+        catalog.get_readiness = lambda **kwargs: value
+        response = client.get(CUSTOMER_CONTACT_PATH)
+>       assert response.status_code == 503 and 'CUSTOMER_CONTACT_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1003: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:25.082505+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:25.190162+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:25.190645+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+_________ test_customer_contact_unknown_admission_fails_closed[value1] _________
+
+value = {}
+
+    @pytest.mark.parametrize('value', [None, {}, {'item': {'blockers': []}}, 'wrong_module', 'wrong_tenant'])
+    def test_customer_contact_unknown_admission_fails_closed(value):
+        client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+        if value == 'wrong_module': value = price_admission()
+        elif value == 'wrong_tenant':
+            value = contact_admission(); value = value.model_copy(update={'tenant': value.tenant.model_copy(update={'org_id': 'foreign'})})
+        catalog.get_readiness = lambda **kwargs: value
+        response = client.get(CUSTOMER_CONTACT_PATH)
+>       assert response.status_code == 503 and 'CUSTOMER_CONTACT_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1003: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:25.198986+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:25.305231+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:25.305670+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+_________ test_customer_contact_unknown_admission_fails_closed[value2] _________
+
+value = {'item': {'blockers': []}}
+
+    @pytest.mark.parametrize('value', [None, {}, {'item': {'blockers': []}}, 'wrong_module', 'wrong_tenant'])
+    def test_customer_contact_unknown_admission_fails_closed(value):
+        client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+        if value == 'wrong_module': value = price_admission()
+        elif value == 'wrong_tenant':
+            value = contact_admission(); value = value.model_copy(update={'tenant': value.tenant.model_copy(update={'org_id': 'foreign'})})
+        catalog.get_readiness = lambda **kwargs: value
+        response = client.get(CUSTOMER_CONTACT_PATH)
+>       assert response.status_code == 503 and 'CUSTOMER_CONTACT_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1003: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:25.313820+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:25.420192+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:25.420632+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+______ test_customer_contact_unknown_admission_fails_closed[wrong_module] ______
+
+value = EcommerceWorkshopModuleReadinessResponse(schema_version='aos.ecommerce-workshop/v1', tenant=WorkshopTenant(org_id='org... legacy_asset_refs=[], legacy_routes=['/s2/price-governance'], minimum_runtime_version='1.7.0', last_receipt_ref=None))
+
+    @pytest.mark.parametrize('value', [None, {}, {'item': {'blockers': []}}, 'wrong_module', 'wrong_tenant'])
+    def test_customer_contact_unknown_admission_fails_closed(value):
+        client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+        if value == 'wrong_module': value = price_admission()
+        elif value == 'wrong_tenant':
+            value = contact_admission(); value = value.model_copy(update={'tenant': value.tenant.model_copy(update={'org_id': 'foreign'})})
+        catalog.get_readiness = lambda **kwargs: value
+        response = client.get(CUSTOMER_CONTACT_PATH)
+>       assert response.status_code == 503 and 'CUSTOMER_CONTACT_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1003: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:25.522373+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:25.628355+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:25.628806+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+______ test_customer_contact_unknown_admission_fails_closed[wrong_tenant] ______
+
+value = EcommerceWorkshopModuleReadinessResponse(schema_version='aos.ecommerce-workshop/v1', tenant=WorkshopTenant(org_id='for...ions', '/workshop/customer-relations', '/workshop/customers'], minimum_runtime_version='1.7.0', last_receipt_ref=None))
+
+    @pytest.mark.parametrize('value', [None, {}, {'item': {'blockers': []}}, 'wrong_module', 'wrong_tenant'])
+    def test_customer_contact_unknown_admission_fails_closed(value):
+        client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+        if value == 'wrong_module': value = price_admission()
+        elif value == 'wrong_tenant':
+            value = contact_admission(); value = value.model_copy(update={'tenant': value.tenant.model_copy(update={'org_id': 'foreign'})})
+        catalog.get_readiness = lambda **kwargs: value
+        response = client.get(CUSTOMER_CONTACT_PATH)
+>       assert response.status_code == 503 and 'CUSTOMER_CONTACT_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1003: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:25.684617+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.074611+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.075127+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+_ test_customer_contact_read_failure_never_becomes_empty_success[AUTHORITY_UNAVAILABLE] _
+
+suffix = 'AUTHORITY_UNAVAILABLE'
+
+    @pytest.mark.parametrize('suffix', ['AUTHORITY_UNAVAILABLE', 'AUTHORITY_DRIFT', 'SIGNING_MATERIAL_UNAVAILABLE', 'LIMIT_EXCEEDED', 'SENSITIVE_CONTENT'])
+    def test_customer_contact_read_failure_never_becomes_empty_success(suffix):
+        client, legacy, catalog = client_with_catalogs(); code = 'CUSTOMER_CONTACT_READ_' + suffix
+        calls = contact_probes(client, code); catalog.get_readiness = lambda **kwargs: contact_admission()
+        response = client.get(CUSTOMER_CONTACT_PATH)
+>       assert response.status_code == 503 and code in response.text and 'latestStart' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1012: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:26.084145+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.191524+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.191951+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+_ test_customer_contact_read_failure_never_becomes_empty_success[AUTHORITY_DRIFT] _
+
+suffix = 'AUTHORITY_DRIFT'
+
+    @pytest.mark.parametrize('suffix', ['AUTHORITY_UNAVAILABLE', 'AUTHORITY_DRIFT', 'SIGNING_MATERIAL_UNAVAILABLE', 'LIMIT_EXCEEDED', 'SENSITIVE_CONTENT'])
+    def test_customer_contact_read_failure_never_becomes_empty_success(suffix):
+        client, legacy, catalog = client_with_catalogs(); code = 'CUSTOMER_CONTACT_READ_' + suffix
+        calls = contact_probes(client, code); catalog.get_readiness = lambda **kwargs: contact_admission()
+        response = client.get(CUSTOMER_CONTACT_PATH)
+>       assert response.status_code == 503 and code in response.text and 'latestStart' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1012: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:26.200406+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.307564+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.307969+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+_ test_customer_contact_read_failure_never_becomes_empty_success[SIGNING_MATERIAL_UNAVAILABLE] _
+
+suffix = 'SIGNING_MATERIAL_UNAVAILABLE'
+
+    @pytest.mark.parametrize('suffix', ['AUTHORITY_UNAVAILABLE', 'AUTHORITY_DRIFT', 'SIGNING_MATERIAL_UNAVAILABLE', 'LIMIT_EXCEEDED', 'SENSITIVE_CONTENT'])
+    def test_customer_contact_read_failure_never_becomes_empty_success(suffix):
+        client, legacy, catalog = client_with_catalogs(); code = 'CUSTOMER_CONTACT_READ_' + suffix
+        calls = contact_probes(client, code); catalog.get_readiness = lambda **kwargs: contact_admission()
+        response = client.get(CUSTOMER_CONTACT_PATH)
+>       assert response.status_code == 503 and code in response.text and 'latestStart' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1012: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:26.316168+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.424381+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.424807+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+_ test_customer_contact_read_failure_never_becomes_empty_success[LIMIT_EXCEEDED] _
+
+suffix = 'LIMIT_EXCEEDED'
+
+    @pytest.mark.parametrize('suffix', ['AUTHORITY_UNAVAILABLE', 'AUTHORITY_DRIFT', 'SIGNING_MATERIAL_UNAVAILABLE', 'LIMIT_EXCEEDED', 'SENSITIVE_CONTENT'])
+    def test_customer_contact_read_failure_never_becomes_empty_success(suffix):
+        client, legacy, catalog = client_with_catalogs(); code = 'CUSTOMER_CONTACT_READ_' + suffix
+        calls = contact_probes(client, code); catalog.get_readiness = lambda **kwargs: contact_admission()
+        response = client.get(CUSTOMER_CONTACT_PATH)
+>       assert response.status_code == 503 and code in response.text and 'latestStart' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1012: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:26.432999+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.540015+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.540483+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+_ test_customer_contact_read_failure_never_becomes_empty_success[SENSITIVE_CONTENT] _
+
+suffix = 'SENSITIVE_CONTENT'
+
+    @pytest.mark.parametrize('suffix', ['AUTHORITY_UNAVAILABLE', 'AUTHORITY_DRIFT', 'SIGNING_MATERIAL_UNAVAILABLE', 'LIMIT_EXCEEDED', 'SENSITIVE_CONTENT'])
+    def test_customer_contact_read_failure_never_becomes_empty_success(suffix):
+        client, legacy, catalog = client_with_catalogs(); code = 'CUSTOMER_CONTACT_READ_' + suffix
+        calls = contact_probes(client, code); catalog.get_readiness = lambda **kwargs: contact_admission()
+        response = client.get(CUSTOMER_CONTACT_PATH)
+>       assert response.status_code == 503 and code in response.text and 'latestStart' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1012: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T09:43:26.548407+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.652398+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T09:43:26.652818+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/contact-contributions "HTTP/1.1 404 Not Found"
+__________ test_customer_contact_complete_public_http_dto[True-True] ___________
+
+readonly = True, nonempty = True
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    @pytest.mark.parametrize('nonempty', [True, False])
+    def test_customer_contact_complete_public_http_dto(readonly, nonempty):
+        from tests.test_ecommerce_customer_contact_readonly import run
+        from aos_api.ecommerce_workshop_customer_contact import EcommerceWorkshopCustomerContactService
+        scope, conn, reader, _ = run()
+        if not nonempty:
+            for table in conn.data: conn.data[table] = []
+        verified = reader.read(scope)
+        class Store:
+            def latest_start_for_tenant_or_none(self, tenant): return verified.latest_start
+            def authority_counts(self, tenant): return dict(frequency_policy=verified.frequency_policy_count, withdrawal=verified.withdrawal_count)
+            def list_dispatch_observations(self, tenant, identity): return []
+        client, legacy, catalog = client_with_catalogs()
+        client.app.dependency_overrides[require_principal] = lambda: Principal(subject='isolated-fixture', org_id=scope.org_id, project_id=scope.project_id, roles=['admin'], markings=[])
+        catalog.get_readiness = lambda **kwargs: contact_admission(readonly, scope)
+>       client.app.dependency_overrides[routes.get_customer_contact_readonly] = lambda: reader
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_customer_contact_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1039: AttributeError
+__________ test_customer_contact_complete_public_http_dto[True-False] __________
+
+readonly = False, nonempty = True
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    @pytest.mark.parametrize('nonempty', [True, False])
+    def test_customer_contact_complete_public_http_dto(readonly, nonempty):
+        from tests.test_ecommerce_customer_contact_readonly import run
+        from aos_api.ecommerce_workshop_customer_contact import EcommerceWorkshopCustomerContactService
+        scope, conn, reader, _ = run()
+        if not nonempty:
+            for table in conn.data: conn.data[table] = []
+        verified = reader.read(scope)
+        class Store:
+            def latest_start_for_tenant_or_none(self, tenant): return verified.latest_start
+            def authority_counts(self, tenant): return dict(frequency_policy=verified.frequency_policy_count, withdrawal=verified.withdrawal_count)
+            def list_dispatch_observations(self, tenant, identity): return []
+        client, legacy, catalog = client_with_catalogs()
+        client.app.dependency_overrides[require_principal] = lambda: Principal(subject='isolated-fixture', org_id=scope.org_id, project_id=scope.project_id, roles=['admin'], markings=[])
+        catalog.get_readiness = lambda **kwargs: contact_admission(readonly, scope)
+>       client.app.dependency_overrides[routes.get_customer_contact_readonly] = lambda: reader
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_customer_contact_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1039: AttributeError
+__________ test_customer_contact_complete_public_http_dto[False-True] __________
+
+readonly = True, nonempty = False
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    @pytest.mark.parametrize('nonempty', [True, False])
+    def test_customer_contact_complete_public_http_dto(readonly, nonempty):
+        from tests.test_ecommerce_customer_contact_readonly import run
+        from aos_api.ecommerce_workshop_customer_contact import EcommerceWorkshopCustomerContactService
+        scope, conn, reader, _ = run()
+        if not nonempty:
+            for table in conn.data: conn.data[table] = []
+        verified = reader.read(scope)
+        class Store:
+            def latest_start_for_tenant_or_none(self, tenant): return verified.latest_start
+            def authority_counts(self, tenant): return dict(frequency_policy=verified.frequency_policy_count, withdrawal=verified.withdrawal_count)
+            def list_dispatch_observations(self, tenant, identity): return []
+        client, legacy, catalog = client_with_catalogs()
+        client.app.dependency_overrides[require_principal] = lambda: Principal(subject='isolated-fixture', org_id=scope.org_id, project_id=scope.project_id, roles=['admin'], markings=[])
+        catalog.get_readiness = lambda **kwargs: contact_admission(readonly, scope)
+>       client.app.dependency_overrides[routes.get_customer_contact_readonly] = lambda: reader
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_customer_contact_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1039: AttributeError
+_________ test_customer_contact_complete_public_http_dto[False-False] __________
+
+readonly = False, nonempty = False
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    @pytest.mark.parametrize('nonempty', [True, False])
+    def test_customer_contact_complete_public_http_dto(readonly, nonempty):
+        from tests.test_ecommerce_customer_contact_readonly import run
+        from aos_api.ecommerce_workshop_customer_contact import EcommerceWorkshopCustomerContactService
+        scope, conn, reader, _ = run()
+        if not nonempty:
+            for table in conn.data: conn.data[table] = []
+        verified = reader.read(scope)
+        class Store:
+            def latest_start_for_tenant_or_none(self, tenant): return verified.latest_start
+            def authority_counts(self, tenant): return dict(frequency_policy=verified.frequency_policy_count, withdrawal=verified.withdrawal_count)
+            def list_dispatch_observations(self, tenant, identity): return []
+        client, legacy, catalog = client_with_catalogs()
+        client.app.dependency_overrides[require_principal] = lambda: Principal(subject='isolated-fixture', org_id=scope.org_id, project_id=scope.project_id, roles=['admin'], markings=[])
+        catalog.get_readiness = lambda **kwargs: contact_admission(readonly, scope)
+>       client.app.dependency_overrides[routes.get_customer_contact_readonly] = lambda: reader
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'aos_api.routers.ecommerce_workshop' has no attribute 'get_customer_contact_readonly'
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:1039: AttributeError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_selects_only_admitted_reader[True]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_selects_only_admitted_reader[False]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_denied_before_business_read
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_unknown_admission_fails_closed[None]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_unknown_admission_fails_closed[value1]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_unknown_admission_fails_closed[value2]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_unknown_admission_fails_closed[wrong_module]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_unknown_admission_fails_closed[wrong_tenant]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_read_failure_never_becomes_empty_success[AUTHORITY_UNAVAILABLE]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_read_failure_never_becomes_empty_success[AUTHORITY_DRIFT]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_read_failure_never_becomes_empty_success[SIGNING_MATERIAL_UNAVAILABLE]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_read_failure_never_becomes_empty_success[LIMIT_EXCEEDED]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_read_failure_never_becomes_empty_success[SENSITIVE_CONTENT]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_complete_public_http_dto[True-True]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_complete_public_http_dto[True-False]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_complete_public_http_dto[False-True]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_customer_contact_complete_public_http_dto[False-False]
+17 failed, 3 passed, 134 deselected, 7 warnings in 2.46s

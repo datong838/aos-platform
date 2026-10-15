@@ -1,0 +1,106 @@
+{
+  "containerId": "94b09ef4018866b5fee6ac4f436478597c0ed030f6757bf800d8fbd269fa62c4",
+  "originalVolumeTouched": false,
+  "fixtureOnlyNotOriginalSchema": true,
+  "originalProducersSyntheticResolvers": true,
+  "actualConsentReceiptOrContactAuthority": false,
+  "exactDdlHashes": {
+    "w6_007_customer_lifecycle.py": "662295c5b97111b7bcb343eed877dba20925fc36218875e72e4cf13af331df07",
+    "w6_008_customer_contact.py": "5865d6b7781a5c7f5b6cd6c02c475d18c935f6fb6e49f1cc5b31a0bc2eb6f166"
+  },
+  "sourceSha": "4d23d7e8224b3ec815db9f7c027267214191121b8b9c8ba3f960a623b9c0cedc",
+  "genuineEmptySqlSumNull": true,
+  "snapshotSavedRevisionCounts": [
+    1,
+    2
+  ],
+  "oldExactFrequencyRefPreserved": true,
+  "unknownAndSkipPreserved": true,
+  "reservationHeld": true,
+  "privateReasonNotPublic": true,
+  "originalStartHashPreservedInProjection": true,
+  "foreignRowsHiddenWithoutWhere": true,
+  "visibleOwnPolicyRows": 2,
+  "writeDeniedSqlstate": "25006",
+  "missingReasonRejected": true,
+  "sensitiveReasonRejected": true,
+  "sqlCaseNull": true,
+  "aggregateTenantDriftRejected": true,
+  "malformedDateRejected": true,
+  "futureAggregateNotHidden": true,
+  "totalBudgetProvenBeforeBulkPayload": true,
+  "bulkBudgetQueryTrace": [
+    {
+      "table": "ecommerce_customer_dispatch_observation",
+      "payload": false
+    }
+  ],
+  "connectionFacts": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "wholeGoalComplete": false
+}

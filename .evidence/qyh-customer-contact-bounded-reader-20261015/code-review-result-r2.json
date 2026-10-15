@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "113c5f53fd5ea60233784faa428f886b62640cabad8d95d287ef21741386a14a",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-contact-bounded-reader-20261015-code-r2",
+    "task_id": "qyh-customer-contact-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "90a601fd1ad2a57c128bf05416dbf97239412865",
+      "authority_revision": "AOS-002037",
+      "files": {
+        ".evidence/qyh-customer-contact-bounded-reader-20261015/code-review-material-r2.txt": "4ba662c67d6dc06f6fa07cb62d53e23dbd17315946151c95fa10c7411708c520"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "读取器在核实同一只读RR截止面保留两完整COUNT，metadata阶段先证明行数/单行/总字节再查询payload，固定参数化SQL/超界/时间/稳定失败门符合方案，不把异常补零/null或截断冒充完整。",
+        "evidence": "源码 ecommerce_customer_contact_readonly.py: connect_factory=connect_read_only 使用 Read-Only Repeatable Read；_count 对 frequency/withdrawal 执行 COUNT+invalid_count+latest_created_at；load 内部先 self._rows(... limit, payload=False) 经 _metadata 校验 rows/sizes/cutoff 并累加 total_rows/total_bytes 至 MAX_ROWS/MAX_TOTAL_BYTES，再 self._rows(... payload=True)；语句前 SET LOCAL statement_timeout='3000ms' / lock_timeout='500ms'；monotonic 10s deadline 跨查询与 decode 循环；JSON-decode 极深嵌套测试失败日志 json-depth-red-r1.log 显式 FAILED，native-r2-stopped.json jsonDepthDecoderFailureRejected:true 且 native 断言 genuineEmptySqlSumNull:true，证明非零化/非截断稳定失败。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原Start/private reason/UTC typed hash及exact Batch/policy/eligible coverage/各binding、保存reservation/withdrawal/observation按原producer核验，再复用原贡献投影保留unknown held/原hash/原对象；strict raw/隐私/零效果/空命令和五false，不授当前Contact/Consent/Receipt权限。",
+        "evidence": "源码 ecommerce_customer_contact_readonly.py: _validate_start 校验 reason not None/decision_id 派生/hash/operational_blockers/zero counts；_REFS exact_refs；batch items eligible 覆盖与排序；reservation.permit.attempt 字段/零 rawContactCount/outboxIntentHash；withdrawal observation 原始请求 canonical_hash 核验；load 仅使用 _START/_RESERVATION/_WITHDRAWAL/_OBSERVATION，不查 current consent/action-receipt/contact resolver；test test_original_nonempty_saved_start_verified_before_projection 断言 unknown==1/reserved held/reason 不出 projection；view.allowed_commands=[] 与五 false 断言 native-r2-stopped.json actualConsentReceiptOrContactAuthority:false/privateReasonNotPublic:true/originalStartHashPreservedInProjection:true/unknownAndSkipPreserved:true/reservationHeld:true。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原producer组合非空/重新hash伪造/真实深JSON解码负向、四owned overlay冻结482及原W6-007/008临时PG真快照/计数/RLS/25006/SQLCASE/metadata前置总量门且准确CID已停支持该候选，尚未部署、不宣称经营/八台视觉或完整Goal完成。",
+        "evidence": "source-verification-r2.json: frozenWithOnlyFourOwnedOverlays:true/originalVolumeTouched:false/source hashes 未变；native-r2-stopped.json stopped:true/container 仅 14 connectionFacts 含 readonly on/isolation repeatable read，无原始PG schema；exactDdlHashes 对应 W6-007/W6-008；writeDeniedSqlstate:'25006'/foreignRowsHiddenWithoutWhere:true/sqlCaseNull:true/totalBudgetProvenBeforeBulkPayload:true；json-depth-red-r1.log 真实 decoder RecursionError FAILED；green-frozen-cumulative-r2.log 482 passed；material header 'not deployed' 与 wholeGoalComplete:false/八台视觉/完整Goal 未宣称一致。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前冻结 r2 基线并存档；若需上线，先在目标 PG 环境以真实 schema 部署前执行全量回归并将 wholeGoalComplete 更新为 true。"
+  }
+}

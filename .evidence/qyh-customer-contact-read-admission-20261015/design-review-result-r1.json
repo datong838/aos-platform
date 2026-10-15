@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "10252002099695fe9ca9f881a52a58d51e6973f1fb80c2c57288d46b2f537025",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-contact-read-admission-20261015-design-r1",
+    "task_id": "qyh-customer-contact-read-admission-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "90a601fd1ad2a57c128bf05416dbf97239412865",
+      "authority_revision": "AOS-002037",
+      "files": {
+        ".evidence/qyh-customer-contact-read-admission-20261015/design-review-material-r1.txt": "a2ec343b875b0740f8e43283fcf1158d0b5b27e85712ce389ac9be9e8314a107"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "方案用完整两COUNT与同一核实只读RR截止面、有界selected Start/exact Batch/policies/reservation/withdrawal/observations读取，明确超界与错误稳定拒绝而不截断或补零/null，可实施且不把保存计数当当前Consent。",
+        "evidence": "implementation-plan-r2.md 规定‘一个核实READONLY/REPEATABLE_READ/autocommitFalse连接，transaction_timestamp cutoff’与‘frequency policy全部保存修订COUNT与withdrawal全部观察COUNT保留，不去重/取样/截断冒充总数’；store.py中authority_counts对ecommerce_customer_frequency_policy_revision与ecommerce_customer_consent_withdrawal_observation各返回COUNT，非当前许可口径。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "方案先验证原未投影Start私有reason及原生产UTC签名、exact lineage/items/零效果与各保存观察签名，再复用原service投影并保留unknown held；不把投影当新签名Start，不调用原关闭resolver或Contact/Provider。",
+        "evidence": "implementation-plan-r2.md 明确‘reason缺失稳定CUSTOMER_CONTACT_READ_SIGNING_MATERIAL_UNAVAILABLE’、调用customer_start_signing_hash重建签名，并‘通过纯已验证Store适配器调用原service.contribution_view...不将投影当新签名记录’；contact.py中require_start_authorities/require_action_receipt raise CustomerContactBlocked；store中resolver恒拒，producer-probe-result-r2.json显示databaseOrHttpCalls=0。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "额外两reader/test文件已非重叠登记，parent只canonical contact GET和HTTP测试接线，其他GET/POST/Web/原DB不扩权；未来RED/冻结/原DDL隔离PG/独立质量/真实SDK650和视觉门明确，当前只方案可行性审阅且完整Goal未缩小。",
+        "evidence": "reader-scope-readback-r1.json 登记ecommerce_customer_contact_readonly.py与test_ecommerce_customer_contact_readonly.py，nonOverlapping=true，excluded_scope含apps/web；implementation-plan-r2.md 指‘parent只改routers/ecommerce_workshop.py与test_ecommerce_workshop_read_http.py’及‘完整Goal ACTIVE’。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前design-r1 PASS审阅结论并消费基线；后续由reader Task落实独立只读实现，再进入RED冻结与独立PG质量门。"
+  }
+}

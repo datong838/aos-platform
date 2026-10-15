@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "10252002099695fe9ca9f881a52a58d51e6973f1fb80c2c57288d46b2f537025",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-contact-read-admission-20261015-route-quality-r1",
+    "task_id": "qyh-customer-contact-read-admission-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "90a601fd1ad2a57c128bf05416dbf97239412865",
+      "authority_revision": "AOS-002037",
+      "files": {
+        ".evidence/qyh-customer-contact-read-admission-20261015/route-quality-material-r1.txt": "1070f23256b8a70c5c77b33efdb95024e189b300c68467bd0e7a2330b338a195"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "仅canonical customer contact-contributions GET使用typed ReadCatalog，并校验返回module/tenant与principal一致后按installed readonly blocker分流；正常legacy成功及其他GET/POST原门保持。",
+        "evidence": "文件 services/aos-api/aos_api/routers/ecommerce_workshop.py (fullFileSHA 623a9c373085aea90e6c8ab51e45e4b86fd5966dd5e42e5ee877a57a992d33b9)。函数 get_customer_contact_contribution_view 签名中 catalog: ReadCatalogDependency, readonly: CustomerContactReadonlyDependency。主体逻辑: admission = _invoke(lambda: catalog.get_readiness(module_id=\"ecommerce.customer\", ...)); 校验 isinstance(admission, EcommerceWorkshopModuleReadinessResponse) 及 admission.item.module_id 和 (org_id, project_id) 与 principal 一致, 否则 raise 503; 若 any(b.reason_code == \"INSTALLED_ASSET_READONLY\" ...) 则走 readonly.read, 否则 return service.contribution_view。diff 显示仅在此路由将 CatalogDependency 替换为 ReadCatalogDependency 并增加 readonly 依赖。tests/test_ecommerce_workshop_read_http.py (fullFileSHA 42630b29fb887ceed3fa0bc515144414ef212e14c4e72a4736c1d72f80ad9b08) 中 test_read_dependency_only_reaches_explicit_audited_get_routes 断言仅指定列表(含 /views/customer/contact-contributions) 使用 read catalog; test_unreviewed_get_still_uses_legacy_admission 确认 /views/creator-growth/workflow/drafts/fixture/history 等仍用 legacy。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "query拒绝/准入未知及错module租户拒绝/reader各失败503不补null、空与非空完整HTTP DTO、空命令和五false均由冻结482验证；未扩大原安装/真人授权为Contact或发送权限。",
+        "evidence": "同 test_ecommerce_workshop_read_http.py。test_customer_contact_query_cannot_change_scope 断言 /?orgId=foreign 等返回 400 且无 calls。test_customer_contact_unknown_admission_fails_closed 参数化 [None, {}, {'item':...}, 'wrong_module', 'wrong_tenant'] 均断言 status_code==503 且 'CUSTOMER_CONTACT_READ_ADMISSION_UNAVAILABLE' in response.text。test_customer_contact_read_failure_never_becomes_empty_success 参数化 ['AUTHORITY_UNAVAILABLE', 'AUTHORITY_DRIFT', 'SIGNING_MATERIAL_UNAVAILABLE', 'LIMIT_EXCEEDED', 'SENSITIVE_CONTENT'] 断言 503 及代码包含, 'latestStart' not in response.text。test_customer_contact_complete_public_http_dto 参数化 readonly=[True,False], nonempty=[True,False] 断言 200, body['allowedCommands'] 长度为 0(readonly)或4, 五字段 permitRedemptionAllowed/contactResolutionAllowed/providerDispatchAllowed/sendAllowed/externalEffectsAllowed 均为 False。source-verification-r2.json 报告 482 passed。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "reader r2独立质量已合法消费，冻结四owned overlay及原W6-007/008临时PG当前版本物证（含深JSON decoder限制、metadata先于bulk）且CID停止，支持该接线候选；尚未部署、原卷未碰、经营/八台视觉/完整Goal不宣称完成。",
+        "evidence": "code-review-consumption-r2.json 显示 request_id qyh-customer-contact-bounded-reader-20261015-code-r2 状态 CONSUMED_MATERIAL_REVIEW。source-verification-r2.json: frozenWithOnlyFourOwnedOverlays:true, originalVolumeTouched:false。native-r2-stopped.json: stopped:true, originalVolumeTouched:false。native result: jsonDepthDecoderFailureRejected:true, totalBudgetProvenBeforeBulkPayload:true, exactDdlHashes 含 w6_007/w6_008, wholeGoalComplete:false。fullRawSHA f46dda2c... 含 actualConsentReceiptOrContactAuthority:false。material header 'ROUTE CODE QUALITY, NOT DEPLOYED' 及 '尚未部署' 一致。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前冻结 r2 基线与 482 通过结果; 若需上线, 先在目标 PG 环境部署前执行全量回归并将 wholeGoalComplete 更新为 true。"
+  }
+}

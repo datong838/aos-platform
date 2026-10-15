@@ -223,6 +223,7 @@ from aos_api.ecommerce_workshop_price_research_store import EcommerceWorkshopPri
 from aos_api.ecommerce_price_research_readonly import PriceResearchReadonlyError, PriceResearchReadonlyReader
 from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader, PriceDispositionReadonlyError
 from aos_api.ecommerce_customer_lifecycle_readonly import CustomerLifecycleReadonlyError, CustomerLifecycleReadonlyReader
+from aos_api.ecommerce_customer_contact_readonly import CustomerContactReadonlyError, CustomerContactReadonlyReader
 from aos_api.ecommerce_workshop_price_disposition import (
     CreatePriceCaseRequest,
     CreatePriceDispositionContractRequest,
@@ -640,6 +641,15 @@ def get_customer_lifecycle_readonly() -> CustomerLifecycleReadonlyReader:
 
 CustomerLifecycleReadonlyDependency = Annotated[
     CustomerLifecycleReadonlyReader, Depends(get_customer_lifecycle_readonly)
+]
+
+
+def get_customer_contact_readonly() -> CustomerContactReadonlyReader:
+    return CustomerContactReadonlyReader()
+
+
+CustomerContactReadonlyDependency = Annotated[
+    CustomerContactReadonlyReader, Depends(get_customer_contact_readonly)
 ]
 
 
@@ -2761,11 +2771,26 @@ def record_customer_dispatch_observation(
 def get_customer_contact_contribution_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     service: CustomerContactDependency,
+    readonly: CustomerContactReadonlyDependency,
 ) -> CustomerContactContributionView:
     _reject_query_parameters(request)
-    _require_customer_installation(principal=principal, catalog=catalog)
+    admission = _invoke(lambda: catalog.get_readiness(
+        module_id="ecommerce.customer", org_id=principal.org_id,
+        project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
+    ))
+    if (not isinstance(admission, EcommerceWorkshopModuleReadinessResponse)
+            or admission.item.module_id != "ecommerce.customer"
+            or (admission.tenant.org_id, admission.tenant.project_id) != (principal.org_id, principal.project_id)):
+        raise ApiError(code="CUSTOMER_CONTACT_READ_ADMISSION_UNAVAILABLE",
+                       message="当前客户联系治理读取准入不可核验。", status_code=503)
+    if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+        try:
+            return readonly.read(TenantScope(principal.org_id, principal.project_id))
+        except CustomerContactReadonlyError as exc:
+            raise ApiError(code=exc.code, message="当前客户联系治理暂不可读，请核对保存记录或读取范围。",
+                           status_code=503) from exc
     return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
 
 

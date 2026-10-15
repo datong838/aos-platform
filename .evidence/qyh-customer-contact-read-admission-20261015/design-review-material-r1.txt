@@ -1,0 +1,735 @@
+PRE-IMPLEMENTATION CONTACT READER DESIGN. Prerequisite private signing material is committed90a601 and code-quality PASS, NOT deployed. Contact reader/router do not exist yet. Review plan implementability/coherence before RED, not existence of future implementation/tests. Full231Goal ACTIVE, original runtime API80b39 remains. Synthetic saved observations are not current Consent/ActionReceipt/Contact authority.
+
+FULL FILE services/aos-api/aos_api/ecommerce_workshop_customer_contact.py SHA afae8d6baf95c977a176efa67b56ca3877351dd1c819fb8723d28dc68a06a9b3
+"""W6-08 customer contact governance without contact resolution or dispatch."""
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
+
+from pydantic import Field, field_validator, model_validator
+
+from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.ecommerce_workshop_customer_contracts import CustomerExactRef
+from aos_api.ecommerce_workshop_customer_lifecycle import (
+    CUSTOMER_LOGIC_ID,
+    CUSTOMER_SKILL_IDS,
+    ConsentDecision,
+    CustomerBatchDisposition,
+    CustomerDialogueBatchRevision,
+    canonical_hash,
+)
+from aos_api.tenant_scope import TenantScope
+from aos_api.public_contracts import redact_sensitive
+
+
+CUSTOMER_CONTACT_SCHEMA_VERSION = "aos.ecommerce-workshop.customer-contact-governance/v1"
+
+
+class CustomerContactBlocked(RuntimeError):
+    code = "CUSTOMER_CONTACT_BLOCKED"
+
+
+class CustomerContactConflict(CustomerContactBlocked):
+    code = "CUSTOMER_CONTACT_CONFLICT"
+
+
+class CustomerContactItemState(StrEnum):
+    RESERVED = "reserved"
+    SKIPPED_WITHDRAWN = "skipped_withdrawn"
+    CANCELLED = "cancelled"
+    ACCEPTED = "accepted"
+    APPLIED = "applied"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+    DISPUTED = "disputed"
+
+
+class CreateCustomerFrequencyPolicyRequest(AipContractModel):
+    policy_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    channel: str = Field(min_length=1, max_length=80)
+    purpose: str = Field(min_length=1, max_length=160)
+    timezone: str = Field(min_length=1, max_length=80)
+    quiet_hours_start: str = Field(pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    quiet_hours_end: str = Field(pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    rolling_window_hours: int = Field(ge=1, le=24 * 365)
+    maximum_contacts: int = Field(ge=1, le=1000)
+    unknown_behavior: str = Field(default="block", pattern=r"^block$")
+
+
+class CustomerFrequencyPolicyRevision(CreateCustomerFrequencyPolicyRequest):
+    tenant: TenantContext
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class RecordCustomerConsentWithdrawalRequest(AipContractModel):
+    customer_ref: CustomerExactRef
+    consent_policy_ref: CustomerExactRef
+    purpose: str = Field(min_length=1, max_length=160)
+    channel: str = Field(min_length=1, max_length=80)
+    sequence: int = Field(ge=1)
+    observed_at: datetime
+
+    @field_validator("observed_at")
+    @classmethod
+    def _aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("observedAt must include timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _refs(self) -> "RecordCustomerConsentWithdrawalRequest":
+        if self.customer_ref.resource_type != "CustomerLiteProjectionRevision":
+            raise ValueError("withdrawal customerRef must remain CustomerLite")
+        if self.consent_policy_ref.resource_type != "CustomerConsentPolicyRevision":
+            raise ValueError("withdrawal consentPolicyRef drifted")
+        return self
+
+
+class CustomerConsentWithdrawalObservation(RecordCustomerConsentWithdrawalRequest):
+    tenant: TenantContext
+    observation_id: str
+    revision: int = 1
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class StartCustomerDialogueItem(AipContractModel):
+    item_key: str = Field(min_length=1, max_length=200)
+    item_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    customer_ref: CustomerExactRef
+
+    @model_validator(mode="after")
+    def _customer(self) -> "StartCustomerDialogueItem":
+        if self.customer_ref.resource_type != "CustomerLiteProjectionRevision":
+            raise ValueError("start item accepts only CustomerLiteProjectionRevision")
+        return self
+
+
+class StartCustomerDialogueBatchRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    consent_policy_ref: CustomerExactRef
+    frequency_policy_ref: CustomerExactRef
+    action_type_ref: CustomerExactRef
+    impact_preview_ref: CustomerExactRef
+    approval_policy_ref: CustomerExactRef
+    account_binding_ref: CustomerExactRef
+    adapter_capability_ref: CustomerExactRef
+    content_ref: CustomerExactRef
+    start_sequence: int = Field(ge=1)
+    items: list[StartCustomerDialogueItem] = Field(min_length=1, max_length=1000)
+    reason: str = Field(min_length=1, max_length=500)
+
+    @model_validator(mode="after")
+    def _refs(self) -> "StartCustomerDialogueBatchRequest":
+        expected = (
+            (self.consent_policy_ref, "CustomerConsentPolicyRevision"),
+            (self.frequency_policy_ref, "FrequencyPolicyRevision"),
+            (self.action_type_ref, "ActionTypeRevision"),
+            (self.impact_preview_ref, "ImpactPreviewRevision"),
+            (self.approval_policy_ref, "ApprovalPolicyRevision"),
+            (self.account_binding_ref, "AccountBindingRevision"),
+            (self.adapter_capability_ref, "AdapterCapabilityRevision"),
+            (self.content_ref, "ArtifactRevision"),
+        )
+        if any(ref.resource_type != kind for ref, kind in expected):
+            raise ValueError("customer start exact refs drifted")
+        keys = [item.item_key for item in self.items]
+        if len(keys) != len(set(keys)):
+            raise ValueError("customer start item keys must be unique")
+        return self
+
+
+class CustomerFrequencyReservationRevision(AipContractModel):
+    tenant: TenantContext
+    reservation_id: str
+    batch_ref: CustomerExactRef
+    item_key: str = Field(min_length=1, max_length=200)
+    customer_ref: CustomerExactRef
+    frequency_policy_ref: CustomerExactRef
+    sequence: int = Field(ge=1)
+    status: str = Field(pattern=r"^held$")
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_at: datetime
+
+
+class CustomerContactExecutionPermitRevision(AipContractModel):
+    permit_id: str
+    customer_ref: CustomerExactRef
+    sequence: int = Field(ge=1)
+    status: str = Field(pattern=r"^not_redeemable$")
+    binding_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    raw_contact_count: int = Field(default=0, ge=0, le=0)
+
+
+class CustomerDispatchAttemptRevision(AipContractModel):
+    attempt_id: str
+    customer_ref: CustomerExactRef
+    sequence: int = Field(ge=1)
+    status: str = Field(pattern=r"^prepared$")
+    binding_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    outbox_intent_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    provider_call_count: int = Field(default=0, ge=0, le=0)
+
+
+class CustomerContactItemBinding(AipContractModel):
+    item_key: str
+    item_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    customer_ref: CustomerExactRef
+    state: CustomerContactItemState
+    withdrawal_sequence: int | None = Field(default=None, ge=1)
+    reservation: CustomerFrequencyReservationRevision | None = None
+    permit: CustomerContactExecutionPermitRevision | None = None
+    attempt: CustomerDispatchAttemptRevision | None = None
+    binding_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    action_receipt_ref: CustomerExactRef | None = None
+    resolved_state: CustomerContactItemState | None = None
+
+
+class CustomerContactLedger(AipContractModel):
+    frozen_eligible: int = Field(ge=0)
+    reserved: int = Field(ge=0)
+    skipped_withdrawn: int = Field(ge=0)
+    cancelled: int = Field(ge=0)
+    accepted: int = Field(ge=0)
+    applied: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    unknown: int = Field(ge=0)
+    disputed: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _conserved(self) -> "CustomerContactLedger":
+        total = self.reserved + self.skipped_withdrawn + self.cancelled + self.accepted + self.applied + self.failed + self.unknown + self.disputed
+        if self.frozen_eligible != total:
+            raise ValueError("customer contact ledger must conserve frozen eligible items")
+        return self
+
+
+class CustomerBatchStartDecisionRevision(AipContractModel):
+    tenant: TenantContext
+    decision_id: str
+    revision: int = 1
+    lifecycle: str = Field(pattern=r"^governance_prepared$")
+    batch_ref: CustomerExactRef
+    start_sequence: int = Field(ge=1)
+    exact_refs: dict[str, CustomerExactRef]
+    items: list[CustomerContactItemBinding]
+    ledger: CustomerContactLedger
+    operational_blockers: list[str]
+    contact_resolution_count: int = Field(default=0, ge=0, le=0)
+    provider_call_count: int = Field(default=0, ge=0, le=0)
+    send_count: int = Field(default=0, ge=0, le=0)
+    external_effect_count: int = Field(default=0, ge=0, le=0)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    started_by: str
+    started_at: datetime
+    # Original signing input, private to persistence/reconstruction. Legacy rows
+    # may lack it; never infer or backfill a reason for an existing decision.
+    reason: str | None = Field(default=None, min_length=1, max_length=500, exclude=True, repr=False)
+
+
+def customer_start_authority_data(item: CustomerBatchStartDecisionRevision) -> dict[str, Any]:
+    payload = item.model_dump(mode="json", by_alias=True)
+    if item.reason is not None:
+        payload["reason"] = item.reason
+    return payload
+
+
+def customer_start_signing_hash(item: CustomerBatchStartDecisionRevision) -> str:
+    """Reconstruct the original production UTC typed-repr signing recipe."""
+    if item.reason is None:
+        raise CustomerContactBlocked("CUSTOMER_START_SIGNING_MATERIAL_UNAVAILABLE")
+    bindings = []
+    for binding in item.items:
+        if binding.reservation is None:
+            bindings.append(binding)
+            continue
+        at = binding.reservation.created_at
+        if at.utcoffset() is None:
+            raise CustomerContactBlocked("CUSTOMER_START_SIGNING_MATERIAL_UNAVAILABLE")
+        reservation = binding.reservation.model_copy(update={"created_at": at.astimezone(UTC)})
+        bindings.append(binding.model_copy(update={"reservation": reservation}))
+    return canonical_hash({"batchRef": item.batch_ref, "startSequence": item.start_sequence,
+                           "exactRefs": item.exact_refs, "items": bindings, "reason": item.reason})
+
+
+class RecordCustomerDispatchObservationRequest(AipContractModel):
+    start_decision_ref: CustomerExactRef
+    item_key: str = Field(min_length=1, max_length=200)
+    action_receipt_ref: CustomerExactRef
+    state: CustomerContactItemState
+    resolved_state: CustomerContactItemState | None = None
+    manual_case_ref: CustomerExactRef | None = None
+    observed_at: datetime
+
+    @field_validator("observed_at")
+    @classmethod
+    def _aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("observedAt must include timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _refs(self) -> "RecordCustomerDispatchObservationRequest":
+        if self.start_decision_ref.resource_type != "CustomerBatchStartDecisionRevision":
+            raise ValueError("startDecisionRef drifted")
+        if self.action_receipt_ref.resource_type != "ActionReceipt":
+            raise ValueError("actionReceiptRef drifted")
+        if self.manual_case_ref and self.manual_case_ref.resource_type != "ManualReconcileCase":
+            raise ValueError("manualCaseRef drifted")
+        if self.state in {CustomerContactItemState.RESERVED, CustomerContactItemState.SKIPPED_WITHDRAWN}:
+            raise ValueError("dispatch observation cannot manufacture pre-dispatch state")
+        if self.state is CustomerContactItemState.UNKNOWN and self.resolved_state is not None:
+            raise ValueError("unknown observation cannot self-resolve")
+        if self.resolved_state is not None:
+            if self.state is not CustomerContactItemState.DISPUTED or self.resolved_state in {CustomerContactItemState.RESERVED, CustomerContactItemState.SKIPPED_WITHDRAWN, CustomerContactItemState.UNKNOWN, CustomerContactItemState.DISPUTED} or self.manual_case_ref is None:
+                raise ValueError("resolvedState requires disputed observation and exact manual case")
+        return self
+
+
+class CustomerDispatchObservation(RecordCustomerDispatchObservationRequest):
+    tenant: TenantContext
+    observation_id: str
+    revision: int = 1
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class CustomerContactContributionView(AipContractModel):
+    schema_version: str = CUSTOMER_CONTACT_SCHEMA_VERSION
+    tenant: TenantContext
+    evaluated_at: datetime
+    atomic_skill_ids: list[str] = Field(default_factory=lambda: list(CUSTOMER_SKILL_IDS))
+    logic_id: str = CUSTOMER_LOGIC_ID
+    primary_colleague: str = "私域管家"
+    collaborator_colleagues: list[str] = Field(default_factory=lambda: ["内容官", "客服专员", "导购顾问", "数据参谋"])
+    latest_start: CustomerBatchStartDecisionRevision | None
+    ledger: CustomerContactLedger
+    frequency_policy_count: int = Field(ge=0)
+    withdrawal_count: int = Field(ge=0)
+    blockers: list[str]
+    allowed_commands: list[str] = Field(default_factory=lambda: [
+        "CREATE_CUSTOMER_FREQUENCY_POLICY", "RECORD_CUSTOMER_CONSENT_WITHDRAWAL",
+        "START_CUSTOMER_DIALOGUE_BATCH_GOVERNANCE", "RECORD_CUSTOMER_DISPATCH_OBSERVATION",
+    ])
+    permit_redemption_allowed: bool = False
+    contact_resolution_allowed: bool = False
+    provider_dispatch_allowed: bool = False
+    send_allowed: bool = False
+    external_effects_allowed: bool = False
+
+
+def _ledger(items: list[CustomerContactItemBinding]) -> CustomerContactLedger:
+    counts = {state.value: 0 for state in CustomerContactItemState}
+    for item in items:
+        counts[(item.resolved_state or item.state).value] += 1
+    return CustomerContactLedger(frozenEligible=len(items), **counts)
+
+
+class EcommerceWorkshopCustomerContactService:
+    def __init__(self, store: Any, batch_store: Any) -> None:
+        self.store = store
+        self.batch_store = batch_store
+
+    @staticmethod
+    def _tenant(scope: TenantScope) -> TenantContext:
+        return TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+
+    @staticmethod
+    def _batch_ref(batch: CustomerDialogueBatchRevision) -> CustomerExactRef:
+        return CustomerExactRef(resourceType="CustomerDialogueBatchRevision", resourceId=batch.batch_id, revision=batch.revision, contentHash=f"sha256:{batch.content_hash}", receiptId=f"receipt-{batch.batch_id}")
+
+    def create_frequency_policy(self, scope: TenantScope, request: CreateCustomerFrequencyPolicyRequest, actor: str, *, now: datetime | None = None) -> CustomerFrequencyPolicyRevision:
+        at = now or datetime.now(UTC)
+        payload = request.model_dump(mode="json", by_alias=True)
+        item = CustomerFrequencyPolicyRevision(tenant=self._tenant(scope), **payload, contentHash=canonical_hash(payload), createdBy=actor, createdAt=at)
+        return self.store.append_frequency_policy(scope, item)
+
+    def record_withdrawal(self, scope: TenantScope, request: RecordCustomerConsentWithdrawalRequest) -> CustomerConsentWithdrawalObservation:
+        self.store.require_consent_policy(scope, request.consent_policy_ref)
+        payload = request.model_dump(mode="json", by_alias=True)
+        item = CustomerConsentWithdrawalObservation(
+            tenant=self._tenant(scope), observationId=f"customer-withdrawal-{canonical_hash(payload)[:24]}",
+            **payload, contentHash=canonical_hash(payload),
+        )
+        return self.store.append_withdrawal(scope, item)
+
+    def start_batch(self, scope: TenantScope, batch_id: str, request: StartCustomerDialogueBatchRequest, actor: str, *, now: datetime | None = None) -> CustomerBatchStartDecisionRevision:
+        if redact_sensitive(request.reason) != request.reason:
+            raise CustomerContactBlocked("CUSTOMER_START_SIGNING_REASON_SENSITIVE")
+        at = now or datetime.now(UTC)
+        batch = self.batch_store.latest_batch(scope, batch_id)
+        if batch.lifecycle != "frozen":
+            raise CustomerContactBlocked("CUSTOMER_DIALOGUE_BATCH_NOT_FROZEN")
+        if batch.version != request.expected_version or batch.content_hash != request.expected_content_hash:
+            raise CustomerContactConflict("CUSTOMER_DIALOGUE_BATCH_EXPECTED_VERSION_OR_HASH_DRIFTED")
+        if batch.consent_policy_ref != request.consent_policy_ref or batch.frequency_policy_ref != request.frequency_policy_ref:
+            raise CustomerContactBlocked("CUSTOMER_START_BATCH_POLICY_REF_DRIFTED")
+        eligible = [item for item in batch.items if item.disposition is CustomerBatchDisposition.ELIGIBLE]
+        expected = {
+            (item.item_key, batch.item_hashes[index], canonical_hash(item.customer_ref.model_dump(mode="json", by_alias=True)))
+            for index, item in enumerate(batch.items)
+            if item.disposition is CustomerBatchDisposition.ELIGIBLE
+        }
+        actual = {
+            (item.item_key, item.item_hash, canonical_hash(item.customer_ref.model_dump(mode="json", by_alias=True)))
+            for item in request.items
+        }
+        if actual != expected:
+            raise CustomerContactBlocked("CUSTOMER_START_ITEM_COVERAGE_OR_HASH_DRIFTED")
+        self.store.require_start_authorities(scope, request)
+        exact_refs = {
+            "consentPolicy": request.consent_policy_ref, "frequencyPolicy": request.frequency_policy_ref,
+            "actionType": request.action_type_ref, "impactPreview": request.impact_preview_ref,
+            "approvalPolicy": request.approval_policy_ref, "accountBinding": request.account_binding_ref,
+            "adapterCapability": request.adapter_capability_ref, "content": request.content_ref,
+        }
+        bindings: list[CustomerContactItemBinding] = []
+        for start_item in sorted(request.items, key=lambda value: value.item_key):
+            withdrawal = self.store.latest_withdrawal_or_none(scope, start_item.customer_ref, request.consent_policy_ref)
+            withdrawn_first = withdrawal is not None and withdrawal.sequence <= request.start_sequence
+            base = {"batchRef": self._batch_ref(batch), "item": start_item, "exactRefs": exact_refs, "startSequence": request.start_sequence}
+            binding_hash = canonical_hash(base)
+            if withdrawn_first:
+                bindings.append(CustomerContactItemBinding(
+                    **start_item.model_dump(mode="json", by_alias=True), state=CustomerContactItemState.SKIPPED_WITHDRAWN,
+                    withdrawalSequence=withdrawal.sequence, bindingHash=binding_hash,
+                ))
+                continue
+            reservation = CustomerFrequencyReservationRevision(
+                tenant=self._tenant(scope), reservationId=f"customer-frequency-{binding_hash[:24]}",
+                batchRef=self._batch_ref(batch), itemKey=start_item.item_key, customerRef=start_item.customer_ref,
+                frequencyPolicyRef=request.frequency_policy_ref, sequence=request.start_sequence, status="held",
+                contentHash=canonical_hash({"bindingHash": binding_hash, "kind": "frequency"}), createdAt=at,
+            )
+            reservation = self.store.reserve_frequency(scope, reservation)
+            permit = CustomerContactExecutionPermitRevision(
+                permitId=f"customer-permit-{binding_hash[:24]}", customerRef=start_item.customer_ref,
+                sequence=request.start_sequence, status="not_redeemable", bindingHash=binding_hash,
+            )
+            attempt = CustomerDispatchAttemptRevision(
+                attemptId=f"customer-attempt-{binding_hash[:24]}", customerRef=start_item.customer_ref,
+                sequence=request.start_sequence, status="prepared", bindingHash=binding_hash,
+                outboxIntentHash=canonical_hash({"bindingHash": binding_hash, "kind": "outbox-intent"}),
+            )
+            bindings.append(CustomerContactItemBinding(
+                **start_item.model_dump(mode="json", by_alias=True), state=CustomerContactItemState.RESERVED,
+                reservation=reservation, permit=permit, attempt=attempt, bindingHash=binding_hash,
+            ))
+        payload = {"batchRef": self._batch_ref(batch), "startSequence": request.start_sequence, "exactRefs": exact_refs, "items": bindings, "reason": request.reason}
+        content_hash = canonical_hash(payload)
+        existing = self.store.latest_start_or_none(scope, batch_id)
+        if existing is not None:
+            if existing.content_hash == content_hash:
+                return existing
+            raise CustomerContactConflict("CUSTOMER_BATCH_START_IDEMPOTENCY_CONFLICT")
+        item = CustomerBatchStartDecisionRevision(
+            tenant=self._tenant(scope), decisionId=f"customer-start-{canonical_hash([*scope.key, batch_id])[:24]}",
+            lifecycle="governance_prepared", batchRef=self._batch_ref(batch), startSequence=request.start_sequence,
+            exactRefs=exact_refs, items=bindings, ledger=_ledger(bindings),
+            operationalBlockers=["CUSTOMER_CONTACT_PERMIT_REDEMPTION_NOT_AUTHORIZED", "CUSTOMER_PROVIDER_DISPATCH_NOT_AUTHORIZED", "CUSTOMER_EXTERNAL_EFFECT_NOT_AUTHORIZED"],
+            contentHash=content_hash, startedBy=actor, startedAt=at, reason=request.reason,
+        )
+        return self.store.append_start(scope, batch_id, item)
+
+    def record_dispatch_observation(self, scope: TenantScope, request: RecordCustomerDispatchObservationRequest) -> CustomerDispatchObservation:
+        start = self.store.require_start(scope, request.start_decision_ref)
+        binding = next((item for item in start.items if item.item_key == request.item_key), None)
+        if binding is None or binding.state is CustomerContactItemState.SKIPPED_WITHDRAWN:
+            raise CustomerContactBlocked("CUSTOMER_CONTACT_ITEM_NOT_OBSERVABLE")
+        self.store.require_action_receipt(scope, request.action_receipt_ref, binding.binding_hash)
+        payload = request.model_dump(mode="json", by_alias=True)
+        item = CustomerDispatchObservation(
+            tenant=self._tenant(scope), observationId=f"customer-dispatch-observation-{canonical_hash(payload)[:24]}",
+            **payload, contentHash=canonical_hash(payload),
+        )
+        return self.store.append_dispatch_observation(scope, item)
+
+    def contribution_view(self, scope: TenantScope, *, now: datetime | None = None) -> CustomerContactContributionView:
+        at = now or datetime.now(UTC)
+        try:
+            latest = self.store.latest_start_for_tenant_or_none(scope)
+            counts = self.store.authority_counts(scope)
+            observations = [] if latest is None else self.store.list_dispatch_observations(scope, latest.decision_id)
+            if latest is not None and observations:
+                by_key = {item.item_key: item.model_copy(deep=True) for item in latest.items}
+                for observation in observations:
+                    item = by_key.get(observation.item_key)
+                    if item is not None:
+                        item.state = observation.state
+                        item.resolved_state = observation.resolved_state
+                        item.action_receipt_ref = observation.action_receipt_ref
+                latest = latest.model_copy(update={"items": list(by_key.values()), "ledger": _ledger(list(by_key.values()))})
+            blockers = ["CUSTOMER_CONTACT_GOVERNANCE_NOT_PREPARED"] if latest is None else list(latest.operational_blockers)
+        except CustomerContactBlocked as exc:
+            latest = None
+            counts = {"frequency_policy": 0, "withdrawal": 0}
+            blockers = [str(exc)]
+        ledger = CustomerContactLedger(frozenEligible=0, reserved=0, skippedWithdrawn=0, cancelled=0, accepted=0, applied=0, failed=0, unknown=0, disputed=0) if latest is None else latest.ledger
+        return CustomerContactContributionView(
+            tenant=self._tenant(scope), evaluatedAt=at, latestStart=latest, ledger=ledger,
+            frequencyPolicyCount=counts["frequency_policy"], withdrawalCount=counts["withdrawal"], blockers=blockers,
+        )
+
+
+__all__ = [name for name in globals() if name.startswith("Customer") or name.startswith("CreateCustomer") or name.startswith("RecordCustomer") or name.startswith("StartCustomer") or name == "EcommerceWorkshopCustomerContactService"]
+
+
+SELECTED COMPLETE FUNCTIONS services/aos-api/aos_api/ecommerce_workshop_customer_contact_store.py fullFileSHA c75d0d378df875b38c4f5a86d5b21d2f61a3433cf5614e0fcdb8929b409164c9
+
+    def __init__(self, connect_factory: Callable[[TenantScope], Any] = connect) -> None:
+        self._connect = connect_factory
+
+    def latest_withdrawal_or_none(self, scope: TenantScope, customer_ref: CustomerExactRef, consent_policy_ref: CustomerExactRef) -> CustomerConsentWithdrawalObservation | None:
+        with self._connect(scope) as conn:
+            row = conn.execute(
+                "SELECT authority_data FROM ecommerce_customer_consent_withdrawal_observation WHERE org_id=%s AND project_id=%s AND customer_id=%s AND consent_policy_id=%s ORDER BY sequence DESC,created_at DESC LIMIT 1",
+                (*scope.key, customer_ref.resource_id, consent_policy_ref.resource_id),
+            ).fetchone()
+        return None if row is None else CustomerConsentWithdrawalObservation.model_validate(row["authority_data"])
+
+    def require_start_authorities(self, scope: TenantScope, request: StartCustomerDialogueBatchRequest) -> None:
+        del scope, request
+        # No caller-shaped exact refs are accepted as production authority.
+        # A future resolver must bind all W5 records at one cutoff.
+        raise CustomerContactBlocked("CUSTOMER_START_AUTHORITY_RESOLVER_UNAVAILABLE")
+
+    def latest_start_for_tenant_or_none(self, scope: TenantScope) -> CustomerBatchStartDecisionRevision | None:
+        with self._connect(scope) as conn:
+            row = conn.execute(
+                "SELECT authority_data FROM ecommerce_customer_batch_start_decision_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC LIMIT 1",
+                scope.key,
+            ).fetchone()
+        return None if row is None else CustomerBatchStartDecisionRevision.model_validate(row["authority_data"])
+
+    def require_action_receipt(self, scope: TenantScope, ref: CustomerExactRef, binding_hash: str) -> None:
+        del scope, ref, binding_hash
+        raise CustomerContactBlocked("CUSTOMER_ACTION_RECEIPT_RESOLVER_UNAVAILABLE")
+
+    def list_dispatch_observations(self, scope: TenantScope, decision_id: str) -> list[CustomerDispatchObservation]:
+        with self._connect(scope) as conn:
+            rows = conn.execute(
+                "SELECT authority_data FROM ecommerce_customer_dispatch_observation WHERE org_id=%s AND project_id=%s AND decision_id=%s ORDER BY created_at,observation_id",
+                (*scope.key, decision_id),
+            ).fetchall()
+        return [CustomerDispatchObservation.model_validate(row["authority_data"]) for row in rows]
+
+    def authority_counts(self, scope: TenantScope) -> dict[str, int]:
+        with self._connect(scope) as conn:
+            frequency = conn.execute("SELECT COUNT(*) AS count FROM ecommerce_customer_frequency_policy_revision WHERE org_id=%s AND project_id=%s", scope.key).fetchone()["count"]
+            withdrawals = conn.execute("SELECT COUNT(*) AS count FROM ecommerce_customer_consent_withdrawal_observation WHERE org_id=%s AND project_id=%s", scope.key).fetchone()["count"]
+        return {"frequency_policy": frequency, "withdrawal": withdrawals}
+
+SELECTED COMPLETE FUNCTIONS services/aos-api/aos_api/ecommerce_customer_lifecycle_readonly.py fullFileSHA b7ac470efd1d04f36621896d830b094562fb899ab223fb73555f03bc88617010
+
+def _strict(value):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key in _INTS and type(child) is not int: _deny('AUTHORITY_DRIFT')
+            if key in _BOOLS and type(child) is not bool and not (key in _NULLABLE_BOOLS and child is None):
+                _deny('AUTHORITY_DRIFT')
+            _strict(child)
+    elif isinstance(value, list):
+        for child in value: _strict(child)
+
+def _privacy(raw):
+    visible = _visible(raw)
+    if redact_sensitive(visible) != visible: _deny('SENSITIVE_CONTENT')
+    serialized = json.dumps(visible, ensure_ascii=False).lower()
+    if any(word in serialized for word in ('mobile', 'openid', 'email', 'address', 'nickname', 'avatar', 'rawmessage', 'providerpayload')):
+        _deny('SENSITIVE_CONTENT')
+
+def _matches(ref, item, identity):
+    return (ref.resource_id == getattr(item, identity) and ref.revision == item.revision
+            and ref.content_hash == 'sha256:' + item.content_hash)
+
+    @staticmethod
+    def _decode(row, model, identity, scope, cutoff):
+        if row is None: _deny('AUTHORITY_DRIFT')
+        if ((row.get('org_id'), row.get('project_id')) != scope.key
+                or not isinstance(row.get('identity'), str) or not 0 < len(row['identity']) <= 200
+                or type(row.get('revision')) is not int or row['revision'] < 1
+                or not isinstance(row.get('content_hash'), str) or re.fullmatch('[0-9a-f]{64}', row['content_hash']) is None
+                or not _aware(row.get('created_at')) or row['created_at'] > cutoff): _deny('AUTHORITY_DRIFT')
+        if type(row.get('size')) is not int or row['size'] < 1: _deny('AUTHORITY_DRIFT')
+        if row['size'] > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
+        raw = row.get('authority_data')
+        if not isinstance(raw, dict): _deny('AUTHORITY_DRIFT')
+        _strict(raw)
+        item = model.model_validate(raw)
+        if item.model_dump(mode='json', by_alias=True) != raw: _deny('AUTHORITY_DRIFT')
+        if ((item.tenant.org_id, item.tenant.project_id) != scope.key or getattr(item, identity) != row['identity']
+                or item.revision != row['revision'] or item.content_hash != row['content_hash']
+                or not _aware(item.created_at) or item.created_at != row['created_at']
+                or item.created_at > cutoff): _deny('AUTHORITY_DRIFT')
+        if hasattr(item, 'cutoff') and (not _aware(item.cutoff) or item.cutoff > cutoff): _deny('AUTHORITY_DRIFT')
+        _privacy(raw)
+        return item
+
+    @staticmethod
+    def _validate_batch(item, prior=None):
+        request = _request(domain.PrepareCustomerDialogueBatchRequest, item)
+        refs = {key: getattr(request, attr) for key, attr in _REFS.items()}
+        hashes = [domain.canonical_hash(value.model_dump(mode='json', by_alias=True)) for value in request.items]
+        counts = {kind: sum(value.disposition == kind for value in request.items) for kind in domain.CustomerBatchDisposition}
+        ledger = domain.CustomerDialogueBatchLedger(input=len(request.items), **{key.value: value for key, value in counts.items()})
+        binding = domain.canonical_hash({'refs': refs, 'itemHashes': hashes})
+        if item.item_hashes != hashes or item.binding_hash != binding or item.ledger != ledger: _deny('AUTHORITY_DRIFT')
+        if any(getattr(item, field) != 0 for field in ('contact_resolution_count', 'action_count', 'provider_call_count', 'send_count', 'external_effect_count')):
+            _deny('AUTHORITY_DRIFT')
+        if item.lifecycle == 'prepared':
+            expected = domain.canonical_hash({**request.model_dump(mode='json', by_alias=True), 'ledger': ledger, 'bindingHash': binding})
+            if item.revision != 1 or item.version != 1 or item.prior_content_hash is not None or item.content_hash != expected:
+                _deny('AUTHORITY_DRIFT')
+        elif item.lifecycle == 'frozen':
+            if prior is None or prior.lifecycle != 'prepared': _deny('AUTHORITY_DRIFT')
+            CustomerLifecycleReadonlyReader._validate_batch(prior)
+            if (item.revision != prior.revision + 1 or item.version != prior.version + 1
+                    or item.prior_content_hash != prior.content_hash or item.created_at < prior.created_at): _deny('AUTHORITY_DRIFT')
+            inherited = prior.model_dump(mode='json', by_alias=True, exclude=_FREEZE_EXCLUDE)
+            if item.model_dump(mode='json', by_alias=True, exclude=_FREEZE_EXCLUDE) != inherited: _deny('AUTHORITY_DRIFT')
+            expected = domain.canonical_hash({**inherited, 'revision': item.revision, 'version': item.version,
+                                              'lifecycle': 'frozen', 'priorContentHash': prior.content_hash})
+            if item.content_hash != expected: _deny('AUTHORITY_DRIFT')
+        else: _deny('AUTHORITY_DRIFT')
+
+EVIDENCE .evidence/qyh-customer-contact-read-admission-20261015/implementation-plan-r2.md
+# 客户联系保存贡献：完整reader文件级方案r2
+
+基线m1 90a601fd1ad2a57c128bf05416dbf97239412865、Authority2037。contact parent/maintenance-r10/signing/reader四Task同owner非重叠，至16UTC。产品v2/09、技术56-W6-08含8/25封板及原producer/Store/DDL/前端parser已复习。完整231Goal、原唯一真人安装全恢复本机授权与完整剩余经营首链/安装生命周期/八真实场景全部视觉/连续观察发布保留；原DB只读、HostworkerProviderOFF、unknown旧12不重放、disabledSchedule/source/noPush不变。daily每次实际aos最新m1同原卷全面PG→API→Web，aos2不重启，API-only不能替代。
+
+## 基线证据与精确文件
+
+90a601fd仅前置签名材料三文件代码：私有reason/原生产UTC纯签名重建/原Store私有序列化、敏感理由先于Store拒绝；原hash配方与公共wire/旧payload decode不改。冻结407/原w6_008临时PG往返/RLS/25006/真实in-process FastAPI输出和OpenAPI排除reason、新独立code r2 PASS合法消费；未部署、Task未提前Delivery。原实际API15265/source80b39、Web89803/f036及原卷schema161/650/绑定0不变。
+
+probe-r2组合原W6-07与W6-08生产器：完整exact policy→原prepare/freeze→真实匹配frequency hash→reserved与skipped withdrawal sequence9/start10→unknown observation；原Start仍reserved、投影unknown保持held、签名不变。全部纯内存合成resolver，无DB/HTTP/实际Consent/Receipt/Contact准入。
+
+另reader Task已登记两文件：`services/aos-api/aos_api/ecommerce_customer_contact_readonly.py`与`services/aos-api/tests/test_ecommerce_customer_contact_readonly.py`。parent只改`services/aos-api/aos_api/routers/ecommerce_workshop.py`与`services/aos-api/tests/test_ecommerce_workshop_read_http.py`；仅canonical `/views/customer/contact-contributions`使用typed ReadCatalog/installed readonly分流。正常legacy成功、其他GET/POST原门保持；原producer/Store/DDL/Web/AIP本reader阶段不再修改，额外文件先登记。
+
+## 一致快照与完整计数
+
+一个核实READONLY/REPEATABLE_READ/autocommitFalse连接，transaction_timestamp cutoff。SET LOCAL statement_timeout3000ms/lock_timeout500ms，查询间、解码循环与返回前monotonic10秒门。frequency policy全部保存修订COUNT与withdrawal全部观察COUNT保留，不去重/取样/截断冒充总数。固定两聚合返回count/invalid_count/MAX(created_at)，检查payload/outer tenant/id/revision/hash/date；withdrawal附加customer_id/consent_policy_id/sequence一致；createdAt/observedAt aware且与outer相同，未来MAX拒绝，不用WHERE cutoff隐藏坏行。SQL无效cast或任何错误稳定503，不补0/null；count原生int 0..2^53-1。未展示payload不声称全部逐行重算hash。
+
+所有表/列来自固定常量。最新Start按created_at DESC/revision DESC/decision_id稳定排序LIMIT1；outer identity<=200/hash64/SQL CASE单行1MiB先于传输。单DTO1MiB/载荷总8MiB/总1280行，original start最多1000items。selected observations按原created_at/observation_id及revision确定顺序LIMIT257，超过256整视图拒绝，不截断历史冒充完整。reservation与skipped withdrawal每item互斥，最多1000见证行；bulk固定表参数化ANY或明确(customer_id,sequence)请求对，LIMIT1001且超界拒绝。query/row/size/循环均计入同一总门。
+
+## 原保存物证验证
+
+先验证未投影Start：private serializer与raw精确相等、strict int/bool/None不强转、outer tenant/id/revision1/batch_id/startedAt/hash匹配、aware且不晚于cutoff、全raw隐私检查含私有reason。reason缺失稳定`CUSTOMER_CONTACT_READ_SIGNING_MATERIAL_UNAVAILABLE`，不猜、不回填、不重放。调用已交付`customer_start_signing_hash`重建原生产UTC typed签名后比较，验证原decision_id派生公式、governance_prepared、原blockers、四zero。
+
+精确读取Start.batchRef指定冻结Batch及其prepared前版、四policy，复用已交付`CustomerLifecycleReadonlyReader._decode/_validate_batch`与原policy签名/lineage合同，不改或复制源权威引擎；错误映射为本contact前缀。仅读取exact batch，不用当前latest替代。由Batch expected version/hash、Start exactRefs/私有reason及StartItem原模型重建校验请求；核完整eligible覆盖、itemHashes/customer refs、唯一有序items及八exact ref类型。Start签名重建在任何观察投影之前。
+
+base items仅reserved/skipped_withdrawn。原typed StartItem/batchRef/exactRefs/startSequence重算bindingHash。reserved要求匹配原reservation ID/hash、tenant/customer/batch/frequency/sequence/createdAt、held状态及独立保存row，outer revision1/customer_id/policy_id/sequence/status一致；permit不可兑换、rawContactCount0、attempt prepared/providerCallCount0、各ID/bindingHash/outbox hash均按原producer；无withdrawal_sequence/actionReceipt/resolution。skipped要求sequence<=startSequence、无reservation/permit/attempt/receipt/resolution，并有同customer/policy exact refs及同sequence的已保存withdrawal witness，按原request JSON hash/派生ID/outer/date核对。只证明保存历史，不从现有事件猜当时所有撤回顺序、不重新判当前Consent或重算当前rolling-window配额。
+
+读取exact frequency policy核原Create request JSON签名与ref；selected Batch/policy lineage按原合同核对，saved counts必须覆盖所选事实。观察逐条验证原RecordCustomerDispatchObservationRequest模型、完整raw/outer tenant/id/revision1/decision_id/item_key/date、原request hash/派生ID、exact原Start ref和存在且未skipped的item。unknown不能自解析；disputed resolution必须原模型允许且有typed ManualReconcileCase。保存typed ActionReceipt引用不当真实Receipt resolver已可用；原生产Start与ActionReceipt resolver仍恒拒绝，GET绝不调用它们、reserve_frequency、start、record或contact/Provider。
+
+## 投影、隐私与失败
+
+原Start和每观察验完后，通过纯已验证Store适配器调用原service.contribution_view，复用原覆盖items/ledger规则：输出仍是贡献投影，保留原Start contentHash，不将投影当新签名记录，不对投影重新签名；unknown保持held，不释放或重发。原Start对象不得被修改。公开wire沿用原模型，私有reason被排除；完整DTO重验、commands[]及permitRedemption/contactResolution/providerDispatch/send/external五false。敏感字段和值、任意扩展/缺字段/数字bool/越界/时间/租户/签名错误均拒绝；hash字段需先校验格式/原签名再排除手机号误判。不让异常补空/0成功。
+
+## Loop与退出条件
+
+独立方案Prime/合法消费后RED：原producer完整非空reserved+skip+unknown/manual-resolution、私有reason缺失/UTC重建、各hash/exact/lineage/outer/PII/数量/时间/超界/错误；新HTTP正常与installed只读空/非空/400/401/失败503/其他入口不扩权。最小实现后冻结专项/原W6-08/W6-07/相邻customer/price/closure/catalog；原w6_008与必要w6_007 DDL独立tmpfs PG真快照/完整COUNT revisions/RLS/25006/SQLCASE/privacy及准确停CID，独立reader与route质量。
+
+精确提交后fresh维护-r10源冻结/原650 before/controller独立门/单新意图API-only；原真人正式SDK/拒绝矩阵/650全等、客户原稿适用三宽与只读交互/livePrime后才准确Delivery、Authority七强及全部remaining接续。前置签名Task一起按真实范围交付，不提前把代码或fixture当Contact/Consent/经营准入。完整Goal ACTIVE。
+
+
+EVIDENCE .evidence/qyh-customer-contact-read-admission-20261015/producer-probe-result-r2.json
+{
+  "syntheticMemoryOnly": true,
+  "databaseOrHttpCalls": 0,
+  "actualConsentReceiptOrContactAuthority": false,
+  "originalW6_07AndW6_08ProducersComposed": true,
+  "fullPolicyAndBatchExactHashes": true,
+  "frequencyPolicyMatchesFrozenBatch": true,
+  "originalPreparedAndFrozenBatchHashes": true,
+  "privateSigningMaterialRoundtrip": true,
+  "originalStartHashVerified": true,
+  "startLedger": {
+    "frozenEligible": 2,
+    "reserved": 1,
+    "skippedWithdrawn": 1,
+    "cancelled": 0,
+    "accepted": 0,
+    "applied": 0,
+    "failed": 0,
+    "unknown": 0,
+    "disputed": 0
+  },
+  "projectionLedger": {
+    "frozenEligible": 2,
+    "reserved": 0,
+    "skippedWithdrawn": 1,
+    "cancelled": 0,
+    "accepted": 0,
+    "applied": 0,
+    "failed": 0,
+    "unknown": 1,
+    "disputed": 0
+  },
+  "skippedWithdrawalSequence": 9,
+  "startSequence": 10,
+  "unknownKeepsReservationHeld": true,
+  "originalStartRemainsReserved": true,
+  "projectionKeepsOriginalHash": true,
+  "privateReasonAbsentFromPublicView": true,
+  "savedObservationHashVerified": true,
+  "sourceHashes": {
+    "services/aos-api/aos_api/ecommerce_workshop_customer_contact.py": "afae8d6baf95c977a176efa67b56ca3877351dd1c819fb8723d28dc68a06a9b3",
+    "services/aos-api/aos_api/ecommerce_workshop_customer_lifecycle.py": "0c1cb897d99b622d041d65688bedceedd5697da1fdd6152844fcd0e2bfa3ac4d"
+  },
+  "wholeGoalComplete": false
+}
+
+EVIDENCE .evidence/qyh-customer-contact-read-admission-20261015/reader-scope-readback-r1.json
+{
+  "authority": "AOS-002037",
+  "reader": {
+    "schema": "aos-memory-task-receipt/v1",
+    "task_id": "qyh-customer-contact-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "base_revision": "AOS-002037",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/ecommerce_customer_contact_readonly.py",
+      "aos-platform/services/aos-api/tests/test_ecommerce_customer_contact_readonly.py",
+      "aos-platform/.evidence/qyh-customer-contact-bounded-reader-20261015"
+    ],
+    "excluded_scope": [
+      "aos-platform/apps/web",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py"
+    ],
+    "expected_outputs": [
+      "Full customer saved contact governance readonly reader, including original producer signatures/private reason, exact frozen batch ancestry/policies/reservation/withdrawal/dispatch observation and original projection, never current Contact/Consent/receipt admission.",
+      "Full two revision/observation COUNT semantics, one verified readonly RR snapshot, strict bounds/errors/privacy/commands[]/fivefalse; RED/frozen/native/independent quality; parent handles actual SDK650/visual/live and accurate full231Goal handoff."
+    ],
+    "lease_expires_at": "2026-10-15T16:00:00+00:00",
+    "status": "ACTIVE",
+    "created_at": "2026-10-15T16:52:17+08:00"
+  },
+  "otherLeasesPreserved": 41,
+  "nonOverlapping": true,
+  "wholeGoalComplete": false
+}
+
+EVIDENCE .evidence/qyh-customer-start-signing-material-20261015/code-review-consumption-r2.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-start-signing-material-20261015-code-r2",
+  "task_id": "qyh-customer-start-signing-material-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "b91134970d94fb1eab83556d3b98c7324711596f",
+    "authority_revision": "AOS-002037",
+    "files": {
+      ".evidence/qyh-customer-start-signing-material-20261015/code-review-material-r2.txt": "f72e514908f5f77dce33c669a5550083a2a68f4bc477ad76e47561a2278e4461"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "d0d4c1ea6781b66d50e2198758ff19074b81b7e6edd58f1b5b62271d265a3694",
+  "transport_sha256": "fbe5b7332aa3d44958a7c78e64aa30cd3115370343815b7e80ff0241d90dceef"
+}

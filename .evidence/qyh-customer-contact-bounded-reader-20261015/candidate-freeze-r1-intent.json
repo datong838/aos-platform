@@ -1,0 +1,12 @@
+{
+  "baseHead": "90a601fd1ad2a57c128bf05416dbf97239412865",
+  "overlay": {
+    "services/aos-api/aos_api/ecommerce_customer_contact_readonly.py": "4d23d7e8224b3ec815db9f7c027267214191121b8b9c8ba3f960a623b9c0cedc",
+    "services/aos-api/tests/test_ecommerce_customer_contact_readonly.py": "33db9325aa3b260352b68a8c256d78058be634eb2ded6d093b34486ded69e716",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "623a9c373085aea90e6c8ab51e45e4b86fd5966dd5e42e5ee877a57a992d33b9",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "42630b29fb887ceed3fa0bc515144414ef212e14c4e72a4736c1d72f80ad9b08"
+  },
+  "privateSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-contact-bounded-reader-20261015/private/candidate-source-r1",
+  "noUserDirtyCopied": true,
+  "noServiceEffects": true
+}

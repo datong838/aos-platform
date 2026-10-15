@@ -1,0 +1,895 @@
+CURRENT READER CODE QUALITY, not deployed. Full231Goal ACTIVE. Canonical saved contact view only, never current Consent/ActionReceipt/Contact or send admission. A typed saved receipt ref does not assert current production resolver enabled. Original signed Start is validated BEFORE its original contribution projection; projected items keep original hash and are not claimed a new signed Start.
+
+FULL FILE services/aos-api/aos_api/ecommerce_customer_contact_readonly.py SHA 4d23d7e8224b3ec815db9f7c027267214191121b8b9c8ba3f960a623b9c0cedc
+"""Verify saved contact governance before its original side-effect-free projection."""
+from datetime import datetime
+import json
+import re
+from time import monotonic
+
+import psycopg
+from psycopg import IsolationLevel
+
+from aos_api.db import connect_read_only
+from aos_api import ecommerce_workshop_customer_contact as d
+from aos_api import ecommerce_workshop_customer_lifecycle as lifecycle
+from aos_api import ecommerce_customer_lifecycle_readonly as life
+from aos_api.public_contracts import redact_sensitive
+
+MAX_ROW_BYTES = 1024 * 1024
+MAX_TOTAL_BYTES = 8 * MAX_ROW_BYTES
+MAX_ROWS = 1280
+MAX_OBSERVATIONS = 256
+_FREQUENCY = 'ecommerce_customer_frequency_policy_revision'
+_WITHDRAWAL = 'ecommerce_customer_consent_withdrawal_observation'
+_START = 'ecommerce_customer_batch_start_decision_revision'
+_RESERVATION = 'ecommerce_customer_frequency_reservation_revision'
+_OBSERVATION = 'ecommerce_customer_dispatch_observation'
+_SPECS = {
+    table: (identity, model, 'created_at', ()) for table, identity, model, _request, _key in life.POLICIES
+}
+_SPECS.update({
+    life.BATCH_TABLE: ('batch_id', lifecycle.CustomerDialogueBatchRevision, 'created_at', ()),
+    _FREQUENCY: ('policy_id', d.CustomerFrequencyPolicyRevision, 'created_at', ()),
+    _WITHDRAWAL: ('observation_id', d.CustomerConsentWithdrawalObservation, 'observed_at', ('customer_id', 'consent_policy_id', 'sequence')),
+    _START: ('decision_id', d.CustomerBatchStartDecisionRevision, 'started_at', ('batch_id',)),
+    _RESERVATION: ('reservation_id', d.CustomerFrequencyReservationRevision, 'created_at', ('customer_id', 'policy_id', 'sequence', 'status')),
+    _OBSERVATION: ('observation_id', d.CustomerDispatchObservation, 'observed_at', ('decision_id', 'item_key')),
+})
+_REFS = {'consentPolicy': 'consent_policy_ref', 'frequencyPolicy': 'frequency_policy_ref',
+         'actionType': 'action_type_ref', 'impactPreview': 'impact_preview_ref',
+         'approvalPolicy': 'approval_policy_ref', 'accountBinding': 'account_binding_ref',
+         'adapterCapability': 'adapter_capability_ref', 'content': 'content_ref'}
+_BLOCKERS = ['CUSTOMER_CONTACT_PERMIT_REDEMPTION_NOT_AUTHORIZED', 'CUSTOMER_PROVIDER_DISPATCH_NOT_AUTHORIZED', 'CUSTOMER_EXTERNAL_EFFECT_NOT_AUTHORIZED']
+_INTS = {'revision', 'version', 'startSequence', 'sequence', 'withdrawalSequence', 'rollingWindowHours',
+         'maximumContacts', 'frozenEligible', 'reserved', 'skippedWithdrawn', 'cancelled', 'accepted',
+         'applied', 'failed', 'unknown', 'disputed', 'rawContactCount', 'contactResolutionCount',
+         'providerCallCount', 'sendCount', 'externalEffectCount'}
+
+
+class CustomerContactReadonlyError(RuntimeError):
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
+def _deny(suffix):
+    raise CustomerContactReadonlyError('CUSTOMER_CONTACT_READ_' + suffix)
+
+
+def _aware(value):
+    return isinstance(value, datetime) and value.utcoffset() is not None
+
+
+def _strict(raw):
+    life._strict(raw)
+    if isinstance(raw, dict):
+        for key, value in raw.items():
+            if key in _INTS and type(value) is not int and not (key == 'withdrawalSequence' and value is None):
+                _deny('AUTHORITY_DRIFT')
+            if key.endswith('Hash') and value is not None:
+                if not isinstance(value, str) or re.fullmatch(r'(?:sha256:)?[0-9a-f]{64}', value) is None:
+                    _deny('AUTHORITY_DRIFT')
+            if key.endswith('Hashes'):
+                if not isinstance(value, list) or any(not isinstance(v, str) or re.fullmatch('[0-9a-f]{64}', v) is None for v in value):
+                    _deny('AUTHORITY_DRIFT')
+            _strict(value)
+    elif isinstance(raw, list):
+        for value in raw: _strict(value)
+
+
+def _privacy(raw):
+    visible = life._visible(raw)
+    if redact_sensitive(visible) != visible: _deny('SENSITIVE_CONTENT')
+    serialized = json.dumps(visible, ensure_ascii=False).lower()
+    if any(word in serialized for word in ('mobile', 'openid', 'email', 'address', 'nickname', 'avatar', 'rawmessage', 'providerpayload', 'contactvalue', 'contactdetail')):
+        _deny('SENSITIVE_CONTENT')
+
+
+def _camel(value):
+    head, *tail = value.split('_')
+    return head + ''.join(part.title() for part in tail)
+
+
+class _ValidatedStore:
+    def __init__(self, counts, start, observations):
+        self.counts, self.start, self.observations = counts, start, observations
+    def authority_counts(self, _scope): return self.counts
+    def latest_start_for_tenant_or_none(self, _scope): return self.start
+    def list_dispatch_observations(self, _scope, _identity): return self.observations
+
+
+class CustomerContactReadonlyReader:
+    def __init__(self, *, connect_factory=None):
+        self._connect = connect_factory or connect_read_only
+
+    @staticmethod
+    def _count(conn, scope, table):
+        if table not in (_FREQUENCY, _WITHDRAWAL): _deny('AUTHORITY_DRIFT')
+        identity, _model, date, _extras = _SPECS[table]
+        valid = (f'length({identity}) BETWEEN 1 AND 200 AND revision>=1 '
+                 "AND content_hash ~ '^[0-9a-f]{64}$' "
+                 "AND jsonb_typeof(authority_data)='object' "
+                 "AND authority_data->'tenant'->'orgId'=to_jsonb(org_id) "
+                 "AND authority_data->'tenant'->'projectId'=to_jsonb(project_id) "
+                 f"AND authority_data->'{_camel(identity)}'=to_jsonb({identity}) "
+                 "AND authority_data->>'revision'=revision::text "
+                 "AND authority_data->'contentHash'=to_jsonb(content_hash::text) "
+                 f"AND jsonb_typeof(authority_data->'{_camel(date)}')='string' "
+                 f"AND authority_data->>'{_camel(date)}' ~ '(Z|[+-][0-9]{{2}}:[0-9]{{2}})$' "
+                 f"AND (authority_data->>'{_camel(date)}')::timestamptz=created_at")
+        if table == _WITHDRAWAL:
+            valid += (" AND revision=1 AND authority_data->'customerRef'->'resourceId'=to_jsonb(customer_id)"
+                      " AND authority_data->'consentPolicyRef'->'resourceId'=to_jsonb(consent_policy_id)"
+                      " AND authority_data->>'sequence'=sequence::text")
+        return conn.execute(f'SELECT COUNT(*) AS count,SUM(CASE WHEN {valid} THEN 0 ELSE 1 END) AS invalid_count,'
+                            f'MAX(created_at) AS latest_created_at FROM {table} '
+                            'WHERE org_id=%s AND project_id=%s', scope.key).fetchone()
+
+    @staticmethod
+    def _rows(conn, scope, table, *, exact=None, selection=None, payload=False, limit=1):
+        if table not in _SPECS or limit not in (1, 257, 1001): _deny('AUTHORITY_DRIFT')
+        identity, _model, _date, extras = _SPECS[table]
+        columns = (f'org_id,project_id,CASE WHEN length({identity})<=200 THEN {identity} ELSE NULL END AS identity,'
+                   'revision,CASE WHEN length(content_hash)=64 THEN content_hash ELSE NULL END AS content_hash,'
+                   'created_at,octet_length(authority_data::text) AS size')
+        for key in extras:
+            if key == 'sequence': columns += ',sequence'
+            else: columns += f',CASE WHEN length({key})<=200 THEN {key} ELSE NULL END AS {key}'
+        if payload:
+            columns += f',CASE WHEN octet_length(authority_data::text)<={MAX_ROW_BYTES} THEN authority_data ELSE NULL END AS authority_data'
+        query = f'SELECT {columns} FROM {table} WHERE org_id=%s AND project_id=%s '
+        params = scope.key
+        if exact is not None:
+            query += f'AND {identity}=%s AND revision=%s '
+            params = (*params, *exact)
+        if selection is not None:
+            if table == _RESERVATION:
+                query += 'AND reservation_id=ANY(%s) '
+                params = (*params, selection)
+            elif table == _WITHDRAWAL:
+                customers, sequences, policy = selection
+                query += 'AND (customer_id,sequence) IN (SELECT * FROM unnest(%s::text[],%s::bigint[])) AND consent_policy_id=%s '
+                params = (*params, customers, sequences, policy)
+            elif table == _OBSERVATION:
+                query += 'AND decision_id=%s '
+                params = (*params, selection)
+            else: _deny('AUTHORITY_DRIFT')
+        order = f'created_at DESC,revision DESC,{identity}' if limit == 1 else f'created_at,{identity},revision'
+        result = conn.execute(query + f'ORDER BY {order} LIMIT {limit}', params)
+        return result.fetchone() if limit == 1 else result.fetchall()
+
+    @staticmethod
+    def _metadata(row, scope, cutoff):
+        if ((row.get('org_id'), row.get('project_id')) != scope.key
+                or not isinstance(row.get('identity'), str) or not 0 < len(row['identity']) <= 200
+                or type(row.get('revision')) is not int or row['revision'] < 1
+                or not isinstance(row.get('content_hash'), str) or re.fullmatch('[0-9a-f]{64}', row['content_hash']) is None
+                or not _aware(row.get('created_at')) or row['created_at'] > cutoff): _deny('AUTHORITY_DRIFT')
+        if type(row.get('size')) is not int or row['size'] < 1: _deny('AUTHORITY_DRIFT')
+        if row['size'] > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
+
+    @staticmethod
+    def _decode(row, table, scope, cutoff):
+        identity, model, date, _extras = _SPECS[table]
+        raw = row.get('authority_data')
+        if not isinstance(raw, dict): _deny('AUTHORITY_DRIFT')
+        _strict(raw); _privacy(raw)
+        if table in {entry[0] for entry in life.POLICIES} or table == life.BATCH_TABLE:
+            return life.CustomerLifecycleReadonlyReader._decode(row, model, identity, scope, cutoff)
+        item = model.model_validate(raw)
+        expected = d.customer_start_authority_data(item) if table == _START else item.model_dump(mode='json', by_alias=True)
+        if expected != raw: _deny('AUTHORITY_DRIFT')
+        if ((item.tenant.org_id, item.tenant.project_id) != scope.key or getattr(item, identity) != row['identity']
+                or getattr(item, 'revision', 1) != row['revision'] or item.content_hash != row['content_hash']
+                or not _aware(getattr(item, date)) or getattr(item, date) != row['created_at']): _deny('AUTHORITY_DRIFT')
+        return item
+
+    @staticmethod
+    def _validate_start(start, batch, frequency, policies):
+        if start.reason is None: _deny('SIGNING_MATERIAL_UNAVAILABLE')
+        if (start.revision != 1 or start.lifecycle != 'governance_prepared'
+                or start.decision_id != 'customer-start-' + d.canonical_hash([start.tenant.org_id, start.tenant.project_id, batch.batch_id])[:24]
+                or start.operational_blockers != _BLOCKERS
+                or any(getattr(start, key) != 0 for key in ('contact_resolution_count', 'provider_call_count', 'send_count', 'external_effect_count'))
+                or start.content_hash != d.customer_start_signing_hash(start)):
+            _deny('AUTHORITY_DRIFT')
+        if (start.batch_ref.resource_type != 'CustomerDialogueBatchRevision' or batch.lifecycle != 'frozen'
+                or not life._matches(start.batch_ref, batch, 'batch_id') or batch.created_at > start.started_at
+                or set(start.exact_refs) != set(_REFS)):
+            _deny('AUTHORITY_DRIFT')
+        args = {attr: start.exact_refs[key] for key, attr in _REFS.items()}
+        items = [d.StartCustomerDialogueItem(itemKey=item.item_key, itemHash=item.item_hash, customerRef=item.customer_ref) for item in start.items]
+        request = d.StartCustomerDialogueBatchRequest(expectedVersion=batch.version, expectedContentHash=batch.content_hash,
+                    startSequence=start.start_sequence, items=items, reason=start.reason, **args)
+        if (request.consent_policy_ref != batch.consent_policy_ref or request.frequency_policy_ref != batch.frequency_policy_ref
+                or not life._matches(request.frequency_policy_ref, frequency, 'policy_id')
+                or frequency.created_at > start.started_at): _deny('AUTHORITY_DRIFT')
+        expected = {(i.item_key, batch.item_hashes[n], d.canonical_hash(i.customer_ref.model_dump(mode='json', by_alias=True)))
+                    for n, i in enumerate(batch.items) if i.disposition.value == 'eligible'}
+        actual = {(i.item_key, i.item_hash, d.canonical_hash(i.customer_ref.model_dump(mode='json', by_alias=True))) for i in items}
+        if actual != expected or [i.item_key for i in start.items] != sorted(i.item_key for i in start.items): _deny('AUTHORITY_DRIFT')
+        if (policies['segment'].consent_policy_ref != batch.consent_policy_ref
+                or policies['journey'].segment_ref != batch.segment_ref
+                or policies['dialogue'].journey_ref != batch.journey_ref
+                or policies['dialogue'].eval_ref != policies['journey'].eval_ref
+                or start.ledger != d._ledger(start.items)):
+            _deny('AUTHORITY_DRIFT')
+        for item, request_item in zip(start.items, items):
+            binding = d.canonical_hash({'batchRef': start.batch_ref, 'item': request_item, 'exactRefs': start.exact_refs, 'startSequence': start.start_sequence})
+            if item.binding_hash != binding or item.action_receipt_ref is not None or item.resolved_state is not None: _deny('AUTHORITY_DRIFT')
+            if item.state is d.CustomerContactItemState.SKIPPED_WITHDRAWN:
+                if (item.withdrawal_sequence is None or item.withdrawal_sequence > start.start_sequence
+                        or any(value is not None for value in (item.reservation, item.permit, item.attempt))): _deny('AUTHORITY_DRIFT')
+            elif item.state is d.CustomerContactItemState.RESERVED:
+                reservation, permit, attempt = item.reservation, item.permit, item.attempt
+                if item.withdrawal_sequence is not None or reservation is None or permit is None or attempt is None: _deny('AUTHORITY_DRIFT')
+                if ((reservation.tenant.org_id, reservation.tenant.project_id) != (start.tenant.org_id, start.tenant.project_id)
+                        or reservation.reservation_id != 'customer-frequency-' + binding[:24]
+                        or reservation.batch_ref != start.batch_ref or reservation.item_key != item.item_key
+                        or reservation.customer_ref != item.customer_ref or reservation.frequency_policy_ref != request.frequency_policy_ref
+                        or reservation.sequence != start.start_sequence or reservation.status != 'held'
+                        or reservation.content_hash != d.canonical_hash({'bindingHash': binding, 'kind': 'frequency'})
+                        or not _aware(reservation.created_at) or reservation.created_at > start.started_at): _deny('AUTHORITY_DRIFT')
+                if (permit.permit_id != 'customer-permit-' + binding[:24] or permit.customer_ref != item.customer_ref
+                        or permit.sequence != start.start_sequence or permit.status != 'not_redeemable'
+                        or permit.binding_hash != binding or permit.raw_contact_count != 0): _deny('AUTHORITY_DRIFT')
+                if (attempt.attempt_id != 'customer-attempt-' + binding[:24] or attempt.customer_ref != item.customer_ref
+                        or attempt.sequence != start.start_sequence or attempt.status != 'prepared'
+                        or attempt.binding_hash != binding or attempt.provider_call_count != 0
+                        or attempt.outbox_intent_hash != d.canonical_hash({'bindingHash': binding, 'kind': 'outbox-intent'})): _deny('AUTHORITY_DRIFT')
+            else: _deny('AUTHORITY_DRIFT')
+
+    def read(self, scope):
+        started = monotonic()
+        def deadline():
+            if monotonic() - started > 10: _deny('LIMIT_EXCEEDED')
+        try:
+            with self._connect(scope) as conn:
+                if conn.read_only is not True or conn.autocommit is not False or conn.isolation_level != IsolationLevel.REPEATABLE_READ:
+                    _deny('AUTHORITY_DRIFT')
+                conn.execute("SET LOCAL statement_timeout='3000ms'")
+                conn.execute("SET LOCAL lock_timeout='500ms'")
+                cutoff = conn.execute('SELECT transaction_timestamp() AS cutoff').fetchone()['cutoff']
+                if not _aware(cutoff): _deny('AUTHORITY_DRIFT')
+                counts = {}
+                for table, key in [(_FREQUENCY, 'frequency_policy'), (_WITHDRAWAL, 'withdrawal')]:
+                    deadline(); aggregate = self._count(conn, scope, table)
+                    count, invalid, latest = (aggregate[k] for k in ('count', 'invalid_count', 'latest_created_at'))
+                    if type(count) is not int or not 0 <= count <= 2**53 - 1: _deny('AUTHORITY_DRIFT')
+                    if not ((count == 0 and invalid is None) or (type(invalid) is int and invalid == 0)): _deny('AUTHORITY_DRIFT')
+                    if count == 0 and latest is not None: _deny('AUTHORITY_DRIFT')
+                    if count and (not _aware(latest) or latest > cutoff): _deny('AUTHORITY_DRIFT')
+                    counts[key] = count
+                total_rows = total_bytes = 0
+                def load(table, *, exact=None, selection=None, limit=1, required=True):
+                    nonlocal total_rows, total_bytes
+                    deadline()
+                    first = self._rows(conn, scope, table, exact=exact, selection=selection, limit=limit)
+                    before = ([] if first is None else [first]) if limit == 1 else first
+                    if limit == 257 and len(before) > MAX_OBSERVATIONS: _deny('LIMIT_EXCEEDED')
+                    if limit == 1001 and len(before) > 1000: _deny('LIMIT_EXCEEDED')
+                    if not before:
+                        if limit == 1 and required: _deny('AUTHORITY_DRIFT')
+                        return None if limit == 1 else []
+                    for row in before: deadline(); self._metadata(row, scope, cutoff)
+                    total_rows += len(before); total_bytes += sum(row['size'] for row in before)
+                    if total_rows > MAX_ROWS or total_bytes > MAX_TOTAL_BYTES: _deny('LIMIT_EXCEEDED')
+                    # Metadata/aggregate limits are proven before any bulk payload transfer.
+                    deadline()
+                    second = self._rows(conn, scope, table, exact=exact, selection=selection, limit=limit, payload=True)
+                    after = ([] if second is None else [second]) if limit == 1 else second
+                    metadata = lambda rows: [{k: v for k, v in row.items() if k != 'authority_data'} for row in rows]
+                    if metadata(before) != metadata(after): _deny('AUTHORITY_DRIFT')
+                    result = []
+                    for row in after:
+                        deadline(); result.append((self._decode(row, table, scope, cutoff), row))
+                    return result[0] if limit == 1 else result
+                selected = load(_START, required=False)
+                start = None; observations = []
+                if selected is not None:
+                    start, start_row = selected
+                    if start.reason is None: _deny('SIGNING_MATERIAL_UNAVAILABLE')
+                    if start_row['batch_id'] != start.batch_ref.resource_id: _deny('AUTHORITY_DRIFT')
+                    batch, _ = load(life.BATCH_TABLE, exact=(start.batch_ref.resource_id, start.batch_ref.revision))
+                    prior, _ = load(life.BATCH_TABLE, exact=(batch.batch_id, batch.revision - 1))
+                    life.CustomerLifecycleReadonlyReader._validate_batch(batch, prior)
+                    policies = {}
+                    for table, identity, _model, request_model, key in life.POLICIES:
+                        ref = getattr(batch, key + '_ref')
+                        item, _ = load(table, exact=(ref.resource_id, ref.revision))
+                        if not life._matches(ref, item, identity) or item.created_at > start.started_at: _deny('AUTHORITY_DRIFT')
+                        if item.content_hash != d.canonical_hash(life._request(request_model, item).model_dump(mode='json', by_alias=True)): _deny('AUTHORITY_DRIFT')
+                        policies[key] = item
+                    ref = batch.frequency_policy_ref
+                    frequency, _ = load(_FREQUENCY, exact=(ref.resource_id, ref.revision))
+                    if counts['frequency_policy'] < 1 or frequency.content_hash != d.canonical_hash(life._request(d.CreateCustomerFrequencyPolicyRequest, frequency).model_dump(mode='json', by_alias=True)):
+                        _deny('AUTHORITY_DRIFT')
+                    self._validate_start(start, batch, frequency, policies)
+                    reserved = {item.reservation.reservation_id: item for item in start.items if item.reservation is not None}
+                    if reserved:
+                        saved = load(_RESERVATION, selection=list(reserved), limit=1001)
+                        if len(saved) != len(reserved) or len({item.reservation_id for item, _ in saved}) != len(saved): _deny('AUTHORITY_DRIFT')
+                        for item, row in saved:
+                            expected = reserved.get(item.reservation_id)
+                            if (expected is None or item != expected.reservation or row['revision'] != 1
+                                    or row['customer_id'] != item.customer_ref.resource_id or row['policy_id'] != item.frequency_policy_ref.resource_id
+                                    or row['sequence'] != item.sequence or type(row['sequence']) is not int or row['status'] != 'held'):
+                                _deny('AUTHORITY_DRIFT')
+                    skipped = [item for item in start.items if item.state is d.CustomerContactItemState.SKIPPED_WITHDRAWN]
+                    if skipped:
+                        if counts['withdrawal'] < 1: _deny('AUTHORITY_DRIFT')
+                        saved = load(_WITHDRAWAL, selection=([i.customer_ref.resource_id for i in skipped], [i.withdrawal_sequence for i in skipped], batch.consent_policy_ref.resource_id), limit=1001)
+                        witnesses = set()
+                        for item, row in saved:
+                            request = life._request(d.RecordCustomerConsentWithdrawalRequest, item)
+                            digest = d.canonical_hash(request.model_dump(mode='json', by_alias=True))
+                            if (item.revision != 1 or item.content_hash != digest or item.observation_id != 'customer-withdrawal-' + digest[:24]
+                                    or row['customer_id'] != item.customer_ref.resource_id or row['consent_policy_id'] != item.consent_policy_ref.resource_id
+                                    or row['sequence'] != item.sequence or type(row['sequence']) is not int or item.observed_at > start.started_at): _deny('AUTHORITY_DRIFT')
+                            for binding in skipped:
+                                if item.customer_ref == binding.customer_ref and item.consent_policy_ref == batch.consent_policy_ref and item.sequence == binding.withdrawal_sequence:
+                                    witnesses.add(binding.item_key)
+                        if witnesses != {item.item_key for item in skipped}: _deny('AUTHORITY_DRIFT')
+                    by_key = {item.item_key: item for item in start.items}
+                    seen = set()
+                    for item, row in load(_OBSERVATION, selection=start.decision_id, limit=257):
+                        deadline()
+                        request = life._request(d.RecordCustomerDispatchObservationRequest, item)
+                        digest = d.canonical_hash(request.model_dump(mode='json', by_alias=True))
+                        binding = by_key.get(item.item_key)
+                        if (item.revision != 1 or item.observation_id in seen or item.content_hash != digest
+                                or item.observation_id != 'customer-dispatch-observation-' + digest[:24]
+                                or not life._matches(item.start_decision_ref, start, 'decision_id')
+                                or binding is None or binding.state is d.CustomerContactItemState.SKIPPED_WITHDRAWN
+                                or row['decision_id'] != start.decision_id or row['item_key'] != item.item_key
+                                or item.observed_at < start.started_at): _deny('AUTHORITY_DRIFT')
+                        seen.add(item.observation_id); observations.append(item)
+                deadline()
+                view = d.EcommerceWorkshopCustomerContactService(_ValidatedStore(counts, start, observations), None).contribution_view(scope, now=cutoff)
+                payload = view.model_dump(mode='json', by_alias=True); payload['allowedCommands'] = []
+                result = d.CustomerContactContributionView.model_validate(payload)
+                if result.model_dump(mode='json', by_alias=True) != payload: _deny('AUTHORITY_DRIFT')
+                if len(result.model_dump_json(by_alias=True).encode()) > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
+                deadline(); return result
+        except CustomerContactReadonlyError:
+            raise
+        except life.CustomerLifecycleReadonlyError as error:
+            _deny(error.code.removeprefix('CUSTOMER_LIFECYCLE_READ_'))
+        except d.CustomerContactBlocked as error:
+            _deny('SIGNING_MATERIAL_UNAVAILABLE' if str(error) == 'CUSTOMER_START_SIGNING_MATERIAL_UNAVAILABLE' else 'AUTHORITY_DRIFT')
+        except psycopg.Error:
+            _deny('AUTHORITY_UNAVAILABLE')
+        except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+            _deny('AUTHORITY_DRIFT')
+
+
+FULL FILE services/aos-api/tests/test_ecommerce_customer_contact_readonly.py SHA 33db9325aa3b260352b68a8c256d78058be634eb2ded6d093b34486ded69e716
+"""Original W6-07/W6-08 synthetic facts; no operational consent or contact."""
+from copy import deepcopy
+from datetime import timedelta
+import importlib.util
+import json
+from pathlib import Path
+
+import psycopg
+from psycopg import IsolationLevel
+import pytest
+
+from aos_api import ecommerce_customer_contact_readonly as reader
+from aos_api import ecommerce_workshop_customer_contact as d
+
+
+TABLES = {
+    'policy': 'ecommerce_customer_consent_policy_revision',
+    'segment': 'ecommerce_customer_segment_revision',
+    'journey': 'ecommerce_customer_journey_revision',
+    'dialogue': 'ecommerce_customer_dialogue_strategy_revision',
+    'batch': 'ecommerce_customer_dialogue_batch_revision',
+    'frequency': 'ecommerce_customer_frequency_policy_revision',
+    'reservation': 'ecommerce_customer_frequency_reservation_revision',
+    'withdrawal': 'ecommerce_customer_consent_withdrawal_observation',
+    'start': 'ecommerce_customer_batch_start_decision_revision',
+    'observation': 'ecommerce_customer_dispatch_observation',
+}
+
+
+def _module(name, path):
+    spec = importlib.util.spec_from_file_location(name, Path(__file__).parent / path)
+    value = importlib.util.module_from_spec(spec); spec.loader.exec_module(value)
+    return value
+
+
+def row(item, identity, date='created_at', **extra):
+    raw = d.customer_start_authority_data(item) if isinstance(item, d.CustomerBatchStartDecisionRevision) else item.model_dump(mode='json', by_alias=True)
+    return dict(org_id=item.tenant.org_id, project_id=item.tenant.project_id, identity=getattr(item, identity),
+                revision=getattr(item, 'revision', 1), content_hash=item.content_hash, created_at=getattr(item, date),
+                authority_data=raw, size=len(json.dumps(raw).encode()), **extra)
+
+
+def producer_fixture(observation='unknown'):
+    lf = _module('lifecycle_read_fixture', 'aip/test_w6_07_customer_lifecycle.py')
+    cf = _module('contact_read_fixture', 'aip/test_w6_08_customer_contact.py')
+    scope = lf.TenantScope('dev-org', 'fixture-project'); lf.SCOPE = cf.SCOPE = scope
+    def exact(item, kind, identity):
+        name = getattr(item, identity)
+        return lf.CustomerExactRef(resourceType=kind, resourceId=name, revision=item.revision,
+                                   contentHash='sha256:' + item.content_hash, receiptId='receipt-' + name)
+    lf.exact = exact
+    life_store, life, *refs = lf.authority_fixture(); store = cf.MemoryStore()
+    class BatchStore:
+        def latest_batch(self, tenant, identity):
+            assert tenant == scope
+            return life_store.latest_batch(tenant, identity)
+    service = d.EcommerceWorkshopCustomerContactService(store, BatchStore())
+    frequency = service.create_frequency_policy(scope, d.CreateCustomerFrequencyPolicyRequest(
+        policyId='frequency', revision=1, channel='wecom', purpose='retention', timezone='Asia/Shanghai',
+        quietHoursStart='22:00', quietHoursEnd='08:00', rollingWindowHours=168, maximumContacts=2), 'synthetic-operator', now=lf.NOW)
+    request = lf.batch_request(*refs)
+    third = request.items[0].model_copy(update={'item_key': 'item-3', 'customer_ref': lf.ref('CustomerLiteProjectionRevision', 'customer-3')})
+    request = request.model_copy(update={'frequency_policy_ref': exact(frequency, 'FrequencyPolicyRevision', 'policy_id'), 'items': [*request.items, third]})
+    prepared = life.prepare_batch(scope, request, 'synthetic-operator', now=lf.NOW)
+    names = {'segment': 'segment_ref', 'journey': 'journey_ref', 'dialogue': 'dialogue_ref', 'consentPolicy': 'consent_policy_ref', 'frequencyPolicy': 'frequency_policy_ref', 'channelCapability': 'channel_capability_ref'}
+    batch = life.freeze_batch(scope, prepared.batch_id, lf.FreezeCustomerDialogueBatchRequest(
+        expectedVersion=1, expectedContentHash=prepared.content_hash, exactRefs={k: getattr(prepared, v) for k, v in names.items()}, itemHashes=prepared.item_hashes), 'synthetic-reviewer', now=lf.NOW + timedelta(seconds=1))
+    service.record_withdrawal(scope, d.RecordCustomerConsentWithdrawalRequest(
+        customerRef=third.customer_ref, consentPolicyRef=batch.consent_policy_ref, purpose='retention', channel='wecom', sequence=9, observedAt=lf.NOW + timedelta(seconds=1)))
+    payload = cf.start_request(batch).model_dump(mode='json', by_alias=True)
+    payload['items'] = [dict(itemKey=i.item_key, itemHash=batch.item_hashes[n], customerRef=i.customer_ref.model_dump(mode='json', by_alias=True)) for n, i in enumerate(batch.items) if i.disposition.value == 'eligible']
+    start = service.start_batch(scope, batch.batch_id, d.StartCustomerDialogueBatchRequest.model_validate(payload), 'synthetic-operator', now=lf.NOW + timedelta(seconds=2))
+    if observation:
+        receipt = cf.ref('ActionReceipt', 'synthetic-receipt', 'f'); binding = start.items[0]
+        store.receipts[(*scope.key, receipt.resource_id)] = (receipt.content_hash, binding.binding_hash)
+        service.record_dispatch_observation(scope, d.RecordCustomerDispatchObservationRequest(
+            startDecisionRef=exact(start, 'CustomerBatchStartDecisionRevision', 'decision_id'), itemKey=binding.item_key,
+            actionReceiptRef=receipt, state=observation,
+            resolvedState='applied' if observation == 'disputed' else None,
+            manualCaseRef=cf.ref('ManualReconcileCase', 'synthetic-case') if observation == 'disputed' else None,
+            observedAt=lf.NOW + timedelta(seconds=3)))
+    data = {
+        TABLES['policy']: [row(i, 'policy_id') for i in life_store.policies.values()],
+        TABLES['segment']: [row(i, 'segment_id') for i in life_store.segments.values()],
+        TABLES['journey']: [row(i, 'journey_id') for i in life_store.journeys.values()],
+        TABLES['dialogue']: [row(i, 'dialogue_id') for i in life_store.dialogues.values()],
+        TABLES['batch']: [row(i, 'batch_id') for i in life_store.batches[batch.batch_id]],
+        TABLES['frequency']: [row(i, 'policy_id') for i in store.policies],
+        TABLES['reservation']: [row(i, 'reservation_id', customer_id=i.customer_ref.resource_id, policy_id=i.frequency_policy_ref.resource_id, sequence=i.sequence, status=i.status) for i in store.reservations.values()],
+        TABLES['withdrawal']: [row(i, 'observation_id', 'observed_at', customer_id=i.customer_ref.resource_id, consent_policy_id=i.consent_policy_ref.resource_id, sequence=i.sequence) for i in store.withdrawals],
+        TABLES['start']: [row(start, 'decision_id', 'started_at', batch_id=start.batch_ref.resource_id)],
+        TABLES['observation']: [row(i, 'observation_id', 'observed_at', decision_id=i.start_decision_ref.resource_id, item_key=i.item_key) for i in store.observations],
+    }
+    return scope, lf.NOW + timedelta(seconds=4), data, start
+
+
+class Result:
+    def __init__(self, value): self.value = value
+    def fetchone(self): return deepcopy(self.value)
+    def fetchall(self): return deepcopy(self.value)
+
+
+class Connection:
+    read_only = True
+    autocommit = False
+    isolation_level = IsolationLevel.REPEATABLE_READ
+    def __init__(self, data, cutoff):
+        self.data, self.cutoff, self.calls, self.overrides = deepcopy(data), cutoff, [], {}
+    def __enter__(self): return self
+    def __exit__(self, *args): pass
+    def execute(self, query, params=None):
+        self.calls.append((query, params))
+        if query.startswith('SET LOCAL'): return Result(None)
+        if 'transaction_timestamp()' in query: return Result({'cutoff': self.cutoff})
+        table = next(t for t in self.data if 'FROM ' + t + ' ' in query)
+        assert params[:2] == ('dev-org', 'fixture-project')
+        rows = self.data[table]
+        if 'COUNT(*)' in query:
+            assert 'LIMIT' not in query
+            return Result(self.overrides.get(table, dict(count=len(rows), invalid_count=0 if rows else None,
+                          latest_created_at=max((r['created_at'] for r in rows), default=None))))
+        assert 'octet_length' in query and 'LIMIT ' in query
+        if 'AS authority_data' in query: assert 'CASE WHEN octet_length' in query
+        if len(params) == 4: rows = [r for r in rows if (r['identity'], r['revision']) == tuple(params[2:])]
+        elif len(params) == 3:
+            if isinstance(params[2], list): rows = [r for r in rows if r['identity'] in params[2]]
+            else: rows = [r for r in rows if r['decision_id'] == params[2]]
+        elif len(params) == 5:
+            pairs = set(zip(params[2], params[3]))
+            rows = [r for r in rows if (r['customer_id'], r['sequence']) in pairs and r['consent_policy_id'] == params[4]]
+        if 'LIMIT 1' in query and 'LIMIT 1001' not in query:
+            return Result(max(rows, key=lambda r: (r['created_at'], r['revision'], r['identity'])) if rows else None)
+        return Result(sorted(rows, key=lambda r: (r['created_at'], r['identity'], r['revision'])))
+
+
+def run(observation='unknown'):
+    scope, cutoff, data, start = producer_fixture(observation)
+    conn = Connection(data, cutoff)
+    return scope, conn, reader.CustomerContactReadonlyReader(connect_factory=lambda tenant: conn), start
+
+
+@pytest.mark.parametrize('observation,field', [(None, 'reserved'), ('unknown', 'unknown'), ('disputed', 'applied')])
+def test_original_nonempty_saved_start_verified_before_projection(observation, field):
+    scope, conn, subject, original = run(observation)
+    view = subject.read(scope)
+    assert view.ledger.frozen_eligible == 2 and getattr(view.ledger, field) == view.ledger.skipped_withdrawn == 1
+    assert view.latest_start.content_hash == original.content_hash
+    assert view.latest_start.items[0].reservation.status == 'held' and original.items[0].state.value == 'reserved'
+    assert view.frequency_policy_count == view.withdrawal_count == 1
+    assert view.allowed_commands == [] and 'reason' not in view.model_dump(mode='json', by_alias=True)['latestStart']
+    assert not any((view.permit_redemption_allowed, view.contact_resolution_allowed, view.provider_dispatch_allowed, view.send_allowed, view.external_effects_allowed))
+
+
+def test_real_empty_and_untruncated_saved_revision_counts():
+    scope, conn, subject, _ = run()
+    for table in conn.data: conn.data[table] = []
+    conn.overrides[TABLES['frequency']] = dict(count=9000, invalid_count=0, latest_created_at=conn.cutoff)
+    view = subject.read(scope)
+    assert view.frequency_policy_count == 9000 and view.withdrawal_count == 0
+    assert view.latest_start is None and view.ledger.frozen_eligible == 0 and not view.allowed_commands
+
+
+@pytest.mark.parametrize('key,value', [('count', True), ('count', -1), ('count', 2**53), ('invalid_count', 1), ('invalid_count', False)])
+def test_invalid_counts_never_become_zero_success(key, value):
+    scope, conn, subject, _ = run(); entry = dict(count=1, invalid_count=0, latest_created_at=conn.cutoff); entry[key] = value
+    conn.overrides[TABLES['frequency']] = entry
+    with pytest.raises(reader.CustomerContactReadonlyError): subject.read(scope)
+
+
+@pytest.mark.parametrize('attribute,value', [('read_only', False), ('autocommit', True), ('isolation_level', IsolationLevel.READ_COMMITTED)])
+def test_one_verified_readonly_snapshot_required(attribute, value):
+    scope, conn, subject, _ = run(); setattr(conn, attribute, value)
+    with pytest.raises(reader.CustomerContactReadonlyError): subject.read(scope)
+
+
+@pytest.mark.parametrize('mutation', ['missing_reason', 'wrong_reason', 'tenant', 'extra', 'bool_zero', 'missing_zero', 'private_reason', 'future', 'oversize', 'start_hash', 'binding', 'permit', 'attempt', 'reservation', 'reservation_outer', 'withdrawal', 'withdrawal_outer', 'batch_hash', 'policy_hash', 'frequency_hash', 'observation_hash', 'observation_outer', 'observation_unknown', 'skip_observation'])
+def test_corrupted_saved_fact_is_stable_failure(mutation):
+    scope, conn, subject, _ = run()
+    start = conn.data[TABLES['start']][0]; raw = start['authority_data']
+    if mutation == 'missing_reason': del raw['reason']
+    elif mutation == 'wrong_reason': raw['reason'] += '-changed'
+    elif mutation == 'tenant': raw['tenant']['projectId'] = 'foreign'
+    elif mutation == 'extra': raw['contactValue'] = 'synthetic-private-value'
+    elif mutation == 'bool_zero': raw['sendCount'] = False
+    elif mutation == 'missing_zero': del raw['sendCount']
+    elif mutation == 'private_reason': raw['reason'] = 'fixture@example.test'
+    elif mutation == 'future': start['created_at'] = conn.cutoff + timedelta(seconds=1)
+    elif mutation == 'oversize': start['size'] = reader.MAX_ROW_BYTES + 1; start['authority_data'] = None
+    elif mutation == 'start_hash': raw['contentHash'] = 'a' * 64
+    elif mutation == 'binding': raw['items'][0]['bindingHash'] = 'b' * 64
+    elif mutation == 'permit': raw['items'][0]['permit']['rawContactCount'] = 1
+    elif mutation == 'attempt': raw['items'][0]['attempt']['outboxIntentHash'] = 'c' * 64
+    elif mutation == 'reservation': conn.data[TABLES['reservation']][0]['authority_data']['status'] = 'released'
+    elif mutation == 'reservation_outer': conn.data[TABLES['reservation']][0]['customer_id'] = 'different'
+    elif mutation == 'withdrawal': conn.data[TABLES['withdrawal']][0]['authority_data']['sequence'] = 11
+    elif mutation == 'withdrawal_outer': conn.data[TABLES['withdrawal']][0]['consent_policy_id'] = 'different'
+    elif mutation == 'batch_hash': conn.data[TABLES['batch']][-1]['authority_data']['contentHash'] = 'd' * 64
+    elif mutation == 'policy_hash': conn.data[TABLES['policy']][0]['authority_data']['purpose'] = 'changed'
+    elif mutation == 'frequency_hash': conn.data[TABLES['frequency']][0]['authority_data']['maximumContacts'] = 3
+    elif mutation == 'observation_hash': conn.data[TABLES['observation']][0]['authority_data']['contentHash'] = 'e' * 64
+    elif mutation == 'observation_outer': conn.data[TABLES['observation']][0]['item_key'] = 'different'
+    elif mutation == 'observation_unknown': conn.data[TABLES['observation']][0]['authority_data']['resolvedState'] = 'applied'
+    elif mutation == 'skip_observation': conn.data[TABLES['observation']][0]['authority_data']['itemKey'] = 'item-3'
+    with pytest.raises(reader.CustomerContactReadonlyError): subject.read(scope)
+
+
+def test_future_aggregate_not_hidden_by_where_cutoff():
+    scope, conn, subject, _ = run()
+    conn.overrides[TABLES['withdrawal']] = dict(count=1, invalid_count=0, latest_created_at=conn.cutoff + timedelta(seconds=1))
+    with pytest.raises(reader.CustomerContactReadonlyError): subject.read(scope)
+
+
+def test_observation_limit_rejects_instead_of_truncating():
+    scope, conn, subject, _ = run()
+    conn.data[TABLES['observation']] *= 257
+    with pytest.raises(reader.CustomerContactReadonlyError, match='LIMIT_EXCEEDED'): subject.read(scope)
+
+
+def test_database_error_is_stable_and_does_not_echo_private_details():
+    scope, conn, subject, _ = run()
+    def fail(*args): raise psycopg.OperationalError('synthetic-private-database-details')
+    conn.execute = fail
+    with pytest.raises(reader.CustomerContactReadonlyError, match='CUSTOMER_CONTACT_READ_AUTHORITY_UNAVAILABLE') as error: subject.read(scope)
+    assert 'private-database' not in str(error.value)
+
+
+def test_deadline_checked_between_queries(monkeypatch):
+    scope, conn, subject, _ = run(); ticks = iter([0, 11])
+    monkeypatch.setattr(reader, 'monotonic', lambda: next(ticks))
+    with pytest.raises(reader.CustomerContactReadonlyError, match='LIMIT_EXCEEDED'): subject.read(scope)
+
+
+@pytest.mark.parametrize('mutation', ['coverage', 'order', 'decision_id', 'unknown_base', 'permit_id', 'outbox', 'skip_sequence', 'extra_ref', 'duplicate'])
+def test_rehashed_start_still_must_match_original_producer_and_exact_batch(mutation):
+    scope, conn, subject, _ = run()
+    saved = conn.data[TABLES['start']][0]
+    start = d.CustomerBatchStartDecisionRevision.model_validate(saved['authority_data'])
+    if mutation == 'coverage': start.items = start.items[:1]
+    elif mutation == 'order': start.items.reverse()
+    elif mutation == 'decision_id': start.decision_id = 'forged-start'; saved['identity'] = start.decision_id
+    elif mutation == 'unknown_base': start.items[0].state = d.CustomerContactItemState.UNKNOWN
+    elif mutation == 'permit_id': start.items[0].permit.permit_id = 'forged-permit'
+    elif mutation == 'outbox': start.items[0].attempt.outbox_intent_hash = 'a' * 64
+    elif mutation == 'skip_sequence': start.items[1].withdrawal_sequence = 11
+    elif mutation == 'extra_ref': start.exact_refs['unexpected'] = start.batch_ref
+    elif mutation == 'duplicate': start.items.append(start.items[0].model_copy(deep=True))
+    start.ledger = d._ledger(start.items)
+    start.content_hash = d.customer_start_signing_hash(start)
+    saved.update(authority_data=d.customer_start_authority_data(start), content_hash=start.content_hash)
+    with pytest.raises(reader.CustomerContactReadonlyError): subject.read(scope)
+
+
+@pytest.mark.parametrize('mutation', ['start_ref', 'missing_item', 'skipped_item', 'before_start'])
+def test_rehashed_observation_requires_original_start_and_observable_item(mutation):
+    scope, conn, subject, original = run()
+    saved = conn.data[TABLES['observation']][0]
+    value = d.CustomerDispatchObservation.model_validate(saved['authority_data'])
+    if mutation == 'start_ref': value.start_decision_ref = value.start_decision_ref.model_copy(update={'content_hash': 'sha256:' + 'a' * 64})
+    elif mutation == 'missing_item': value.item_key = 'absent-item'; saved['item_key'] = value.item_key
+    elif mutation == 'skipped_item': value.item_key = 'item-3'; saved['item_key'] = value.item_key
+    elif mutation == 'before_start': value.observed_at = original.started_at - timedelta(seconds=1); saved['created_at'] = value.observed_at
+    request = d.RecordCustomerDispatchObservationRequest.model_validate({name: getattr(value, name) for name in d.RecordCustomerDispatchObservationRequest.model_fields})
+    value.content_hash = d.canonical_hash(request.model_dump(mode='json', by_alias=True))
+    value.observation_id = 'customer-dispatch-observation-' + value.content_hash[:24]
+    saved.update(identity=value.observation_id, authority_data=value.model_dump(mode='json', by_alias=True), content_hash=value.content_hash)
+    with pytest.raises(reader.CustomerContactReadonlyError): subject.read(scope)
+
+
+def test_total_payload_budget_is_checked_on_metadata_before_bulk_transfer():
+    scope, conn, subject, _ = run()
+    conn.data[TABLES['observation']] *= 8
+    for row in conn.data[TABLES['observation']]: row['size'] = reader.MAX_ROW_BYTES
+    with pytest.raises(reader.CustomerContactReadonlyError, match='LIMIT_EXCEEDED'): subject.read(scope)
+    observed = [query for query, _ in conn.calls if 'FROM ' + TABLES['observation'] + ' ' in query]
+    assert len(observed) == 1 and 'AS authority_data' not in observed[0]
+
+
+def test_original_start_snapshot_is_unchanged_after_projection():
+    scope, conn, subject, _ = run()
+    before = deepcopy(conn.data)
+    result = subject.read(scope)
+    assert result.ledger.unknown == 1 and conn.data == before
+
+
+ORIGINAL PRODUCER COMPLETE SELECTED FUNCTIONS services/aos-api/aos_api/ecommerce_workshop_customer_contact.py fullFileSHA afae8d6baf95c977a176efa67b56ca3877351dd1c819fb8723d28dc68a06a9b3
+
+def customer_start_authority_data(item: CustomerBatchStartDecisionRevision) -> dict[str, Any]:
+    payload = item.model_dump(mode="json", by_alias=True)
+    if item.reason is not None:
+        payload["reason"] = item.reason
+    return payload
+
+def customer_start_signing_hash(item: CustomerBatchStartDecisionRevision) -> str:
+    """Reconstruct the original production UTC typed-repr signing recipe."""
+    if item.reason is None:
+        raise CustomerContactBlocked("CUSTOMER_START_SIGNING_MATERIAL_UNAVAILABLE")
+    bindings = []
+    for binding in item.items:
+        if binding.reservation is None:
+            bindings.append(binding)
+            continue
+        at = binding.reservation.created_at
+        if at.utcoffset() is None:
+            raise CustomerContactBlocked("CUSTOMER_START_SIGNING_MATERIAL_UNAVAILABLE")
+        reservation = binding.reservation.model_copy(update={"created_at": at.astimezone(UTC)})
+        bindings.append(binding.model_copy(update={"reservation": reservation}))
+    return canonical_hash({"batchRef": item.batch_ref, "startSequence": item.start_sequence,
+                           "exactRefs": item.exact_refs, "items": bindings, "reason": item.reason})
+
+def _ledger(items: list[CustomerContactItemBinding]) -> CustomerContactLedger:
+    counts = {state.value: 0 for state in CustomerContactItemState}
+    for item in items:
+        counts[(item.resolved_state or item.state).value] += 1
+    return CustomerContactLedger(frozenEligible=len(items), **counts)
+
+    def start_batch(self, scope: TenantScope, batch_id: str, request: StartCustomerDialogueBatchRequest, actor: str, *, now: datetime | None = None) -> CustomerBatchStartDecisionRevision:
+        if redact_sensitive(request.reason) != request.reason:
+            raise CustomerContactBlocked("CUSTOMER_START_SIGNING_REASON_SENSITIVE")
+        at = now or datetime.now(UTC)
+        batch = self.batch_store.latest_batch(scope, batch_id)
+        if batch.lifecycle != "frozen":
+            raise CustomerContactBlocked("CUSTOMER_DIALOGUE_BATCH_NOT_FROZEN")
+        if batch.version != request.expected_version or batch.content_hash != request.expected_content_hash:
+            raise CustomerContactConflict("CUSTOMER_DIALOGUE_BATCH_EXPECTED_VERSION_OR_HASH_DRIFTED")
+        if batch.consent_policy_ref != request.consent_policy_ref or batch.frequency_policy_ref != request.frequency_policy_ref:
+            raise CustomerContactBlocked("CUSTOMER_START_BATCH_POLICY_REF_DRIFTED")
+        eligible = [item for item in batch.items if item.disposition is CustomerBatchDisposition.ELIGIBLE]
+        expected = {
+            (item.item_key, batch.item_hashes[index], canonical_hash(item.customer_ref.model_dump(mode="json", by_alias=True)))
+            for index, item in enumerate(batch.items)
+            if item.disposition is CustomerBatchDisposition.ELIGIBLE
+        }
+        actual = {
+            (item.item_key, item.item_hash, canonical_hash(item.customer_ref.model_dump(mode="json", by_alias=True)))
+            for item in request.items
+        }
+        if actual != expected:
+            raise CustomerContactBlocked("CUSTOMER_START_ITEM_COVERAGE_OR_HASH_DRIFTED")
+        self.store.require_start_authorities(scope, request)
+        exact_refs = {
+            "consentPolicy": request.consent_policy_ref, "frequencyPolicy": request.frequency_policy_ref,
+            "actionType": request.action_type_ref, "impactPreview": request.impact_preview_ref,
+            "approvalPolicy": request.approval_policy_ref, "accountBinding": request.account_binding_ref,
+            "adapterCapability": request.adapter_capability_ref, "content": request.content_ref,
+        }
+        bindings: list[CustomerContactItemBinding] = []
+        for start_item in sorted(request.items, key=lambda value: value.item_key):
+            withdrawal = self.store.latest_withdrawal_or_none(scope, start_item.customer_ref, request.consent_policy_ref)
+            withdrawn_first = withdrawal is not None and withdrawal.sequence <= request.start_sequence
+            base = {"batchRef": self._batch_ref(batch), "item": start_item, "exactRefs": exact_refs, "startSequence": request.start_sequence}
+            binding_hash = canonical_hash(base)
+            if withdrawn_first:
+                bindings.append(CustomerContactItemBinding(
+                    **start_item.model_dump(mode="json", by_alias=True), state=CustomerContactItemState.SKIPPED_WITHDRAWN,
+                    withdrawalSequence=withdrawal.sequence, bindingHash=binding_hash,
+                ))
+                continue
+            reservation = CustomerFrequencyReservationRevision(
+                tenant=self._tenant(scope), reservationId=f"customer-frequency-{binding_hash[:24]}",
+                batchRef=self._batch_ref(batch), itemKey=start_item.item_key, customerRef=start_item.customer_ref,
+                frequencyPolicyRef=request.frequency_policy_ref, sequence=request.start_sequence, status="held",
+                contentHash=canonical_hash({"bindingHash": binding_hash, "kind": "frequency"}), createdAt=at,
+            )
+            reservation = self.store.reserve_frequency(scope, reservation)
+            permit = CustomerContactExecutionPermitRevision(
+                permitId=f"customer-permit-{binding_hash[:24]}", customerRef=start_item.customer_ref,
+                sequence=request.start_sequence, status="not_redeemable", bindingHash=binding_hash,
+            )
+            attempt = CustomerDispatchAttemptRevision(
+                attemptId=f"customer-attempt-{binding_hash[:24]}", customerRef=start_item.customer_ref,
+                sequence=request.start_sequence, status="prepared", bindingHash=binding_hash,
+                outboxIntentHash=canonical_hash({"bindingHash": binding_hash, "kind": "outbox-intent"}),
+            )
+            bindings.append(CustomerContactItemBinding(
+                **start_item.model_dump(mode="json", by_alias=True), state=CustomerContactItemState.RESERVED,
+                reservation=reservation, permit=permit, attempt=attempt, bindingHash=binding_hash,
+            ))
+        payload = {"batchRef": self._batch_ref(batch), "startSequence": request.start_sequence, "exactRefs": exact_refs, "items": bindings, "reason": request.reason}
+        content_hash = canonical_hash(payload)
+        existing = self.store.latest_start_or_none(scope, batch_id)
+        if existing is not None:
+            if existing.content_hash == content_hash:
+                return existing
+            raise CustomerContactConflict("CUSTOMER_BATCH_START_IDEMPOTENCY_CONFLICT")
+        item = CustomerBatchStartDecisionRevision(
+            tenant=self._tenant(scope), decisionId=f"customer-start-{canonical_hash([*scope.key, batch_id])[:24]}",
+            lifecycle="governance_prepared", batchRef=self._batch_ref(batch), startSequence=request.start_sequence,
+            exactRefs=exact_refs, items=bindings, ledger=_ledger(bindings),
+            operationalBlockers=["CUSTOMER_CONTACT_PERMIT_REDEMPTION_NOT_AUTHORIZED", "CUSTOMER_PROVIDER_DISPATCH_NOT_AUTHORIZED", "CUSTOMER_EXTERNAL_EFFECT_NOT_AUTHORIZED"],
+            contentHash=content_hash, startedBy=actor, startedAt=at, reason=request.reason,
+        )
+        return self.store.append_start(scope, batch_id, item)
+
+    def record_dispatch_observation(self, scope: TenantScope, request: RecordCustomerDispatchObservationRequest) -> CustomerDispatchObservation:
+        start = self.store.require_start(scope, request.start_decision_ref)
+        binding = next((item for item in start.items if item.item_key == request.item_key), None)
+        if binding is None or binding.state is CustomerContactItemState.SKIPPED_WITHDRAWN:
+            raise CustomerContactBlocked("CUSTOMER_CONTACT_ITEM_NOT_OBSERVABLE")
+        self.store.require_action_receipt(scope, request.action_receipt_ref, binding.binding_hash)
+        payload = request.model_dump(mode="json", by_alias=True)
+        item = CustomerDispatchObservation(
+            tenant=self._tenant(scope), observationId=f"customer-dispatch-observation-{canonical_hash(payload)[:24]}",
+            **payload, contentHash=canonical_hash(payload),
+        )
+        return self.store.append_dispatch_observation(scope, item)
+
+    def contribution_view(self, scope: TenantScope, *, now: datetime | None = None) -> CustomerContactContributionView:
+        at = now or datetime.now(UTC)
+        try:
+            latest = self.store.latest_start_for_tenant_or_none(scope)
+            counts = self.store.authority_counts(scope)
+            observations = [] if latest is None else self.store.list_dispatch_observations(scope, latest.decision_id)
+            if latest is not None and observations:
+                by_key = {item.item_key: item.model_copy(deep=True) for item in latest.items}
+                for observation in observations:
+                    item = by_key.get(observation.item_key)
+                    if item is not None:
+                        item.state = observation.state
+                        item.resolved_state = observation.resolved_state
+                        item.action_receipt_ref = observation.action_receipt_ref
+                latest = latest.model_copy(update={"items": list(by_key.values()), "ledger": _ledger(list(by_key.values()))})
+            blockers = ["CUSTOMER_CONTACT_GOVERNANCE_NOT_PREPARED"] if latest is None else list(latest.operational_blockers)
+        except CustomerContactBlocked as exc:
+            latest = None
+            counts = {"frequency_policy": 0, "withdrawal": 0}
+            blockers = [str(exc)]
+        ledger = CustomerContactLedger(frozenEligible=0, reserved=0, skippedWithdrawn=0, cancelled=0, accepted=0, applied=0, failed=0, unknown=0, disputed=0) if latest is None else latest.ledger
+        return CustomerContactContributionView(
+            tenant=self._tenant(scope), evaluatedAt=at, latestStart=latest, ledger=ledger,
+            frequencyPolicyCount=counts["frequency_policy"], withdrawalCount=counts["withdrawal"], blockers=blockers,
+        )
+
+PLAN BOUNDED CONTRACT, fullPlanSHA 9f6f72643f24880dc0433d8a639cbe7c1621cb5bda5d65cf9331996fc597428f
+One verified readonly RR snapshot/cutoff; complete saved frequency revisions and withdrawal observations COUNT, not active/unique customers. Invalid/future aggregates reject, not filter. Original exact frozen Batch+prepared and4 policies via existing pure lifecycle validation. Original typed Start/private reason/UTC hash/derived ID/eligible coverage/ref lineage, saved reservation and skip witness, typed permit/attempt/outbox/zero effects. Dispatch observation original request hash/exact original start+observable item/date/state/manual resolution before original service projection. No current authority resolvers invoked. Metadata phase proves bounds BEFORE payload queries: 1MiB each/8MiB total/1280 rows/1000 items/256 observations (257 reject), statement3s/lock0.5s/monotonic10s between queries AND decode loops. Strict raw/no coercion, tenant/time/privacy, stable503 not fake0/null, commands[]/fivefalse. Original legacy/POST untouched, full reader route/runtimeSDK650/visual/live gates still required.
+
+
+EVIDENCE .evidence/qyh-customer-contact-read-admission-20261015/design-review-consumption-r1.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-contact-read-admission-20261015-design-r1",
+  "task_id": "qyh-customer-contact-read-admission-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "90a601fd1ad2a57c128bf05416dbf97239412865",
+    "authority_revision": "AOS-002037",
+    "files": {
+      ".evidence/qyh-customer-contact-read-admission-20261015/design-review-material-r1.txt": "a2ec343b875b0740f8e43283fcf1158d0b5b27e85712ce389ac9be9e8314a107"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "d770ceaa15114bbd1cff860d4f60fa6e4a6143b60b2a8d714c8b0ab13535f1f0",
+  "transport_sha256": "a6260a38c3101f157bde30bbaad8acec8a9a65749da2397797284f2b8db3e81e"
+}
+
+EVIDENCE .evidence/qyh-customer-contact-bounded-reader-20261015/source-verification-r1.json
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_customer_contact_readonly.py": "4d23d7e8224b3ec815db9f7c027267214191121b8b9c8ba3f960a623b9c0cedc",
+    "services/aos-api/tests/test_ecommerce_customer_contact_readonly.py": "33db9325aa3b260352b68a8c256d78058be634eb2ded6d093b34486ded69e716",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "623a9c373085aea90e6c8ab51e45e4b86fd5966dd5e42e5ee877a57a992d33b9",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "42630b29fb887ceed3fa0bc515144414ef212e14c4e72a4736c1d72f80ad9b08"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_customer_contact_readonly.py": "4d23d7e8224b3ec815db9f7c027267214191121b8b9c8ba3f960a623b9c0cedc",
+    "services/aos-api/tests/test_ecommerce_customer_contact_readonly.py": "33db9325aa3b260352b68a8c256d78058be634eb2ded6d093b34486ded69e716",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "623a9c373085aea90e6c8ab51e45e4b86fd5966dd5e42e5ee877a57a992d33b9",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "42630b29fb887ceed3fa0bc515144414ef212e14c4e72a4736c1d72f80ad9b08"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_customer_contact_readonly.py",
+    "tests/test_customer_start_signing_material.py",
+    "tests/aip/test_w6_08_customer_contact.py",
+    "tests/aip/test_w6_08_customer_contact_store.py",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_customer_lifecycle_readonly.py",
+    "tests/test_w6_009_three_module_closure.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/aip/test_w6_07_customer_lifecycle.py",
+    "tests/aip/test_w6_07_customer_lifecycle_store.py"
+  ],
+  "baseHead": "90a601fd1ad2a57c128bf05416dbf97239412865",
+  "frozenWithOnlyFourOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T09:48:39.516304+00:00",
+  "finishedAt": "2026-10-15T09:49:16.209793+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "8049000007d9a487e88359c3e65c617148d795c062be92df01258a97ec926a2a"
+}
+
+EVIDENCE .evidence/qyh-customer-contact-bounded-reader-20261015/native-r1-stopped.json
+{
+  "containerId": "94b09ef4018866b5fee6ac4f436478597c0ed030f6757bf800d8fbd269fa62c4",
+  "stopped": true,
+  "originalVolumeTouched": false
+}
+
+NATIVE ACTUAL RESULT fullRawSHA 34202d7b70a91a9db5ac4f66b998cd7489193327158fbed0d824eeba7ef60f89
+{"containerId": "94b09ef4018866b5fee6ac4f436478597c0ed030f6757bf800d8fbd269fa62c4", "originalVolumeTouched": false, "fixtureOnlyNotOriginalSchema": true, "originalProducersSyntheticResolvers": true, "actualConsentReceiptOrContactAuthority": false, "exactDdlHashes": {"w6_007_customer_lifecycle.py": "662295c5b97111b7bcb343eed877dba20925fc36218875e72e4cf13af331df07", "w6_008_customer_contact.py": "5865d6b7781a5c7f5b6cd6c02c475d18c935f6fb6e49f1cc5b31a0bc2eb6f166"}, "sourceSha": "4d23d7e8224b3ec815db9f7c027267214191121b8b9c8ba3f960a623b9c0cedc", "genuineEmptySqlSumNull": true, "snapshotSavedRevisionCounts": [1, 2], "oldExactFrequencyRefPreserved": true, "unknownAndSkipPreserved": true, "reservationHeld": true, "privateReasonNotPublic": true, "originalStartHashPreservedInProjection": true, "foreignRowsHiddenWithoutWhere": true, "visibleOwnPolicyRows": 2, "writeDeniedSqlstate": "25006", "missingReasonRejected": true, "sensitiveReasonRejected": true, "sqlCaseNull": true, "aggregateTenantDriftRejected": true, "malformedDateRejected": true, "futureAggregateNotHidden": true, "totalBudgetProvenBeforeBulkPayload": true, "bulkBudgetQueryTrace": [{"table": "ecommerce_customer_dispatch_observation", "payload": false}], "wholeGoalComplete": false, "connectionFactCount": 13, "uniqueConnectionFacts": [{"role": "aos_runtime", "readonly": "on", "isolation": "repeatable read"}]}
+
+RAW LOG red-r1.log SHA d361bf4914ecab69c2cba0bd67aa9312bf9962125d7087a1943369fd72f24ec1
+ERROR services/aos-api/tests/test_ecommerce_customer_contact_readonly.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+7 warnings, 1 error in 0.12s
+
+RAW LOG green-r2.log SHA 56cb7a66af219cfd489cfcea3391cd452c4734353116938c900a2cbeaf45ab04
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+55 passed, 7 warnings in 0.49s
+
+RAW LOG green-frozen-cumulative-r1.log SHA 8049000007d9a487e88359c3e65c617148d795c062be92df01258a97ec926a2a
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+481 passed, 7 warnings in 26.74s

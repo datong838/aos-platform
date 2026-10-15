@@ -1,0 +1,45 @@
+{
+  "syntheticMemoryOnly": true,
+  "databaseOrHttpCalls": 0,
+  "actualConsentReceiptOrContactAuthority": false,
+  "originalW6_07AndW6_08ProducersComposed": true,
+  "fullPolicyAndBatchExactHashes": true,
+  "frequencyPolicyMatchesFrozenBatch": true,
+  "originalPreparedAndFrozenBatchHashes": true,
+  "privateSigningMaterialRoundtrip": true,
+  "originalStartHashVerified": true,
+  "startLedger": {
+    "frozenEligible": 2,
+    "reserved": 1,
+    "skippedWithdrawn": 1,
+    "cancelled": 0,
+    "accepted": 0,
+    "applied": 0,
+    "failed": 0,
+    "unknown": 0,
+    "disputed": 0
+  },
+  "projectionLedger": {
+    "frozenEligible": 2,
+    "reserved": 0,
+    "skippedWithdrawn": 1,
+    "cancelled": 0,
+    "accepted": 0,
+    "applied": 0,
+    "failed": 0,
+    "unknown": 1,
+    "disputed": 0
+  },
+  "skippedWithdrawalSequence": 9,
+  "startSequence": 10,
+  "unknownKeepsReservationHeld": true,
+  "originalStartRemainsReserved": true,
+  "projectionKeepsOriginalHash": true,
+  "privateReasonAbsentFromPublicView": true,
+  "savedObservationHashVerified": true,
+  "sourceHashes": {
+    "services/aos-api/aos_api/ecommerce_workshop_customer_contact.py": "afae8d6baf95c977a176efa67b56ca3877351dd1c819fb8723d28dc68a06a9b3",
+    "services/aos-api/aos_api/ecommerce_workshop_customer_lifecycle.py": "0c1cb897d99b622d041d65688bedceedd5697da1fdd6152844fcd0e2bfa3ac4d"
+  },
+  "wholeGoalComplete": false
+}

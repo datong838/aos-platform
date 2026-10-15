@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "113c5f53fd5ea60233784faa428f886b62640cabad8d95d287ef21741386a14a",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-contact-bounded-reader-20261015-code-r1",
+    "task_id": "qyh-customer-contact-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "90a601fd1ad2a57c128bf05416dbf97239412865",
+      "authority_revision": "AOS-002037",
+      "files": {
+        ".evidence/qyh-customer-contact-bounded-reader-20261015/code-review-material-r1.txt": "90ae0135927ed0a24b3c86bd66dc80528be4ea932b194d05f931a2bc045b958c"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "读取器在核实同一只读RR截止面保留两完整COUNT，metadata阶段先证明行数/单行/总字节再查询payload，固定参数化SQL/超界/时间/稳定失败门符合方案，不把异常补零/null或截断冒充完整。",
+        "evidence": "文件 services/aos-api/aos_api/ecommerce_customer_contact_readonly.py 的 CustomerContactReadonlyReader.read 方法：连接断言 read_only=True、autocommit=False、isolation_level=IsolationLevel.REPEATABLE_READ；SET LOCAL statement_timeout='3000ms' 和 lock_timeout='500ms'；SELECT transaction_timestamp() 获 cutoff。load() 内部先调 self._rows(..., limit=limit) 获取 metadata（行计数、octet_length size），检查 total_rows<=MAX_ROWS(1280)、total_bytes<=MAX_TOTAL_BYTES(8MiB)、单行<=MAX_ROW_BYTES(1MiB)，然后才调 self._rows(..., payload=True)。COUNT 查询使用参数化 %s，返回 invalid_count>=0，count 范围 0..2^53-1。测试 test_invalid_counts_never_become_zero_success 验证异常计数不伪装成功；test_observation_limit_rejects_instead_of_truncating 验证观察超界拒绝而非截断；test_database_error_is_stable 验证数据库错误返回 AUTHORITY_UNAVAILABLE 而非空结果。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原Start/private reason/UTC typed hash及exact Batch/policy/eligible coverage/各binding、保存reservation/withdrawal/observation按原producer核验，再复用原贡献投影保留unknown held/原hash/原对象；strict raw/隐私/零效果/空命令和五false，不授当前Contact/Consent/Receipt权限。",
+        "evidence": "文件 ecommerce_customer_contact_readonly.py 的 _validate_start：校验 start.reason 非 None（私有原因），start.content_hash == d.customer_start_signing_hash(start)（UTC typed hash），decision_id 派生自 canonical_hash([org_id, project_id, batch_id])[:24]。batch 通过 life._validate_batch 核验 frozen 状态和 exact refs。policies 通过 canonical_hash 校验。reserved/withdrawn/skipped items 按原 producer 公式核验 reservation.permit.attempt 字段为零效果（rawContactCount=0, providerCallCount=0 等）。observations 校验 original request hash 和 start_decision_ref 匹配。contribution_view 调用前已保存 counts/start/observations 到 _ValidatedStore。测试 test_original_nonempty_saved_start_verified_before_projection 验证 ledger.frozen_eligible==2、unknown==1、reserved.held、allowed_commands==[]、五 false（permit_redemption/contact_resolution/provider_dispatch/send/external_effects）。strict/_privacy 函数校验整型/Hash格式/敏感词（mobile/openid/email等）。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原producer组合非空与重新hash伪造负向55项、四owned overlay冻结481及原W6-007/008临时PG真快照/计数/RLS/25006/SQLCASE/metadata前置总量门且准确CID已停支持该候选，尚未部署、不宣称经营/八台视觉或完整Goal完成。",
+        "evidence": "source-verification-r1.json: frozenWithOnlyFourOwnedOverlays=true, noUserDirtyCopied=true, originalVolumeTouched=false。green-r2.log: '55 passed'（对应 test_corrupted_saved_fact_is_stable_failure 的24项+test_rehashed_start 的9项+test_rehashed_observation 的4项+其他参数化测试共55项）。green-frozen-cumulative-r1.log: '481 passed'（四 owned overlay 全量）。native-r1-stopped.json: containerId='94b09ef4...', stopped=true, originalVolumeTouched=false。native 结果: genuineEmptySqlSumNull=true, writeDeniedSqlstate='25006', sqlCaseNull=true, snapshotSavedRevisionCounts=[1,2], wholeGoalComplete=false。设计消费 r1.json: execution_authorized=false。代码头部注释 'CURRENT READER CODE QUALITY, not deployed'。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前冻结状态等待授权；如需推进请创建新任务申请部署审阅或关联视觉/经营 gate 验证。"
+  }
+}

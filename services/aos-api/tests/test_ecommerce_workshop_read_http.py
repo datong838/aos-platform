@@ -51,7 +51,7 @@ def test_root_get_uses_scoped_read_admission_before_business_reader(module):
 
 
 @pytest.mark.parametrize('path', [
-    '/views/customer/contact-contributions', '/views/creator-growth/workflow/drafts/fixture/history',
+    '/views/creator-growth/workflow/drafts/fixture/history',
     '/modules/ecommerce.operations/readiness',
 ])
 def test_unreviewed_get_still_uses_legacy_admission(path):
@@ -83,6 +83,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
         '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
         '/v1/ecommerce-workshop/views/creator-growth/contributions',
         '/v1/ecommerce-workshop/views/customer/contributions',
+        '/v1/ecommerce-workshop/views/customer/contact-contributions',
         '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
         '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
         '/v1/ecommerce-workshop/views/{module}/closure-contributions',
@@ -939,4 +940,112 @@ def test_customer_lifecycle_full_http_serialization(readonly, nonempty):
         assert body['latestBatch']['items'][1]['retentionActive'] is None
     else:
         assert body['latestBatch'] is None and body['consentPolicyCount'] == 0
+    assert not legacy.calls
+
+
+CUSTOMER_CONTACT_PATH = '/v1/ecommerce-workshop/views/customer/contact-contributions'
+
+
+def contact_admission(readonly=True, tenant=None):
+    from tests.test_ecommerce_workshop_read_catalog import make, ARGS
+    catalog, _ = make(); result = catalog.get_readiness(**ARGS)
+    if not readonly:
+        result = result.model_copy(update={'item': result.item.model_copy(update={
+            'blockers': [b for b in result.item.blockers if b.reason_code != 'INSTALLED_ASSET_READONLY']})})
+    if tenant:
+        result = result.model_copy(update={'tenant': result.tenant.model_copy(update={'org_id': tenant.org_id, 'project_id': tenant.project_id})})
+    return result
+
+
+def contact_probes(client, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope):
+            calls.append(('legacy', scope.key)); raise ReadReached('legacy-customer-contact')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key))
+            if failure:
+                from aos_api.ecommerce_customer_contact_readonly import CustomerContactReadonlyError
+                raise CustomerContactReadonlyError(failure)
+            raise ReadReached('readonly-customer-contact')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_customer_contact] = lambda: Legacy()
+    client.app.dependency_overrides[getattr(routes, 'get_customer_contact_readonly', Readonly)] = lambda: Readonly()
+    return calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_customer_contact_selects_only_admitted_reader(readonly):
+    client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+    def admit(**scope):
+        assert scope == dict(module_id='ecommerce.customer', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+        return contact_admission(readonly)
+    catalog.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-customer-contact'): client.get(CUSTOMER_CONTACT_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'))] and not legacy.calls
+
+
+def test_customer_contact_denied_before_business_read():
+    client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+    assert client.get(CUSTOMER_CONTACT_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+
+
+@pytest.mark.parametrize('value', [None, {}, {'item': {'blockers': []}}, 'wrong_module', 'wrong_tenant'])
+def test_customer_contact_unknown_admission_fails_closed(value):
+    client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+    if value == 'wrong_module': value = price_admission()
+    elif value == 'wrong_tenant':
+        value = contact_admission(); value = value.model_copy(update={'tenant': value.tenant.model_copy(update={'org_id': 'foreign'})})
+    catalog.get_readiness = lambda **kwargs: value
+    response = client.get(CUSTOMER_CONTACT_PATH)
+    assert response.status_code == 503 and 'CUSTOMER_CONTACT_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls
+
+
+@pytest.mark.parametrize('suffix', ['AUTHORITY_UNAVAILABLE', 'AUTHORITY_DRIFT', 'SIGNING_MATERIAL_UNAVAILABLE', 'LIMIT_EXCEEDED', 'SENSITIVE_CONTENT'])
+def test_customer_contact_read_failure_never_becomes_empty_success(suffix):
+    client, legacy, catalog = client_with_catalogs(); code = 'CUSTOMER_CONTACT_READ_' + suffix
+    calls = contact_probes(client, code); catalog.get_readiness = lambda **kwargs: contact_admission()
+    response = client.get(CUSTOMER_CONTACT_PATH)
+    assert response.status_code == 503 and code in response.text and 'latestStart' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
+
+
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'purpose=other'])
+def test_customer_contact_query_cannot_change_scope(query):
+    client, legacy, catalog = client_with_catalogs(); calls = contact_probes(client)
+    assert client.get(CUSTOMER_CONTACT_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+@pytest.mark.parametrize('nonempty', [True, False])
+def test_customer_contact_complete_public_http_dto(readonly, nonempty):
+    from tests.test_ecommerce_customer_contact_readonly import run
+    from aos_api.ecommerce_workshop_customer_contact import EcommerceWorkshopCustomerContactService
+    scope, conn, reader, _ = run()
+    if not nonempty:
+        for table in conn.data: conn.data[table] = []
+    verified = reader.read(scope)
+    class Store:
+        def latest_start_for_tenant_or_none(self, tenant): return verified.latest_start
+        def authority_counts(self, tenant): return dict(frequency_policy=verified.frequency_policy_count, withdrawal=verified.withdrawal_count)
+        def list_dispatch_observations(self, tenant, identity): return []
+    client, legacy, catalog = client_with_catalogs()
+    client.app.dependency_overrides[require_principal] = lambda: Principal(subject='isolated-fixture', org_id=scope.org_id, project_id=scope.project_id, roles=['admin'], markings=[])
+    catalog.get_readiness = lambda **kwargs: contact_admission(readonly, scope)
+    client.app.dependency_overrides[routes.get_customer_contact_readonly] = lambda: reader
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_customer_contact] = lambda: EcommerceWorkshopCustomerContactService(Store(), None)
+    response = client.get(CUSTOMER_CONTACT_PATH); assert response.status_code == 200
+    body = response.json()
+    assert body['tenant'] == dict(orgId='dev-org', projectId='fixture-project') and body['primaryColleague'] == '私域管家'
+    assert len(body['allowedCommands']) == (0 if readonly else 4)
+    assert body['permitRedemptionAllowed'] is body['contactResolutionAllowed'] is body['providerDispatchAllowed'] is body['sendAllowed'] is body['externalEffectsAllowed'] is False
+    if nonempty:
+        assert body['ledger']['unknown'] == body['ledger']['skippedWithdrawn'] == 1
+        assert body['latestStart']['items'][0]['reservation']['status'] == 'held' and 'reason' not in body['latestStart']
+    else:
+        assert body['latestStart'] is None and body['ledger']['frozenEligible'] == 0
     assert not legacy.calls

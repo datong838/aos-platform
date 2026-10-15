@@ -1,0 +1,30 @@
+{
+  "authority": "AOS-002037",
+  "reader": {
+    "schema": "aos-memory-task-receipt/v1",
+    "task_id": "qyh-customer-contact-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "base_revision": "AOS-002037",
+    "scope": [
+      "aos-platform/services/aos-api/aos_api/ecommerce_customer_contact_readonly.py",
+      "aos-platform/services/aos-api/tests/test_ecommerce_customer_contact_readonly.py",
+      "aos-platform/.evidence/qyh-customer-contact-bounded-reader-20261015"
+    ],
+    "excluded_scope": [
+      "aos-platform/apps/web",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py"
+    ],
+    "expected_outputs": [
+      "Full customer saved contact governance readonly reader, including original producer signatures/private reason, exact frozen batch ancestry/policies/reservation/withdrawal/dispatch observation and original projection, never current Contact/Consent/receipt admission.",
+      "Full two revision/observation COUNT semantics, one verified readonly RR snapshot, strict bounds/errors/privacy/commands[]/fivefalse; RED/frozen/native/independent quality; parent handles actual SDK650/visual/live and accurate full231Goal handoff."
+    ],
+    "lease_expires_at": "2026-10-15T16:00:00+00:00",
+    "status": "ACTIVE",
+    "created_at": "2026-10-15T16:52:17+08:00"
+  },
+  "otherLeasesPreserved": 41,
+  "nonOverlapping": true,
+  "wholeGoalComplete": false
+}
