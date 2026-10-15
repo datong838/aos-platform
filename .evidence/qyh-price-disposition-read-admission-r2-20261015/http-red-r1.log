@@ -1,0 +1,283 @@
+FFFFFFFFFF....                                                           [100%]
+=================================== FAILURES ===================================
+________ test_read_dependency_only_reaches_explicit_audited_get_routes _________
+
+    def test_read_dependency_only_reaches_explicit_audited_get_routes():
+        actual = set()
+        for route in routes.router.routes:
+            uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                            for d in route.dependant.dependencies)
+            if uses_read:
+                assert route.methods == {'GET'}
+                actual.add(route.path)
+>       assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+            '/v1/ecommerce-workshop/source-readiness',
+            '/v1/ecommerce-workshop/views/operations/cases',
+            '/v1/ecommerce-workshop/commands/operations/readiness',
+            '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+            '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+            '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+            '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+            '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+            '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+            '/v1/ecommerce-workshop/views/creator-growth/contributions',
+            '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+            '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
+            '/v1/ecommerce-workshop/views/{module}/closure-contributions',
+            '/v1/ecommerce-workshop/views/price-governance/contributions',
+            '/v1/ecommerce-workshop/views/price-governance/dispositions',
+        }
+E       AssertionError: assert {'/v1/ecommer...-inputs', ...} == {'/v1/ecommer...-inputs', ...}
+E         
+E         Extra items in the right set:
+E         '/v1/ecommerce-workshop/views/price-governance/dispositions'
+E         Use -v to get more diff
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:73: AssertionError
+__________ test_price_disposition_selects_only_admitted_reader[True] ___________
+
+readonly = True
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_price_disposition_selects_only_admitted_reader(readonly):
+        client, legacy, catalog = client_with_catalogs()
+        calls = disposition_probes(client)
+        def admit(**scope):
+            assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+            return price_admission(readonly)
+        catalog.get_readiness = admit
+        kind = 'readonly' if readonly else 'legacy'
+>       with pytest.raises(ReadReached, match=kind + '-price-disposition'): client.get(PRICE_DISPOSITION_PATH)
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:673: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T02:02:39.698542+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:39.817812+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:39.818382+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions "HTTP/1.1 404 Not Found"
+__________ test_price_disposition_selects_only_admitted_reader[False] __________
+
+readonly = False
+
+    @pytest.mark.parametrize('readonly', [True, False])
+    def test_price_disposition_selects_only_admitted_reader(readonly):
+        client, legacy, catalog = client_with_catalogs()
+        calls = disposition_probes(client)
+        def admit(**scope):
+            assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+            return price_admission(readonly)
+        catalog.get_readiness = admit
+        kind = 'readonly' if readonly else 'legacy'
+>       with pytest.raises(ReadReached, match=kind + '-price-disposition'): client.get(PRICE_DISPOSITION_PATH)
+E       Failed: DID NOT RAISE ReadReached
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:673: Failed
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T02:02:39.824157+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:39.935166+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:39.935639+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions "HTTP/1.1 404 Not Found"
+______________ test_price_disposition_denied_before_business_read ______________
+
+    def test_price_disposition_denied_before_business_read():
+        client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
+        assert client.get(PRICE_DISPOSITION_PATH).status_code == 404
+>       assert not calls and not legacy.calls and len(catalog.calls) == 1
+E       AssertionError: assert (not [] and not [{'module_id': 'ecommerce.price-governance', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}])
+E        +  where [{'module_id': 'ecommerce.price-governance', 'org_id': 'org-org', 'project_id': 'dev-project', 'roles': ['admin'], ...}] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x11dd09dd0>.calls
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:680: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T02:02:39.941100+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.054343+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.054869+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions "HTTP/1.1 404 Not Found"
+_________ test_price_disposition_unknown_admission_fails_closed[None] __________
+
+admission = None
+
+    @pytest.mark.parametrize('admission', [None, object()])
+    def test_price_disposition_unknown_admission_fails_closed(admission):
+        client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
+        catalog.get_readiness = lambda **scope: admission
+        response = client.get(PRICE_DISPOSITION_PATH)
+>       assert response.status_code == 503 and 'PRICE_DISPOSITION_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:688: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T02:02:40.061063+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.173421+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.174433+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions "HTTP/1.1 404 Not Found"
+______ test_price_disposition_unknown_admission_fails_closed[admission1] _______
+
+admission = <object object at 0x11d179c10>
+
+    @pytest.mark.parametrize('admission', [None, object()])
+    def test_price_disposition_unknown_admission_fails_closed(admission):
+        client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
+        catalog.get_readiness = lambda **scope: admission
+        response = client.get(PRICE_DISPOSITION_PATH)
+>       assert response.status_code == 503 and 'PRICE_DISPOSITION_READ_ADMISSION_UNAVAILABLE' in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:688: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T02:02:40.181252+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.295126+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.295596+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions "HTTP/1.1 404 Not Found"
+_ test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE] _
+
+code = 'PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE'
+
+    @pytest.mark.parametrize('code', ['PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE', 'PRICE_DISPOSITION_READ_AUTHORITY_DRIFT',
+                                     'PRICE_DISPOSITION_READ_LIMIT_EXCEEDED', 'PRICE_DISPOSITION_READ_SENSITIVE_CONTENT'])
+    def test_price_disposition_failure_does_not_become_empty_success(code):
+        client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_DISPOSITION_PATH)
+>       assert response.status_code == 503 and code in response.text and 'caseCount' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:698: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T02:02:40.301885+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.415230+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.415673+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions "HTTP/1.1 404 Not Found"
+_ test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_AUTHORITY_DRIFT] _
+
+code = 'PRICE_DISPOSITION_READ_AUTHORITY_DRIFT'
+
+    @pytest.mark.parametrize('code', ['PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE', 'PRICE_DISPOSITION_READ_AUTHORITY_DRIFT',
+                                     'PRICE_DISPOSITION_READ_LIMIT_EXCEEDED', 'PRICE_DISPOSITION_READ_SENSITIVE_CONTENT'])
+    def test_price_disposition_failure_does_not_become_empty_success(code):
+        client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_DISPOSITION_PATH)
+>       assert response.status_code == 503 and code in response.text and 'caseCount' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:698: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T02:02:40.421790+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.533090+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.534038+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions "HTTP/1.1 404 Not Found"
+_ test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_LIMIT_EXCEEDED] _
+
+code = 'PRICE_DISPOSITION_READ_LIMIT_EXCEEDED'
+
+    @pytest.mark.parametrize('code', ['PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE', 'PRICE_DISPOSITION_READ_AUTHORITY_DRIFT',
+                                     'PRICE_DISPOSITION_READ_LIMIT_EXCEEDED', 'PRICE_DISPOSITION_READ_SENSITIVE_CONTENT'])
+    def test_price_disposition_failure_does_not_become_empty_success(code):
+        client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_DISPOSITION_PATH)
+>       assert response.status_code == 503 and code in response.text and 'caseCount' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:698: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T02:02:40.540228+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.650338+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.650845+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions "HTTP/1.1 404 Not Found"
+_ test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_SENSITIVE_CONTENT] _
+
+code = 'PRICE_DISPOSITION_READ_SENSITIVE_CONTENT'
+
+    @pytest.mark.parametrize('code', ['PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE', 'PRICE_DISPOSITION_READ_AUTHORITY_DRIFT',
+                                     'PRICE_DISPOSITION_READ_LIMIT_EXCEEDED', 'PRICE_DISPOSITION_READ_SENSITIVE_CONTENT'])
+    def test_price_disposition_failure_does_not_become_empty_success(code):
+        client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client, code)
+        catalog.get_readiness = lambda **scope: price_admission()
+        response = client.get(PRICE_DISPOSITION_PATH)
+>       assert response.status_code == 503 and code in response.text and 'caseCount' not in response.text
+E       assert (404 == 503)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+services/aos-api/tests/test_ecommerce_workshop_read_http.py:698: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T02:02:40.656429+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.766324+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=NOT_FOUND status=404", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T02:02:40.766790+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions \"HTTP/1.1 404 Not Found\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=NOT_FOUND status=404
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/price-governance/dispositions "HTTP/1.1 404 Not Found"
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_selects_only_admitted_reader[True]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_selects_only_admitted_reader[False]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_denied_before_business_read
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_unknown_admission_fails_closed[None]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_unknown_admission_fails_closed[admission1]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_AUTHORITY_DRIFT]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_LIMIT_EXCEEDED]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_SENSITIVE_CONTENT]
+10 failed, 4 passed, 86 deselected, 7 warnings in 1.96s

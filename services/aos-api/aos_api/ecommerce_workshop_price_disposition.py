@@ -92,6 +92,33 @@ REQUIRED_GATE_TYPES: dict[PriceDispositionKind, dict[str, str]] = {
 }
 
 
+def price_disposition_operational_blockers(kind: PriceDispositionKind) -> list[str]:
+    """Saved disposition classification; never grants operational authority."""
+    return {
+        PriceDispositionKind.INTERNAL_ADVICE: [],
+        PriceDispositionKind.MODULE_HANDOFF: ["PRICE_HANDOFF_ISSUE_NOT_AUTHORIZED"],
+        PriceDispositionKind.EXTERNAL_NOTICE: ["PRICE_NOTICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"],
+        PriceDispositionKind.REPRICING: ["PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"],
+    }[kind]
+
+
+def price_disposition_observation_rules(kind: PriceDispositionKind) -> tuple[str, set[PriceDispositionOutcome]]:
+    """Original receipt/outcome contract shared by producer and saved-row reader."""
+    receipt_type = {
+        PriceDispositionKind.INTERNAL_ADVICE: "AdoptionReceipt",
+        PriceDispositionKind.MODULE_HANDOFF: "HandoffDecisionRevision",
+        PriceDispositionKind.EXTERNAL_NOTICE: "ActionReceipt",
+        PriceDispositionKind.REPRICING: "ActionReceipt",
+    }[kind]
+    outcomes = {
+        PriceDispositionKind.INTERNAL_ADVICE: {PriceDispositionOutcome.ADOPTED, PriceDispositionOutcome.REJECTED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+        PriceDispositionKind.MODULE_HANDOFF: {PriceDispositionOutcome.ACCEPTED, PriceDispositionOutcome.REJECTED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+        PriceDispositionKind.EXTERNAL_NOTICE: {PriceDispositionOutcome.APPLIED, PriceDispositionOutcome.FAILED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+        PriceDispositionKind.REPRICING: {PriceDispositionOutcome.APPLIED, PriceDispositionOutcome.FAILED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+    }[kind]
+    return receipt_type, outcomes
+
+
 def _unique_refs(values: list[PriceExactRef], label: str) -> list[PriceExactRef]:
     keys = [(item.resource_type, item.resource_id, item.revision, item.content_hash) for item in values]
     if len(keys) != len(set(keys)):
@@ -360,12 +387,7 @@ class EcommerceWorkshopPriceDispositionService:
         self.store.require_gate_authorities(scope, contract, request.gate_refs)
         payload = request.model_dump(mode="json", by_alias=True)
         binding_hash = canonical_hash({"case": request.case_ref, "contract": request.contract_ref, "targets": request.target_refs, "gates": request.gate_refs, "purpose": request.purpose, "requestedOutcome": request.requested_outcome})
-        blockers = {
-            PriceDispositionKind.INTERNAL_ADVICE: [],
-            PriceDispositionKind.MODULE_HANDOFF: ["PRICE_HANDOFF_ISSUE_NOT_AUTHORIZED"],
-            PriceDispositionKind.EXTERNAL_NOTICE: ["PRICE_NOTICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"],
-            PriceDispositionKind.REPRICING: ["PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"],
-        }[contract.kind]
+        blockers = price_disposition_operational_blockers(contract.kind)
         content_hash = canonical_hash({**payload, "kind": contract.kind, "bindingHash": binding_hash, "operationalBlockers": blockers})
         existing = self.store.latest_disposition_or_none(scope, request.disposition_id)
         if existing is not None:
@@ -405,20 +427,9 @@ class EcommerceWorkshopPriceDispositionService:
         disposition = self.store.require_disposition(scope, request.disposition_ref)
         if disposition.lifecycle != "frozen":
             raise PriceDispositionBlocked("PRICE_DISPOSITION_NOT_FROZEN")
-        expected_receipt_type = {
-            PriceDispositionKind.INTERNAL_ADVICE: "AdoptionReceipt",
-            PriceDispositionKind.MODULE_HANDOFF: "HandoffDecisionRevision",
-            PriceDispositionKind.EXTERNAL_NOTICE: "ActionReceipt",
-            PriceDispositionKind.REPRICING: "ActionReceipt",
-        }[disposition.kind]
+        expected_receipt_type, allowed_outcomes = price_disposition_observation_rules(disposition.kind)
         if request.receipt_ref.resource_type != expected_receipt_type:
             raise PriceDispositionBlocked("PRICE_DISPOSITION_RECEIPT_TYPE_DRIFTED")
-        allowed_outcomes = {
-            PriceDispositionKind.INTERNAL_ADVICE: {PriceDispositionOutcome.ADOPTED, PriceDispositionOutcome.REJECTED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
-            PriceDispositionKind.MODULE_HANDOFF: {PriceDispositionOutcome.ACCEPTED, PriceDispositionOutcome.REJECTED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
-            PriceDispositionKind.EXTERNAL_NOTICE: {PriceDispositionOutcome.APPLIED, PriceDispositionOutcome.FAILED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
-            PriceDispositionKind.REPRICING: {PriceDispositionOutcome.APPLIED, PriceDispositionOutcome.FAILED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
-        }[disposition.kind]
         if request.outcome not in allowed_outcomes:
             raise PriceDispositionBlocked("PRICE_DISPOSITION_OUTCOME_KIND_DRIFTED")
         self.store.require_outcome_receipt(scope, request.receipt_ref, disposition.binding_hash)

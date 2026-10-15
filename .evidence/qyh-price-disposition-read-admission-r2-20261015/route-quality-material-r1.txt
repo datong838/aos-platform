@@ -1,0 +1,850 @@
+ROUTE CODE QUALITY ONLY. Candidate not deployed; reader separate independent quality r2 PASS consumed. Full Goal still ACTIVE, no operating/budget/source approval. Native synthetic fixture is not customer evidence. Historical unchanged migration test failure retained (w6_009 expected/current a0v_162); frozen selected cumulative267 passes, no all-suite claim.
+
+
+FILE AST full selected functions with decorators services/aos-api/aos_api/routers/ecommerce_workshop.py fullfileSHA 78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220
+
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_catalog() -> EcommerceWorkshopCatalog:
+    return build_ecommerce_workshop_catalog()
+
+def get_ecommerce_workshop_read_catalog(
+    legacy: Annotated[EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)],
+) -> EcommerceWorkshopReadCatalog:
+    from aos_api.ecommerce_installed_readonly_catalog import build_installed_readonly_catalog
+
+    return EcommerceWorkshopReadCatalog(
+        legacy=legacy,
+        installed_factory=build_installed_readonly_catalog,
+    )
+
+@lru_cache(maxsize=1)
+def get_price_disposition_readonly() -> EcommercePriceDispositionReadonlyReader:
+    return EcommercePriceDispositionReadonlyReader()
+
+def get_ecommerce_workshop_price_disposition() -> EcommerceWorkshopPriceDispositionService:
+    return EcommerceWorkshopPriceDispositionService(
+        EcommerceWorkshopPriceDispositionStore(), EcommerceWorkshopPriceResearchStore()
+    )
+
+def _reject_query_parameters(request: Request) -> None:
+    if request.query_params:
+        raise ApiError(
+            code="VALIDATION",
+            message="ecommerce Workshop reads do not accept query parameters",
+            status_code=400,
+        )
+
+def _invoke(operation: Callable[[], ResultT]) -> ResultT:
+    try:
+        return operation()
+    except AssetRegistryError as exc:
+        raise ApiError(
+            code=exc.code.value,
+            message=str(exc),
+            status_code=exc.http_status,
+            details=exc.details,
+        ) from exc
+
+def _require_price_governance_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.price-governance",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+
+@router.get(
+    "/views/price-governance/dispositions",
+    response_model=PriceDispositionContributionView,
+    operation_id="ecommerceWorkshopPriceDispositionContributionViewGet",
+    responses=_ERRORS,
+)
+def get_price_disposition_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    service: PriceDispositionDependency,
+    readonly: PriceDispositionReadonlyDependency,
+) -> PriceDispositionContributionView:
+    _reject_query_parameters(request)
+    admission = _invoke(lambda: catalog.get_readiness(
+        module_id="ecommerce.price-governance", org_id=principal.org_id,
+        project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
+    ))
+    if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+        raise ApiError(code="PRICE_DISPOSITION_READ_ADMISSION_UNAVAILABLE",
+                       message="当前价格处置读取准入不可核验。", status_code=503)
+    if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+        try:
+            return readonly.read(TenantScope(principal.org_id, principal.project_id))
+        except PriceDispositionReadonlyError as exc:
+            raise ApiError(code=exc.code, message="当前价格处置暂不可读，请核对保存记录或读取范围。",
+                           status_code=503) from exc
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+
+EXACT FULL DIFF
+diff --git a/services/aos-api/aos_api/routers/ecommerce_workshop.py b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+index e901b8323..38c631a35 100644
+--- a/services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+@@ -220,6 +220,7 @@ from aos_api.ecommerce_workshop_price_research import (
+ )
+ from aos_api.ecommerce_workshop_price_research_store import EcommerceWorkshopPriceResearchStore
+ from aos_api.ecommerce_price_research_readonly import PriceResearchReadonlyError, PriceResearchReadonlyReader
++from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader, PriceDispositionReadonlyError
+ from aos_api.ecommerce_workshop_price_disposition import (
+     CreatePriceCaseRequest,
+     CreatePriceDispositionContractRequest,
+@@ -536,6 +537,15 @@ PriceResearchReadonlyDependency = Annotated[
+ 
+ 
+ @lru_cache(maxsize=1)
++def get_price_disposition_readonly() -> EcommercePriceDispositionReadonlyReader:
++    return EcommercePriceDispositionReadonlyReader()
++
++
++PriceDispositionReadonlyDependency = Annotated[
++    EcommercePriceDispositionReadonlyReader, Depends(get_price_disposition_readonly)
++]
++
++
+ def get_ecommerce_workshop_price_disposition() -> EcommerceWorkshopPriceDispositionService:
+     return EcommerceWorkshopPriceDispositionService(
+         EcommerceWorkshopPriceDispositionStore(), EcommerceWorkshopPriceResearchStore()
+@@ -2432,11 +2442,24 @@ def record_price_disposition_observation(
+ def get_price_disposition_contribution_view(
+     request: Request,
+     principal: PrincipalDependency,
+-    catalog: CatalogDependency,
++    catalog: ReadCatalogDependency,
+     service: PriceDispositionDependency,
++    readonly: PriceDispositionReadonlyDependency,
+ ) -> PriceDispositionContributionView:
+     _reject_query_parameters(request)
+-    _require_price_governance_installation(principal=principal, catalog=catalog)
++    admission = _invoke(lambda: catalog.get_readiness(
++        module_id="ecommerce.price-governance", org_id=principal.org_id,
++        project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
++    ))
++    if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
++        raise ApiError(code="PRICE_DISPOSITION_READ_ADMISSION_UNAVAILABLE",
++                       message="当前价格处置读取准入不可核验。", status_code=503)
++    if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
++        try:
++            return readonly.read(TenantScope(principal.org_id, principal.project_id))
++        except PriceDispositionReadonlyError as exc:
++            raise ApiError(code=exc.code, message="当前价格处置暂不可读，请核对保存记录或读取范围。",
++                           status_code=503) from exc
+     return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+ 
+ 
+
+
+FILE AST full selected functions with decorators services/aos-api/tests/test_ecommerce_workshop_read_http.py fullfileSHA 6c6c9cccd083280e888aea4134e8724169cd89601d665d483e4805170391d1fa
+
+class RejectingCatalog:
+    def __init__(self):
+        self.calls = []
+
+    def get_readiness(self, **scope):
+        self.calls.append(scope)
+        raise AssetNotFoundError('not installed in current scoped catalog')
+
+def client_with_catalogs():
+    app = FastAPI()
+    register_exception_handlers(app)
+    app.include_router(routes.router)
+    legacy, reader = RejectingCatalog(), RejectingCatalog()
+    app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+    app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+    app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='scope-test', org_id='org-org', project_id='dev-project',
+        roles=['admin'], markings=[],
+    )
+    return TestClient(app), legacy, reader
+
+def test_read_dependency_only_reaches_explicit_audited_get_routes():
+    actual = set()
+    for route in routes.router.routes:
+        uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
+                        for d in route.dependant.dependencies)
+        if uses_read:
+            assert route.methods == {'GET'}
+            actual.add(route.path)
+    assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+        '/v1/ecommerce-workshop/source-readiness',
+        '/v1/ecommerce-workshop/views/operations/cases',
+        '/v1/ecommerce-workshop/commands/operations/readiness',
+        '/v1/ecommerce-workshop/views/task-cockpit/feedback',
+        '/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario',
+        '/v1/ecommerce-workshop/views/task-cockpit/batch-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/full-production-scenario',
+        '/v1/ecommerce-workshop/views/media-studio/workflow/drafts',
+        '/v1/ecommerce-workshop/views/analyst/learning-scenario',
+        '/v1/ecommerce-workshop/views/content-campaign/real-inputs',
+        '/v1/ecommerce-workshop/views/creator-growth/contributions',
+        '/v1/ecommerce-workshop/views/creator-growth/lifecycle',
+        '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
+        '/v1/ecommerce-workshop/views/{module}/closure-contributions',
+        '/v1/ecommerce-workshop/views/price-governance/contributions',
+        '/v1/ecommerce-workshop/views/price-governance/dispositions',
+    }
+
+class ReadReached(RuntimeError):
+    pass
+
+def price_admission(readonly=True):
+    from tests.test_ecommerce_workshop_read_catalog import make, ARGS
+    catalog, _ = make()
+    result = catalog.get_readiness(**{**ARGS, 'module_id': 'ecommerce.price-governance'})
+    if not readonly:
+        result = result.model_copy(update={'item': result.item.model_copy(update={
+            'blockers': [b for b in result.item.blockers if b.reason_code != 'INSTALLED_ASSET_READONLY'],
+        })})
+    return result
+
+def disposition_probes(client, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope):
+            calls.append(('legacy', scope.key))
+            raise ReadReached('legacy-price-disposition')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key))
+            if failure:
+                from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+                raise PriceDispositionReadonlyError(failure)
+            raise ReadReached('readonly-price-disposition')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_price_disposition] = lambda: Legacy()
+    client.app.dependency_overrides[getattr(routes, 'get_price_disposition_readonly', Readonly)] = lambda: Readonly()
+    return calls
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_price_disposition_selects_only_admitted_reader(readonly):
+    client, legacy, catalog = client_with_catalogs()
+    calls = disposition_probes(client)
+    def admit(**scope):
+        assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+        return price_admission(readonly)
+    catalog.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-price-disposition'): client.get(PRICE_DISPOSITION_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'))] and not legacy.calls
+
+def test_price_disposition_denied_before_business_read():
+    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
+    assert client.get(PRICE_DISPOSITION_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+
+@pytest.mark.parametrize('admission', [None, object()])
+def test_price_disposition_unknown_admission_fails_closed(admission):
+    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
+    catalog.get_readiness = lambda **scope: admission
+    response = client.get(PRICE_DISPOSITION_PATH)
+    assert response.status_code == 503 and 'PRICE_DISPOSITION_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls
+
+@pytest.mark.parametrize('code', ['PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE', 'PRICE_DISPOSITION_READ_AUTHORITY_DRIFT',
+                                 'PRICE_DISPOSITION_READ_LIMIT_EXCEEDED', 'PRICE_DISPOSITION_READ_SENSITIVE_CONTENT'])
+def test_price_disposition_failure_does_not_become_empty_success(code):
+    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client, code)
+    catalog.get_readiness = lambda **scope: price_admission()
+    response = client.get(PRICE_DISPOSITION_PATH)
+    assert response.status_code == 503 and code in response.text and 'caseCount' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
+
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+def test_price_disposition_query_cannot_change_scope(query):
+    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
+    assert client.get(PRICE_DISPOSITION_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+
+@pytest.mark.parametrize('readonly,nonempty', [(True, True), (True, False), (False, False)])
+def test_price_disposition_full_http_serialization(readonly, nonempty):
+    import importlib.util
+    from pathlib import Path
+    from aos_api.ecommerce_workshop_price_disposition import EcommerceWorkshopPriceDispositionService
+    path = Path(__file__).parent / 'aip/test_ecommerce_price_disposition_readonly.py'
+    spec = importlib.util.spec_from_file_location('disposition_http_fixture', path)
+    fixture = importlib.util.module_from_spec(spec); spec.loader.exec_module(fixture)
+    f, tables = fixture.saved_rows()
+    if not nonempty:
+        for table in tables: tables[table] = []
+    reader, conn, opened = fixture.reader_for(tables, f)
+    client, legacy, catalog = client_with_catalogs()
+    catalog.get_readiness = lambda **scope: price_admission(readonly)
+    class EmptyStore:
+        def list_cases(self, _scope): return []
+        def list_dispositions(self, _scope): return []
+        def list_observations(self, _scope): return []
+    client.app.dependency_overrides[routes.get_price_disposition_readonly] = lambda: reader
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_price_disposition] = lambda: EcommerceWorkshopPriceDispositionService(EmptyStore(), None)
+    response = client.get(PRICE_DISPOSITION_PATH)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['tenant'] == dict(orgId='org-org', projectId='dev-project')
+    assert body['caseCount'] == int(nonempty)
+    assert sum(body['dispositionCounts'].values()) == (8 if nonempty else 0)
+    assert body['externalEffectsAllowed'] is body['repricingEnabled'] is False
+    assert body['allowedCommands'] == ([] if readonly else ['COMPILE_PRICE_CASE', 'CREATE_PRICE_DISPOSITION_CONTRACT',
+        'PREPARE_PRICE_DISPOSITION', 'FREEZE_PRICE_DISPOSITION', 'RECORD_PRICE_DISPOSITION_OBSERVATION'])
+    if nonempty:
+        assert body['latestDisposition']['lifecycle'] == 'frozen'
+        assert body['latestObservation']['dispositionRef']['resourceId'] != body['latestDisposition']['dispositionId']
+    else:
+        assert body['latestDisposition'] is body['latestObservation'] is None
+    assert len(opened) == int(readonly) and conn.payload_calls == (4 if readonly else 0)
+    assert not legacy.calls
+
+EXACT FULL DIFF
+diff --git a/services/aos-api/tests/test_ecommerce_workshop_read_http.py b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+index 5d95f2c2e..c5fe8dc1c 100644
+--- a/services/aos-api/tests/test_ecommerce_workshop_read_http.py
++++ b/services/aos-api/tests/test_ecommerce_workshop_read_http.py
+@@ -86,6 +86,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
+         '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
+         '/v1/ecommerce-workshop/views/{module}/closure-contributions',
+         '/v1/ecommerce-workshop/views/price-governance/contributions',
++        '/v1/ecommerce-workshop/views/price-governance/dispositions',
+     }
+ 
+ 
+@@ -637,3 +638,107 @@ def test_price_research_full_http_dto_preserves_readonly_and_legacy_semantics(re
+     assert body['allowedCommands'] == ([] if readonly else ['PREPARE_PRICE_RESEARCH_BATCH', 'FREEZE_PRICE_RESEARCH_BATCH'])
+     assert calls == [('readonly' if readonly else 'legacy', ('org-org', 'dev-project'))]
+     assert not legacy.calls
++
++
++PRICE_DISPOSITION_PATH = '/v1/ecommerce-workshop/views/price-governance/dispositions'
++
++
++def disposition_probes(client, failure=None):
++    calls = []
++    class Legacy:
++        def contribution_view(self, scope):
++            calls.append(('legacy', scope.key))
++            raise ReadReached('legacy-price-disposition')
++    class Readonly:
++        def read(self, scope):
++            calls.append(('readonly', scope.key))
++            if failure:
++                from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
++                raise PriceDispositionReadonlyError(failure)
++            raise ReadReached('readonly-price-disposition')
++    client.app.dependency_overrides[routes.get_ecommerce_workshop_price_disposition] = lambda: Legacy()
++    client.app.dependency_overrides[getattr(routes, 'get_price_disposition_readonly', Readonly)] = lambda: Readonly()
++    return calls
++
++
++@pytest.mark.parametrize('readonly', [True, False])
++def test_price_disposition_selects_only_admitted_reader(readonly):
++    client, legacy, catalog = client_with_catalogs()
++    calls = disposition_probes(client)
++    def admit(**scope):
++        assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
++        return price_admission(readonly)
++    catalog.get_readiness = admit
++    kind = 'readonly' if readonly else 'legacy'
++    with pytest.raises(ReadReached, match=kind + '-price-disposition'): client.get(PRICE_DISPOSITION_PATH)
++    assert calls == [(kind, ('org-org', 'dev-project'))] and not legacy.calls
++
++
++def test_price_disposition_denied_before_business_read():
++    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
++    assert client.get(PRICE_DISPOSITION_PATH).status_code == 404
++    assert not calls and not legacy.calls and len(catalog.calls) == 1
++
++
++@pytest.mark.parametrize('admission', [None, object()])
++def test_price_disposition_unknown_admission_fails_closed(admission):
++    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
++    catalog.get_readiness = lambda **scope: admission
++    response = client.get(PRICE_DISPOSITION_PATH)
++    assert response.status_code == 503 and 'PRICE_DISPOSITION_READ_ADMISSION_UNAVAILABLE' in response.text
++    assert not calls and not legacy.calls
++
++
++@pytest.mark.parametrize('code', ['PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE', 'PRICE_DISPOSITION_READ_AUTHORITY_DRIFT',
++                                 'PRICE_DISPOSITION_READ_LIMIT_EXCEEDED', 'PRICE_DISPOSITION_READ_SENSITIVE_CONTENT'])
++def test_price_disposition_failure_does_not_become_empty_success(code):
++    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client, code)
++    catalog.get_readiness = lambda **scope: price_admission()
++    response = client.get(PRICE_DISPOSITION_PATH)
++    assert response.status_code == 503 and code in response.text and 'caseCount' not in response.text
++    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
++
++
++@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
++def test_price_disposition_query_cannot_change_scope(query):
++    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
++    assert client.get(PRICE_DISPOSITION_PATH + '?' + query).status_code == 400
++    assert not calls and not legacy.calls and not catalog.calls
++
++
++@pytest.mark.parametrize('readonly,nonempty', [(True, True), (True, False), (False, False)])
++def test_price_disposition_full_http_serialization(readonly, nonempty):
++    import importlib.util
++    from pathlib import Path
++    from aos_api.ecommerce_workshop_price_disposition import EcommerceWorkshopPriceDispositionService
++    path = Path(__file__).parent / 'aip/test_ecommerce_price_disposition_readonly.py'
++    spec = importlib.util.spec_from_file_location('disposition_http_fixture', path)
++    fixture = importlib.util.module_from_spec(spec); spec.loader.exec_module(fixture)
++    f, tables = fixture.saved_rows()
++    if not nonempty:
++        for table in tables: tables[table] = []
++    reader, conn, opened = fixture.reader_for(tables, f)
++    client, legacy, catalog = client_with_catalogs()
++    catalog.get_readiness = lambda **scope: price_admission(readonly)
++    class EmptyStore:
++        def list_cases(self, _scope): return []
++        def list_dispositions(self, _scope): return []
++        def list_observations(self, _scope): return []
++    client.app.dependency_overrides[routes.get_price_disposition_readonly] = lambda: reader
++    client.app.dependency_overrides[routes.get_ecommerce_workshop_price_disposition] = lambda: EcommerceWorkshopPriceDispositionService(EmptyStore(), None)
++    response = client.get(PRICE_DISPOSITION_PATH)
++    assert response.status_code == 200
++    body = response.json()
++    assert body['tenant'] == dict(orgId='org-org', projectId='dev-project')
++    assert body['caseCount'] == int(nonempty)
++    assert sum(body['dispositionCounts'].values()) == (8 if nonempty else 0)
++    assert body['externalEffectsAllowed'] is body['repricingEnabled'] is False
++    assert body['allowedCommands'] == ([] if readonly else ['COMPILE_PRICE_CASE', 'CREATE_PRICE_DISPOSITION_CONTRACT',
++        'PREPARE_PRICE_DISPOSITION', 'FREEZE_PRICE_DISPOSITION', 'RECORD_PRICE_DISPOSITION_OBSERVATION'])
++    if nonempty:
++        assert body['latestDisposition']['lifecycle'] == 'frozen'
++        assert body['latestObservation']['dispositionRef']['resourceId'] != body['latestDisposition']['dispositionId']
++    else:
++        assert body['latestDisposition'] is body['latestObservation'] is None
++    assert len(opened) == int(readonly) and conn.payload_calls == (4 if readonly else 0)
++    assert not legacy.calls
+
+
+FULL CANDIDATE READER SHA 82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70
+"""Bounded verification of saved dispositions; no gate/receipt consumer or writes."""
+from datetime import datetime
+import re
+from time import monotonic
+
+import psycopg
+from psycopg import IsolationLevel
+
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_workshop_price_disposition import (
+    CreatePriceCaseRequest, CreatePriceDispositionContractRequest,
+    EcommerceWorkshopPriceDispositionService, PreparePriceDispositionRequest,
+    PriceCaseRevision, PriceDispositionContractRevision, PriceDispositionObservation,
+    PriceDispositionRevision, RecordPriceDispositionObservationRequest,
+    REQUIRED_GATE_TYPES, canonical_hash, price_disposition_observation_rules,
+    price_disposition_operational_blockers,
+)
+from aos_api.public_contracts import redact_sensitive
+
+MAX_ROWS = 512
+MAX_ROW_BYTES = 1024 * 1024
+MAX_TOTAL_BYTES = 8 * MAX_ROW_BYTES
+_TABLES = (
+    ('ecommerce_price_case_revision', 'case_id', PriceCaseRevision),
+    ('ecommerce_price_disposition_contract_revision', 'contract_id', PriceDispositionContractRevision),
+    ('ecommerce_price_disposition_revision', 'disposition_id', PriceDispositionRevision),
+    ('ecommerce_price_disposition_observation', 'observation_id', PriceDispositionObservation),
+)
+_FREEZE_EXCLUDE = {'revision', 'version', 'lifecycle', 'prior_content_hash', 'content_hash', 'created_by', 'created_at'}
+_INTS = {'revision', 'version', 'providerCallCount', 'notificationSendCount', 'repricingCount', 'externalEffectCount'}
+_BOOLS = {'executionAllowed', 'externalEffectCapable'}
+
+
+class PriceDispositionReadonlyError(RuntimeError):
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
+def _deny(suffix):
+    raise PriceDispositionReadonlyError('PRICE_DISPOSITION_READ_' + suffix)
+
+
+def _aware(value):
+    return isinstance(value, datetime) and value.utcoffset() is not None
+
+
+def _strict(value):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key in _INTS and type(child) is not int: _deny('AUTHORITY_DRIFT')
+            if key in _BOOLS and type(child) is not bool: _deny('AUTHORITY_DRIFT')
+            _strict(child)
+    elif isinstance(value, list):
+        for child in value: _strict(child)
+
+
+def _visible(value):
+    if isinstance(value, dict):
+        return {key: _visible(child) for key, child in value.items() if not key.endswith('Hash')}
+    if isinstance(value, list): return [_visible(child) for child in value]
+    return value
+
+
+def _request(model, item):
+    return model.model_validate({name: getattr(item, name) for name in model.model_fields})
+
+
+def _matches(ref, item, identity):
+    return (ref.resource_id == getattr(item, identity) and ref.revision == item.revision
+            and ref.content_hash == 'sha256:' + item.content_hash)
+
+
+class _ValidatedStore:
+    def __init__(self, cases, dispositions, observations):
+        self.cases, self.dispositions, self.observations = cases, dispositions, observations
+    def list_cases(self, _scope): return self.cases
+    def list_dispositions(self, _scope): return self.dispositions
+    def list_observations(self, _scope): return self.observations
+
+
+class EcommercePriceDispositionReadonlyReader:
+    def __init__(self, *, connect_factory=None):
+        self._connect = connect_factory or connect_read_only
+
+    @staticmethod
+    def _query(conn, scope, table, identity, payload=False):
+        # All interpolated identifiers originate in the fixed _TABLES tuple.
+        columns = (f'org_id,project_id,CASE WHEN length({identity})<=200 THEN {identity} ELSE NULL END AS identity,'
+                   'revision,CASE WHEN length(content_hash)=64 THEN content_hash ELSE NULL END AS content_hash,'
+                   'created_at,octet_length(authority_data::text) AS size')
+        if payload:
+            columns += f',CASE WHEN octet_length(authority_data::text)<={MAX_ROW_BYTES} THEN authority_data ELSE NULL END AS authority_data'
+        return conn.execute(f'SELECT {columns} FROM {table} WHERE org_id=%s AND project_id=%s '
+                            f'ORDER BY created_at,revision,{identity} LIMIT 513', scope.key).fetchall()
+
+    @staticmethod
+    def _metadata(row, scope, cutoff):
+        if (row.get('org_id'), row.get('project_id')) != scope.key: _deny('AUTHORITY_DRIFT')
+        if (not isinstance(row.get('identity'), str) or not 0 < len(row['identity']) <= 200
+                or type(row.get('revision')) is not int or row['revision'] < 1
+                or not isinstance(row.get('content_hash'), str)
+                or re.fullmatch('[0-9a-f]{64}', row['content_hash']) is None
+                or not _aware(row.get('created_at')) or row['created_at'] > cutoff):
+            _deny('AUTHORITY_DRIFT')
+        if type(row.get('size')) is not int or row['size'] < 1: _deny('AUTHORITY_DRIFT')
+        if row['size'] > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
+
+    @staticmethod
+    def _decode(row, model, identity, scope, cutoff):
+        raw = row.get('authority_data')
+        if not isinstance(raw, dict): _deny('AUTHORITY_DRIFT')
+        _strict(raw)
+        item = model.model_validate(raw)
+        if item.model_dump(mode='json', by_alias=True) != raw: _deny('AUTHORITY_DRIFT')
+        if ((item.tenant.org_id, item.tenant.project_id) != scope.key
+                or getattr(item, identity) != row['identity'] or item.revision != row['revision']
+                or item.content_hash != row['content_hash']): _deny('AUTHORITY_DRIFT')
+        at = item.observed_at if isinstance(item, PriceDispositionObservation) else item.created_at
+        if not _aware(at) or at != row['created_at'] or at > cutoff: _deny('AUTHORITY_DRIFT')
+        if hasattr(item, 'detected_at') and (not _aware(item.detected_at) or item.detected_at > cutoff): _deny('AUTHORITY_DRIFT')
+        visible = _visible(raw)
+        if redact_sensitive(visible) != visible: _deny('SENSITIVE_CONTENT')
+        return item
+
+    @staticmethod
+    def _validate(cases, contracts, dispositions, observations):
+        def index(items, identity):
+            result = {}
+            for item in items:
+                key = (getattr(item, identity), item.revision)
+                if key in result: _deny('AUTHORITY_DRIFT')
+                result[key] = item
+            return result
+        case_index = index(cases, 'case_id')
+        contract_index = index(contracts, 'contract_id')
+        disposition_index = index(dispositions, 'disposition_id')
+        index(observations, 'observation_id')
+        for case in cases:
+            request = _request(CreatePriceCaseRequest, case)
+            if (case.revision != 1 or case.lifecycle != 'open'
+                    or case.content_hash != canonical_hash(request.model_dump(mode='json', by_alias=True))): _deny('AUTHORITY_DRIFT')
+        for contract in contracts:
+            request = _request(CreatePriceDispositionContractRequest, contract)
+            expected = {**request.model_dump(mode='json', by_alias=True),
+                'requiredGateTypes': REQUIRED_GATE_TYPES[contract.kind],
+                'externalEffectCapable': contract.kind.value in ('external_notice', 'repricing')}
+            if contract.content_hash != canonical_hash(expected): _deny('AUTHORITY_DRIFT')
+        for item in dispositions:
+            request = _request(PreparePriceDispositionRequest, item)
+            case = case_index.get((request.case_ref.resource_id, request.case_ref.revision))
+            contract = contract_index.get((request.contract_ref.resource_id, request.contract_ref.revision))
+            if (case is None or contract is None or not _matches(request.case_ref, case, 'case_id')
+                    or not _matches(request.contract_ref, contract, 'contract_id') or item.kind != contract.kind): _deny('AUTHORITY_DRIFT')
+            targets = {ref.resource_id: ref for ref in case.target_refs}
+            if any(targets.get(ref.resource_id) != ref for ref in item.target_refs): _deny('AUTHORITY_DRIFT')
+            if set(item.gate_refs) != set(contract.required_gate_types): _deny('AUTHORITY_DRIFT')
+            if any(item.gate_refs[k].resource_type != typ for k, typ in contract.required_gate_types.items()): _deny('AUTHORITY_DRIFT')
+            binding = canonical_hash({'case': request.case_ref, 'contract': request.contract_ref,
+                'targets': request.target_refs, 'gates': request.gate_refs,
+                'purpose': request.purpose, 'requestedOutcome': request.requested_outcome})
+            if (item.binding_hash != binding or item.operational_blockers != price_disposition_operational_blockers(item.kind)
+                    or item.execution_allowed is not False
+                    or (item.provider_call_count, item.notification_send_count, item.repricing_count, item.external_effect_count) != (0, 0, 0, 0)):
+                _deny('AUTHORITY_DRIFT')
+            if item.lifecycle == 'prepared':
+                expected = canonical_hash({**request.model_dump(mode='json', by_alias=True), 'kind': item.kind,
+                    'bindingHash': binding, 'operationalBlockers': item.operational_blockers})
+                if item.revision != 1 or item.version != 1 or item.prior_content_hash is not None or item.content_hash != expected: _deny('AUTHORITY_DRIFT')
+            elif item.lifecycle == 'frozen':
+                prior = disposition_index.get((item.disposition_id, item.revision - 1))
+                if (prior is None or prior.lifecycle != 'prepared' or prior.revision != 1 or prior.version != 1
+                        or item.version != prior.version + 1 or item.prior_content_hash != prior.content_hash
+                        or item.created_at < prior.created_at): _deny('AUTHORITY_DRIFT')
+                inherited = prior.model_dump(mode='json', by_alias=True, exclude=_FREEZE_EXCLUDE)
+                if item.model_dump(mode='json', by_alias=True, exclude=_FREEZE_EXCLUDE) != inherited: _deny('AUTHORITY_DRIFT')
+                expected = canonical_hash({**inherited, 'revision': item.revision, 'version': item.version,
+                    'lifecycle': 'frozen', 'priorContentHash': prior.content_hash})
+                if item.content_hash != expected: _deny('AUTHORITY_DRIFT')
+            else: _deny('AUTHORITY_DRIFT')
+        for item in observations:
+            request = _request(RecordPriceDispositionObservationRequest, item)
+            disposition = disposition_index.get((request.disposition_ref.resource_id, request.disposition_ref.revision))
+            if (disposition is None or disposition.lifecycle != 'frozen'
+                    or not _matches(request.disposition_ref, disposition, 'disposition_id')): _deny('AUTHORITY_DRIFT')
+            receipt_type, outcomes = price_disposition_observation_rules(disposition.kind)
+            digest = canonical_hash(request.model_dump(mode='json', by_alias=True))
+            if (item.revision != 1 or item.receipt_ref.resource_type != receipt_type or item.outcome not in outcomes
+                    or item.content_hash != digest or item.observation_id != 'price-disposition-observation-' + digest[:24]): _deny('AUTHORITY_DRIFT')
+
+    def read(self, scope):
+        started = monotonic()
+        def deadline():
+            if monotonic() - started > 10: _deny('LIMIT_EXCEEDED')
+        try:
+            with self._connect(scope) as conn:
+                if (conn.read_only is not True or conn.autocommit is not False
+                        or conn.isolation_level != IsolationLevel.REPEATABLE_READ): _deny('AUTHORITY_DRIFT')
+                conn.execute("SET LOCAL statement_timeout='3000ms'")
+                conn.execute("SET LOCAL lock_timeout='500ms'")
+                cutoff = conn.execute('SELECT transaction_timestamp() AS cutoff').fetchone()['cutoff']
+                if not _aware(cutoff): _deny('AUTHORITY_DRIFT')
+                metadata = []
+                total_count = total_size = 0
+                for table, identity, _model in _TABLES:
+                    deadline()
+                    rows = self._query(conn, scope, table, identity)
+                    total_count += len(rows)
+                    if len(rows) > MAX_ROWS or total_count > MAX_ROWS: _deny('LIMIT_EXCEEDED')
+                    for row in rows:
+                        self._metadata(row, scope, cutoff)
+                        total_size += row['size']
+                    if total_size > MAX_TOTAL_BYTES: _deny('LIMIT_EXCEEDED')
+                    metadata.append(rows)
+                decoded = []
+                for (table, identity, model), before in zip(_TABLES, metadata):
+                    deadline()
+                    rows = self._query(conn, scope, table, identity, payload=True)
+                    if [{k: v for k, v in row.items() if k != 'authority_data'} for row in rows] != before: _deny('AUTHORITY_DRIFT')
+                    decoded.append([self._decode(row, model, identity, scope, cutoff) for row in rows])
+                deadline()
+                cases, contracts, dispositions, observations = decoded
+                self._validate(cases, contracts, dispositions, observations)
+                result = EcommerceWorkshopPriceDispositionService(
+                    _ValidatedStore(cases, dispositions, observations), None).contribution_view(scope, now=cutoff)
+                result = result.model_copy(update={'allowed_commands': [], 'repricing_enabled': False, 'external_effects_allowed': False})
+                if len(result.model_dump_json(by_alias=True).encode()) > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
+                deadline()
+                return result
+        except PriceDispositionReadonlyError:
+            raise
+        except psycopg.Error:
+            _deny('AUTHORITY_UNAVAILABLE')
+        except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+            _deny('AUTHORITY_DRIFT')
+
+
+EVIDENCE source-verification-r1.json
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+    "services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py": "9709476c1d1a8a0f0fa03c700a823f53a53639a0ecc707e0dc639d81a4d1f873",
+    "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py": "52fb937b078a18390961a0274167fd054dce4ac6f5c90d06991ecf238136d8bb",
+    "services/aos-api/tests/aip/test_w6_06_price_disposition.py": "bf57c3c488312e354aebf1f0d95a3fa23e451d16799d47979123228a141e7dfa",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "6c6c9cccd083280e888aea4134e8724169cd89601d665d483e4805170391d1fa"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+    "services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py": "9709476c1d1a8a0f0fa03c700a823f53a53639a0ecc707e0dc639d81a4d1f873",
+    "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py": "52fb937b078a18390961a0274167fd054dce4ac6f5c90d06991ecf238136d8bb",
+    "services/aos-api/tests/aip/test_w6_06_price_disposition.py": "bf57c3c488312e354aebf1f0d95a3fa23e451d16799d47979123228a141e7dfa",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "6c6c9cccd083280e888aea4134e8724169cd89601d665d483e4805170391d1fa"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/test_w6_009_three_module_closure.py"
+  ],
+  "baseHead": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+  "frozenWithOnlySixOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T02:06:29.117294+00:00",
+  "finishedAt": "2026-10-15T02:06:55.045908+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "973fca8793b9a25f7abb95691a84f9f5026f46f9f5a19caf806759985855a963"
+}
+
+EVIDENCE native-r1-result.json
+{
+  "containerId": "28aa6e0eee5ce624861d26f5fba696b956ad151f08769204850ac67225151d2e",
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "12261eb327b42d5d39572731f0b788c2288ca134c1186d79cac7dfce150c5d94",
+  "sourceSha": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+  "originalProducerWithSyntheticMemoryResolvers": true,
+  "productionGateAuthorization": false,
+  "originalVolumeTouched": false,
+  "snapshotCaseCounts": [
+    1,
+    2
+  ],
+  "savedRevisionCount": 8,
+  "earlierFrozenObservationAccepted": true,
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "foreignRowsHiddenWithoutWhere": true,
+  "readonlyRoleCounts": {
+    "ecommerce_price_case_revision": 2,
+    "ecommerce_price_disposition_contract_revision": 4,
+    "ecommerce_price_disposition_revision": 8,
+    "ecommerce_price_disposition_observation": 1
+  },
+  "writeDeniedSqlstate": "25006",
+  "oversizeBeforePayload": true,
+  "sqlCaseReturnedNull": true,
+  "oversizeError": "PRICE_DISPOSITION_READ_LIMIT_EXCEEDED",
+  "privacyError": "PRICE_DISPOSITION_READ_SENSITIVE_CONTENT",
+  "commandsEmpty": true,
+  "wholeGoalComplete": false
+}
+
+EVIDENCE code-review-result-r2.json
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "7e9d2c2213b2312c19456ef2aa9575dce6874c50b9b72b4da9598903921bb6cd",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-disposition-bounded-reader-20261015-code-r2",
+    "task_id": "qyh-price-disposition-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+      "authority_revision": "AOS-002034",
+      "files": {
+        ".evidence/qyh-price-disposition-bounded-reader-20261015/code-review-material-r2.txt": "777cc2da6a276b6ec2af8dc25417d38c0d6f77403530d8fe004f511112109e78"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "候选reader只在同一已核实READ ONLY REPEATABLE READ连接中按固定四表读取，元数据行数和总字节先门控，SQLCASE载荷及截止面保持完整有界计数，失败不补零。",
+        "evidence": "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py: read()开头验证conn.read_only=True/autocommit=False/isolation_level=REPEATABLE_READ；_TABLES固定四表；_query用SQL CASE限制identity<=200、content_hash length=64、authority_data<1024*1024否则NULL；先metadata pass限额MAX_ROWS=512/MAX_TOTAL_BYTES=8MB再payload pass；cutoff用transaction_timestamp()；psycopg.Error映射AUTHORITY_UNAVAILABLE不返回空计。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "候选reader核对原typed绑定哈希、prepared与frozen完整继承、case和contract以及观察exact关系、严格字段和隐私；保存gate及receipt不构成当前授权。",
+        "evidence": "ecommerce_price_disposition_readonly.py:_validate核对binding_hash/operational_blockers/case和contract exact ref/created_at与observed_at/cutoff；prepared version=1 lifecycle=prepared；frozen继承prepared排除_FREEZE_EXCLUDE并核对prior_content_hash；observation核对disposition lifecycle=frozen/receipt_type/outcome由price_disposition_observation_rules给出且hash一致；_visible去掉Hash字段后redact_sensitive校验；服务contribution_view强制allowed_commands=[]/repricing_enabled=False/external_effects_allowed=False。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原service变更只提取原kind分类纯规则，未改写入准入、resolver、签名或幂等；原producer兼容测试及冻结267项和隔离原W6DDL物证支持候选质量，未声称现场或整体Goal完成。",
+        "evidence": "EXACT SERVICE DIFF显示ecommerce_workshop_price_disposition.py仅新增price_disposition_operational_blockers/price_disposition_observation_rules两纯函数并重用；execute/freeze/record_observation签名、幂等、gate准入逻辑不变。test_ecommerce_price_disposition_readonly.py通过original()加载test_w6_06_price_disposition.py做producer兼容。native-r1-result.json: wholeGoalComplete=false/productionGateAuthorization=false/originalVolumeTouched=false；source-verification-r1.json: 267 passed/knows separate failure w6_009 vs a0v_162。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持candidate隔离，不部署到生产；等待router层独立parent quality gate结论；保留w6_009/a0v_162已知差异记录待后续DDL对齐后再考虑启用。"
+  }
+}
+
+EVIDENCE code-review-consumption-r2.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-disposition-bounded-reader-20261015-code-r2",
+  "task_id": "qyh-price-disposition-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+    "authority_revision": "AOS-002034",
+    "files": {
+      ".evidence/qyh-price-disposition-bounded-reader-20261015/code-review-material-r2.txt": "777cc2da6a276b6ec2af8dc25417d38c0d6f77403530d8fe004f511112109e78"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "477df6d9dae9f5bfd22fe77934b1158c8d617add0d5b98ab9e5cc688f1a297eb",
+  "transport_sha256": "dc32a7a03577bc5ad0a1378b3a49b611b524899e94e30e0d25760b685ee720a2"
+}
+
+RAW LOG green-frozen-cumulative-r1.log SHA 973fca8793b9a25f7abb95691a84f9f5026f46f9f5a19caf806759985855a963 FINAL EXCERPT
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+267 passed, 7 warnings in 16.33s
+
+RAW LOG http-serialization-r1.log SHA f49b1001e3f3304d65d06c121fee1aaa7d26aa4a72ab91bef1b89bfe1a069468 FINAL EXCERPT
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 100 deselected, 7 warnings in 0.62s
+
+RAW LOG http-red-r1.log SHA 4765ba5bf3c8a61964f56eb46b2397ae862be27b17c021e9badf309ab8f78327 FINAL EXCERPT
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_LIMIT_EXCEEDED]
+FAILED services/aos-api/tests/test_ecommerce_workshop_read_http.py::test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_SENSITIVE_CONTENT]
+10 failed, 4 passed, 86 deselected, 7 warnings in 1.96s

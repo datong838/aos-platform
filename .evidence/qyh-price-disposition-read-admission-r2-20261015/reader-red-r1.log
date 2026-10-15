@@ -1,0 +1,258 @@
+FFFFFFFFFFFFFFFFFF                                                       [100%]
+=================================== FAILURES ===================================
+_ test_original_producer_complete_counts_and_earlier_observation_single_snapshot _
+
+    def test_original_producer_complete_counts_and_earlier_observation_single_snapshot():
+>       f, tables = saved_rows(); reader, conn, opened = reader_for(tables, f)
+                                                         ^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tables = {'ecommerce_price_case_revision': [{'org_id': 'org-org', 'project_id': 'dev-project', 'identity': 'case-1', 'revision'...project_id': 'dev-project', 'identity': 'price-disposition-observation-654bb64b6a54265bbd241f18', 'revision': 1, ...}]}
+f = <module 'disposition_read_fixture' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_w6_06_price_disposition.py'>
+
+    def reader_for(tables, f):
+>       from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:85: ModuleNotFoundError
+______________ test_true_empty_snapshot_is_zero_without_commands _______________
+
+    def test_true_empty_snapshot_is_zero_without_commands():
+        f, tables = saved_rows()
+        for table in tables: tables[table] = []
+>       reader, _, _ = reader_for(tables, f); view = reader.read(f.SCOPE)
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:109: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tables = {'ecommerce_price_case_revision': [], 'ecommerce_price_disposition_contract_revision': [], 'ecommerce_price_disposition_revision': [], 'ecommerce_price_disposition_observation': []}
+f = <module 'disposition_read_fixture' from '/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/tests/aip/test_w6_06_price_disposition.py'>
+
+    def reader_for(tables, f):
+>       from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:85: ModuleNotFoundError
+________________ test_corrupt_selected_rows_fail_closed[tenant] ________________
+
+change = 'tenant'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+______________ test_corrupt_selected_rows_fail_closed[outer_hash] ______________
+
+change = 'outer_hash'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+_______________ test_corrupt_selected_rows_fail_closed[outer_id] _______________
+
+change = 'outer_id'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+________________ test_corrupt_selected_rows_fail_closed[future] ________________
+
+change = 'future'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+______________ test_corrupt_selected_rows_fail_closed[typed_bool] ______________
+
+change = 'typed_bool'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+____________ test_corrupt_selected_rows_fail_closed[missing_field] _____________
+
+change = 'missing_field'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+_______________ test_corrupt_selected_rows_fail_closed[binding] ________________
+
+change = 'binding'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+__________ test_corrupt_selected_rows_fail_closed[frozen_inheritance] __________
+
+change = 'frozen_inheritance'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+___________ test_corrupt_selected_rows_fail_closed[observation_hash] ___________
+
+change = 'observation_hash'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+___________ test_corrupt_selected_rows_fail_closed[observation_link] ___________
+
+change = 'observation_link'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+_______________ test_corrupt_selected_rows_fail_closed[privacy] ________________
+
+change = 'privacy'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+____________ test_corrupt_selected_rows_fail_closed[case_lifecycle] ____________
+
+change = 'case_lifecycle'
+
+    @pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+        'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+    def test_corrupt_selected_rows_fail_closed(change):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:118: ModuleNotFoundError
+________ test_metadata_limits_reject_before_any_payload_transfer[rows] _________
+
+limit = 'rows'
+
+    @pytest.mark.parametrize('limit', ['rows', 'row_bytes', 'total_bytes'])
+    def test_metadata_limits_reject_before_any_payload_transfer(limit):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:141: ModuleNotFoundError
+______ test_metadata_limits_reject_before_any_payload_transfer[row_bytes] ______
+
+limit = 'row_bytes'
+
+    @pytest.mark.parametrize('limit', ['rows', 'row_bytes', 'total_bytes'])
+    def test_metadata_limits_reject_before_any_payload_transfer(limit):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:141: ModuleNotFoundError
+_____ test_metadata_limits_reject_before_any_payload_transfer[total_bytes] _____
+
+limit = 'total_bytes'
+
+    @pytest.mark.parametrize('limit', ['rows', 'row_bytes', 'total_bytes'])
+    def test_metadata_limits_reject_before_any_payload_transfer(limit):
+>       from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:141: ModuleNotFoundError
+____ test_database_failure_does_not_fabricate_empty_counts_or_leak_message _____
+
+    def test_database_failure_does_not_fabricate_empty_counts_or_leak_message():
+        import psycopg
+>       from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader, PriceDispositionReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_price_disposition_readonly'
+
+services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py:156: ModuleNotFoundError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_original_producer_complete_counts_and_earlier_observation_single_snapshot
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_true_empty_snapshot_is_zero_without_commands
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[tenant]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[outer_hash]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[outer_id]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[future]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[typed_bool]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[missing_field]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[binding]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[frozen_inheritance]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[observation_hash]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[observation_link]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[privacy]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_corrupt_selected_rows_fail_closed[case_lifecycle]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_metadata_limits_reject_before_any_payload_transfer[rows]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_metadata_limits_reject_before_any_payload_transfer[row_bytes]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_metadata_limits_reject_before_any_payload_transfer[total_bytes]
+FAILED services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py::test_database_failure_does_not_fabricate_empty_counts_or_leak_message
+18 failed, 7 warnings in 0.15s

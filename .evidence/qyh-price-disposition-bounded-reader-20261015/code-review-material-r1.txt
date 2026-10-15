@@ -1,0 +1,1159 @@
+CODE QUALITY GATE: current candidate, not deployed and no operating approval. Original daily/full Goal remains. Read all supplied source; plan PASS is not code proof. Historical migration-head test failed (w6_009 expected/a0v_162 actual), unchanged migration/test; raw failure retained, no migration or claim that it passed.
+
+
+FILE services/aos-api/aos_api/ecommerce_price_disposition_readonly.py SHA256 82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70
+"""Bounded verification of saved dispositions; no gate/receipt consumer or writes."""
+from datetime import datetime
+import re
+from time import monotonic
+
+import psycopg
+from psycopg import IsolationLevel
+
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_workshop_price_disposition import (
+    CreatePriceCaseRequest, CreatePriceDispositionContractRequest,
+    EcommerceWorkshopPriceDispositionService, PreparePriceDispositionRequest,
+    PriceCaseRevision, PriceDispositionContractRevision, PriceDispositionObservation,
+    PriceDispositionRevision, RecordPriceDispositionObservationRequest,
+    REQUIRED_GATE_TYPES, canonical_hash, price_disposition_observation_rules,
+    price_disposition_operational_blockers,
+)
+from aos_api.public_contracts import redact_sensitive
+
+MAX_ROWS = 512
+MAX_ROW_BYTES = 1024 * 1024
+MAX_TOTAL_BYTES = 8 * MAX_ROW_BYTES
+_TABLES = (
+    ('ecommerce_price_case_revision', 'case_id', PriceCaseRevision),
+    ('ecommerce_price_disposition_contract_revision', 'contract_id', PriceDispositionContractRevision),
+    ('ecommerce_price_disposition_revision', 'disposition_id', PriceDispositionRevision),
+    ('ecommerce_price_disposition_observation', 'observation_id', PriceDispositionObservation),
+)
+_FREEZE_EXCLUDE = {'revision', 'version', 'lifecycle', 'prior_content_hash', 'content_hash', 'created_by', 'created_at'}
+_INTS = {'revision', 'version', 'providerCallCount', 'notificationSendCount', 'repricingCount', 'externalEffectCount'}
+_BOOLS = {'executionAllowed', 'externalEffectCapable'}
+
+
+class PriceDispositionReadonlyError(RuntimeError):
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
+def _deny(suffix):
+    raise PriceDispositionReadonlyError('PRICE_DISPOSITION_READ_' + suffix)
+
+
+def _aware(value):
+    return isinstance(value, datetime) and value.utcoffset() is not None
+
+
+def _strict(value):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key in _INTS and type(child) is not int: _deny('AUTHORITY_DRIFT')
+            if key in _BOOLS and type(child) is not bool: _deny('AUTHORITY_DRIFT')
+            _strict(child)
+    elif isinstance(value, list):
+        for child in value: _strict(child)
+
+
+def _visible(value):
+    if isinstance(value, dict):
+        return {key: _visible(child) for key, child in value.items() if not key.endswith('Hash')}
+    if isinstance(value, list): return [_visible(child) for child in value]
+    return value
+
+
+def _request(model, item):
+    return model.model_validate({name: getattr(item, name) for name in model.model_fields})
+
+
+def _matches(ref, item, identity):
+    return (ref.resource_id == getattr(item, identity) and ref.revision == item.revision
+            and ref.content_hash == 'sha256:' + item.content_hash)
+
+
+class _ValidatedStore:
+    def __init__(self, cases, dispositions, observations):
+        self.cases, self.dispositions, self.observations = cases, dispositions, observations
+    def list_cases(self, _scope): return self.cases
+    def list_dispositions(self, _scope): return self.dispositions
+    def list_observations(self, _scope): return self.observations
+
+
+class EcommercePriceDispositionReadonlyReader:
+    def __init__(self, *, connect_factory=None):
+        self._connect = connect_factory or connect_read_only
+
+    @staticmethod
+    def _query(conn, scope, table, identity, payload=False):
+        # All interpolated identifiers originate in the fixed _TABLES tuple.
+        columns = (f'org_id,project_id,CASE WHEN length({identity})<=200 THEN {identity} ELSE NULL END AS identity,'
+                   'revision,CASE WHEN length(content_hash)=64 THEN content_hash ELSE NULL END AS content_hash,'
+                   'created_at,octet_length(authority_data::text) AS size')
+        if payload:
+            columns += f',CASE WHEN octet_length(authority_data::text)<={MAX_ROW_BYTES} THEN authority_data ELSE NULL END AS authority_data'
+        return conn.execute(f'SELECT {columns} FROM {table} WHERE org_id=%s AND project_id=%s '
+                            f'ORDER BY created_at,revision,{identity} LIMIT 513', scope.key).fetchall()
+
+    @staticmethod
+    def _metadata(row, scope, cutoff):
+        if (row.get('org_id'), row.get('project_id')) != scope.key: _deny('AUTHORITY_DRIFT')
+        if (not isinstance(row.get('identity'), str) or not 0 < len(row['identity']) <= 200
+                or type(row.get('revision')) is not int or row['revision'] < 1
+                or not isinstance(row.get('content_hash'), str)
+                or re.fullmatch('[0-9a-f]{64}', row['content_hash']) is None
+                or not _aware(row.get('created_at')) or row['created_at'] > cutoff):
+            _deny('AUTHORITY_DRIFT')
+        if type(row.get('size')) is not int or row['size'] < 1: _deny('AUTHORITY_DRIFT')
+        if row['size'] > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
+
+    @staticmethod
+    def _decode(row, model, identity, scope, cutoff):
+        raw = row.get('authority_data')
+        if not isinstance(raw, dict): _deny('AUTHORITY_DRIFT')
+        _strict(raw)
+        item = model.model_validate(raw)
+        if item.model_dump(mode='json', by_alias=True) != raw: _deny('AUTHORITY_DRIFT')
+        if ((item.tenant.org_id, item.tenant.project_id) != scope.key
+                or getattr(item, identity) != row['identity'] or item.revision != row['revision']
+                or item.content_hash != row['content_hash']): _deny('AUTHORITY_DRIFT')
+        at = item.observed_at if isinstance(item, PriceDispositionObservation) else item.created_at
+        if not _aware(at) or at != row['created_at'] or at > cutoff: _deny('AUTHORITY_DRIFT')
+        if hasattr(item, 'detected_at') and (not _aware(item.detected_at) or item.detected_at > cutoff): _deny('AUTHORITY_DRIFT')
+        visible = _visible(raw)
+        if redact_sensitive(visible) != visible: _deny('SENSITIVE_CONTENT')
+        return item
+
+    @staticmethod
+    def _validate(cases, contracts, dispositions, observations):
+        def index(items, identity):
+            result = {}
+            for item in items:
+                key = (getattr(item, identity), item.revision)
+                if key in result: _deny('AUTHORITY_DRIFT')
+                result[key] = item
+            return result
+        case_index = index(cases, 'case_id')
+        contract_index = index(contracts, 'contract_id')
+        disposition_index = index(dispositions, 'disposition_id')
+        index(observations, 'observation_id')
+        for case in cases:
+            request = _request(CreatePriceCaseRequest, case)
+            if (case.revision != 1 or case.lifecycle != 'open'
+                    or case.content_hash != canonical_hash(request.model_dump(mode='json', by_alias=True))): _deny('AUTHORITY_DRIFT')
+        for contract in contracts:
+            request = _request(CreatePriceDispositionContractRequest, contract)
+            expected = {**request.model_dump(mode='json', by_alias=True),
+                'requiredGateTypes': REQUIRED_GATE_TYPES[contract.kind],
+                'externalEffectCapable': contract.kind.value in ('external_notice', 'repricing')}
+            if contract.content_hash != canonical_hash(expected): _deny('AUTHORITY_DRIFT')
+        for item in dispositions:
+            request = _request(PreparePriceDispositionRequest, item)
+            case = case_index.get((request.case_ref.resource_id, request.case_ref.revision))
+            contract = contract_index.get((request.contract_ref.resource_id, request.contract_ref.revision))
+            if (case is None or contract is None or not _matches(request.case_ref, case, 'case_id')
+                    or not _matches(request.contract_ref, contract, 'contract_id') or item.kind != contract.kind): _deny('AUTHORITY_DRIFT')
+            targets = {ref.resource_id: ref for ref in case.target_refs}
+            if any(targets.get(ref.resource_id) != ref for ref in item.target_refs): _deny('AUTHORITY_DRIFT')
+            if set(item.gate_refs) != set(contract.required_gate_types): _deny('AUTHORITY_DRIFT')
+            if any(item.gate_refs[k].resource_type != typ for k, typ in contract.required_gate_types.items()): _deny('AUTHORITY_DRIFT')
+            binding = canonical_hash({'case': request.case_ref, 'contract': request.contract_ref,
+                'targets': request.target_refs, 'gates': request.gate_refs,
+                'purpose': request.purpose, 'requestedOutcome': request.requested_outcome})
+            if (item.binding_hash != binding or item.operational_blockers != price_disposition_operational_blockers(item.kind)
+                    or item.execution_allowed is not False
+                    or (item.provider_call_count, item.notification_send_count, item.repricing_count, item.external_effect_count) != (0, 0, 0, 0)):
+                _deny('AUTHORITY_DRIFT')
+            if item.lifecycle == 'prepared':
+                expected = canonical_hash({**request.model_dump(mode='json', by_alias=True), 'kind': item.kind,
+                    'bindingHash': binding, 'operationalBlockers': item.operational_blockers})
+                if item.revision != 1 or item.version != 1 or item.prior_content_hash is not None or item.content_hash != expected: _deny('AUTHORITY_DRIFT')
+            elif item.lifecycle == 'frozen':
+                prior = disposition_index.get((item.disposition_id, item.revision - 1))
+                if (prior is None or prior.lifecycle != 'prepared' or prior.revision != 1 or prior.version != 1
+                        or item.version != prior.version + 1 or item.prior_content_hash != prior.content_hash
+                        or item.created_at < prior.created_at): _deny('AUTHORITY_DRIFT')
+                inherited = prior.model_dump(mode='json', by_alias=True, exclude=_FREEZE_EXCLUDE)
+                if item.model_dump(mode='json', by_alias=True, exclude=_FREEZE_EXCLUDE) != inherited: _deny('AUTHORITY_DRIFT')
+                expected = canonical_hash({**inherited, 'revision': item.revision, 'version': item.version,
+                    'lifecycle': 'frozen', 'priorContentHash': prior.content_hash})
+                if item.content_hash != expected: _deny('AUTHORITY_DRIFT')
+            else: _deny('AUTHORITY_DRIFT')
+        for item in observations:
+            request = _request(RecordPriceDispositionObservationRequest, item)
+            disposition = disposition_index.get((request.disposition_ref.resource_id, request.disposition_ref.revision))
+            if (disposition is None or disposition.lifecycle != 'frozen'
+                    or not _matches(request.disposition_ref, disposition, 'disposition_id')): _deny('AUTHORITY_DRIFT')
+            receipt_type, outcomes = price_disposition_observation_rules(disposition.kind)
+            digest = canonical_hash(request.model_dump(mode='json', by_alias=True))
+            if (item.revision != 1 or item.receipt_ref.resource_type != receipt_type or item.outcome not in outcomes
+                    or item.content_hash != digest or item.observation_id != 'price-disposition-observation-' + digest[:24]): _deny('AUTHORITY_DRIFT')
+
+    def read(self, scope):
+        started = monotonic()
+        def deadline():
+            if monotonic() - started > 10: _deny('LIMIT_EXCEEDED')
+        try:
+            with self._connect(scope) as conn:
+                if (conn.read_only is not True or conn.autocommit is not False
+                        or conn.isolation_level != IsolationLevel.REPEATABLE_READ): _deny('AUTHORITY_DRIFT')
+                conn.execute("SET LOCAL statement_timeout='3000ms'")
+                conn.execute("SET LOCAL lock_timeout='500ms'")
+                cutoff = conn.execute('SELECT transaction_timestamp() AS cutoff').fetchone()['cutoff']
+                if not _aware(cutoff): _deny('AUTHORITY_DRIFT')
+                metadata = []
+                total_count = total_size = 0
+                for table, identity, _model in _TABLES:
+                    deadline()
+                    rows = self._query(conn, scope, table, identity)
+                    total_count += len(rows)
+                    if len(rows) > MAX_ROWS or total_count > MAX_ROWS: _deny('LIMIT_EXCEEDED')
+                    for row in rows:
+                        self._metadata(row, scope, cutoff)
+                        total_size += row['size']
+                    if total_size > MAX_TOTAL_BYTES: _deny('LIMIT_EXCEEDED')
+                    metadata.append(rows)
+                decoded = []
+                for (table, identity, model), before in zip(_TABLES, metadata):
+                    deadline()
+                    rows = self._query(conn, scope, table, identity, payload=True)
+                    if [{k: v for k, v in row.items() if k != 'authority_data'} for row in rows] != before: _deny('AUTHORITY_DRIFT')
+                    decoded.append([self._decode(row, model, identity, scope, cutoff) for row in rows])
+                deadline()
+                cases, contracts, dispositions, observations = decoded
+                self._validate(cases, contracts, dispositions, observations)
+                result = EcommerceWorkshopPriceDispositionService(
+                    _ValidatedStore(cases, dispositions, observations), None).contribution_view(scope, now=cutoff)
+                result = result.model_copy(update={'allowed_commands': [], 'repricing_enabled': False, 'external_effects_allowed': False})
+                if len(result.model_dump_json(by_alias=True).encode()) > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
+                deadline()
+                return result
+        except PriceDispositionReadonlyError:
+            raise
+        except psycopg.Error:
+            _deny('AUTHORITY_UNAVAILABLE')
+        except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+            _deny('AUTHORITY_DRIFT')
+
+
+FILE services/aos-api/aos_api/ecommerce_workshop_price_disposition.py SHA256 52fb937b078a18390961a0274167fd054dce4ac6f5c90d06991ecf238136d8bb
+"""W6-06 typed price dispositions with no execution or external side effect."""
+from __future__ import annotations
+
+import hashlib
+import json
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
+
+from pydantic import Field, field_validator, model_validator
+
+from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.ecommerce_workshop_price_governance_contracts import PriceExactRef
+from aos_api.ecommerce_workshop_price_research import PriceBatchDisposition, PriceResearchBatchRevision
+from aos_api.tenant_scope import TenantScope
+
+
+PRICE_DISPOSITION_SCHEMA_VERSION = "aos.ecommerce-workshop.price-disposition/v1"
+PRICE_DISPOSITION_SKILL_IDS = (
+    "compile-price-case",
+    "prepare-price-advice",
+    "prepare-price-notice",
+    "prepare-price-handoff",
+    "evaluate-reprice-specialized-gate",
+)
+PRICE_LOGIC_ID = "ecommerce-price-governance"
+
+
+def canonical_hash(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+class PriceDispositionBlocked(RuntimeError):
+    code = "PRICE_DISPOSITION_BLOCKED"
+
+
+class PriceDispositionConflict(PriceDispositionBlocked):
+    code = "PRICE_DISPOSITION_CONFLICT"
+
+
+class PriceDispositionKind(StrEnum):
+    INTERNAL_ADVICE = "internal_advice"
+    EXTERNAL_NOTICE = "external_notice"
+    MODULE_HANDOFF = "module_handoff"
+    REPRICING = "repricing"
+
+
+class PriceDispositionOutcome(StrEnum):
+    PREPARED = "prepared"
+    ADOPTED = "adopted"
+    REJECTED = "rejected"
+    ACCEPTED = "accepted"
+    APPLIED = "applied"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+    DISPUTED = "disputed"
+
+
+REQUIRED_GATE_TYPES: dict[PriceDispositionKind, dict[str, str]] = {
+    PriceDispositionKind.INTERNAL_ADVICE: {
+        "draftSchema": "SchemaRevision",
+        "adoptionPolicy": "AdoptionPolicyRevision",
+    },
+    PriceDispositionKind.EXTERNAL_NOTICE: {
+        "template": "TemplateRevision",
+        "frequencyPolicy": "FrequencyPolicyRevision",
+        "actionType": "ActionTypeRevision",
+        "capabilityBinding": "CapabilityBindingRevision",
+        "accountBinding": "AccountBindingRevision",
+        "approvalPolicy": "ApprovalPolicyRevision",
+        "budgetReservation": "BudgetReservation",
+        "impactPreview": "ImpactPreviewRevision",
+    },
+    PriceDispositionKind.MODULE_HANDOFF: {
+        "handoffContract": "HandoffContractRevision",
+        "receiverModule": "WorkshopModuleRevision",
+    },
+    PriceDispositionKind.REPRICING: {
+        "actionType": "ActionTypeRevision",
+        "capabilityBinding": "CapabilityBindingRevision",
+        "accountBinding": "AccountBindingRevision",
+        "approvalPolicy": "ApprovalPolicyRevision",
+        "budgetReservation": "BudgetReservation",
+        "impactPreview": "ImpactPreviewRevision",
+        "priceConstraints": "PriceConstraintPolicyRevision",
+        "makerChecker": "MakerCheckerPolicyRevision",
+        "killPolicy": "KillPolicyRevision",
+        "canaryPlan": "CanaryPlanRevision",
+        "compensationPolicy": "CompensationPolicyRevision",
+    },
+}
+
+
+def price_disposition_operational_blockers(kind: PriceDispositionKind) -> list[str]:
+    """Saved disposition classification; never grants operational authority."""
+    return {
+        PriceDispositionKind.INTERNAL_ADVICE: [],
+        PriceDispositionKind.MODULE_HANDOFF: ["PRICE_HANDOFF_ISSUE_NOT_AUTHORIZED"],
+        PriceDispositionKind.EXTERNAL_NOTICE: ["PRICE_NOTICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"],
+        PriceDispositionKind.REPRICING: ["PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"],
+    }[kind]
+
+
+def price_disposition_observation_rules(kind: PriceDispositionKind) -> tuple[str, set[PriceDispositionOutcome]]:
+    """Original receipt/outcome contract shared by producer and saved-row reader."""
+    receipt_type = {
+        PriceDispositionKind.INTERNAL_ADVICE: "AdoptionReceipt",
+        PriceDispositionKind.MODULE_HANDOFF: "HandoffDecisionRevision",
+        PriceDispositionKind.EXTERNAL_NOTICE: "ActionReceipt",
+        PriceDispositionKind.REPRICING: "ActionReceipt",
+    }[kind]
+    outcomes = {
+        PriceDispositionKind.INTERNAL_ADVICE: {PriceDispositionOutcome.ADOPTED, PriceDispositionOutcome.REJECTED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+        PriceDispositionKind.MODULE_HANDOFF: {PriceDispositionOutcome.ACCEPTED, PriceDispositionOutcome.REJECTED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+        PriceDispositionKind.EXTERNAL_NOTICE: {PriceDispositionOutcome.APPLIED, PriceDispositionOutcome.FAILED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+        PriceDispositionKind.REPRICING: {PriceDispositionOutcome.APPLIED, PriceDispositionOutcome.FAILED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+    }[kind]
+    return receipt_type, outcomes
+
+
+def _unique_refs(values: list[PriceExactRef], label: str) -> list[PriceExactRef]:
+    keys = [(item.resource_type, item.resource_id, item.revision, item.content_hash) for item in values]
+    if len(keys) != len(set(keys)):
+        raise ValueError(f"{label} must be unique")
+    return values
+
+
+class CreatePriceCaseRequest(AipContractModel):
+    case_id: str = Field(min_length=1, max_length=200)
+    batch_ref: PriceExactRef
+    policy_ref: PriceExactRef
+    evidence_bundle_ref: PriceExactRef
+    eval_ref: PriceExactRef
+    impact_preview_ref: PriceExactRef
+    target_refs: list[PriceExactRef] = Field(min_length=1, max_length=100)
+    calculation_input_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    anomaly_code: str = Field(pattern=r"^[A-Z][A-Z0-9_]{1,119}$")
+    severity: str = Field(pattern=r"^(low|medium|high|critical)$")
+    key_assumptions: list[str] = Field(default_factory=list, max_length=32)
+    uncertainties: list[str] = Field(default_factory=list, max_length=32)
+    detected_at: datetime
+
+    @field_validator("detected_at")
+    @classmethod
+    def _aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("detectedAt must include timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _refs(self) -> "CreatePriceCaseRequest":
+        expected = (
+            (self.batch_ref, "PriceResearchBatchRevision"),
+            (self.policy_ref, "MonitoringPolicyRevision"),
+            (self.evidence_bundle_ref, "EvidenceBundleRevision"),
+            (self.eval_ref, "EvalContractRevision"),
+            (self.impact_preview_ref, "ImpactPreviewRevision"),
+        )
+        if any(ref.resource_type != kind for ref, kind in expected):
+            raise ValueError("price case exact ref type drifted")
+        if any(ref.resource_type != "ProductSkuRevision" for ref in self.target_refs):
+            raise ValueError("targetRefs must reference ProductSkuRevision")
+        _unique_refs(self.target_refs, "targetRefs")
+        if len(self.key_assumptions) != len(set(self.key_assumptions)) or len(self.uncertainties) != len(set(self.uncertainties)):
+            raise ValueError("assumptions and uncertainties must be unique")
+        return self
+
+
+class PriceCaseRevision(CreatePriceCaseRequest):
+    tenant: TenantContext
+    revision: int = Field(default=1, ge=1)
+    lifecycle: str = Field(default="open", pattern=r"^(open|stale|closed)$")
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class CreatePriceDispositionContractRequest(AipContractModel):
+    contract_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    kind: PriceDispositionKind
+    payload_schema_ref: PriceExactRef
+    risk_policy_ref: PriceExactRef
+
+    @model_validator(mode="after")
+    def _refs(self) -> "CreatePriceDispositionContractRequest":
+        if self.payload_schema_ref.resource_type != "SchemaRevision" or self.risk_policy_ref.resource_type != "RiskPolicyRevision":
+            raise ValueError("disposition contract schema/risk policy ref drifted")
+        return self
+
+
+class PriceDispositionContractRevision(CreatePriceDispositionContractRequest):
+    tenant: TenantContext
+    required_gate_types: dict[str, str]
+    external_effect_capable: bool
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _canonical_gate_contract(self) -> "PriceDispositionContractRevision":
+        if self.required_gate_types != REQUIRED_GATE_TYPES[self.kind]:
+            raise ValueError("requiredGateTypes drifted from canonical disposition contract")
+        expected_capable = self.kind in {PriceDispositionKind.EXTERNAL_NOTICE, PriceDispositionKind.REPRICING}
+        if self.external_effect_capable is not expected_capable:
+            raise ValueError("externalEffectCapable drifted")
+        return self
+
+
+class PreparePriceDispositionRequest(AipContractModel):
+    disposition_id: str = Field(min_length=1, max_length=200)
+    case_ref: PriceExactRef
+    contract_ref: PriceExactRef
+    target_refs: list[PriceExactRef] = Field(min_length=1, max_length=100)
+    gate_refs: dict[str, PriceExactRef]
+    purpose: str = Field(min_length=1, max_length=500)
+    requested_outcome: str = Field(min_length=1, max_length=500)
+
+    @model_validator(mode="after")
+    def _refs(self) -> "PreparePriceDispositionRequest":
+        if self.case_ref.resource_type != "PriceCaseRevision" or self.contract_ref.resource_type != "PriceDispositionContractRevision":
+            raise ValueError("disposition requires PriceCase and typed contract exact refs")
+        if any(ref.resource_type != "ProductSkuRevision" for ref in self.target_refs):
+            raise ValueError("targetRefs must reference ProductSkuRevision")
+        _unique_refs(self.target_refs, "targetRefs")
+        if len(self.gate_refs) != len(set(self.gate_refs)) or any(not key.strip() for key in self.gate_refs):
+            raise ValueError("gateRefs keys must be unique and non-empty")
+        return self
+
+
+class PriceDispositionRevision(AipContractModel):
+    tenant: TenantContext
+    disposition_id: str
+    revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    lifecycle: str = Field(pattern=r"^(prepared|frozen|stale)$")
+    kind: PriceDispositionKind
+    case_ref: PriceExactRef
+    contract_ref: PriceExactRef
+    target_refs: list[PriceExactRef]
+    gate_refs: dict[str, PriceExactRef]
+    purpose: str
+    requested_outcome: str
+    binding_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    operational_blockers: list[str]
+    execution_allowed: bool = False
+    provider_call_count: int = Field(default=0, ge=0, le=0)
+    notification_send_count: int = Field(default=0, ge=0, le=0)
+    repricing_count: int = Field(default=0, ge=0, le=0)
+    external_effect_count: int = Field(default=0, ge=0, le=0)
+    prior_content_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _never_executes(self) -> "PriceDispositionRevision":
+        if self.execution_allowed:
+            raise ValueError("W6-06 disposition never grants execution")
+        if self.kind is PriceDispositionKind.REPRICING and "PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED" not in self.operational_blockers:
+            raise ValueError("repricing must retain its specialized operational blocker")
+        return self
+
+
+class FreezePriceDispositionRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    exact_refs: dict[str, PriceExactRef]
+
+
+class RecordPriceDispositionObservationRequest(AipContractModel):
+    disposition_ref: PriceExactRef
+    receipt_ref: PriceExactRef
+    outcome: PriceDispositionOutcome
+    resolved_outcome: PriceDispositionOutcome | None = None
+    manual_case_ref: PriceExactRef | None = None
+    observed_at: datetime
+
+    @model_validator(mode="after")
+    def _honest_resolution(self) -> "RecordPriceDispositionObservationRequest":
+        if self.disposition_ref.resource_type != "PriceDispositionRevision":
+            raise ValueError("dispositionRef must reference PriceDispositionRevision")
+        if self.observed_at.utcoffset() is None:
+            raise ValueError("observedAt must include timezone")
+        if self.outcome is PriceDispositionOutcome.UNKNOWN and self.resolved_outcome is not None:
+            raise ValueError("unknown observation cannot self-resolve")
+        if self.resolved_outcome is not None and self.manual_case_ref is None:
+            raise ValueError("resolvedOutcome requires ManualReconcileCase")
+        if self.manual_case_ref and self.manual_case_ref.resource_type != "ManualReconcileCase":
+            raise ValueError("manualCaseRef must reference ManualReconcileCase")
+        return self
+
+
+class PriceDispositionObservation(AipContractModel):
+    tenant: TenantContext
+    observation_id: str
+    revision: int = 1
+    disposition_ref: PriceExactRef
+    receipt_ref: PriceExactRef
+    outcome: PriceDispositionOutcome
+    resolved_outcome: PriceDispositionOutcome | None = None
+    manual_case_ref: PriceExactRef | None = None
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    observed_at: datetime
+
+
+class PriceDispositionContributionView(AipContractModel):
+    schema_version: str = PRICE_DISPOSITION_SCHEMA_VERSION
+    tenant: TenantContext
+    evaluated_at: datetime
+    atomic_skill_ids: list[str] = Field(default_factory=lambda: list(PRICE_DISPOSITION_SKILL_IDS))
+    logic_id: str = PRICE_LOGIC_ID
+    primary_colleague: str = "数据参谋"
+    collaborator_colleagues: list[str] = Field(default_factory=lambda: ["活动策划师", "导购顾问"])
+    case_count: int = Field(ge=0)
+    disposition_counts: dict[PriceDispositionKind, int]
+    latest_disposition: PriceDispositionRevision | None
+    latest_observation: PriceDispositionObservation | None
+    blockers: list[str]
+    allowed_commands: list[str] = Field(default_factory=lambda: [
+        "COMPILE_PRICE_CASE", "CREATE_PRICE_DISPOSITION_CONTRACT", "PREPARE_PRICE_DISPOSITION",
+        "FREEZE_PRICE_DISPOSITION", "RECORD_PRICE_DISPOSITION_OBSERVATION",
+    ])
+    repricing_enabled: bool = False
+    external_effects_allowed: bool = False
+
+
+class EcommerceWorkshopPriceDispositionService:
+    def __init__(self, store: Any, research_store: Any) -> None:
+        self.store = store
+        self.research_store = research_store
+
+    @staticmethod
+    def _tenant(scope: TenantScope) -> TenantContext:
+        return TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+
+    @staticmethod
+    def _batch_ref(batch: PriceResearchBatchRevision) -> PriceExactRef:
+        return PriceExactRef(resourceType="PriceResearchBatchRevision", resourceId=batch.batch_id, revision=batch.revision, contentHash=f"sha256:{batch.content_hash}", receiptId=f"receipt-{batch.batch_id}")
+
+    def create_case(self, scope: TenantScope, request: CreatePriceCaseRequest, actor: str, *, now: datetime | None = None) -> PriceCaseRevision:
+        at = now or datetime.now(UTC)
+        batch = self.research_store.latest_batch(scope, request.batch_ref.resource_id)
+        if batch.lifecycle != "frozen" or self._batch_ref(batch) != request.batch_ref:
+            raise PriceDispositionBlocked("PRICE_CASE_BATCH_MISSING_OR_DRIFTED")
+        policy = self.research_store.require_policy(scope, request.policy_ref)
+        if policy.eval_ref != request.eval_ref:
+            raise PriceDispositionBlocked("PRICE_CASE_POLICY_EVAL_DRIFTED")
+        if batch.exact_refs.get("monitoringPolicy") != request.policy_ref or batch.exact_refs.get("eval") != request.eval_ref:
+            raise PriceDispositionBlocked("PRICE_CASE_BATCH_POLICY_OR_EVAL_DRIFTED")
+        eligible = {item.sku_ref.resource_id: item.sku_ref for item in batch.items if item.disposition is PriceBatchDisposition.ELIGIBLE}
+        if any(eligible.get(ref.resource_id) != ref for ref in request.target_refs):
+            raise PriceDispositionBlocked("PRICE_CASE_TARGET_NOT_ELIGIBLE_OR_DRIFTED")
+        payload = request.model_dump(mode="json", by_alias=True)
+        item = PriceCaseRevision(
+            tenant=self._tenant(scope), **payload, contentHash=canonical_hash(payload),
+            createdBy=actor, createdAt=at,
+        )
+        return self.store.append_case(scope, item)
+
+    def create_contract(self, scope: TenantScope, request: CreatePriceDispositionContractRequest, actor: str, *, now: datetime | None = None) -> PriceDispositionContractRevision:
+        at = now or datetime.now(UTC)
+        payload = request.model_dump(mode="json", by_alias=True)
+        full = {
+            **payload,
+            "requiredGateTypes": REQUIRED_GATE_TYPES[request.kind],
+            "externalEffectCapable": request.kind in {PriceDispositionKind.EXTERNAL_NOTICE, PriceDispositionKind.REPRICING},
+        }
+        item = PriceDispositionContractRevision(
+            tenant=self._tenant(scope), **full, contentHash=canonical_hash(full), createdBy=actor, createdAt=at,
+        )
+        return self.store.append_contract(scope, item)
+
+    def prepare(self, scope: TenantScope, request: PreparePriceDispositionRequest, actor: str, *, now: datetime | None = None) -> PriceDispositionRevision:
+        at = now or datetime.now(UTC)
+        case = self.store.require_case(scope, request.case_ref)
+        contract = self.store.require_contract(scope, request.contract_ref)
+        case_targets = {ref.resource_id: ref for ref in case.target_refs}
+        if any(case_targets.get(ref.resource_id) != ref for ref in request.target_refs):
+            raise PriceDispositionBlocked("PRICE_DISPOSITION_TARGET_SCOPE_DRIFTED")
+        if set(request.gate_refs) != set(contract.required_gate_types):
+            raise PriceDispositionBlocked("PRICE_DISPOSITION_GATE_SET_DRIFTED")
+        for key, resource_type in contract.required_gate_types.items():
+            if request.gate_refs[key].resource_type != resource_type:
+                raise PriceDispositionBlocked(f"PRICE_DISPOSITION_GATE_TYPE_DRIFTED:{key}")
+        self.store.require_gate_authorities(scope, contract, request.gate_refs)
+        payload = request.model_dump(mode="json", by_alias=True)
+        binding_hash = canonical_hash({"case": request.case_ref, "contract": request.contract_ref, "targets": request.target_refs, "gates": request.gate_refs, "purpose": request.purpose, "requestedOutcome": request.requested_outcome})
+        blockers = price_disposition_operational_blockers(contract.kind)
+        content_hash = canonical_hash({**payload, "kind": contract.kind, "bindingHash": binding_hash, "operationalBlockers": blockers})
+        existing = self.store.latest_disposition_or_none(scope, request.disposition_id)
+        if existing is not None:
+            if existing.content_hash == content_hash:
+                return existing
+            raise PriceDispositionConflict("PRICE_DISPOSITION_IDEMPOTENCY_CONFLICT")
+        item = PriceDispositionRevision(
+            tenant=self._tenant(scope), dispositionId=request.disposition_id, revision=1, version=1, lifecycle="prepared",
+            kind=contract.kind, caseRef=request.case_ref, contractRef=request.contract_ref, targetRefs=request.target_refs,
+            gateRefs=request.gate_refs, purpose=request.purpose, requestedOutcome=request.requested_outcome,
+            bindingHash=binding_hash, operationalBlockers=blockers, contentHash=content_hash,
+            createdBy=actor, createdAt=at,
+        )
+        return self.store.append_disposition(scope, item)
+
+    def freeze(self, scope: TenantScope, disposition_id: str, request: FreezePriceDispositionRequest, actor: str, *, now: datetime | None = None) -> PriceDispositionRevision:
+        at = now or datetime.now(UTC)
+        current = self.store.latest_disposition(scope, disposition_id)
+        if current.lifecycle != "prepared" or current.version != request.expected_version or current.content_hash != request.expected_content_hash:
+            raise PriceDispositionConflict("PRICE_DISPOSITION_EXPECTED_VERSION_OR_HASH_DRIFTED")
+        expected_refs = {"case": current.case_ref, "contract": current.contract_ref, **current.gate_refs}
+        if request.exact_refs != expected_refs:
+            raise PriceDispositionConflict("PRICE_DISPOSITION_EXACT_REFS_DRIFTED")
+        payload = current.model_dump(
+            mode="json",
+            by_alias=True,
+            exclude={"revision", "version", "lifecycle", "prior_content_hash", "content_hash", "created_by", "created_at"},
+        )
+        content_hash = canonical_hash({**payload, "revision": current.revision + 1, "version": current.version + 1, "lifecycle": "frozen", "priorContentHash": current.content_hash})
+        frozen = current.model_copy(update={
+            "revision": current.revision + 1, "version": current.version + 1, "lifecycle": "frozen",
+            "prior_content_hash": current.content_hash, "content_hash": content_hash, "created_by": actor, "created_at": at,
+        })
+        return self.store.append_disposition(scope, frozen)
+
+    def record_observation(self, scope: TenantScope, request: RecordPriceDispositionObservationRequest) -> PriceDispositionObservation:
+        disposition = self.store.require_disposition(scope, request.disposition_ref)
+        if disposition.lifecycle != "frozen":
+            raise PriceDispositionBlocked("PRICE_DISPOSITION_NOT_FROZEN")
+        expected_receipt_type, allowed_outcomes = price_disposition_observation_rules(disposition.kind)
+        if request.receipt_ref.resource_type != expected_receipt_type:
+            raise PriceDispositionBlocked("PRICE_DISPOSITION_RECEIPT_TYPE_DRIFTED")
+        if request.outcome not in allowed_outcomes:
+            raise PriceDispositionBlocked("PRICE_DISPOSITION_OUTCOME_KIND_DRIFTED")
+        self.store.require_outcome_receipt(scope, request.receipt_ref, disposition.binding_hash)
+        payload = request.model_dump(mode="json", by_alias=True)
+        item = PriceDispositionObservation(
+            tenant=self._tenant(scope), observationId=f"price-disposition-observation-{canonical_hash(payload)[:24]}",
+            **payload, contentHash=canonical_hash(payload),
+        )
+        return self.store.append_observation(scope, item)
+
+    def contribution_view(self, scope: TenantScope, *, now: datetime | None = None) -> PriceDispositionContributionView:
+        at = now or datetime.now(UTC)
+        try:
+            cases = self.store.list_cases(scope)
+            dispositions = self.store.list_dispositions(scope)
+            observations = self.store.list_observations(scope)
+        except PriceDispositionBlocked as exc:
+            if str(exc) != "PRICE_DISPOSITION_AUTHORITY_UNAVAILABLE":
+                raise
+            cases, dispositions, observations = [], [], []
+            unavailable = True
+        else:
+            unavailable = False
+        counts = {kind: sum(item.kind is kind for item in dispositions) for kind in PriceDispositionKind}
+        blockers = ["PRICE_DISPOSITION_AUTHORITY_UNAVAILABLE"] if unavailable else []
+        if not cases:
+            blockers.append("PRICE_CASE_NOT_AVAILABLE")
+        if not dispositions:
+            blockers.append("PRICE_DISPOSITION_NOT_AVAILABLE")
+        blockers.extend(["PRICE_NOTICE_OPERATIONAL_AUTHORITY_NOT_GRANTED", "PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"])
+        return PriceDispositionContributionView(
+            tenant=self._tenant(scope), evaluatedAt=at, caseCount=len(cases), dispositionCounts=counts,
+            latestDisposition=dispositions[-1] if dispositions else None,
+            latestObservation=observations[-1] if observations else None, blockers=list(dict.fromkeys(blockers)),
+        )
+
+
+__all__ = [name for name in globals() if name.startswith("Price") or name.startswith("Create") or name.startswith("Prepare") or name.startswith("Freeze") or name.startswith("Record") or name in {"EcommerceWorkshopPriceDispositionService", "PRICE_DISPOSITION_SCHEMA_VERSION", "PRICE_DISPOSITION_SKILL_IDS"}]
+
+
+FILE services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py SHA256 9709476c1d1a8a0f0fa03c700a823f53a53639a0ecc707e0dc639d81a4d1f873
+"""Installed read compatibility and failure isolation; no real DB in this file."""
+from contextlib import contextmanager
+from copy import deepcopy
+from datetime import timedelta
+import importlib.util
+from pathlib import Path
+
+import pytest
+
+
+def original():
+    path = Path(__file__).with_name('test_w6_06_price_disposition.py')
+    spec = importlib.util.spec_from_file_location('disposition_read_fixture', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def saved_rows(*, scope=None, at=None):
+    f = original()
+    if scope is not None: f.SCOPE = scope
+    if at is not None: f.NOW = at
+    store, service, case, sku = f.authority_fixture()
+    frozen_rows = []
+    for kind in f.PriceDispositionKind:
+        contract = f.create_contract(service, kind)
+        # Original producer fixture uses an approximate ref helper; this experiment uses exact hashes.
+        exact = lambda obj, typ, field: f.PriceExactRef(resourceType=typ, resourceId=getattr(obj, field),
+            revision=obj.revision, contentHash='sha256:' + obj.content_hash, receiptId='receipt-' + getattr(obj, field))
+        request = f.PreparePriceDispositionRequest(dispositionId='read-' + kind.value,
+            caseRef=exact(case, 'PriceCaseRevision', 'case_id'),
+            contractRef=exact(contract, 'PriceDispositionContractRevision', 'contract_id'), targetRefs=[sku],
+            gateRefs={key: f.ref(typ, key) for key, typ in f.REQUIRED_GATE_TYPES[kind].items()},
+            purpose='read compatibility', requestedOutcome='review only')
+        prepared = service.prepare(f.SCOPE, request, 'synthetic', now=f.NOW)
+        frozen = service.freeze(f.SCOPE, prepared.disposition_id, f.FreezePriceDispositionRequest(
+            expectedVersion=1, expectedContentHash=prepared.content_hash,
+            exactRefs={'case': prepared.case_ref, 'contract': prepared.contract_ref, **prepared.gate_refs}), 'reviewer', now=f.NOW)
+        frozen_rows.append(frozen)
+    earlier = frozen_rows[0]
+    receipt = f.ref('AdoptionReceipt', 'read-adoption')
+    store.receipts[(*f.SCOPE.key, receipt.resource_id)] = (receipt.content_hash, earlier.binding_hash)
+    service.record_observation(f.SCOPE, f.RecordPriceDispositionObservationRequest(
+        dispositionRef=exact(earlier, 'PriceDispositionRevision', 'disposition_id'), receiptRef=receipt,
+        outcome='adopted', observedAt=f.NOW))
+    collections = {
+        'ecommerce_price_case_revision': (list(store.cases.values()), 'case_id'),
+        'ecommerce_price_disposition_contract_revision': (list(store.contracts.values()), 'contract_id'),
+        'ecommerce_price_disposition_revision': ([r for revisions in store.dispositions.values() for r in revisions], 'disposition_id'),
+        'ecommerce_price_disposition_observation': (store.observations, 'observation_id'),
+    }
+    tables = {}
+    for table, (items, identity) in collections.items():
+        tables[table] = [{'org_id': f.SCOPE.org_id, 'project_id': f.SCOPE.project_id,
+            'identity': getattr(row, identity), 'revision': row.revision, 'content_hash': row.content_hash,
+            'created_at': getattr(row, 'created_at', getattr(row, 'observed_at', f.NOW)),
+            'size': len(row.model_dump_json(by_alias=True).encode()),
+            'authority_data': row.model_dump(mode='json', by_alias=True)} for row in items]
+        tables[table].sort(key=lambda row: (row['created_at'], row['revision'], row['identity']))
+    return f, tables
+
+
+class Cursor:
+    def __init__(self, rows): self.rows = rows
+    def fetchall(self): return deepcopy(self.rows)
+    def fetchone(self): return deepcopy(self.rows[0])
+
+
+class Connection:
+    read_only = True
+    autocommit = False
+    from psycopg import IsolationLevel
+    isolation_level = IsolationLevel.REPEATABLE_READ
+    def __init__(self, tables, cutoff): self.tables = tables; self.cutoff = cutoff; self.calls = []; self.payload_calls = 0
+    def execute(self, sql, params=None):
+        self.calls.append((sql, params))
+        if sql.startswith('SET LOCAL'): return Cursor([])
+        if 'transaction_timestamp()' in sql: return Cursor([{'cutoff': self.cutoff}])
+        table = next(table for table in self.tables if 'FROM ' + table + ' ' in sql)
+        assert params == ('org-org', 'dev-project')
+        assert 'LIMIT 513' in sql and 'ORDER BY created_at,revision,' in sql
+        rows = deepcopy(self.tables[table])
+        if 'THEN authority_data' in sql:
+            self.payload_calls += 1
+        else:
+            for row in rows: row.pop('authority_data')
+        return Cursor(rows[:513])
+
+
+def reader_for(tables, f):
+    from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader
+    conn = Connection(tables, f.NOW + timedelta(days=1))
+    opened = []
+    @contextmanager
+    def connect(scope):
+        assert scope == f.SCOPE
+        opened.append(scope)
+        yield conn
+    return EcommercePriceDispositionReadonlyReader(connect_factory=connect), conn, opened
+
+
+def test_original_producer_complete_counts_and_earlier_observation_single_snapshot():
+    f, tables = saved_rows(); reader, conn, opened = reader_for(tables, f)
+    view = reader.read(f.SCOPE)
+    assert len(opened) == 1 and conn.payload_calls == 4
+    assert view.case_count == 1 and sum(view.disposition_counts.values()) == 8
+    assert set(view.disposition_counts.values()) == {2}
+    assert view.latest_observation.disposition_ref.resource_id != view.latest_disposition.disposition_id
+    assert view.allowed_commands == [] and view.external_effects_allowed is view.repricing_enabled is False
+
+
+def test_true_empty_snapshot_is_zero_without_commands():
+    f, tables = saved_rows()
+    for table in tables: tables[table] = []
+    reader, _, _ = reader_for(tables, f); view = reader.read(f.SCOPE)
+    assert view.case_count == 0 and sum(view.disposition_counts.values()) == 0
+    assert view.latest_disposition is view.latest_observation is None
+    assert view.allowed_commands == []
+
+
+@pytest.mark.parametrize('change', ['tenant', 'outer_hash', 'outer_id', 'future', 'typed_bool', 'missing_field',
+    'binding', 'frozen_inheritance', 'observation_hash', 'observation_link', 'privacy', 'case_lifecycle'])
+def test_corrupt_selected_rows_fail_closed(change):
+    from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+    f, tables = saved_rows()
+    case = tables['ecommerce_price_case_revision'][0]
+    disposition = tables['ecommerce_price_disposition_revision'][0]
+    observation = tables['ecommerce_price_disposition_observation'][0]
+    if change == 'tenant': case['authority_data']['tenant']['orgId'] = 'foreign'
+    elif change == 'outer_hash': case['content_hash'] = '0' * 64
+    elif change == 'outer_id': case['identity'] = 'drifted'
+    elif change == 'future': case['created_at'] = f.NOW + timedelta(days=2)
+    elif change == 'typed_bool': disposition['authority_data']['executionAllowed'] = 0
+    elif change == 'missing_field': del disposition['authority_data']['providerCallCount']
+    elif change == 'binding': disposition['authority_data']['bindingHash'] = '0' * 64
+    elif change == 'frozen_inheritance': tables['ecommerce_price_disposition_revision'][-1]['authority_data']['purpose'] = 'changed'
+    elif change == 'observation_hash': observation['authority_data']['contentHash'] = '0' * 64
+    elif change == 'observation_link': observation['authority_data']['dispositionRef']['contentHash'] = 'sha256:' + '0' * 64
+    elif change == 'privacy': case['authority_data']['createdBy'] = 'person@example.com'
+    elif change == 'case_lifecycle': case['authority_data']['lifecycle'] = 'closed'
+    reader, _, _ = reader_for(tables, f)
+    with pytest.raises(PriceDispositionReadonlyError): reader.read(f.SCOPE)
+
+
+@pytest.mark.parametrize('limit', ['rows', 'row_bytes', 'total_bytes'])
+def test_metadata_limits_reject_before_any_payload_transfer(limit):
+    from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+    f, tables = saved_rows()
+    case = tables['ecommerce_price_case_revision'][0]
+    if limit == 'rows': tables['ecommerce_price_case_revision'] = [deepcopy(case) for _ in range(513)]
+    elif limit == 'row_bytes': case['size'] = 1024 * 1024 + 1
+    else:
+        for rows in tables.values():
+            for row in rows: row['size'] = 1024 * 1024
+    reader, conn, _ = reader_for(tables, f)
+    with pytest.raises(PriceDispositionReadonlyError, match='LIMIT_EXCEEDED'): reader.read(f.SCOPE)
+    assert conn.payload_calls == 0
+
+
+def test_database_failure_does_not_fabricate_empty_counts_or_leak_message():
+    import psycopg
+    from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader, PriceDispositionReadonlyError
+    f = original()
+    @contextmanager
+    def failed(_scope):
+        raise psycopg.OperationalError('private connection text')
+        yield
+    with pytest.raises(PriceDispositionReadonlyError, match='AUTHORITY_UNAVAILABLE') as caught:
+        EcommercePriceDispositionReadonlyReader(connect_factory=failed).read(f.SCOPE)
+    assert 'private' not in str(caught.value)
+
+
+@pytest.mark.parametrize('attribute,value', [('read_only', False), ('autocommit', True), ('isolation_level', None)])
+def test_connection_characteristics_must_be_proven_before_select(attribute, value):
+    from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+    f, tables = saved_rows(); reader, conn, _ = reader_for(tables, f)
+    setattr(conn, attribute, value)
+    with pytest.raises(PriceDispositionReadonlyError, match='AUTHORITY_DRIFT'): reader.read(f.SCOPE)
+    assert conn.calls == []
+
+
+NEW SHARED RULE TEST services/aos-api/tests/aip/test_w6_06_price_disposition.py fullfileSHA bf57c3c488312e354aebf1f0d95a3fa23e451d16799d47979123228a141e7dfa
+@pytest.mark.parametrize("kind,receipt,outcomes,blockers", [
+    (PriceDispositionKind.INTERNAL_ADVICE, "AdoptionReceipt", {"adopted", "rejected", "unknown", "disputed"}, []),
+    (PriceDispositionKind.MODULE_HANDOFF, "HandoffDecisionRevision", {"accepted", "rejected", "unknown", "disputed"}, ["PRICE_HANDOFF_ISSUE_NOT_AUTHORIZED"]),
+    (PriceDispositionKind.EXTERNAL_NOTICE, "ActionReceipt", {"applied", "failed", "unknown", "disputed"}, ["PRICE_NOTICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"]),
+    (PriceDispositionKind.REPRICING, "ActionReceipt", {"applied", "failed", "unknown", "disputed"}, ["PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"]),
+])
+def test_shared_saved_disposition_rules_preserve_original_producer(kind, receipt, outcomes, blockers):
+    from aos_api.ecommerce_workshop_price_disposition import (
+        price_disposition_observation_rules, price_disposition_operational_blockers,
+    )
+    assert price_disposition_observation_rules(kind) == (receipt, outcomes)
+    actual = price_disposition_operational_blockers(kind)
+    assert actual == blockers
+    actual.append("caller-local-only")
+    assert price_disposition_operational_blockers(kind) == blockers
+    store, service, case, sku = authority_fixture()
+    prepared = prepare(service, case, sku, create_contract(service, kind), identity="shared-rule-probe")
+    assert prepared.operational_blockers == blockers
+    frozen = service.freeze(SCOPE, prepared.disposition_id, FreezePriceDispositionRequest(
+        expectedVersion=1, expectedContentHash=prepared.content_hash,
+        exactRefs={"case": prepared.case_ref, "contract": prepared.contract_ref, **prepared.gate_refs}),
+        "reviewer", now=NOW)
+    for outcome in outcomes:
+        receipt_ref = ref(receipt, "shared-rule-" + outcome)
+        store.receipts[(*SCOPE.key, receipt_ref.resource_id)] = (receipt_ref.content_hash, frozen.binding_hash)
+        observed = service.record_observation(SCOPE, RecordPriceDispositionObservationRequest(
+            dispositionRef=exact(frozen, "PriceDispositionRevision", "disposition_id"),
+            receiptRef=receipt_ref, outcome=outcome, observedAt=NOW))
+        assert observed.outcome.value == outcome
+
+EXACT SERVICE DIFF
+diff --git a/services/aos-api/aos_api/ecommerce_workshop_price_disposition.py b/services/aos-api/aos_api/ecommerce_workshop_price_disposition.py
+index a0be0e2cf..3d75b77e1 100644
+--- a/services/aos-api/aos_api/ecommerce_workshop_price_disposition.py
++++ b/services/aos-api/aos_api/ecommerce_workshop_price_disposition.py
+@@ -92,6 +92,33 @@ REQUIRED_GATE_TYPES: dict[PriceDispositionKind, dict[str, str]] = {
+ }
+ 
+ 
++def price_disposition_operational_blockers(kind: PriceDispositionKind) -> list[str]:
++    """Saved disposition classification; never grants operational authority."""
++    return {
++        PriceDispositionKind.INTERNAL_ADVICE: [],
++        PriceDispositionKind.MODULE_HANDOFF: ["PRICE_HANDOFF_ISSUE_NOT_AUTHORIZED"],
++        PriceDispositionKind.EXTERNAL_NOTICE: ["PRICE_NOTICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"],
++        PriceDispositionKind.REPRICING: ["PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"],
++    }[kind]
++
++
++def price_disposition_observation_rules(kind: PriceDispositionKind) -> tuple[str, set[PriceDispositionOutcome]]:
++    """Original receipt/outcome contract shared by producer and saved-row reader."""
++    receipt_type = {
++        PriceDispositionKind.INTERNAL_ADVICE: "AdoptionReceipt",
++        PriceDispositionKind.MODULE_HANDOFF: "HandoffDecisionRevision",
++        PriceDispositionKind.EXTERNAL_NOTICE: "ActionReceipt",
++        PriceDispositionKind.REPRICING: "ActionReceipt",
++    }[kind]
++    outcomes = {
++        PriceDispositionKind.INTERNAL_ADVICE: {PriceDispositionOutcome.ADOPTED, PriceDispositionOutcome.REJECTED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
++        PriceDispositionKind.MODULE_HANDOFF: {PriceDispositionOutcome.ACCEPTED, PriceDispositionOutcome.REJECTED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
++        PriceDispositionKind.EXTERNAL_NOTICE: {PriceDispositionOutcome.APPLIED, PriceDispositionOutcome.FAILED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
++        PriceDispositionKind.REPRICING: {PriceDispositionOutcome.APPLIED, PriceDispositionOutcome.FAILED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
++    }[kind]
++    return receipt_type, outcomes
++
++
+ def _unique_refs(values: list[PriceExactRef], label: str) -> list[PriceExactRef]:
+     keys = [(item.resource_type, item.resource_id, item.revision, item.content_hash) for item in values]
+     if len(keys) != len(set(keys)):
+@@ -360,12 +387,7 @@ class EcommerceWorkshopPriceDispositionService:
+         self.store.require_gate_authorities(scope, contract, request.gate_refs)
+         payload = request.model_dump(mode="json", by_alias=True)
+         binding_hash = canonical_hash({"case": request.case_ref, "contract": request.contract_ref, "targets": request.target_refs, "gates": request.gate_refs, "purpose": request.purpose, "requestedOutcome": request.requested_outcome})
+-        blockers = {
+-            PriceDispositionKind.INTERNAL_ADVICE: [],
+-            PriceDispositionKind.MODULE_HANDOFF: ["PRICE_HANDOFF_ISSUE_NOT_AUTHORIZED"],
+-            PriceDispositionKind.EXTERNAL_NOTICE: ["PRICE_NOTICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"],
+-            PriceDispositionKind.REPRICING: ["PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"],
+-        }[contract.kind]
++        blockers = price_disposition_operational_blockers(contract.kind)
+         content_hash = canonical_hash({**payload, "kind": contract.kind, "bindingHash": binding_hash, "operationalBlockers": blockers})
+         existing = self.store.latest_disposition_or_none(scope, request.disposition_id)
+         if existing is not None:
+@@ -405,20 +427,9 @@ class EcommerceWorkshopPriceDispositionService:
+         disposition = self.store.require_disposition(scope, request.disposition_ref)
+         if disposition.lifecycle != "frozen":
+             raise PriceDispositionBlocked("PRICE_DISPOSITION_NOT_FROZEN")
+-        expected_receipt_type = {
+-            PriceDispositionKind.INTERNAL_ADVICE: "AdoptionReceipt",
+-            PriceDispositionKind.MODULE_HANDOFF: "HandoffDecisionRevision",
+-            PriceDispositionKind.EXTERNAL_NOTICE: "ActionReceipt",
+-            PriceDispositionKind.REPRICING: "ActionReceipt",
+-        }[disposition.kind]
++        expected_receipt_type, allowed_outcomes = price_disposition_observation_rules(disposition.kind)
+         if request.receipt_ref.resource_type != expected_receipt_type:
+             raise PriceDispositionBlocked("PRICE_DISPOSITION_RECEIPT_TYPE_DRIFTED")
+-        allowed_outcomes = {
+-            PriceDispositionKind.INTERNAL_ADVICE: {PriceDispositionOutcome.ADOPTED, PriceDispositionOutcome.REJECTED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+-            PriceDispositionKind.MODULE_HANDOFF: {PriceDispositionOutcome.ACCEPTED, PriceDispositionOutcome.REJECTED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+-            PriceDispositionKind.EXTERNAL_NOTICE: {PriceDispositionOutcome.APPLIED, PriceDispositionOutcome.FAILED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+-            PriceDispositionKind.REPRICING: {PriceDispositionOutcome.APPLIED, PriceDispositionOutcome.FAILED, PriceDispositionOutcome.UNKNOWN, PriceDispositionOutcome.DISPUTED},
+-        }[disposition.kind]
+         if request.outcome not in allowed_outcomes:
+             raise PriceDispositionBlocked("PRICE_DISPOSITION_OUTCOME_KIND_DRIFTED")
+         self.store.require_outcome_receipt(scope, request.receipt_ref, disposition.binding_hash)
+
+
+EVIDENCE native-r1-result.json
+{
+  "containerId": "28aa6e0eee5ce624861d26f5fba696b956ad151f08769204850ac67225151d2e",
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "12261eb327b42d5d39572731f0b788c2288ca134c1186d79cac7dfce150c5d94",
+  "sourceSha": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+  "originalProducerWithSyntheticMemoryResolvers": true,
+  "productionGateAuthorization": false,
+  "originalVolumeTouched": false,
+  "snapshotCaseCounts": [
+    1,
+    2
+  ],
+  "savedRevisionCount": 8,
+  "earlierFrozenObservationAccepted": true,
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "foreignRowsHiddenWithoutWhere": true,
+  "readonlyRoleCounts": {
+    "ecommerce_price_case_revision": 2,
+    "ecommerce_price_disposition_contract_revision": 4,
+    "ecommerce_price_disposition_revision": 8,
+    "ecommerce_price_disposition_observation": 1
+  },
+  "writeDeniedSqlstate": "25006",
+  "oversizeBeforePayload": true,
+  "sqlCaseReturnedNull": true,
+  "oversizeError": "PRICE_DISPOSITION_READ_LIMIT_EXCEEDED",
+  "privacyError": "PRICE_DISPOSITION_READ_SENSITIVE_CONTENT",
+  "commandsEmpty": true,
+  "wholeGoalComplete": false
+}
+
+EVIDENCE native-r1-stopped.json
+{
+  "containerId": "28aa6e0eee5ce624861d26f5fba696b956ad151f08769204850ac67225151d2e",
+  "stopped": true,
+  "originalVolumeTouched": false
+}
+
+EVIDENCE source-verification-r1.json
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+    "services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py": "9709476c1d1a8a0f0fa03c700a823f53a53639a0ecc707e0dc639d81a4d1f873",
+    "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py": "52fb937b078a18390961a0274167fd054dce4ac6f5c90d06991ecf238136d8bb",
+    "services/aos-api/tests/aip/test_w6_06_price_disposition.py": "bf57c3c488312e354aebf1f0d95a3fa23e451d16799d47979123228a141e7dfa",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "6c6c9cccd083280e888aea4134e8724169cd89601d665d483e4805170391d1fa"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+    "services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py": "9709476c1d1a8a0f0fa03c700a823f53a53639a0ecc707e0dc639d81a4d1f873",
+    "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py": "52fb937b078a18390961a0274167fd054dce4ac6f5c90d06991ecf238136d8bb",
+    "services/aos-api/tests/aip/test_w6_06_price_disposition.py": "bf57c3c488312e354aebf1f0d95a3fa23e451d16799d47979123228a141e7dfa",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "6c6c9cccd083280e888aea4134e8724169cd89601d665d483e4805170391d1fa"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/test_w6_009_three_module_closure.py"
+  ],
+  "baseHead": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+  "frozenWithOnlySixOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T02:06:29.117294+00:00",
+  "finishedAt": "2026-10-15T02:06:55.045908+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "973fca8793b9a25f7abb95691a84f9f5026f46f9f5a19caf806759985855a963"
+}
+
+FULL RAW FROZEN LOG SHA 973fca8793b9a25f7abb95691a84f9f5026f46f9f5a19caf806759985855a963
+........................................................................ [ 26%]
+........................................................................ [ 53%]
+........................................................................ [ 80%]
+...................................................                      [100%]
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-disposition-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-disposition-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-disposition-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-disposition-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-disposition-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-disposition-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+../../../../../../services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+267 passed, 7 warnings in 16.33s
+
+
+PLAN SHA 6f29ad2a3c85b05d19288089eaa0457ae9332df53b298d7aced825451af359b4; route PASS legally consumed. Router has separate parent quality gate still pending; implementation PASS cannot deploy.

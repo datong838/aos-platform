@@ -86,6 +86,7 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
         '/v1/ecommerce-workshop/views/creator-growth/workflow/drafts',
         '/v1/ecommerce-workshop/views/{module}/closure-contributions',
         '/v1/ecommerce-workshop/views/price-governance/contributions',
+        '/v1/ecommerce-workshop/views/price-governance/dispositions',
     }
 
 
@@ -636,4 +637,108 @@ def test_price_research_full_http_dto_preserves_readonly_and_legacy_semantics(re
     assert body['externalEffectsAllowed'] is False
     assert body['allowedCommands'] == ([] if readonly else ['PREPARE_PRICE_RESEARCH_BATCH', 'FREEZE_PRICE_RESEARCH_BATCH'])
     assert calls == [('readonly' if readonly else 'legacy', ('org-org', 'dev-project'))]
+    assert not legacy.calls
+
+
+PRICE_DISPOSITION_PATH = '/v1/ecommerce-workshop/views/price-governance/dispositions'
+
+
+def disposition_probes(client, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope):
+            calls.append(('legacy', scope.key))
+            raise ReadReached('legacy-price-disposition')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key))
+            if failure:
+                from aos_api.ecommerce_price_disposition_readonly import PriceDispositionReadonlyError
+                raise PriceDispositionReadonlyError(failure)
+            raise ReadReached('readonly-price-disposition')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_price_disposition] = lambda: Legacy()
+    client.app.dependency_overrides[getattr(routes, 'get_price_disposition_readonly', Readonly)] = lambda: Readonly()
+    return calls
+
+
+@pytest.mark.parametrize('readonly', [True, False])
+def test_price_disposition_selects_only_admitted_reader(readonly):
+    client, legacy, catalog = client_with_catalogs()
+    calls = disposition_probes(client)
+    def admit(**scope):
+        assert scope == dict(module_id='ecommerce.price-governance', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+        return price_admission(readonly)
+    catalog.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-price-disposition'): client.get(PRICE_DISPOSITION_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'))] and not legacy.calls
+
+
+def test_price_disposition_denied_before_business_read():
+    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
+    assert client.get(PRICE_DISPOSITION_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+
+
+@pytest.mark.parametrize('admission', [None, object()])
+def test_price_disposition_unknown_admission_fails_closed(admission):
+    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
+    catalog.get_readiness = lambda **scope: admission
+    response = client.get(PRICE_DISPOSITION_PATH)
+    assert response.status_code == 503 and 'PRICE_DISPOSITION_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls
+
+
+@pytest.mark.parametrize('code', ['PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE', 'PRICE_DISPOSITION_READ_AUTHORITY_DRIFT',
+                                 'PRICE_DISPOSITION_READ_LIMIT_EXCEEDED', 'PRICE_DISPOSITION_READ_SENSITIVE_CONTENT'])
+def test_price_disposition_failure_does_not_become_empty_success(code):
+    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client, code)
+    catalog.get_readiness = lambda **scope: price_admission()
+    response = client.get(PRICE_DISPOSITION_PATH)
+    assert response.status_code == 503 and code in response.text and 'caseCount' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'))] and not legacy.calls
+
+
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+def test_price_disposition_query_cannot_change_scope(query):
+    client, legacy, catalog = client_with_catalogs(); calls = disposition_probes(client)
+    assert client.get(PRICE_DISPOSITION_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+
+
+@pytest.mark.parametrize('readonly,nonempty', [(True, True), (True, False), (False, False)])
+def test_price_disposition_full_http_serialization(readonly, nonempty):
+    import importlib.util
+    from pathlib import Path
+    from aos_api.ecommerce_workshop_price_disposition import EcommerceWorkshopPriceDispositionService
+    path = Path(__file__).parent / 'aip/test_ecommerce_price_disposition_readonly.py'
+    spec = importlib.util.spec_from_file_location('disposition_http_fixture', path)
+    fixture = importlib.util.module_from_spec(spec); spec.loader.exec_module(fixture)
+    f, tables = fixture.saved_rows()
+    if not nonempty:
+        for table in tables: tables[table] = []
+    reader, conn, opened = fixture.reader_for(tables, f)
+    client, legacy, catalog = client_with_catalogs()
+    catalog.get_readiness = lambda **scope: price_admission(readonly)
+    class EmptyStore:
+        def list_cases(self, _scope): return []
+        def list_dispositions(self, _scope): return []
+        def list_observations(self, _scope): return []
+    client.app.dependency_overrides[routes.get_price_disposition_readonly] = lambda: reader
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_price_disposition] = lambda: EcommerceWorkshopPriceDispositionService(EmptyStore(), None)
+    response = client.get(PRICE_DISPOSITION_PATH)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['tenant'] == dict(orgId='org-org', projectId='dev-project')
+    assert body['caseCount'] == int(nonempty)
+    assert sum(body['dispositionCounts'].values()) == (8 if nonempty else 0)
+    assert body['externalEffectsAllowed'] is body['repricingEnabled'] is False
+    assert body['allowedCommands'] == ([] if readonly else ['COMPILE_PRICE_CASE', 'CREATE_PRICE_DISPOSITION_CONTRACT',
+        'PREPARE_PRICE_DISPOSITION', 'FREEZE_PRICE_DISPOSITION', 'RECORD_PRICE_DISPOSITION_OBSERVATION'])
+    if nonempty:
+        assert body['latestDisposition']['lifecycle'] == 'frozen'
+        assert body['latestObservation']['dispositionRef']['resourceId'] != body['latestDisposition']['dispositionId']
+    else:
+        assert body['latestDisposition'] is body['latestObservation'] is None
+    assert len(opened) == int(readonly) and conn.payload_calls == (4 if readonly else 0)
     assert not legacy.calls

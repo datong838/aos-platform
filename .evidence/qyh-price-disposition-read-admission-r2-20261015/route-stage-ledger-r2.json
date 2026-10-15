@@ -1,0 +1,31 @@
+{
+  "stageExplanation": "http-red-r1.log is deliberately retained PRE-IMPLEMENTATION RED (10 failed,4 passed). It is not current candidate evidence. The unmodified six-file candidate passed frozen267 and now all17 targeted current route tests. R1 REWORK is preserved/legally consumed; no code changed to conceal RED or bypass review.",
+  "frozen267SourceEqualsCurrent": {
+    "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+    "services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py": "9709476c1d1a8a0f0fa03c700a823f53a53639a0ecc707e0dc639d81a4d1f873",
+    "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py": "52fb937b078a18390961a0274167fd054dce4ac6f5c90d06991ecf238136d8bb",
+    "services/aos-api/tests/aip/test_w6_06_price_disposition.py": "bf57c3c488312e354aebf1f0d95a3fa23e451d16799d47979123228a141e7dfa",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "6c6c9cccd083280e888aea4134e8724169cd89601d665d483e4805170391d1fa"
+  },
+  "currentTargetedLog": "http-stage-green-r2.log",
+  "currentTargetedLogSha": "8b945fa0488f62975d63b97e56f1fcd1cf454a2b77427ed1462ea0932c422c2b",
+  "priorReworkResultSha": "45440f6d4fa7e232d9d980a81e2ace180c062116c1e4bd68caa55d23e23a6045",
+  "priorReworkConsumption": {
+    "schema": "aos-material-review-consumption/v1",
+    "request_id": "qyh-price-disposition-read-admission-r2-20261015-route-quality-r1",
+    "task_id": "qyh-price-disposition-read-admission-r2-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "baseline": {
+      "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+      "authority_revision": "AOS-002034",
+      "files": {
+        ".evidence/qyh-price-disposition-read-admission-r2-20261015/route-quality-material-r1.txt": "a33e4989da2fafba1a40bb1b254bc1ba173fe6e5bc0362854cdb8e75db562827"
+      }
+    },
+    "status": "REWORK",
+    "execution_authorized": false,
+    "result_sha256": "4deb1c9f87439e8b9dc148dd30ea84eecab8b129e2c28c6151b16c04e1ccddaf",
+    "transport_sha256": "a90c20ea8ec6bb0160ee717555f261e02f59437e8090e3252b2bae6a80b5b6f3"
+  }
+}

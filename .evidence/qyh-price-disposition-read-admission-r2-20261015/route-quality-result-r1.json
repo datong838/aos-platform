@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "dd73da73835c4f1b5f699722ef1d4d5617c48aac79be8a32da71b526b5ebc577",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-disposition-read-admission-r2-20261015-route-quality-r1",
+    "task_id": "qyh-price-disposition-read-admission-r2-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+      "authority_revision": "AOS-002034",
+      "files": {
+        ".evidence/qyh-price-disposition-read-admission-r2-20261015/route-quality-material-r1.txt": "a33e4989da2fafba1a40bb1b254bc1ba173fe6e5bc0362854cdb8e75db562827"
+      }
+    },
+    "verdict": "REWORK",
+    "findings": [
+      {
+        "claim": "路由仅为该已审计GET使用受支持ReadCatalog，并按typed installed readonly标记选择专用reader；原legacy成功分支和全部POST仍保持原门。",
+        "evidence": "files/services/aos-api/aos_api/routers/ecommerce_workshop.py: get_price_disposition_contribution_view声明ReadCatalogDependency与PriceDispositionReadonlyDependency；test_ecommerce_workshop_read_http.py: test_read_dependency_only_reaches_explicit_audited_get_routes验证仅GET路由依赖ReadCatalog；diff显示未改动POST路由与legacy service依赖。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "认证tenant来自principal，query覆盖在准入前拒绝，unknown admission与reader失败稳定503且不补零或泄露底层错误；完整HTTP DTO保留真实空值及空命令。",
+        "evidence": "files/test_ecommerce_workshop_read_http.py: test_price_disposition_query_cannot_change_scope验证query参数返回400；test_price_disposition_unknown_admission_fails_closed验证None/object admission返回503且不调用calls；test_price_disposition_failure_does_not_become_empty_success参数化PRICE_DISPOSITION_READ_AUTHORITY_UNAVAILABLE等四种reader失败码验证返回503且'caseCount'不在response.text；但logs/http-red-r1.log报告test_price_disposition_failure_does_not_become_empty_success[PRICE_DISPOSITION_READ_LIMIT_EXCEEDED]与[PRICE_DISPOSITION_READ_SENSITIVE_CONTENT] FAILED，存在与实际材料反证的明确反证。",
+        "assessment": "contradicted"
+      },
+      {
+        "claim": "本波候选六文件和冻结267项、原生产兼容及独立临时PG证据可支持接线代码质量；独立reader质量已合法消费，尚未部署或完成整体业务与视觉目标。",
+        "evidence": "evidence/source-verification-r1.json: frozenWithOnlySixOwnedOverlays=true/267 passed/knownSeparateFailure w6_009 vs a0v_162；evidence/code-review-result-r2.json: verdict PASS/CONSUMED_MATERIAL_REVIEW；evidence/native-r1-result.json: wholeGoalComplete=false/productionGateAuthorization=false。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "修复路由层price disposition reader失败到HTTP 503的错误传播（当前LimitExceeded/SensitiveContent未透传503导致测试失败），重跑http-red-r1并确认10 failed变为全通过后再重新提交本r1审阅。"
+  }
+}

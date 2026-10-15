@@ -1,0 +1,44 @@
+{
+  "syntheticMemoryOnly": true,
+  "databaseOrHttpCalls": 0,
+  "productionAuthorization": false,
+  "records": [
+    {
+      "kind": "internal_advice",
+      "typedBindingDiffersFromJson": true,
+      "preparedHashVerified": true,
+      "frozenFullPayloadHashVerified": true,
+      "inheritedFieldsEqual": true
+    },
+    {
+      "kind": "external_notice",
+      "typedBindingDiffersFromJson": true,
+      "preparedHashVerified": true,
+      "frozenFullPayloadHashVerified": true,
+      "inheritedFieldsEqual": true
+    },
+    {
+      "kind": "module_handoff",
+      "typedBindingDiffersFromJson": true,
+      "preparedHashVerified": true,
+      "frozenFullPayloadHashVerified": true,
+      "inheritedFieldsEqual": true
+    },
+    {
+      "kind": "repricing",
+      "typedBindingDiffersFromJson": true,
+      "preparedHashVerified": true,
+      "frozenFullPayloadHashVerified": true,
+      "inheritedFieldsEqual": true
+    }
+  ],
+  "savedRevisionCount": 8,
+  "perKindSavedRevisions": 2,
+  "observationHashAndDerivedIdVerified": true,
+  "latestObservationMayReferenceEarlierDisposition": true,
+  "sourceHashes": {
+    "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py": "700026c33160b896ea28e69a6a86fc7d40af958db664f9b9a6a10aca02a0dcb1",
+    "services/aos-api/tests/aip/test_w6_06_price_disposition.py": "7140865b2de6f38a3c75283e4d81a878ed89bd6264e5e25a4eefc5d6814e5a34"
+  },
+  "wholeGoalComplete": false
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "7e9d2c2213b2312c19456ef2aa9575dce6874c50b9b72b4da9598903921bb6cd",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-disposition-bounded-reader-20261015-code-r2",
+    "task_id": "qyh-price-disposition-bounded-reader-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+      "authority_revision": "AOS-002034",
+      "files": {
+        ".evidence/qyh-price-disposition-bounded-reader-20261015/code-review-material-r2.txt": "777cc2da6a276b6ec2af8dc25417d38c0d6f77403530d8fe004f511112109e78"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "候选reader只在同一已核实READ ONLY REPEATABLE READ连接中按固定四表读取，元数据行数和总字节先门控，SQLCASE载荷及截止面保持完整有界计数，失败不补零。",
+        "evidence": "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py: read()开头验证conn.read_only=True/autocommit=False/isolation_level=REPEATABLE_READ；_TABLES固定四表；_query用SQL CASE限制identity<=200、content_hash length=64、authority_data<1024*1024否则NULL；先metadata pass限额MAX_ROWS=512/MAX_TOTAL_BYTES=8MB再payload pass；cutoff用transaction_timestamp()；psycopg.Error映射AUTHORITY_UNAVAILABLE不返回空计。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "候选reader核对原typed绑定哈希、prepared与frozen完整继承、case和contract以及观察exact关系、严格字段和隐私；保存gate及receipt不构成当前授权。",
+        "evidence": "ecommerce_price_disposition_readonly.py:_validate核对binding_hash/operational_blockers/case和contract exact ref/created_at与observed_at/cutoff；prepared version=1 lifecycle=prepared；frozen继承prepared排除_FREEZE_EXCLUDE并核对prior_content_hash；observation核对disposition lifecycle=frozen/receipt_type/outcome由price_disposition_observation_rules给出且hash一致；_visible去掉Hash字段后redact_sensitive校验；服务contribution_view强制allowed_commands=[]/repricing_enabled=False/external_effects_allowed=False。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "原service变更只提取原kind分类纯规则，未改写入准入、resolver、签名或幂等；原producer兼容测试及冻结267项和隔离原W6DDL物证支持候选质量，未声称现场或整体Goal完成。",
+        "evidence": "EXACT SERVICE DIFF显示ecommerce_workshop_price_disposition.py仅新增price_disposition_operational_blockers/price_disposition_observation_rules两纯函数并重用；execute/freeze/record_observation签名、幂等、gate准入逻辑不变。test_ecommerce_price_disposition_readonly.py通过original()加载test_w6_06_price_disposition.py做producer兼容。native-r1-result.json: wholeGoalComplete=false/productionGateAuthorization=false/originalVolumeTouched=false；source-verification-r1.json: 267 passed/knows separate failure w6_009 vs a0v_162。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持candidate隔离，不部署到生产；等待router层独立parent quality gate结论；保留w6_009/a0v_162已知差异记录待后续DDL对齐后再考虑启用。"
+  }
+}

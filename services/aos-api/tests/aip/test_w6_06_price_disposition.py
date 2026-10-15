@@ -168,3 +168,34 @@ def test_contribution_view_exposes_skill_logic_colleague_and_operational_blocker
     assert view.collaborator_colleagues == ["活动策划师", "导购顾问"]
     assert len(view.atomic_skill_ids) == 5 and view.repricing_enabled is view.external_effects_allowed is False
     assert "PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED" in view.blockers
+
+
+@pytest.mark.parametrize("kind,receipt,outcomes,blockers", [
+    (PriceDispositionKind.INTERNAL_ADVICE, "AdoptionReceipt", {"adopted", "rejected", "unknown", "disputed"}, []),
+    (PriceDispositionKind.MODULE_HANDOFF, "HandoffDecisionRevision", {"accepted", "rejected", "unknown", "disputed"}, ["PRICE_HANDOFF_ISSUE_NOT_AUTHORIZED"]),
+    (PriceDispositionKind.EXTERNAL_NOTICE, "ActionReceipt", {"applied", "failed", "unknown", "disputed"}, ["PRICE_NOTICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"]),
+    (PriceDispositionKind.REPRICING, "ActionReceipt", {"applied", "failed", "unknown", "disputed"}, ["PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"]),
+])
+def test_shared_saved_disposition_rules_preserve_original_producer(kind, receipt, outcomes, blockers):
+    from aos_api.ecommerce_workshop_price_disposition import (
+        price_disposition_observation_rules, price_disposition_operational_blockers,
+    )
+    assert price_disposition_observation_rules(kind) == (receipt, outcomes)
+    actual = price_disposition_operational_blockers(kind)
+    assert actual == blockers
+    actual.append("caller-local-only")
+    assert price_disposition_operational_blockers(kind) == blockers
+    store, service, case, sku = authority_fixture()
+    prepared = prepare(service, case, sku, create_contract(service, kind), identity="shared-rule-probe")
+    assert prepared.operational_blockers == blockers
+    frozen = service.freeze(SCOPE, prepared.disposition_id, FreezePriceDispositionRequest(
+        expectedVersion=1, expectedContentHash=prepared.content_hash,
+        exactRefs={"case": prepared.case_ref, "contract": prepared.contract_ref, **prepared.gate_refs}),
+        "reviewer", now=NOW)
+    for outcome in outcomes:
+        receipt_ref = ref(receipt, "shared-rule-" + outcome)
+        store.receipts[(*SCOPE.key, receipt_ref.resource_id)] = (receipt_ref.content_hash, frozen.binding_hash)
+        observed = service.record_observation(SCOPE, RecordPriceDispositionObservationRequest(
+            dispositionRef=exact(frozen, "PriceDispositionRevision", "disposition_id"),
+            receiptRef=receipt_ref, outcome=outcome, observedAt=NOW))
+        assert observed.outcome.value == outcome

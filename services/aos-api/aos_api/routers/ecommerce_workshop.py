@@ -220,6 +220,7 @@ from aos_api.ecommerce_workshop_price_research import (
 )
 from aos_api.ecommerce_workshop_price_research_store import EcommerceWorkshopPriceResearchStore
 from aos_api.ecommerce_price_research_readonly import PriceResearchReadonlyError, PriceResearchReadonlyReader
+from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader, PriceDispositionReadonlyError
 from aos_api.ecommerce_workshop_price_disposition import (
     CreatePriceCaseRequest,
     CreatePriceDispositionContractRequest,
@@ -536,6 +537,15 @@ PriceResearchReadonlyDependency = Annotated[
 
 
 @lru_cache(maxsize=1)
+def get_price_disposition_readonly() -> EcommercePriceDispositionReadonlyReader:
+    return EcommercePriceDispositionReadonlyReader()
+
+
+PriceDispositionReadonlyDependency = Annotated[
+    EcommercePriceDispositionReadonlyReader, Depends(get_price_disposition_readonly)
+]
+
+
 def get_ecommerce_workshop_price_disposition() -> EcommerceWorkshopPriceDispositionService:
     return EcommerceWorkshopPriceDispositionService(
         EcommerceWorkshopPriceDispositionStore(), EcommerceWorkshopPriceResearchStore()
@@ -2432,11 +2442,24 @@ def record_price_disposition_observation(
 def get_price_disposition_contribution_view(
     request: Request,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
     service: PriceDispositionDependency,
+    readonly: PriceDispositionReadonlyDependency,
 ) -> PriceDispositionContributionView:
     _reject_query_parameters(request)
-    _require_price_governance_installation(principal=principal, catalog=catalog)
+    admission = _invoke(lambda: catalog.get_readiness(
+        module_id="ecommerce.price-governance", org_id=principal.org_id,
+        project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
+    ))
+    if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+        raise ApiError(code="PRICE_DISPOSITION_READ_ADMISSION_UNAVAILABLE",
+                       message="当前价格处置读取准入不可核验。", status_code=503)
+    if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+        try:
+            return readonly.read(TenantScope(principal.org_id, principal.project_id))
+        except PriceDispositionReadonlyError as exc:
+            raise ApiError(code=exc.code, message="当前价格处置暂不可读，请核对保存记录或读取范围。",
+                           status_code=503) from exc
     return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
 
 

@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "dd73da73835c4f1b5f699722ef1d4d5617c48aac79be8a32da71b526b5ebc577",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-disposition-read-admission-r2-20261015-route-quality-r2",
+    "task_id": "qyh-price-disposition-read-admission-r2-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+      "authority_revision": "AOS-002034",
+      "files": {
+        ".evidence/qyh-price-disposition-read-admission-r2-20261015/route-quality-material-r2.txt": "965d4f3992cbcff68fbbac4189816178823807bd7f6742fbfe1a68c0914742f5"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "路由仅为该已审计GET使用受支持ReadCatalog，并按typed installed readonly标记选择专用reader；原legacy成功分支和全部POST仍保持原门。",
+        "evidence": "services/aos-api/aos_api/routers/ecommerce_workshop.py: get_price_disposition_contribution_view() 显式使用 ReadCatalogDependency，新增 PriceDispositionReadonlyDependency 依赖 get_price_disposition_readonly()；diff 显示路由仅将 catalog 类型从 CatalogDependency 改为 ReadCatalogDependency，原 service.contribution_view legacy 分支未动。tests/test_ecommerce_workshop_read_http.py::test_read_dependency_only_reaches_explicit_audited_get_routes 验证仅 GET 路由依赖 ReadCatalog，并包含新路径 /views/price-governance/dispositions。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "认证tenant来自principal，query覆盖在准入前拒绝，unknown admission与reader失败稳定503且不补零或泄露底层错误；完整HTTP DTO保留真实空值及空命令。",
+        "evidence": "services/aos-api/aos_api/routers/ecommerce_workshop.py: _reject_query_parameters 在准入前检查 query_params 返回 400；get_price_disposition_contribution_view 使用 principal.org_id/project_id/roles/markings 调用 catalog.get_readiness；unknown admission 返回 503 码 PRICE_DISPOSITION_READ_ADMISSION_UNAVAILABLE。tests: test_price_disposition_denied_before_business_read 确认 404、catalog.calls=1、无业务调用；test_price_disposition_unknown_admission_fails_closed 确认 None/object 均返回 503；test_price_disposition_failure_does_not_become_empty_success 确认四种 error code 均返回 503 且 'caseCount' not in response.text；test_price_disposition_full_http_serialization 确认 body['allowedCommands'] == [] when readonly, tenant/orgId/projectId 真实传递。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "本波候选六文件和冻结267项、原生产兼容及独立临时PG证据可支持接线代码质量；独立reader质量已合法消费，尚未部署或完成整体业务与视觉目标。",
+        "evidence": "source-verification-r1.json: 六文件 sourceBefore/sourceAfter SHA 一致，frozenWithOnlySixOwnedOverlays=true，267 passed（含 test_ecommerce_price_disposition_readonly.py/test_w6_06_price_disposition.py 等）；knownSeparateFailure 记录 w6_009/a0v_162 历史不兼容。code-review-result-r2.json: PASS verdict，reader bounded/read-only/strict validation 三项 claims 均 supported。code-review-consumption-r2.json: status=CONSUMED_MATERIAL_REVIEW。native-r1-result.json: productionGateAuthorization=false, wholeGoalComplete=false。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "维持当前 candidate 隔离状态，不部署到生产；等待 parent route-quality gate 结论后决定是否推进。保留 w6_009 vs a0v_162 已知差异记录待后续 DDL 对齐。"
+  }
+}

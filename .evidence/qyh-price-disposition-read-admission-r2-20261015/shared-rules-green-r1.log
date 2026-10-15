@@ -1,0 +1,54 @@
+.............F                                                           [100%]
+=================================== FAILURES ===================================
+_______ test_w6_006_price_disposition_is_append_only_rls_and_single_head _______
+
+    def test_w6_006_price_disposition_is_append_only_rls_and_single_head():
+        root = Path(__file__).parents[2]
+        text = (root / "alembic/versions/w6_006_price_disposition.py").read_text()
+        assert 'revision: str = "w6_006"' in text
+        assert 'down_revision: str | Sequence[str] | None = "w6_005"' in text
+        assert text.count("ENABLE ROW LEVEL SECURITY") == 1
+        assert "FORCE ROW LEVEL SECURITY" in text
+        assert "GRANT SELECT, INSERT" in text
+        assert "UPDATE" not in text and "DELETE" not in text
+        config = Config(str(root / "alembic.ini"))
+>       assert ScriptDirectory.from_config(config).get_heads() == ["w6_009"]
+E       AssertionError: assert ['a0v_162'] == ['w6_009']
+E         
+E         At index 0 diff: 'a0v_162' != 'w6_009'
+E         Use -v to get more diff
+
+services/aos-api/tests/aip/test_w6_06_price_disposition_migration.py:17: AssertionError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_w6_06_price_disposition_migration.py::test_w6_006_price_disposition_is_append_only_rls_and_single_head
+1 failed, 13 passed, 7 warnings in 0.28s

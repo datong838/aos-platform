@@ -1,0 +1,44 @@
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+    "services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py": "9709476c1d1a8a0f0fa03c700a823f53a53639a0ecc707e0dc639d81a4d1f873",
+    "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py": "52fb937b078a18390961a0274167fd054dce4ac6f5c90d06991ecf238136d8bb",
+    "services/aos-api/tests/aip/test_w6_06_price_disposition.py": "bf57c3c488312e354aebf1f0d95a3fa23e451d16799d47979123228a141e7dfa",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "6c6c9cccd083280e888aea4134e8724169cd89601d665d483e4805170391d1fa"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_price_disposition_readonly.py": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+    "services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py": "9709476c1d1a8a0f0fa03c700a823f53a53639a0ecc707e0dc639d81a4d1f873",
+    "services/aos-api/aos_api/ecommerce_workshop_price_disposition.py": "52fb937b078a18390961a0274167fd054dce4ac6f5c90d06991ecf238136d8bb",
+    "services/aos-api/tests/aip/test_w6_06_price_disposition.py": "bf57c3c488312e354aebf1f0d95a3fa23e451d16799d47979123228a141e7dfa",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "78db249f25f3e51b85362e2ca3c50e56575ed960b6371d22f0dc17f6bc454220",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "6c6c9cccd083280e888aea4134e8724169cd89601d665d483e4805170391d1fa"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/test_w6_009_three_module_closure.py"
+  ],
+  "baseHead": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+  "frozenWithOnlySixOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T02:06:29.117294+00:00",
+  "finishedAt": "2026-10-15T02:06:55.045908+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "973fca8793b9a25f7abb95691a84f9f5026f46f9f5a19caf806759985855a963"
+}

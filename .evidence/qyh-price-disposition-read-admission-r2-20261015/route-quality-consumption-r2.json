@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-disposition-read-admission-r2-20261015-route-quality-r2",
+  "task_id": "qyh-price-disposition-read-admission-r2-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+    "authority_revision": "AOS-002034",
+    "files": {
+      ".evidence/qyh-price-disposition-read-admission-r2-20261015/route-quality-material-r2.txt": "965d4f3992cbcff68fbbac4189816178823807bd7f6742fbfe1a68c0914742f5"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "f6e0d24495e8dcc55ab7c829aa591a3b3fe32188141708307c7300f3bbe5d6c8",
+  "transport_sha256": "a29f8f803eb7df4445c57335cff765824f867016eeb8611ee21e2218d2074468"
+}

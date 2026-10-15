@@ -1,0 +1,26 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-price-disposition-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "base_revision": "AOS-002034",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/ecommerce_price_disposition_readonly.py",
+    "aos-platform/services/aos-api/tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "aos-platform/services/aos-api/aos_api/ecommerce_workshop_price_disposition.py",
+    "aos-platform/services/aos-api/tests/aip/test_w6_06_price_disposition.py",
+    "aos-platform/.evidence/qyh-price-disposition-bounded-reader-20261015"
+  ],
+  "excluded_scope": [
+    "aos-platform/apps/web",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume"
+  ],
+  "expected_outputs": [
+    "Exact additional files for carried disposition GET read; full231Goal/user authorization/daily original-volume fullPGAPIWeb preserved, no operating authorization.",
+    "Plan Prime before product code; single snapshot complete bounded counts, original producer typed binding/full frozen hash/observation ancestry and privacy/tenant/time/SQL payload guard.",
+    "Pure rules extracted only from original service with unchanged writer behavior; RED/native isolated original DDL PG/frozen regression and independent quality; no original business writes/source/Provider/unknown replay.",
+    "Carry precise implementation quality evidence back to parent route/live scope; accurate Delivery only, not whole business or visual completion."
+  ],
+  "lease_expires_at": "2026-10-15T04:00:00+00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-10-15T09:57:16+08:00"
+}

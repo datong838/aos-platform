@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "dd73da73835c4f1b5f699722ef1d4d5617c48aac79be8a32da71b526b5ebc577",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-disposition-read-admission-r2-20261015-design-r1",
+    "task_id": "qyh-price-disposition-read-admission-r2-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+      "authority_revision": "AOS-002034",
+      "files": {
+        ".evidence/qyh-price-disposition-read-admission-r2-20261015/design-review-material-r1.txt": "0af47846c66ce74e1c688d5f906466cde9b37595c64e71d24f02c9ffe85874fc"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "该方案保持原四类处置producer签名、完整修订计数及观察exact关联，不将保存引用当当前运行授权；共享纯规则提取不改变writer行为。",
+        "evidence": "文件ecommerce_workshop_price_disposition.py定义PriceDispositionKind四枚举、PriceDispositionOutcome八状态、REQUIRED_GATE_TYPES字典、PriceDispositionRevision/PriceDispositionObservation模型及allowed_outcomes字典；producer-probe-result-r1.json显示4种kind全verify、savedRevisionCount=8、observationHashAndDerivedIdVerified=true、latestObservationMayReferenceEarlierDisposition=true；bounded-read-design-r1.md声明‘不改变resolver、签名、写入、幂等、原DTO或legacy贡献行为’。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "该方案在单一只读snapshot内先元数据限额再SQL有界payload，全部失败关闭，能够在实施阶段消除跨截止面及错误补零风险。",
+        "evidence": "bounded-read-design-r1.md明确：'使用原connect_read_only，一个REPEATABLE READ READ ONLY事务'、'第一阶段只返回outer identity/revision/hash/time与octet_length(authority_data::text)，各表LIMIT 513。单表最多512行，四表合计最多512行，单行最多1MiB、合计最多8MiB；任一哨兵/尺寸/类型错误立即失败，不返回部分计数'、'第二阶段仍同事务，固定同范围/顺序/LIMIT，以SQL CASE WHEN octet_length<=1MiB THEN authority_data ELSE NULL END返回payload'、'连接使用原只读租户设置；事务内先SET LOCAL statement_timeout='3000ms'与lock_timeout='500ms'，均固定字面量'、'最多9个SELECT，事务总耗时另以monotonic 10秒门在查询间检查'。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "文件归属、独立门禁与后续原生产兼容测试和真实只读验收明确；这是实施前方案审查，不宣称候选代码、现场或完整Goal完成。",
+        "evidence": "bounded-read-design-r1.md首行'Stage: PRE-IMPLEMENTATION design gate. No candidate code, native PG, live deployment or completion claim yet.'；文件归属在'文件与归属'节列出四个具体文件；implementation-scope-readback-r1.json登记tasks和scope；producer-probe-result-r1.json末尾'wholeGoalComplete=false'、'syntheticMemoryOnly=true'、'databaseOrHttpCalls=0'、'productionAuthorization=false'；设计文档声明'先冻结原producer/Store/DDL/本方案与probe，独立Prime route PASS合法消费后才写产品'。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "等待独立Prime route PASS后，实现专用reader文件ecommerce_price_disposition_readonly.py及对应测试，并在w6_006隔离PG执行完整RED覆盖测试。"
+  }
+}

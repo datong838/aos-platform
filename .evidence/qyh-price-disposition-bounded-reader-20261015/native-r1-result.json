@@ -1,0 +1,61 @@
+{
+  "containerId": "28aa6e0eee5ce624861d26f5fba696b956ad151f08769204850ac67225151d2e",
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "12261eb327b42d5d39572731f0b788c2288ca134c1186d79cac7dfce150c5d94",
+  "sourceSha": "82495a145841c3865f423f124473c541e4d6f2be868a26966a6bcba1ff90ba70",
+  "originalProducerWithSyntheticMemoryResolvers": true,
+  "productionGateAuthorization": false,
+  "originalVolumeTouched": false,
+  "snapshotCaseCounts": [
+    1,
+    2
+  ],
+  "savedRevisionCount": 8,
+  "earlierFrozenObservationAccepted": true,
+  "observations": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "foreignRowsHiddenWithoutWhere": true,
+  "readonlyRoleCounts": {
+    "ecommerce_price_case_revision": 2,
+    "ecommerce_price_disposition_contract_revision": 4,
+    "ecommerce_price_disposition_revision": 8,
+    "ecommerce_price_disposition_observation": 1
+  },
+  "writeDeniedSqlstate": "25006",
+  "oversizeBeforePayload": true,
+  "sqlCaseReturnedNull": true,
+  "oversizeError": "PRICE_DISPOSITION_READ_LIMIT_EXCEEDED",
+  "privacyError": "PRICE_DISPOSITION_READ_SENSITIVE_CONTENT",
+  "commandsEmpty": true,
+  "wholeGoalComplete": false
+}

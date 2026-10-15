@@ -1,0 +1,9 @@
+# 原价格处置生产算法隔离探针
+
+Rules：沿231完整Goal及当前Task/Lease，先方案后编码，保护原库与用户dirty；本步只在已登记evidence目录新增探针，不改产品。
+
+目的：实际调用原create_case/create_contract/prepare/freeze/record_observation，核对四类合法非空记录的完整hash算法及历史修订计数，避免新reader自行发明签名。使用原测试的纯内存Store/ResearchStore，明确fixture的gate/receipt resolver不构成生产授权；原生产resolver不可用的边界保持。
+
+具体文件：本目录producer_probe_r1.py、producer-probe-result-r1.json。使用原typed模型和canonical_hash、精确完整hash的PriceExactRef。每类核对typed binding与JSON binding不同、prepared hash、frozen全payload签名/七字段排除/继承、observation request hash及派生ID、零效果。内存list_dispositions明确展开全部保存修订，验证4个prepared+4个frozen计数为8而非4；latest observation允许引用非全局latest disposition。输出合成事实与源码hash，不输出凭据。
+
+失败立即保留原输出并诊断，不连接数据库、不调用HTTP/Provider、不开实际gate、不给出经营完成结论。下一步依据实测写文件级方案；额外reader/test及共享纯规则必须先另Task登记，再独立Prime方案门，才改产品。

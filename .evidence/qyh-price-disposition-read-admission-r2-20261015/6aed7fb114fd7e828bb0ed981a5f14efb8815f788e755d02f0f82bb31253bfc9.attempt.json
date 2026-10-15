@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-price-disposition-read-admission-r2-20261015-design-r1",
+  "baseline": {
+    "head": "e58240059c950b7a3ebe9b31d760e55f5fb05c9b",
+    "authority_revision": "AOS-002034",
+    "files": {
+      ".evidence/qyh-price-disposition-read-admission-r2-20261015/design-review-material-r1.txt": "0af47846c66ce74e1c688d5f906466cde9b37595c64e71d24f02c9ffe85874fc"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "dd73da73835c4f1b5f699722ef1d4d5617c48aac79be8a32da71b526b5ebc577",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}
