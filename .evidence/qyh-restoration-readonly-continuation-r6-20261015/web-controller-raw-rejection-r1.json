@@ -1,0 +1,9 @@
+{
+  "status": "TERMINAL_RAW_JSON_REJECTED",
+  "reason": "Extra closing brace after top-level JSON; unchanged parser refused",
+  "transport": "web-controller-review-result-r1.transport.json",
+  "acceptedEnvelope": false,
+  "legalConsumption": false,
+  "processSignals": false,
+  "rawRepaired": false
+}

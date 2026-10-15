@@ -1,0 +1,689 @@
+POST-EFFECT LIVE QUALITY scope: only real price filter sizing CSS slice and preservation of original read/data boundaries. Single P1 resolved, not whole visual or business/Goal. All raw failure/NEED attempts retained; no JSON repair or permission widening.
+
+FILE visual-live-report-r1.md SHA f3f8be32161d324a5df5d7c78085a3024aed1a4817f58a0cb28006b690c95191
+# 价格筛选高度修复真实现场
+
+完整231Goal、原用户安装/全恢复/本机真人admin授权、唯一m1写者保留；Authority2033。代码f036e46只改价格primary scoped .price-observations的align-content:start，不改组件/API/权限/原数据。此前方案r2、代码quality r3 PASS合法消费；原CSS89/255/345px隔离RED、候选32px空/非空/筛选/非primary同尺寸、407/TSC/build通过，不把fixture作经营证据。
+
+最新Web764文件完整冻源及CSS SHA通过。fresh维护r1模型raw多一个花括号，被strict parser拒绝、无合法消费；r2 NEED_EVIDENCE原样合法保留，其文字把actualPreflight.otherServicesTouched=false误写true，不按该文字修改事实。r3实际本机预检exit0及完整PID/port/cwd/Lease/PG读回补证，quality PASS合法消费后，新fsync intent只一次Web76677→89803。实际18434监听、准确server.mjs及sourcef036/764manifest已核；原API80779/source246后端树与f036相等，PG原CID/volume/Started20:36:36/schema161/650/绑定0保持。没有signal API/PG/Chrome。
+
+原Node自动化连接失效但9244原目标7263AE405334660557A7840F95B4446F仍在，已连接同一target并核ID，未另开Chrome或操作其他标签。正常登录页可见后原form一次requestSubmit、auth/token200，me原真人subject6f31cfdc-a26c-4f1f-ad6b-95a8559cc657/org-org/dev-project/OIDC。私有输入仅内存填表即清理，不输出或保存密码/token/cookie/storage。
+
+正式价格SDK实际成功、batch null/真实缺口、allowedCommands[]/externalEffectsAllowed false。原价格页1280×720/1440×900/1920×1080均alignContent=start，四button均32px，无重叠/横溢出，各宽度可比/待复核/已排除/全部真实React筛选状态与唯一aria-pressed通过；当前原数据为空，没有制造非空数据或复制原稿47SKU/价格/异常数。三个实际截图与当前foundry原稿三个截图逐对同尺寸检视，此单一筛选高度P1已现场修复；其余布局/八台全页签/a11y/真实场景不作全量通过。临时Chrome/IAB测试视口已清理。
+
+正常参数GET200、query orgId=foreign400、全新无凭据request401；价格dispositions/price closure仍404，业务nonGet[]（唯一正常登录POST不作业务写）。原650在初始before、fresh-before-r3、全部登录/页面验收后的after三份逐表指纹完全相等。原安装/预算/Provider/原未知12Run/disabledSchedule/source未改。
+
+本次Web更新不替代每日/每次aos最新同卷完整PG→API→Web，aos2不重启。Page辅助读取失败假0、达人1280裁切、参谋首屏层级、处置GET完整有界读及其他helper、fullC唯一真人最后预算/原部署、自然CaseRun有来源建议exact评审内容受约束能力产物人审续跑总控Wiki、安装全生命周期/八场景/连续观察发布继续；原DBREADONLY/HostworkerProviderOFF/unknown旧12不重放/disabledSchedule不启用/source不读/noPush不变。
+
+只准备交付价格筛选行此CSS切片及完整剩余maintenance同owner接续。独立现场Prime后准确Delivery/Authority七强Prime，再继续登记的价格处置读取及其他真实业务主线；不将页面变好或407测试当经营完成。
+
+
+FILE visual-runtime-proof-r1.json SHA bde4cacef4f4cee39a76c93658c7bbed32b4f512e2ce586b844658d52610631a
+{
+  "head": "f036e46c643308651b415179e6e991870dbc26ab",
+  "webPid": 89803,
+  "webSourceHead": "f036e46c643308651b415179e6e991870dbc26ab",
+  "webManifestFilesVerified": 764,
+  "webCssSourceHash": {
+    "apps/web/src/styles/45-ecommerce-workshop.css": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12"
+  },
+  "apiPid": 80779,
+  "apiSourceHead": "246d8305332c143bd281cc6aedb013649b81f7d6",
+  "apiBackendTreesEqualCurrent": true,
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "originalContainerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+  "schema": "a0v_161",
+  "bindings": 0,
+  "tables650AllBeforeAfterEqual": true,
+  "genuineUserNormalOidcAndSDK": true,
+  "actualThreeViewportFilters32px": true,
+  "actualFilterInteractionsPass": true,
+  "query400Anon401": true,
+  "businessWrites": false,
+  "APIAndPGAndChromeNotSignaled": true,
+  "webOnlyNotDailyFullRestart": true,
+  "singlePriceSizingP1Resolved": true,
+  "wholeVisualOrBusinessComplete": false,
+  "wholeGoalComplete": false
+}
+
+FILE visual-native-identity-sdk-r1.json SHA 69e8019d22b6ca5bc35dd08e575d6253da58541d5d36b8655f4ba3bf2ca28d1f
+{
+  "who": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc"
+  },
+  "dto": {
+    "schemaVersion": "aos.ecommerce-workshop.price-research/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "evaluatedAt": "2026-10-15T01:40:00.294371Z",
+    "atomicSkillRefs": [],
+    "logicRef": null,
+    "primaryColleague": "数据参谋",
+    "collaboratorColleagues": [
+      "活动策划师",
+      "导购顾问"
+    ],
+    "latestBatch": null,
+    "blockers": [
+      "PRICE_RESEARCH_BATCH_NOT_AVAILABLE"
+    ],
+    "allowedCommands": [],
+    "externalEffectsAllowed": false
+  },
+  "loginStatus": 200
+}
+
+FILE visual-native-geometry-deny-r1.json SHA 2df9f9ecbe04b00298cd3864206dc86cb9aa40219acd9953d0bc73d1f5a26286
+{
+  "url": "http://127.0.0.1:18434/workshop/price-governance",
+  "actualGenuinePricePage": true,
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 720,
+      "documentWidth": 1280,
+      "alignContent": "start",
+      "filters": [
+        {
+          "label": "全部",
+          "height": 32,
+          "right": 370
+        },
+        {
+          "label": "可比",
+          "height": 32,
+          "right": 424
+        },
+        {
+          "label": "待复核",
+          "height": 32,
+          "right": 491
+        },
+        {
+          "label": "已排除",
+          "height": 32,
+          "right": 383
+        }
+      ],
+      "navRight": 503,
+      "noOverlap": true,
+      "emptyText": true,
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "pressed": "true"
+        },
+        {
+          "label": "待复核",
+          "pressed": "true"
+        },
+        {
+          "label": "已排除",
+          "pressed": "true"
+        },
+        {
+          "label": "全部",
+          "pressed": "true"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "alignContent": "start",
+      "filters": [
+        {
+          "label": "全部",
+          "height": 32,
+          "right": 370
+        },
+        {
+          "label": "可比",
+          "height": 32,
+          "right": 424
+        },
+        {
+          "label": "待复核",
+          "height": 32,
+          "right": 491
+        },
+        {
+          "label": "已排除",
+          "height": 32,
+          "right": 558
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "emptyText": true,
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "pressed": "true"
+        },
+        {
+          "label": "待复核",
+          "pressed": "true"
+        },
+        {
+          "label": "已排除",
+          "pressed": "true"
+        },
+        {
+          "label": "全部",
+          "pressed": "true"
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "documentWidth": 1920,
+      "alignContent": "start",
+      "filters": [
+        {
+          "label": "全部",
+          "height": 32,
+          "right": 370
+        },
+        {
+          "label": "可比",
+          "height": 32,
+          "right": 424
+        },
+        {
+          "label": "待复核",
+          "height": 32,
+          "right": 491
+        },
+        {
+          "label": "已排除",
+          "height": 32,
+          "right": 558
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "emptyText": true,
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "pressed": "true"
+        },
+        {
+          "label": "待复核",
+          "pressed": "true"
+        },
+        {
+          "label": "已排除",
+          "pressed": "true"
+        },
+        {
+          "label": "全部",
+          "pressed": "true"
+        }
+      ]
+    }
+  ],
+  "allPass": true,
+  "deny": {
+    "/v1/ecommerce-workshop/views/price-governance/contributions?orgId=foreign": 400,
+    "/v1/ecommerce-workshop/views/price-governance/dispositions": 404,
+    "/v1/ecommerce-workshop/views/price/closure-contributions": 404
+  },
+  "anonymousStatus": 401,
+  "requests": [
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 400
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    }
+  ],
+  "businessNonGet": [],
+  "wholeGoalComplete": false
+}
+
+FILE visual-live-shas-r1.json SHA a363456977e9699b45b97976b94106e99993a9764535a434efdbed15f989d0dc
+{
+  "images": {
+    "visual-actual-1280-r1.png": "b92b1d00e3d75fc97c50a6ba60d0fae8981d1320f2eb3d99fdcc676b7df27dcd",
+    "visual-actual-1440-r1.png": "dd28f33df680e71d21c03c0612e540dce6c1cdd4960ec3d0efbbb5ca86e67a8e",
+    "visual-actual-1920-r1.png": "4faa7bc9feb7c68cab5046ab7c2e7a4b89080fe26c419764a7b5500ccbebe52d",
+    "visual-reference-1280-r1.png": "02bd68dd590a089554453b814ede8b7ab75c10ef3f5449e507cf73ba7797cb57",
+    "visual-reference-1440-r1.png": "99a22b9de61a69f2ccaa3575b3e79b873c1f1cc283ebb993ae5920e4a88e0081",
+    "visual-reference-1920-r1.png": "8b1d1394db2fef796d9cdee9a113c1bcfa567ad22c9b348336069c968de34df5"
+  },
+  "allSixInspectedInSameSizePairs": true,
+  "wholeVisualComplete": false,
+  "reference": "docs/palantier/foundry/html/workshop-price-governance.html"
+}
+
+FILE web-preflight-execution-r3.json SHA 7e9bc133e9a1a82304f7d3c130b2cf1f9335a7aa3d855f90f08505548989b6e8
+{
+  "observedAt": "2026-10-15T01:37:59.038807+00:00",
+  "preflightReturncode": 0,
+  "preflightStdout": "",
+  "preflightStderr": "",
+  "head": "f036e46c643308651b415179e6e991870dbc26ab",
+  "authority": "AOS-002033",
+  "lease": {
+    "base_revision": "AOS-002033",
+    "created_at": "2026-10-15T07:36:22+08:00",
+    "excluded_scope": [
+      "aos-platform/maintenance/current-preview-database",
+      "aos-platform/maintenance/current-preview-api",
+      "aos-platform/maintenance/current-preview-web",
+      "aos-platform/services/aos-api/aos_api/aip_action_store.py",
+      "aos-platform/services/aos-api/aos_api/aip_action_execution.py"
+    ],
+    "expected_outputs": [
+      "Carry all incomplete original restoration requirements and same original data/approval/identity into new-owner maintenance;no whole completion claim",
+      "Latest committed freeze excludes dirty; original role readonly native root8;fresh same-volume PG/API/Web restart, same-cutoff full fingerprint/no-effect/owned real OIDC SPA/browser reads then continue business Loop",
+      "Unknown effects read-only reconcile; keep Host/worker/Provider OFF,no old Run/mall source/manual execution/duplicate scripts or credentials disclosure",
+      "Recover latest management READONLY API for exact161db/162closedcandidate without migration or runtime override;strict runtime/unknownschema deny,fullreview;then latestPG/API/Web real8page/visual/deny-entry",
+      "Carry unchanged entire longGoal/user original install/fullrestore authorization, latest actual API87013/head110 and Web78346/head6c equalcurrenttrees plus originalPG; daily/aos latestoriginalvolume fullPG/API/Web, aos-2 no restart; maintain readonly/HostworkerProviderOFF; do not replay failed/unknown intents.",
+      "All earlier fullrestore pending original requirements remain; no fullrestoration/visual/business completion from previous handoff; sameowner unique m1 writer and supported Goal/reminders preserved",
+      "Carry complete remaining original recovery/daily fullPG/API/Web and sole originaluser authorization; actualAPI7645/head23e76 Web78346/head6c identicalfrontendtrees, schema161/650 originalvolume readonly; prior maintenancehandoff not whole completion; no replay/privateGoal/reminder edits",
+      "Carry ALL original remaining maintenance/currentAPI25389f005 currentWeb78346/6c PGoriginal161650bindings0 and daily latestcommittedfullPG/API/Web; this handoff not whole completion",
+      "Carry ALL original remaining restoration/complete231Goal/daily originalvolume PG/API/Web/aos2 noRestart/soleoriginaluser authorization. CurrentAPI64550 andWeb64614/source6bf codeeq2f latest, originalPGStarted20:36:36/schema161/650/bindings0; today onlymaintenance proof, fullbudget/business/install/8visual/release pending.",
+      "Carry ALL original remaining restoration/user authorization/full231Goal. Current API72678/source53 and Web76677/source1627 trees equal f1a1f51, original PG started20:36:36/schema161/650/bindings0. Future daily/every aos latest committed m1 original-volume fullPG/API/Web preserved; aos2 no restart. Read wave handoff is not full completion.",
+      "Carry ALL original remaining restoration/user authorization/full231Goal/daily and every aos latest m1 original-volume fullPG/API/Web; aos2 no restart. Actual API80779/source246d830, Web76677/source1627 code equal c1860a9, originalPGStarted20:36:36/schema161/650/bindings0. Only saved price read slice verified; all business/install/visual/observe goals remain."
+    ],
+    "lease_expires_at": "2026-10-15T04:00:00+00:00",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/.evidence/qyh-full-system-restoration-20261011",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/maintenance/qiyuehui-restored-api",
+      "aos-platform/maintenance/qiyuehui-restored-web",
+      "aos-platform/scripts/a0v_qyh_restored_http.py",
+      "aos-platform/services/aos-api/tests/extension_runtime/test_qyh_restored_http.py",
+      "aos-platform/.evidence/qyh-restoration-successor-latest-restart-20261013",
+      "aos-platform/.evidence/qyh-daily-readonly-schema-compat-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r2-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r3-20261014",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r4-20261015",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r5-20261015",
+      "aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015"
+    ],
+    "status": "ACTIVE",
+    "task_id": "qyh-restoration-readonly-continuation-r6-20261015"
+  },
+  "oldWeb": {
+    "pid": 76677,
+    "command": "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r4-20261015/creator-closure-web-server.mjs",
+    "port": 18434
+  },
+  "unchangedApi": {
+    "pid": 80779,
+    "cwd": "p80779\nfcwd\nn/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-246d8305332c143bd281cc6aedb013649b81f7d6",
+    "port": 18080
+  },
+  "pg": {
+    "id": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+    "running": true,
+    "startedAt": "2026-10-14T20:36:36.408087963Z",
+    "volume": "aos-qyh-history159-prepared-data-20261011"
+  },
+  "actualPreflight": {
+    "head": "f036e46c643308651b415179e6e991870dbc26ab",
+    "oldWebPid": 76677,
+    "apiPid": 80779,
+    "manifestVerified": true,
+    "sourceHashesVerified": true,
+    "otherServicesTouched": false
+  },
+  "noProcessSignals": true
+}
+
+FILE visual-web-switch-intent-r1.json SHA e8310830bea751bd86bb693a8dd278136ad3ec61938ff050ffaa8f016fa6b630
+{
+  "head": "f036e46c643308651b415179e6e991870dbc26ab",
+  "oldPid": 76677,
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015/private/price-visual-web-f036e46c643308651b415179e6e991870dbc26ab",
+  "pgApiChromeTouched": false
+}
+
+FILE visual-web-old-stop-r1.json SHA 2300d9ea4e995ceff9cf472c8df53e1117b28a4e4ad9edaf6143b353d13649ba
+{
+  "oldPid": 76677,
+  "portFree": true
+}
+
+FILE visual-web-started-r1.json SHA 9865cd0f975b8a10af8ed6befe3b58d4a31cb1b56c4d1232d70c9511ebdf4be4
+{
+  "head": "f036e46c643308651b415179e6e991870dbc26ab",
+  "pid": 89803,
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015/private/price-visual-web-f036e46c643308651b415179e6e991870dbc26ab",
+  "spawnedOnly": true
+}
+
+FILE web-controller-review-consumption-r3.json SHA f2bf8b5a778c3a38008e107c5c9985acf266ce4e3a26ca14094c7ae98ab9b459
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-visual-web-controller-r3-20261015",
+  "task_id": "qyh-restoration-readonly-continuation-r6-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "f036e46c643308651b415179e6e991870dbc26ab",
+    "authority_revision": "AOS-002033",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r6-20261015/web-controller-review-package-r3.txt": "a3f95c0ee85700a8ef7365b2ccd5342e55e3bbcdfa285c768707ee1ddff0d94a"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "bae52eed3b2279a28c69bdbb87b2bc346dd15cd18d324fd2d4c4d2780a54e549",
+  "transport_sha256": "627a1c958bb36183d8ec603105013cfc943671e4b5f7314bf161cd9a845ae231"
+}
+
+CODE PREREQUISITE code-review-consumption-r3.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-visual-code-r3-20261015",
+  "task_id": "qyh-price-visual-filter-sizing-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+    "authority_revision": "AOS-002033",
+    "files": {
+      ".evidence/qyh-price-visual-filter-sizing-20261015/code-review-package-r3.txt": "07e2acc785781ec92f353c3c5be8e38d055d211ef76cbdc12c649a2d0971a19a"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "e42a38223903b21b5ea6f9db64f567a99f3e1e77aaff2d1848f2372695ea2d86",
+  "transport_sha256": "c524d4436b595a404e5408787a760ce69d8f581277ba3dc216533e6812a1c349"
+}
+
+CODE PREREQUISITE source-verification-r1.json
+{
+  "baseHead": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+  "cssBefore": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "cssAfter": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "onlyOneOwnedCSSOverlay": true,
+  "originalComponentUnchanged": true,
+  "noUserDirtyCopied": true,
+  "privateBuildAndCache": true,
+  "results": {
+    "workshop-cumulative-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/components/workshop",
+        "src/api/ecommerceWorkshop",
+        "--config",
+        "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015/private/frozen-verification-config-r1.ts",
+        "--no-cache"
+      ],
+      "logSha": "0fc6ecd26791cdb44a348fe55aa22b7529af22f0319e460baf9672e5f62b164a"
+    },
+    "web-typecheck-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "logSha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "web-production-build-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vite/bin/vite.js",
+        "build",
+        "--config",
+        "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015/private/frozen-verification-config-r1.ts"
+      ],
+      "logSha": "c39705328cddaa23307a4a92f3f44155302d4df9cedf335ac391e6f9ee2b2656"
+    }
+  },
+  "startedAt": "2026-10-15T01:05:01.549205+00:00",
+  "finishedAt": "2026-10-15T01:05:21.691137+00:00",
+  "originalServicesTouched": false
+}
+
+CODE PREREQUISITE nonprimary-comparison-r2.json
+{
+  "firstFailureWasMismatchedViewport": true,
+  "checks": [
+    {
+      "scenario": "empty",
+      "equal": true,
+      "measurement": {
+        "alignContent": "normal",
+        "articles": 0,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          }
+        ],
+        "width": 1440
+      }
+    },
+    {
+      "scenario": "rich",
+      "equal": true,
+      "measurement": {
+        "alignContent": "normal",
+        "articles": 2,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 61
+          }
+        ],
+        "width": 1440
+      }
+    }
+  ]
+}

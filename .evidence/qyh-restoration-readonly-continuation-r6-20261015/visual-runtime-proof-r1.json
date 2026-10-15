@@ -1,0 +1,28 @@
+{
+  "head": "f036e46c643308651b415179e6e991870dbc26ab",
+  "webPid": 89803,
+  "webSourceHead": "f036e46c643308651b415179e6e991870dbc26ab",
+  "webManifestFilesVerified": 764,
+  "webCssSourceHash": {
+    "apps/web/src/styles/45-ecommerce-workshop.css": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12"
+  },
+  "apiPid": 80779,
+  "apiSourceHead": "246d8305332c143bd281cc6aedb013649b81f7d6",
+  "apiBackendTreesEqualCurrent": true,
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "originalContainerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+  "schema": "a0v_161",
+  "bindings": 0,
+  "tables650AllBeforeAfterEqual": true,
+  "genuineUserNormalOidcAndSDK": true,
+  "actualThreeViewportFilters32px": true,
+  "actualFilterInteractionsPass": true,
+  "query400Anon401": true,
+  "businessWrites": false,
+  "APIAndPGAndChromeNotSignaled": true,
+  "webOnlyNotDailyFullRestart": true,
+  "singlePriceSizingP1Resolved": true,
+  "wholeVisualOrBusinessComplete": false,
+  "wholeGoalComplete": false
+}

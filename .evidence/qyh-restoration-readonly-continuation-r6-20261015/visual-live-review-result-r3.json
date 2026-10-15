@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "579959e6f16c42336ac1b1f2ada0cb36d328681b7a6ac521f0ae24187811c1ea",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-visual-live-r3-20261015",
+    "task_id": "qyh-restoration-readonly-continuation-r6-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "f036e46c643308651b415179e6e991870dbc26ab",
+      "authority_revision": "AOS-002033",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r6-20261015/visual-live-review-package-r3.txt": "5b676bd192241d1094586a4734cdd38d52bfaaebe87431b08a2779271e630559"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "原真人价格页三视口筛选高度与交互已核验",
+        "evidence": "文件 visual-native-geometry-deny-r1.json: viewports[0..2] width 1280/1440/1920 height 720/900/1080; filters每个height=32; filterInteractions四个label均pressed=true; allPass=true。另 visual-runtime-proof-r1.json actualThreeViewportFilters32px=true, actualFilterInteractionsPass=true",
+        "assessment": "supported"
+      },
+      {
+        "claim": "运行版本与原库不变已核验且未扩大经营权限",
+        "evidence": "文件 visual-runtime-proof-r1.json head=f036e46c..., webSourceHead=f036e46c..., apiBackendTreesEqualCurrent=true, originalContainerId保留, bindings=0, businessWrites=false; 文件 visual-live-review-package-r3.txt 内 compact JSON afterRawSHA≠beforeRawSHA但allFullFingerprintValuesEqual=true, businessAuthorityGranted=false; 文件 visual-web-switch-intent-r1.json source指向evidence目录且pgApiChromeTouched=false",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续保留只读运行，优先完成single price filter sizing P1验收，后续再推进user budget/install lifecycle全场景与全量视觉比对。"
+  }
+}

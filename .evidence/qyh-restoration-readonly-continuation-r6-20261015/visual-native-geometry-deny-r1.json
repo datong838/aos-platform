@@ -1,0 +1,332 @@
+{
+  "url": "http://127.0.0.1:18434/workshop/price-governance",
+  "actualGenuinePricePage": true,
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 720,
+      "documentWidth": 1280,
+      "alignContent": "start",
+      "filters": [
+        {
+          "label": "全部",
+          "height": 32,
+          "right": 370
+        },
+        {
+          "label": "可比",
+          "height": 32,
+          "right": 424
+        },
+        {
+          "label": "待复核",
+          "height": 32,
+          "right": 491
+        },
+        {
+          "label": "已排除",
+          "height": 32,
+          "right": 383
+        }
+      ],
+      "navRight": 503,
+      "noOverlap": true,
+      "emptyText": true,
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "pressed": "true"
+        },
+        {
+          "label": "待复核",
+          "pressed": "true"
+        },
+        {
+          "label": "已排除",
+          "pressed": "true"
+        },
+        {
+          "label": "全部",
+          "pressed": "true"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "documentWidth": 1440,
+      "alignContent": "start",
+      "filters": [
+        {
+          "label": "全部",
+          "height": 32,
+          "right": 370
+        },
+        {
+          "label": "可比",
+          "height": 32,
+          "right": 424
+        },
+        {
+          "label": "待复核",
+          "height": 32,
+          "right": 491
+        },
+        {
+          "label": "已排除",
+          "height": 32,
+          "right": 558
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "emptyText": true,
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "pressed": "true"
+        },
+        {
+          "label": "待复核",
+          "pressed": "true"
+        },
+        {
+          "label": "已排除",
+          "pressed": "true"
+        },
+        {
+          "label": "全部",
+          "pressed": "true"
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "documentWidth": 1920,
+      "alignContent": "start",
+      "filters": [
+        {
+          "label": "全部",
+          "height": 32,
+          "right": 370
+        },
+        {
+          "label": "可比",
+          "height": 32,
+          "right": 424
+        },
+        {
+          "label": "待复核",
+          "height": 32,
+          "right": 491
+        },
+        {
+          "label": "已排除",
+          "height": 32,
+          "right": 558
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "emptyText": true,
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "pressed": "true"
+        },
+        {
+          "label": "待复核",
+          "pressed": "true"
+        },
+        {
+          "label": "已排除",
+          "pressed": "true"
+        },
+        {
+          "label": "全部",
+          "pressed": "true"
+        }
+      ]
+    }
+  ],
+  "allPass": true,
+  "deny": {
+    "/v1/ecommerce-workshop/views/price-governance/contributions?orgId=foreign": 400,
+    "/v1/ecommerce-workshop/views/price-governance/dispositions": 404,
+    "/v1/ecommerce-workshop/views/price/closure-contributions": 404
+  },
+  "anonymousStatus": 401,
+  "requests": [
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+      "method": "GET",
+      "status": 400
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+      "method": "GET",
+      "status": 404
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+      "method": "GET",
+      "status": 404
+    }
+  ],
+  "businessNonGet": [],
+  "wholeGoalComplete": false
+}

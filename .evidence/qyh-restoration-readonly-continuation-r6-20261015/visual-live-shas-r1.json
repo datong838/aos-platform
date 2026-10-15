@@ -1,0 +1,13 @@
+{
+  "images": {
+    "visual-actual-1280-r1.png": "b92b1d00e3d75fc97c50a6ba60d0fae8981d1320f2eb3d99fdcc676b7df27dcd",
+    "visual-actual-1440-r1.png": "dd28f33df680e71d21c03c0612e540dce6c1cdd4960ec3d0efbbb5ca86e67a8e",
+    "visual-actual-1920-r1.png": "4faa7bc9feb7c68cab5046ab7c2e7a4b89080fe26c419764a7b5500ccbebe52d",
+    "visual-reference-1280-r1.png": "02bd68dd590a089554453b814ede8b7ab75c10ef3f5449e507cf73ba7797cb57",
+    "visual-reference-1440-r1.png": "99a22b9de61a69f2ccaa3575b3e79b873c1f1cc283ebb993ae5920e4a88e0081",
+    "visual-reference-1920-r1.png": "8b1d1394db2fef796d9cdee9a113c1bcfa567ad22c9b348336069c968de34df5"
+  },
+  "allSixInspectedInSameSizePairs": true,
+  "wholeVisualComplete": false,
+  "reference": "docs/palantier/foundry/html/workshop-price-governance.html"
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "579959e6f16c42336ac1b1f2ada0cb36d328681b7a6ac521f0ae24187811c1ea",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-visual-live-r1-20261015",
+    "task_id": "qyh-restoration-readonly-continuation-r6-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "f036e46c643308651b415179e6e991870dbc26ab",
+      "authority_revision": "AOS-002033",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r6-20261015/visual-live-review-package-r1.txt": "241623c3e558a60a81f4f8482e29496d56904ccdac3d3bc7fa6a0edf1d4f8c50"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "原真人价格页三视口筛选高度与交互已核验",
+        "evidence": "文件 visual-native-geometry-deny-r1.json 字段 actualThreeViewportFilters32px: true, filterInteractions 显示四个按钮 aria-pressed 均为 true，viewports 数组含 1280/1440/1920 三个视口，每视口 filters.height 均为 32，noOverlap: true。报告中明确说明仅此单一 P1 已现场修复，其余八台全页签/a11y 不作全量通过。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "运行版本与原库不变已核验且未扩大经营权限",
+        "evidence": "visual-runtime-proof-r1.json 中 head/sourceHead 均为 f036e46，webManifestFilesVerified: 764，apiBackendTreesEqualCurrent: true，pgStartedAt 保持原时间戳，tables650AllBeforeAfterEqual: true，genuineUserNormalOidcAndSDK: true。visual-native-identity-sdk-r1.json 中 externalEffectsAllowed: false, allowedCommands: [], businessWrites: []。visual-native-geometry-deny-r1.json 中 anonymousStatus: 401，denied 404 业务写接口保持拒绝。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "补充 PG tables 650 条数据在 web 切换前后（oldPid 76677 停止前与 newPid 89803 启动后）的完整指纹比对记录，证明 web 重启未触碰 PG 数据状态；同时提供 API 进程 80779 在切换期间的绑定验证。"
+  }
+}

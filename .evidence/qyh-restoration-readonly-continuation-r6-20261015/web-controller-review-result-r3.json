@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "579959e6f16c42336ac1b1f2ada0cb36d328681b7a6ac521f0ae24187811c1ea",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-visual-web-controller-r3-20261015",
+    "task_id": "qyh-restoration-readonly-continuation-r6-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "f036e46c643308651b415179e6e991870dbc26ab",
+      "authority_revision": "AOS-002033",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r6-20261015/web-controller-review-package-r3.txt": "a3f95c0ee85700a8ef7365b2ccd5342e55e3bbcdfa285c768707ee1ddff0d94a"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "控制器源码只对核验的旧 Web 进程发信号",
+        "evidence": "文件 price_visual_web_switch_r3.py（SHA CONTROLLER_SHA 534a8c3...）第1行声明 OLD=76677。if a.phase=='preflight': ... sys.exit(0) 不执行信号。在 'web' 分支中，先调用 os.kill(OLD, signal.SIGTERM)，随后轮询 port 18434 lsof 直至 free。对 PG/API/Chrome 无任何 subprocess 或 kill 调用。actualPreflight.otherServicesTouched=false, noProcessSignals=true 为 preflight 侧验证（仅验证意图，但 preflight 阶段确实未发信号）。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "本机预检已通过并保留原数据与后续验收门",
+        "evidence": "web-preflight-execution-r3.json：observedAt 2026-10-15T01:37:59Z，preflightReturncode=0，actualPreflight 字段：head=f036e46..., oldWebPid=76677, apiPid=80779, manifestVerified=true, sourceHashesVerified=true, otherServicesTouched=false。base() 断言 HEAD 匹配、lease 有效、API cwd/source 未变、Web PID 76677 与端口 18434、PG CID/volume/startedAt 匹配、legal 消费 r3 质量通过。后续验收门由 plan.md 明确为 livePrime/真实用户会话/页面复拍等，非本 task 覆盖。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "继续执行实际业务 livePrime 观察：等待新 Web 进程启动后在隔离浏览器中用原用户 OIDC 登录，复拍价格三宽度页面并比对 650 指纹与原 schema161 只读行为；如出现非预期信号或 PG/API 变更立即停止并回滚。"
+  }
+}

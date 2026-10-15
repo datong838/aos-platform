@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-price-visual-live-r3-20261015",
+  "baseline": {
+    "head": "f036e46c643308651b415179e6e991870dbc26ab",
+    "authority_revision": "AOS-002033",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r6-20261015/visual-live-review-package-r3.txt": "5b676bd192241d1094586a4734cdd38d52bfaaebe87431b08a2779271e630559"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "579959e6f16c42336ac1b1f2ada0cb36d328681b7a6ac521f0ae24187811c1ea",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

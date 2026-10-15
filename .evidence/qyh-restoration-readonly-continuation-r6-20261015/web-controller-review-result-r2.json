@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "579959e6f16c42336ac1b1f2ada0cb36d328681b7a6ac521f0ae24187811c1ea",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-price-visual-web-controller-r2-20261015",
+    "task_id": "qyh-restoration-readonly-continuation-r6-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "f036e46c643308651b415179e6e991870dbc26ab",
+      "authority_revision": "AOS-002033",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r6-20261015/web-controller-review-package-r2.txt": "307add2846f720900200762b4815950be24b5557135b1ffdfdabc673a1678f1c"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "Web 更新控制器核对精确源码进程与有效租约",
+        "evidence": "文件 price_visual_web_switch_r2.py 含 HEAD='f036e46c643308651b415179e6e991870dbc26ab'、OWNER 与 OLD/API 常量；base() 断言 git rev-parse HEAD==HEAD、分支 m1、authority.json.project_revision=='AOS-002033'、lease.owner==OWNER 且 lease_expires_at 未来；同时核验 listeners(18080)==[API]、cwd(API) 指向 source246、git diff 246 HEAD 无变更、listeners(18434)==[OLD]、ps -p OLD 命令含 NODE 与旧 web-server.mjs；web-preflight-r1.json 记录 manifestVerified/sourceHashesVerified/otherServicesTouched=true。",
+        "assessment": "insufficient"
+      },
+      {
+        "claim": "新意图只更新 Web 且保留原数据和后续现场验收门",
+        "evidence": "控制器 preflight 后写入 visual-web-switch-intent-r1.json（pgApiChromeTouched=false），SIGTERM OLD，等端口 18434 空闲后再启动 price-visual-web-server.mjs（由模板替换 price-visual-web-source.json/private/price-visual-vite-cache 生成），env 过滤 AOS_/PG/VITE_ 前缀；说明文本明言‘不得 signal PG/API/Chrome，不迁移、编译业务批次、改权限或读取商城源’，并指出‘已有 intent/未知结果只读对账不重跑’、‘独立livePrime后准确UI切片Delivery和完整maintenance剩余接续/Authority七强Prime’。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "由具备 filesystem 与进程查看权限的复核者在本机执行 price_visual_web_switch_r2.py --phase preflight，核对 git/lease/port/cwd/PID/Docker inspect 全部断言通过，并回读 web-controller-review-result-r2.json 与 web-controller-review-consumption-r2.json 以确认 quality 已消费且 controller SHA 已固化，再推进 live gate 验收。"
+  }
+}

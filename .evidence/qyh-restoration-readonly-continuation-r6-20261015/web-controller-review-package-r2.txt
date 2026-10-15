@@ -1,0 +1,478 @@
+PRE-EFFECT QUALITY of fresh Web-only maintenance controller, not post-Web acceptance. Original Web76677 still source1627, original API80779/source246 and PG unchanged. Review actual code plus source/preflight; real UI screenshots/650/live gate will follow effect and are NOT claimed now.
+CONTROLLER_SHA c65754ab0bb7e1446c3f3caffc9dd6cbad01cdc588407cc0e73e5c4e57948514
+
+FILE price-visual-web-plan.md SHA d69874a0920a0bae871272b8331801e8dee03f9837057cc9ea4b8ca01287ae88
+# 价格筛选样式最新 Web 维护方案
+
+依据已登记maintenance-r6/visual CSS Task、Authority2033、原用户全恢复授权与完整231Goal。最新提交f036e46仅价格primary selector一个align-content:start；独立方案r2与代码quality r3均PASS合法消费，原组件/原API/数据/权限未改，隔离三尺寸empty/rich与筛选32px、nonprimary同尺寸不变、407累计/tsc/build通过。隔离结果不是原客户经营或真实系统视觉交付。
+
+先冻结最新提交Web及两个依赖包，排除.env/userdirty，核764源完整manifest和CSS与review SHA。新控制器精确HEAD/m1/Authority/有效sameowner Lease及quality消费，核旧Web76677/cwd/command/18434、API80779/source246后端树等于当前、原PG CID卷/Started20:36:36/schema161/650/绑定0、原OIDC及前后指纹。
+
+fresh控制器独立quality合法消费及新持久化意图后，仅旧Web一次SIGTERM/端口free/原代理配置的新冻源18434启动。不得signal PG/API/Chrome，不迁移、编译业务批次、改权限或读取商城源；已有intent/未知结果只读对账不重跑。spawn不当运行证明，必须回读实际listener/PID/command/source及764文件SHA。
+
+原唯一真人正常登录/必要过期会话正常恢复，不暴露凭据。原价格页三宽度原稿复拍、四button真实32px及安全筛选/empty待条件、菜单与业务GET、query400/匿名401/未审辅助404、业务nonGet0及原650一致；不复制原稿商品/价格/异常数字。独立livePrime后准确UI切片Delivery和完整maintenance剩余接续/Authority七强Prime。
+
+本Web更新不冒充daily/every aos全面重启：每次仍最新m1同原权威卷完整PG→API→Web，aos2不重启。Page辅助失败假0/达人裁切/全八台视觉、fullC唯一真人最后预算/原部署、自然有来源首链/安装全生命周期/八场景/连续观察发布继续；HostworkerProviderOFF/原业务READONLY/unknown旧12/Schedule/source/noPush禁界保留。
+
+
+FILE price_visual_web_switch_r2.py SHA c65754ab0bb7e1446c3f3caffc9dd6cbad01cdc588407cc0e73e5c4e57948514
+from pathlib import Path
+import argparse,datetime,hashlib,json,os,signal,subprocess,sys,time
+E=Path(__file__).resolve().parent;R=E.parents[1];HEAD='f036e46c643308651b415179e6e991870dbc26ab';OWNER='codex-01a13484-f019-7d82-94ce-812396db9124';OLD=76677;API=80779;NODE='/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node'
+sys.path.insert(0,str(R/'scripts/long-task-watchdog'));import aos_review as gate
+def read(p):return json.loads(p.read_text())
+def cmd(*a):return subprocess.check_output(a,cwd=R,text=True,timeout=30).strip()
+def save(n,v):
+ with (E/n).open('x') as f:json.dump(v,f,indent=2);f.flush();os.fsync(f.fileno())
+def listeners(port):return sorted({int(x) for x in cmd('lsof','-t','-nP',f'-iTCP:{port}','-sTCP:LISTEN').split()})
+def cwd(pid):return next(x[1:] for x in cmd('lsof','-a','-p',str(pid),'-d','cwd','-Fn').splitlines() if x.startswith('n'))
+def legal(folder,req,res,con):
+ q=read(folder/req);v=read(folder/res);t=read((folder/res).with_suffix('.transport.json'));assert gate.consumption_record(q,v,t,v['runner_sha256'])==read(folder/con) and v['result']['verdict']=='PASS'
+def base():
+ assert hashlib.sha256((R/'.evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/web-server.mjs').read_bytes()).hexdigest()=='79d9e1cd43ceabb84a52e18e92816e437685286cb41654b2bfb8175502744202'
+ assert cmd('git','rev-parse','HEAD')==HEAD and cmd('git','branch','--show-current')=='m1'
+ m=R.parent/'docs/palantier/AOS项目开发上下文/memory';l=read(m/'receipts/tasks'/(E.name+'.json'));assert l in read(m/'leases.json')['leases'] and l['owner']==OWNER and l['base_revision']==read(m/'authority.json')['project_revision']=='AOS-002033' and datetime.datetime.fromisoformat(l['lease_expires_at'])>datetime.datetime.now(datetime.timezone.utc)
+ assert listeners(18080)==[API] and cwd(API)==str(R/'.evidence/qyh-full-system-restoration-20261011/private/api-source-246d8305332c143bd281cc6aedb013649b81f7d6') and not cmd('git','diff','246d8305332c143bd281cc6aedb013649b81f7d6','HEAD','--','services/aos-api','scripts','bundles')
+ assert listeners(18434)==[OLD] and cwd(OLD)==str(R) and cmd('ps','-p',str(OLD),'-o','command=')==NODE+' '+str(R/'.evidence/qyh-restoration-readonly-continuation-r4-20261015/creator-closure-web-server.mjs')
+ pg=json.loads(cmd('docker','--context','colima-aos-extension','inspect','qyh-restored-pg-20261011'))[0];assert pg['Id']=='84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c' and pg['State']['Running'] and pg['State']['StartedAt']=='2026-10-14T20:36:36.408087963Z' and len(pg['Mounts'])==1 and pg['Mounts'][0]['Name']=='aos-qyh-history159-prepared-data-20261011'
+ legal(R/'.evidence/qyh-price-visual-filter-sizing-20261015','code-review-request-r3.json','code-review-result-r3.json','code-review-consumption-r3.json')
+ w=read(E/'price-visual-web-source.json');s=Path(w['source']);assert w['head']==HEAD and w['port']==18434 and w['apiTarget']=='http://127.0.0.1:18080';assert {str(p.relative_to(s)):hashlib.sha256(p.read_bytes()).hexdigest() for p in s.rglob('*') if p.is_file()}==w['manifest'];assert all(hashlib.sha256((s/f).read_bytes()).hexdigest()==h for f,h in w['sourceHashes'].items())
+ return w
+p=argparse.ArgumentParser();p.add_argument('--phase',choices=['preflight','web'],required=True);a=p.parse_args();web=base()
+if a.phase=='preflight':
+ before=read(R/'.evidence/qyh-restoration-successor-latest-restart-20261013/price-visual-web-before-20261015.json');assert before['native']['schema']=='a0v_161' and before['native']['enabledBindings']==0 and len(before['fingerprints'])==650 and before['pgStartedAt']=='2026-10-14T20:36:36.408087963Z'
+ save('web-preflight-r1.json',dict(head=HEAD,oldWebPid=OLD,apiPid=API,manifestVerified=True,sourceHashesVerified=True,otherServicesTouched=False));sys.exit(0)
+req=read(E/'web-controller-review-request-r2.json');assert req['task_id']==E.name and req['owner']==OWNER;gate.validate_request(R,req);legal(E,'web-controller-review-request-r2.json','web-controller-review-result-r2.json','web-controller-review-consumption-r2.json');assert 'CONTROLLER_SHA '+hashlib.sha256(Path(__file__).read_bytes()).hexdigest() in (E/'web-controller-review-package-r2.txt').read_text()
+assert not (E/'visual-web-switch-intent-r1.json').exists() and not (E/'visual-web-started-r1.json').exists();assert read(E/'web-preflight-r1.json')['head']==HEAD
+entry=(R/'.evidence/qyh-restoration-readonly-continuation-r3-20261014/daily-20261015/web-server.mjs').read_text().replace("'web-source.json'","'price-visual-web-source.json'").replace('private/daily-vite-cache','private/price-visual-vite-cache');server=E/'price-visual-web-server.mjs';assert not server.exists();server.write_text(entry)
+save('visual-web-switch-intent-r1.json',dict(head=HEAD,oldPid=OLD,source=web['source'],pgApiChromeTouched=False));os.kill(OLD,signal.SIGTERM)
+for _ in range(100):
+ r=subprocess.run(['lsof','-t','-nP','-iTCP:18434','-sTCP:LISTEN'],capture_output=True,text=True)
+ if not r.stdout.strip():break
+ time.sleep(.2)
+else:raise RuntimeError('stop unknown: reconcile only')
+save('visual-web-old-stop-r1.json',dict(oldPid=OLD,portFree=True))
+env={k:v for k,v in os.environ.items() if not k.startswith(('AOS_','PG','VITE_'))}
+with (E/'price-visual-live-web-r1.log').open('x') as log:proc=subprocess.Popen([NODE,str(server)],cwd=R,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+save('visual-web-started-r1.json',dict(head=HEAD,pid=proc.pid,source=web['source'],spawnedOnly=True));print(dict(webPid=proc.pid,spawnedOnly=True))
+
+
+FILE web-preflight-r1.json SHA cac0ab611c674bc8d5ba539351f216bbab1034b0aca701dfab505afa51a2c36c
+{
+  "head": "f036e46c643308651b415179e6e991870dbc26ab",
+  "oldWebPid": 76677,
+  "apiPid": 80779,
+  "manifestVerified": true,
+  "sourceHashesVerified": true,
+  "otherServicesTouched": false
+}
+
+EXPLICIT DERIVED FROZEN WEB SUMMARY (full manifest verified in actual preflight)
+{
+  "head": "f036e46c643308651b415179e6e991870dbc26ab",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-restoration-readonly-continuation-r6-20261015/private/price-visual-web-f036e46c643308651b415179e6e991870dbc26ab",
+  "sourceHashes": {
+    "apps/web/src/styles/45-ecommerce-workshop.css": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12"
+  },
+  "port": 18434,
+  "apiTarget": "http://127.0.0.1:18080",
+  "processEffects": false
+}
+fileCount=764
+rawReportSHA=ecf02538c2118532c4c4bba90257748a8776da6dc6046adfd724a8885670a3ea
+
+ORIGINAL UNCHANGED SERVER TEMPLATE
+import { createServer } from '/Users/ddt/work/projects/ai_agent/aos-platform/apps/web/node_modules/vite/dist/node/index.js';
+import fs from 'node:fs';
+import path from 'node:path';
+const task = path.dirname(new URL(import.meta.url).pathname);
+const frozen = JSON.parse(fs.readFileSync(path.join(task, 'web-source.json')));
+process.env.VITE_AOS_API_PROXY_TARGET = frozen.apiTarget;
+delete process.env.VITE_AOS_API_BASE;
+const server = await createServer({
+  root: path.join(frozen.source, 'apps/web'),
+  configFile: path.join(frozen.source, 'apps/web/vite.config.ts'),
+  cacheDir: path.join(task, 'private/daily-vite-cache'),
+  server: { host: '127.0.0.1', port: frozen.port, strictPort: true },
+});
+await server.listen();
+console.log(JSON.stringify({ outcome: 'LOCAL_HUMAN_LOGIN_WEB_LISTENING', port: frozen.port, apiPort: 18080, head: frozen.head, eightPagesAccepted: false }));
+
+TEMPLATE_SHA 79d9e1cd43ceabb84a52e18e92816e437685286cb41654b2bfb8175502744202
+
+CSS CANDIDATE code-review-consumption-r3.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-visual-code-r3-20261015",
+  "task_id": "qyh-price-visual-filter-sizing-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+    "authority_revision": "AOS-002033",
+    "files": {
+      ".evidence/qyh-price-visual-filter-sizing-20261015/code-review-package-r3.txt": "07e2acc785781ec92f353c3c5be8e38d055d211ef76cbdc12c649a2d0971a19a"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "e42a38223903b21b5ea6f9db64f567a99f3e1e77aaff2d1848f2372695ea2d86",
+  "transport_sha256": "c524d4436b595a404e5408787a760ce69d8f581277ba3dc216533e6812a1c349"
+}
+
+CSS CANDIDATE source-verification-r1.json
+{
+  "baseHead": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+  "cssBefore": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "cssAfter": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "onlyOneOwnedCSSOverlay": true,
+  "originalComponentUnchanged": true,
+  "noUserDirtyCopied": true,
+  "privateBuildAndCache": true,
+  "results": {
+    "workshop-cumulative-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/components/workshop",
+        "src/api/ecommerceWorkshop",
+        "--config",
+        "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015/private/frozen-verification-config-r1.ts",
+        "--no-cache"
+      ],
+      "logSha": "0fc6ecd26791cdb44a348fe55aa22b7529af22f0319e460baf9672e5f62b164a"
+    },
+    "web-typecheck-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "logSha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "web-production-build-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vite/bin/vite.js",
+        "build",
+        "--config",
+        "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015/private/frozen-verification-config-r1.ts"
+      ],
+      "logSha": "c39705328cddaa23307a4a92f3f44155302d4df9cedf335ac391e6f9ee2b2656"
+    }
+  },
+  "startedAt": "2026-10-15T01:05:01.549205+00:00",
+  "finishedAt": "2026-10-15T01:05:21.691137+00:00",
+  "originalServicesTouched": false
+}
+
+CSS CANDIDATE green-metrics-r1.json
+{
+  "fixtureOnly": true,
+  "measurements": [
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1280,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 383,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 503,
+      "noOverlap": true,
+      "width": 1280,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1280,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 383,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 497,
+      "noOverlap": true,
+      "width": 1280,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1440,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1440,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1440,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1440,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1920,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1920,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1920,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1920,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "allPass": true
+}
+
+READONLY BEFORE SUMMARY
+{"label": "price-visual-web-before-20261015", "native": {"cluster": "7695302940039200809", "schema": "a0v_161", "enabledBindings": 0, "otherActiveClients": 0}, "containerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c", "volume": "aos-qyh-history159-prepared-data-20261011", "pgStartedAt": "2026-10-14T20:36:36.408087963Z", "elapsedSeconds": 2.395, "dbWrites": false, "scriptSha256": "397383d7f9620f57ed5bb9cfb1e2cb5a9f685b3fdb623e6deac7d50b23d3fc31", "originalFingerprintFunctionSourceSha256": "c73eb170859d043efa94c9b99dedb24bfe00e69c3af1a366a33f066c95a795c1"}
+650count=650
+fullRawSHA 529429fe63823839e98fff29784b4e5cb7982d72a2cf1519c2614ae33c376454
+R1 transport terminal returncode0 but raw assistant JSON had an extra closing brace and was rejected by unchanged parser. No accepted envelope/consumption and no process signals. Raw remains untouched. R2 uses new controller source with only quality artifact filenames updated; same exact preflight/source/lease guards and fresh intent. This is pre-effect quality, post-native gate still follows.

@@ -1,0 +1,6 @@
+{
+  "status": "BEFORE_REQUEST_ATTEMPT",
+  "reason": "Raw pretty650 material66575 bytes exceeded limit",
+  "fullTablesRetained": 650,
+  "next": "Compact full650 JSON plus rawSHA; no omitted tables or changed gates"
+}
