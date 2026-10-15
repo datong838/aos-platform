@@ -1,0 +1,8 @@
+{
+  "attempt": "ordinary native pointer on unique creator sidebar link",
+  "actualAfterAttempt": "http://127.0.0.1:18434/workshop/customer",
+  "expectedHref": "/workshop/creator-growth",
+  "navigationConfirmed": false,
+  "businessMutationAttempted": false,
+  "recovery": "one direct GET to the exact visible link href"
+}

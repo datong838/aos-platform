@@ -1,0 +1,92 @@
+{
+  "head": "90a440c1ae825d6d220c35a001399530666b3ba5",
+  "authority": "AOS-002040",
+  "task": {
+    "base_revision": "AOS-002040",
+    "created_at": "2026-10-15T22:11:53+08:00",
+    "excluded_scope": [
+      "aos-platform/services/aos-api",
+      "aos-platform/maintenance/qiyuehui-restored-data-volume",
+      "aos-platform/pnpm-lock.yaml"
+    ],
+    "expected_outputs": [
+      "Keep full231Goal and prior customer pointer fix. Fresh actual/reference1280/1440/1920 audit creator right-column crop P1 with current original identity/readonly state, read approved creator product five stages and draft-only/receipt/contract/PII boundaries; file-level plan and independent design before code.",
+      "Minimal customer-preserving creator-only responsive layout fix after true RED; do not hide content/blockers or fill demos/unlock execution. Register extra files before edits; frozen tests/type/build, true normal native pointer explicitbuttons1/0 and keyboard/clip/scroll/same-size original acceptance, independent code/controller/live gates and accurate Delivery. Preserve original data/API/PG/source/unknown/daily/aos2 boundaries and all remaining business/install/visual goals."
+    ],
+    "lease_expires_at": "2026-10-15T16:00:00+00:00",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "schema": "aos-memory-task-receipt/v1",
+    "scope": [
+      "aos-platform/apps/web/src/styles/45-ecommerce-workshop.css",
+      "aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.tsx",
+      "aos-platform/apps/web/src/components/workshop/CreatorGrowthPage.test.tsx",
+      "aos-platform/.evidence/qyh-creator-visual-narrow-layout-20261015",
+      "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md"
+    ],
+    "status": "ACTIVE",
+    "task_id": "qyh-creator-visual-narrow-layout-20261015"
+  },
+  "sourceHashes": {
+    "apps/web/src/styles/45-ecommerce-workshop.css": "e9f83bab6c6e21497c4454ba0477e74b798621262268cd969ebf80ed555d2604",
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "c0fc1b3c5d2ceb012587061449263ccb7dfb41dd6e74d2c9f7e4daa0b508486e",
+    "apps/web/src/components/workshop/CreatorGrowthPage.test.tsx": "292371bc6f17c0f9c9cea8e410105a8a101bd77569338f015ac8c1b9565e2e53"
+  },
+  "productUnmodified": true,
+  "screens": [
+    {
+      "file": "reference-1280-r1.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "9f8052980090cdb1ee4ffcec73a26eb63a86ad93eaa3ae1618b992e58f77450a",
+      "inspected": true
+    },
+    {
+      "file": "actual-before-1280-r1.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "a10735a89d9c563fe57308a66415e7747ca1775de9c779daefa10534ee512841",
+      "inspected": true
+    },
+    {
+      "file": "reference-1440-r1.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "70ae489cfe3a9f0d00bbd27dcbb04bd21a8aa4a6c96b8f01a43b7dc4b5ba029d",
+      "inspected": true
+    },
+    {
+      "file": "actual-before-1440-r1.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "aff8f0ac1f2ed4ed5755182d23e73e6c04d306d63d5d71f8dd7f9f8c1d3fe2e4",
+      "inspected": true
+    },
+    {
+      "file": "reference-1920-r1.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "cca0c9a7b5bcc69cbdd85ad1cf64faf5849d2741aa6856d977bed5effa18677d",
+      "inspected": true
+    },
+    {
+      "file": "actual-before-1920-r1.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "fa5d967c95811aa05ab4cd10b5783080876a6387bd34f78e2ed1b49de1ea0dcf",
+      "inspected": true
+    },
+    {
+      "file": "actual-before-1180-r1.png",
+      "width": 1180,
+      "height": 900,
+      "sha256": "346b6d005115138be77bdc5a31efb6090e0af2d40b4881cbcd1f7a9001762b3a",
+      "inspected": true
+    }
+  ],
+  "originalReferenceHtmlSha": "70ac7ad6b92579353b42aaaf17c728fb0a55ea884dd1a717bbda3de075344f37",
+  "currentWebPid": 61045,
+  "currentWebSourceHead": "8dbb4c7c3f48ee161f4d6bf231b35c865a77caf5",
+  "apiPid": 54057,
+  "onlyReadonlyAudit": true,
+  "wholeGoalComplete": false
+}

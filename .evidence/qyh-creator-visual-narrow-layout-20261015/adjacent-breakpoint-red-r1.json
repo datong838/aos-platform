@@ -1,0 +1,14 @@
+{
+  "geometry": {
+    "viewportWidth": 1180,
+    "documentWidth": 1180,
+    "boardClientWidth": 872,
+    "boardScrollWidth": 970,
+    "columns": "225px 460px 285px",
+    "rightmost": 1278
+  },
+  "productChanged": false,
+  "temporaryViewportCleared": true,
+  "closedHandleAndMissingBoardObservationsPreserved": true,
+  "normalLoginUsedOnlyIfOriginalLoginFormVisible": true
+}

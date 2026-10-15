@@ -1,0 +1,12 @@
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "url": "http://127.0.0.1:18434/workshop/creator-growth",
+  "normalLoginStatus": 200,
+  "priorBoardVisibleWaitTimedOut": true,
+  "subsequentFreshDomConfirmedBoardVisible": true,
+  "noTokenExported": true
+}
