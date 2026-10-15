@@ -1,0 +1,48 @@
+{
+  "baseHead": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+  "cssBefore": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "cssAfter": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "onlyOneOwnedCSSOverlay": true,
+  "originalComponentUnchanged": true,
+  "noUserDirtyCopied": true,
+  "privateBuildAndCache": true,
+  "results": {
+    "workshop-cumulative-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/components/workshop",
+        "src/api/ecommerceWorkshop",
+        "--config",
+        "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015/private/frozen-verification-config-r1.ts",
+        "--no-cache"
+      ],
+      "logSha": "0fc6ecd26791cdb44a348fe55aa22b7529af22f0319e460baf9672e5f62b164a"
+    },
+    "web-typecheck-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "logSha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "web-production-build-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vite/bin/vite.js",
+        "build",
+        "--config",
+        "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015/private/frozen-verification-config-r1.ts"
+      ],
+      "logSha": "c39705328cddaa23307a4a92f3f44155302d4df9cedf335ac391e6f9ee2b2656"
+    }
+  },
+  "startedAt": "2026-10-15T01:05:01.549205+00:00",
+  "finishedAt": "2026-10-15T01:05:21.691137+00:00",
+  "originalServicesTouched": false
+}

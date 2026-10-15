@@ -1,0 +1,14 @@
+{
+  "authority": "AOS-002033",
+  "head": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+  "task": "qyh-price-visual-filter-sizing-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "planPrime": "r1 NEED_EVIDENCE preserved and consumed; r2 PASS legally consumed",
+  "originalCSSUnchanged": true,
+  "baselineFrozenFiles": 764,
+  "serviceEffects": false,
+  "goal": "ACTIVE",
+  "next": "Reuse original unchanged PriceGovernancePage and original CSS in isolated throw-only-action fixture; reproduce 1280/1440/1920 >48px RED before one scoped CSS declaration; then empty/nonempty/filter interaction, screenshots, frozen quality and controlled Web/live gates",
+  "otherMainline": "Registered price disposition read audit remains; producer/typedhash/complete bounded counts scheme required before any admission",
+  "fullGoalComplete": false
+}

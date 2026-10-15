@@ -1,0 +1,88 @@
+{
+  "variant": "original committed CSS",
+  "fixtureOnly": true,
+  "measurements": [
+    {
+      "alignContent": "normal",
+      "filters": [
+        {
+          "height": 89,
+          "pressed": "true",
+          "text": "全部"
+        },
+        {
+          "height": 89,
+          "pressed": "false",
+          "text": "可比"
+        },
+        {
+          "height": 89,
+          "pressed": "false",
+          "text": "待复核"
+        },
+        {
+          "height": 89,
+          "pressed": "false",
+          "text": "已排除"
+        }
+      ],
+      "gridRows": "184px 353px",
+      "width": 1280
+    },
+    {
+      "alignContent": "normal",
+      "filters": [
+        {
+          "height": 255,
+          "pressed": "true",
+          "text": "全部"
+        },
+        {
+          "height": 255,
+          "pressed": "false",
+          "text": "可比"
+        },
+        {
+          "height": 255,
+          "pressed": "false",
+          "text": "待复核"
+        },
+        {
+          "height": 255,
+          "pressed": "false",
+          "text": "已排除"
+        }
+      ],
+      "gridRows": "255px 462px",
+      "width": 1440
+    },
+    {
+      "alignContent": "normal",
+      "filters": [
+        {
+          "height": 345,
+          "pressed": "true",
+          "text": "全部"
+        },
+        {
+          "height": 345,
+          "pressed": "false",
+          "text": "可比"
+        },
+        {
+          "height": 345,
+          "pressed": "false",
+          "text": "待复核"
+        },
+        {
+          "height": 345,
+          "pressed": "false",
+          "text": "已排除"
+        }
+      ],
+      "gridRows": "345px 552px",
+      "width": 1920
+    }
+  ],
+  "actualRed": true
+}

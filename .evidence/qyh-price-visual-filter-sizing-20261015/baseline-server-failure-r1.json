@@ -1,0 +1,8 @@
+{
+  "status": "TERMINAL_NO_LISTENER",
+  "reason": "CJS namespace lacks direct createServer; Vite server was never created",
+  "port": 18535,
+  "portReadbackEmpty": true,
+  "originalServicesTouched": false,
+  "next": "fresh r2 ESM Vite entry, original r1 intent retained"
+}

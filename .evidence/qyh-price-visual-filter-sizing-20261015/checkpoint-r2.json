@@ -1,0 +1,33 @@
+{
+  "authority": "AOS-002033",
+  "baseHead": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+  "task": "qyh-price-visual-filter-sizing-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "planPrime": "r2 PASS legally consumed; r1 NEED preserved",
+  "codePrime": "quality r3 PASS legally consumed; route r2 NEED preserved; oversized draft rejected before request",
+  "cssSha": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "productFiles": [
+    "apps/web/src/styles/45-ecommerce-workshop.css"
+  ],
+  "isolatedPrimaryThreeWidthsEmptyAndNonempty": "all 32px, filters and aria-pressed pass",
+  "nonprimary": "same1440 empty/rich equal; earlier1920/1440 mismatch preserved",
+  "cumulative": {
+    "files": 62,
+    "tests": 407,
+    "typecheck": 0,
+    "productionBuild": 0
+  },
+  "fixtureProcessesStopped": true,
+  "fixtureTabsClosed": true,
+  "originalProductionUpdated": false,
+  "actualWebStill": "76677/source1627",
+  "goal": "ACTIVE",
+  "wholeGoalComplete": false,
+  "nextRequired": [
+    "Freeze exact committed newWeb and preserve original API80779/source246 and PG volume/state",
+    "Fresh maintenance Web-only plan/controller quality/intent before any signal",
+    "Original genuine OIDC price page 1280/1440/1920 original reference comparison, safe filter interaction and no business POST",
+    "Original650 fingerprints and independent livePrime before exact UI Delivery/maintenance remaining handoff/AuthorityPrime",
+    "Continue registered price disposition reading plus fullC unique human final budget/original deployment/natural business/install lifecycle/eight scenarios/allvisual/observe release"
+  ]
+}

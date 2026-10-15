@@ -1,0 +1,300 @@
+{
+  "fixtureOnly": true,
+  "measurements": [
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1280,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 383,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 503,
+      "noOverlap": true,
+      "width": 1280,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1280,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 383,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 497,
+      "noOverlap": true,
+      "width": 1280,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1440,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1440,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1440,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1440,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1920,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1920,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1920,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1920,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "allPass": true
+}

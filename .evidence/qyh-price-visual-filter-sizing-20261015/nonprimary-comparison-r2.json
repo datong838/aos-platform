@@ -1,0 +1,67 @@
+{
+  "firstFailureWasMismatchedViewport": true,
+  "checks": [
+    {
+      "scenario": "empty",
+      "equal": true,
+      "measurement": {
+        "alignContent": "normal",
+        "articles": 0,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          }
+        ],
+        "width": 1440
+      }
+    },
+    {
+      "scenario": "rich",
+      "equal": true,
+      "measurement": {
+        "alignContent": "normal",
+        "articles": 2,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 61
+          }
+        ],
+        "width": 1440
+      }
+    }
+  ]
+}

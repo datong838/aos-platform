@@ -1,0 +1,10 @@
+{
+  "head": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015/private/candidate-source-r1",
+  "overlay": {
+    "apps/web/src/styles/45-ecommerce-workshop.css": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12"
+  },
+  "onlyOneOwnedCSSOverlay": true,
+  "userDirtyCopied": false,
+  "originalServicesTouched": false
+}

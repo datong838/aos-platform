@@ -1,0 +1,66 @@
+{
+  "assertion": "Non-primary changed",
+  "observedAfterFailure": [
+    {
+      "url": "http://127.0.0.1:18535/layout-fixture.html?case=empty&primary=0",
+      "metrics": {
+        "alignContent": "normal",
+        "articles": 0,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 633,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 633,
+            "width": 61
+          }
+        ],
+        "width": 1920
+      }
+    },
+    {
+      "url": "http://127.0.0.1:18536/layout-fixture.html?case=empty&primary=0",
+      "metrics": {
+        "alignContent": "normal",
+        "articles": 0,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          }
+        ],
+        "width": 1440
+      }
+    }
+  ],
+  "productChanged": false
+}

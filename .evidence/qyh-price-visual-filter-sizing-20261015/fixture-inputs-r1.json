@@ -1,0 +1,13 @@
+{
+  "head": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015/private/baseline-source-r1",
+  "fixture": {
+    "layout-fixture.tsx": "ed394244ee96cdd8759befdbf2445872a70a0b5c692a44e9463fea0720ccf809",
+    "layout-fixture.html": "0f3f90ce6aa84d0b01c6665fcfae4962a852270ab2d748ae0cdd3ec3a100c4ca"
+  },
+  "originalComponentUnchanged": true,
+  "originalCSSUnchanged": true,
+  "noOriginalApi": true,
+  "actions": "all throw",
+  "tenant": "dev-org/fixture-project"
+}

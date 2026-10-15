@@ -1,0 +1,1301 @@
+QUALITY CODE gate before commit and maintenance. Review ONLY actual one-declaration candidate and isolated original-component regressions. The supported kind is quality (prior request used route and was consumed NEED_EVIDENCE). The ORIGINAL DEPLOYED Web intentionally still oldCSS until code quality and fresh maintenance control gates pass. No deployed/native visual or business/Delivery PASS is claimed in this request. That later gate remains mandatory; independent material judgement may reject code defects, not require deploying unreviewed code. Nonprimary actual PASS after correcting viewport mismatch is provided FIRST below; the first failed mismatched viewport is retained counterevidence, not the final verdict. No product code changed since r2.
+
+FINAL SAME1440 NONPRIMARY BASELINE/CANDIDATE COMPARISON
+{
+  "firstFailureWasMismatchedViewport": true,
+  "checks": [
+    {
+      "scenario": "empty",
+      "equal": true,
+      "measurement": {
+        "alignContent": "normal",
+        "articles": 0,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          }
+        ],
+        "width": 1440
+      }
+    },
+    {
+      "scenario": "rich",
+      "equal": true,
+      "measurement": {
+        "alignContent": "normal",
+        "articles": 2,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 61
+          }
+        ],
+        "width": 1440
+      }
+    }
+  ]
+}
+FINAL PRIMARY THREEWIDTH EMPTY/NONEMPTY AND FILTER INTERACTIONS
+{
+  "fixtureOnly": true,
+  "measurements": [
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1280,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 383,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 503,
+      "noOverlap": true,
+      "width": 1280,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1280,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 383,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 497,
+      "noOverlap": true,
+      "width": 1280,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1440,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1440,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1440,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1440,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1920,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1920,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1920,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1920,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "allPass": true
+}
+FULL FROZEN r2 CODE MATERIALS
+ONE CSS DECLARATION CODE QUALITY review. Original system not deployed; no business or full visual completion. Complete verbose logs retained locally; below are exact passed-file lines and explicitly marked bounded excerpts, with raw SHA. No failing lines removed or result rewritten.
+
+FILE candidate-verification-report-r1.md SHA 4317ef6da59762e94c6143dc888638c9b2f7f128060908471e972c1e9880e4a2
+# 价格筛选行最小样式候选验证
+
+仅45-ecommerce-workshop.css的price-primary scoped .price-observations加align-content:start，一声明；原组件/API/权限/数据/命令未改。完整231Goal、Authority2033、原用户授权与日更每次aos同原卷fullPGAPIWeb保持。独立方案r1 NEED_EVIDENCE保留消费，r2设计限定PASS合法消费后才隔离RED和代码。
+
+原样式/原组件隔离复现三宽度89/255/345px，与原正常页面三尺寸一致；候选空态及非空态六组均32px，无重叠/横溢出，三宽度各可比1/待复核1/已排除0/全部2和唯一aria-pressed通过，无匹配提示保持。12张截图逐组检视，明确dev-org/fixture-project合成租户，不作原客户数据或审批。非primary初次因baseline1920/candidate1440错误对照失败，原记录保留；随后各标签明确1440实测empty/rich两组几何完全相等、alignContent normal。临时CDP/浏览器视口已清理，两个fixture标签已关闭。
+
+fixture原组件和样式来自7a4298提交764文件、不复制.env/userdirty；安全动作adapter全throw，middleware拒绝/api及非GET/HEAD、CSP仅同源，无真实API proxy。r1 Vite CJS命名空间错误终止且端口无监听，原意图保留；fresh r2正常启动两个自有fixture，已按准确PID/command/port停止，终端handle均exit0。原API/PG/Web/Chrome未signal。源码只依赖同版本已装Node库；验证使用独立cache/output目录。
+
+冻结累计62文件407PASS，tsc0、生产build0；原既有act提示和>500kB分包warning保留，不作本波新代码失败或假视觉合格。构建后764源文件及工作CSS前后SHA一致，只有一个CSS overlay。未提交、未部署；原实际Web仍1627/76677，P1仅在候选修复，必须独立代码Prime后精确提交、fresh Web维护门、原真人实际三宽度/核心读取/原650不变及livePrime后才能Delivery。Page辅助失败假0、达人裁切、八台全视觉/真实业务/fullC最终真预算/自然经营/安装全生命周期/观察发布继续。HostworkerProviderOFF、原业务DBREADONLY/oldunknown12不重放/disabledSchedule/source/noPush不变。
+
+
+FILE implementation-plan.md SHA 522769db3612a27ab642fa5dcfaa483a9fc9ecf307567315b4e23e7c5ff8236b
+# 价格观察筛选行视觉修复方案
+
+Rules：用户AGENTS、231串行完整Goal、AOS工程交付闭环及原视觉稿同尺寸对照。当前Authority2033/headc186，独立同owner CSS Task已登记且不重叠；处置GET审计及完整maintenance-r6保留。原真人授权/原数据/日更与每次aos完整PG→API→Web/独立Prime/完整经营目标不变。
+
+## 已有实际 RED 事实
+
+原正常登录、最新API246/Web1627当前价格空/待条件页，1280×720/1440×900/1920×1080与foundry/html/workshop-price-governance.html原稿各三图已同尺寸检视。实际四滤钮高89/255/345px；1440/1920明显呈长竖胶囊，1280已排除换行。证据maintenance-r5/price-menu-deny-visual-r1.json及六PNG/sha。原稿的47SKU/价格/异常属演示，不是待恢复的真实经营数据。
+
+源码：45-ecommerce-workshop.css中price primary selector把.price-observations放进固定可用高度主区；该section自身display:grid，implicit auto rows在剩余高度里stretch，第一nav track连带flex children被拉高。不是按钮文字/业务状态/原数据所致。需先用隔离浏览器原CSS与原组件的空态场景复现此高度失败，不能靠样式字符串断言当视觉证明；若未复现则先修正fixture事实而非改产品。
+
+## 精确文件与最小候选
+
+只改apps/web/src/styles/45-ecommerce-workshop.css，在现有.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-observations规则加align-content:start，使原nav和后续条目按内容高度排布，剩余留白留在列底部。预计一个声明，不改其他selector、全局grid/flex、颜色、字体或三列尺寸；不硬编码89/255/345窗口值，不设置按钮固定大高度遮掩父布局。
+
+Task不含React/API/锁文件；不改筛选click/aria-pressed/顺序、按钮禁用或权限、unknown/empty/blocked/Receipt语义，不覆盖已登记的Page辅助失败假0缺口。不借视觉修复宣称价格处置/自然经营可用。若这一声明不能消除问题，先补充方案再扩候选，不隐性改组件或其他八台布局。
+
+## 验收与交付顺序
+
+独立Prime方案合法消费 → 隔离冻结原CSS+原PriceGovernancePage相同shell/视口空态重现RED（按钮>48px） → 最小CSS → 空态及非空合法组件fixture在1280/1440/1920截图及几何：四按钮同单行内高度一致且不超48px、内容不重叠或截断、筛选无匹配空态正确、aria-pressed及筛选原交互有效、无意外横溢出。1280允许正常紧凑换行，不将桌面强压单行作为唯一合格标准。
+
+隔离fixture是只读验证，使用明确synthetic tenant/data且不连接真实API；不生成任何Run/业务写，不把fixture截图当原客户经营。正常legacy/非primary与其他七台共享样式不变，以selector作用域及相邻组件回归验证，不复制产品实现写样式快照测试。
+
+fixture代码只在本E：从当前已提交Web及必需packages冻结，排除.env/userdirty；挂载未改的PriceGovernancePage、相同p-app.is-workshop-primary-visual与scoped shell、原样式入口。client prop提供现有强类型测试夹具形状的empty及非空只读观察；所有AIP动作adapter均明确throw禁止执行。专用本地端口先查空、owner意图与实际PID对账；浏览器阻断非该fixture本地来源请求，不走原登录/API/Provider。对照原CSS与一声明候选CSS，只测几何和原筛选交互；不得用fixture保存/审批/运行任何真实业务。
+
+冻结候选排除userdirty，相关Workshop回归/TypeScript或构建按适用范围验证，独立代码质量Prime合法消费后精确提交。fresh Web冻结/维护控制器质量门后仅更新Web，API/PG不signal；原真人同页面、三宽度原稿复拍、核心只读筛选和原650不变及独立livePrime后准确Delivery/AuthorityPrime。每日/每次aos完整最新同卷full restart独立保留；aos2不重启。
+
+完整231Goal、fullC唯一真人最终预算/原部署/自然CaseRun建议exact评审内容受约束能力产物人审续跑总控Wiki、安装全生命周期/八场景/全视觉/连续观察发布全部继续。HostworkerProviderOFF/业务DBREADONLY/unknown旧12不重放/disabledSchedule/source/noPush禁界不变。
+
+
+FILE red-metrics-r1.json SHA 0168afa08e9acd8c8d0b8c6575a30a02c75f53e9b12e3bebc59954909bac750a
+{
+  "variant": "original committed CSS",
+  "fixtureOnly": true,
+  "measurements": [
+    {
+      "alignContent": "normal",
+      "filters": [
+        {
+          "height": 89,
+          "pressed": "true",
+          "text": "全部"
+        },
+        {
+          "height": 89,
+          "pressed": "false",
+          "text": "可比"
+        },
+        {
+          "height": 89,
+          "pressed": "false",
+          "text": "待复核"
+        },
+        {
+          "height": 89,
+          "pressed": "false",
+          "text": "已排除"
+        }
+      ],
+      "gridRows": "184px 353px",
+      "width": 1280
+    },
+    {
+      "alignContent": "normal",
+      "filters": [
+        {
+          "height": 255,
+          "pressed": "true",
+          "text": "全部"
+        },
+        {
+          "height": 255,
+          "pressed": "false",
+          "text": "可比"
+        },
+        {
+          "height": 255,
+          "pressed": "false",
+          "text": "待复核"
+        },
+        {
+          "height": 255,
+          "pressed": "false",
+          "text": "已排除"
+        }
+      ],
+      "gridRows": "255px 462px",
+      "width": 1440
+    },
+    {
+      "alignContent": "normal",
+      "filters": [
+        {
+          "height": 345,
+          "pressed": "true",
+          "text": "全部"
+        },
+        {
+          "height": 345,
+          "pressed": "false",
+          "text": "可比"
+        },
+        {
+          "height": 345,
+          "pressed": "false",
+          "text": "待复核"
+        },
+        {
+          "height": 345,
+          "pressed": "false",
+          "text": "已排除"
+        }
+      ],
+      "gridRows": "345px 552px",
+      "width": 1920
+    }
+  ],
+  "actualRed": true
+}
+
+FILE green-metrics-r1.json SHA ce6549deb61b970eaa9b2341014606ccd33b686a107976f56d9b6b3a08eb7529
+{
+  "fixtureOnly": true,
+  "measurements": [
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1280,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 383,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 503,
+      "noOverlap": true,
+      "width": 1280,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1280,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 383,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 497,
+      "noOverlap": true,
+      "width": 1280,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1440,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1440,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1440,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1440,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 0,
+      "documentWidth": 1920,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1920,
+      "scenario": "empty",
+      "pass": true
+    },
+    {
+      "alignContent": "start",
+      "articleCount": 2,
+      "documentWidth": 1920,
+      "filters": [
+        {
+          "height": 32,
+          "pressed": "true",
+          "right": 370,
+          "text": "全部"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 424,
+          "text": "可比"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 491,
+          "text": "待复核"
+        },
+        {
+          "height": 32,
+          "pressed": "false",
+          "right": 558,
+          "text": "已排除"
+        }
+      ],
+      "navRight": 593,
+      "noOverlap": true,
+      "width": 1920,
+      "scenario": "rich",
+      "pass": true,
+      "filterInteractions": [
+        {
+          "label": "可比",
+          "count": 1,
+          "pressed": "可比",
+          "pass": true
+        },
+        {
+          "label": "待复核",
+          "count": 1,
+          "pressed": "待复核",
+          "pass": true
+        },
+        {
+          "label": "已排除",
+          "count": 0,
+          "pressed": "已排除",
+          "pass": true
+        },
+        {
+          "label": "全部",
+          "count": 2,
+          "pressed": "全部",
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "allPass": true
+}
+
+FILE nonprimary-first-failure-r1.json SHA a35d0e7ccb40e8aeac80df726310af9e2a9151579291db59f9ce9e4b4a2c9fd4
+{
+  "assertion": "Non-primary changed",
+  "observedAfterFailure": [
+    {
+      "url": "http://127.0.0.1:18535/layout-fixture.html?case=empty&primary=0",
+      "metrics": {
+        "alignContent": "normal",
+        "articles": 0,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 633,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 633,
+            "width": 61
+          }
+        ],
+        "width": 1920
+      }
+    },
+    {
+      "url": "http://127.0.0.1:18536/layout-fixture.html?case=empty&primary=0",
+      "metrics": {
+        "alignContent": "normal",
+        "articles": 0,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          }
+        ],
+        "width": 1440
+      }
+    }
+  ],
+  "productChanged": false
+}
+
+FILE nonprimary-comparison-r2.json SHA d8665502b4769404516a5b429e19091fa97d991cb29be0595020dde5b37e26e2
+{
+  "firstFailureWasMismatchedViewport": true,
+  "checks": [
+    {
+      "scenario": "empty",
+      "equal": true,
+      "measurement": {
+        "alignContent": "normal",
+        "articles": 0,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 749,
+            "width": 61
+          }
+        ],
+        "width": 1440
+      }
+    },
+    {
+      "scenario": "rich",
+      "equal": true,
+      "measurement": {
+        "alignContent": "normal",
+        "articles": 2,
+        "buttons": [
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 48
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 61
+          },
+          {
+            "height": 32,
+            "top": 633.75,
+            "width": 61
+          }
+        ],
+        "width": 1440
+      }
+    }
+  ]
+}
+
+FILE source-verification-r1.json SHA 7aa50d93d4d53e80a37ed5ed82925b1c38ef37bcfca9050866e224b6936e87a0
+{
+  "baseHead": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+  "cssBefore": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "cssAfter": "ed85285f05c83b6f07ded5800eff2917e94aa30490c9fbfe923957c610864f12",
+  "onlyOneOwnedCSSOverlay": true,
+  "originalComponentUnchanged": true,
+  "noUserDirtyCopied": true,
+  "privateBuildAndCache": true,
+  "results": {
+    "workshop-cumulative-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "src/components/workshop",
+        "src/api/ecommerceWorkshop",
+        "--config",
+        "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015/private/frozen-verification-config-r1.ts",
+        "--no-cache"
+      ],
+      "logSha": "0fc6ecd26791cdb44a348fe55aa22b7529af22f0319e460baf9672e5f62b164a"
+    },
+    "web-typecheck-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit"
+      ],
+      "logSha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "web-production-build-r1": {
+      "returncode": 0,
+      "command": [
+        "/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node",
+        "node_modules/vite/bin/vite.js",
+        "build",
+        "--config",
+        "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-price-visual-filter-sizing-20261015/private/frozen-verification-config-r1.ts"
+      ],
+      "logSha": "c39705328cddaa23307a4a92f3f44155302d4df9cedf335ac391e6f9ee2b2656"
+    }
+  },
+  "startedAt": "2026-10-15T01:05:01.549205+00:00",
+  "finishedAt": "2026-10-15T01:05:21.691137+00:00",
+  "originalServicesTouched": false
+}
+
+FILE visual-shas-r1.json SHA 7274bff6d1400d95d5e9869a583e710c545dda1939e083bb4e698f9ee836dfdb
+{
+  "images": {
+    "green-rich-1280-r1.png": "ec1295ca76516101577e7c3810b154aec1a62140c1ffe36b324c2d00cc08ddf9",
+    "green-empty-1920-r1.png": "26d86f333496acb01dceaf152996dafd39cc08cfe36a552607971358da89d5d1",
+    "green-filtered-empty-1920-r1.png": "61278d5bcaada6567d12e5912320408c66e5454035b077acc4f3d02ea2c16d89",
+    "green-rich-1920-r1.png": "de1f560a574aa29b3e86dcf6a38760cbb7ddde1ac4941a64a3170551bc6c0901",
+    "red-empty-1440-r1.png": "fda451536708e2c88e2886cfb68fae7a2a3d10dcdc745d9b219846801ea77ef6",
+    "green-filtered-empty-1280-r1.png": "dfdcc2947090c5798c74ff3cd9a531df5b2aac9035adc0f5eafa942e717cba5a",
+    "green-empty-1280-r1.png": "cfecac02530b79a79aa41b8fdc7778c3d549a740c7772718ce1a1c756147ff32",
+    "green-rich-1440-r1.png": "df84abf78137ec21c21a800c571c25bde83048b4e8c61733a512cbe841d4b082",
+    "red-empty-1920-r1.png": "cb475f9eb5af7924e89dcd271bbb8f593c4b01891bffb2df04715d2fb3437694",
+    "red-empty-1280-r1.png": "38ddca8e316d1f41c6397a9f237ac29e468cccd52afb2a1ae794da8a5bd913bd",
+    "green-filtered-empty-1440-r1.png": "0f58f387019d9f5c9688fde7e07f5ae4198b23140f30c5f63e010492e5d67469",
+    "green-empty-1440-r1.png": "c8e3587b97683b5aaa7e55c984bd1c836b672691515f6860d06ab0847193db64"
+  },
+  "allTwelveInspected": true,
+  "fixtureOnly": true,
+  "originalProductionVisualAccepted": false
+}
+
+FILE baseline-stopped-r1.json SHA d58d3b5f94ae41b12894970d0304c0ff9a32812854a33cab8f6905ae89b21c6c
+{"pid": 83392, "port": 18535, "portFree": true, "originalServicesTouched": false}
+
+FILE candidate-stopped-r1.json SHA 2913fce74a03af8cc54d3a36a1996614ac79f470dab6e026627a30208a011c5a
+{"pid": 84505, "port": 18536, "portFree": true, "originalServicesTouched": false}
+
+FILE prepare_fixture_r1.py SHA be93fa6fe645d5ec73694554164f5367742a34d10ef539d77030a69a02bb9daf
+"""Prepare an isolated rendering of the unchanged component and committed CSS."""
+from pathlib import Path
+import hashlib, json, os, subprocess, sys
+
+R = Path.cwd()
+E = R/'.evidence/qyh-price-visual-filter-sizing-20261015'
+sys.path.insert(0,str(R/'scripts/memory'))
+import memoryctl as m
+sys.path.insert(0,str(R/'scripts/long-task-watchdog'))
+import aos_review as g
+assert m.load_authority(m.DEFAULT_PATHS)['project_revision']=='AOS-002033'
+lease=next(x for x in m.load_leases(m.DEFAULT_PATHS)['leases'] if x['task_id']==E.name)
+assert lease['owner']=='codex-01a13484-f019-7d82-94ce-812396db9124'
+req=json.loads((E/'plan-review-request-r2.json').read_text())
+env=json.loads((E/'plan-review-result-r2.json').read_text())
+transport=json.loads((E/'plan-review-result-r2.transport.json').read_text())
+assert g.consumption_record(req,env,transport,env['runner_sha256'])==json.loads((E/'plan-review-consumption-r2.json').read_text())
+report=json.loads((E/'baseline-source-r1.json').read_text())
+root=Path(report['source'])
+for name,sha in report['manifest'].items():assert hashlib.sha256((root/name).read_bytes()).hexdigest()==sha
+web=root/'apps/web'
+modules=web/'node_modules'
+assert not modules.exists() and not modules.is_symlink()
+modules.symlink_to(R/'apps/web/node_modules',target_is_directory=True)
+test=(root/'apps/web/src/components/workshop/PriceGovernancePage.test.tsx').read_text()
+constants=test.split('const ids =',1)[1].split('const proposalBundle',1)[0]
+constants=('const ids ='+constants).replace('"org-org"','"dev-org"').replace('"dev-project"','"fixture-project"')
+entry='''import React from 'react';
+import {createRoot} from 'react-dom/client';
+import type {PriceGovernanceViewResponse,PriceObservation} from './src/api/ecommerceWorkshop';
+import {PriceGovernancePage} from './src/components/workshop/PriceGovernancePage';
+import './src/styles.css';
+'''+constants+'''
+const mode=new URLSearchParams(location.search).get('case') ?? 'empty';
+if(!['empty','rich'].includes(mode))throw new Error('Unknown isolated scenario');
+const reject=async()=>{throw new Error('ISOLATED_ACTION_FORBIDDEN');};
+const client={getPriceGovernanceView:async()=>structuredClone(mode==='rich'?rich:blocked)};
+const actions={createProposal:reject,createReplacementProposal:reject,withdraw:reject,timeline:reject};
+const primary=new URLSearchParams(location.search).get('primary')!=='0';
+createRoot(document.getElementById('root')!).render(<div className={'p-app'+(primary?' is-workshop-primary-visual':'')}>
+ <div className="p-nav-global" aria-hidden="true">隔离</div>
+ <div className="p-main"><header className="topbar"><strong>隔离只读布局夹具 · 非经营证据</strong></header>
+ <div className="layout"><aside className="aside">合成租户 dev-org/fixture-project</aside><main className="content">
+ <section className="ecommerce-workshop-shell" data-module-id="ecommerce.price-governance"><main id="ecommerce-workshop-main">
+ <PriceGovernancePage client={client} actions={actions}/>
+ </main></section></main></div></div></div>);
+'''
+files={'layout-fixture.tsx':entry,'layout-fixture.html':'<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>隔离价格布局验证</title><div id="root"></div><script type="module" src="/layout-fixture.tsx"></script></html>'}
+for name,body in files.items():
+ with (web/name).open('x') as f:f.write(body)
+os.chmod(web/'layout-fixture.tsx',0o600)
+with (E/'fixture-inputs-r1.json').open('x') as f:json.dump({'head':report['head'],'source':str(root),'fixture':{k:hashlib.sha256(v.encode()).hexdigest() for k,v in files.items()},'originalComponentUnchanged':True,'originalCSSUnchanged':True,'noOriginalApi':True,'actions':'all throw','tenant':'dev-org/fixture-project'},f,indent=2)
+print('Isolated original component fixture prepared; no server started')
+
+
+FILE fixture_server_r2.mjs SHA 996561ff040ffbe6bb270555a586b48174ecdc7f5d7bf65a5e2c107ccf94e6ac
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+import {execFileSync} from 'node:child_process';
+const E=path.dirname(fileURLToPath(import.meta.url));
+const R=path.resolve(E,'../..');
+const variant=process.argv[2];
+if(!['baseline','candidate'].includes(variant))throw Error('Explicit variant required');
+const port=variant==='baseline'?18535:18536;
+const report=JSON.parse(await fs.readFile(path.join(E,variant==='baseline'?'baseline-source-r1.json':'candidate-source-r1.json'),'utf8'));
+const owner='codex-01a13484-f019-7d82-94ce-812396db9124';
+const memory=path.resolve(R,'../docs/palantier/AOS项目开发上下文/memory');
+const leases=JSON.parse(await fs.readFile(path.join(memory,'leases.json'),'utf8')).leases;
+const lease=leases.find(x=>x.task_id===path.basename(E));
+if(!lease||lease.owner!==owner||Date.parse(lease.lease_expires_at)<=Date.now())throw Error('Invalid owned lease');
+if(JSON.parse(await fs.readFile(path.join(memory,'authority.json'),'utf8')).project_revision!=='AOS-002033')throw Error('Authority drift');
+try {if(execFileSync('lsof',['-t',`-iTCP:${port}`,'-sTCP:LISTEN'],{encoding:'utf8'}).trim())throw Error('Port occupied');}catch(e){if(e.status!==1)throw e;}
+const save=async(name,value)=>{const f=await fs.open(path.join(E,name),'wx',0o600);try{await f.writeFile(JSON.stringify(value,null,2));await f.sync();}finally{await f.close();}};
+await save(variant+'-server-intent-r2.json',{variant,owner,port,source:report.source,pid:process.pid,noOriginalServices:true});
+const require=createRequire(path.join(R,'apps/web/package.json'));
+const vite=await import(path.join(path.dirname(require.resolve('vite/package.json')),'dist/node/index.js'));
+const reactExport=require('@vitejs/plugin-react');const react=reactExport.default??reactExport;
+const root=path.join(report.source,'apps/web');
+const emptyEnv=path.join(E,'private/no-env');await fs.mkdir(emptyEnv,{recursive:true,mode:0o700});
+const server=await vite.createServer({root,configFile:false,envFile:false,envDir:emptyEnv,plugins:[react(),{name:'isolated-no-effects',configureServer(s){s.middlewares.use((req,res,next)=>{res.setHeader('Content-Security-Policy',`default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws://127.0.0.1:${port}`);if(!['GET','HEAD'].includes(req.method)||req.url.startsWith('/api/')){res.statusCode=403;res.end('ISOLATED_NETWORK_FORBIDDEN');return;}next();});}}],resolve:{alias:{'@aos/ontology-sdk':path.join(report.source,'packages/ontology-sdk/src/index.ts')}},server:{host:'127.0.0.1',port,strictPort:true,fs:{allow:[report.source,path.join(R,'node_modules'),path.join(R,'apps/web/node_modules')]}}});
+await server.listen();
+await save(variant+'-server-started-r2.json',{variant,owner,pid:process.pid,port,source:report.source,fixtureOnly:true,noOriginalServices:true});
+console.log(JSON.stringify({pid:process.pid,port,variant,fixtureOnly:true}));
+for(const sig of ['SIGINT','SIGTERM'])process.once(sig,async()=>{await server.close();process.exit(0);});
+
+
+FILE verify_frozen_web_r1.py SHA 7cbbbe4c0a2a7914d8ca464510928c4d79aee7dbe11481726a78d2f4780253ff
+"""Run existing Workshop tests, typecheck and production CSS build privately."""
+from pathlib import Path
+import datetime, hashlib, json, os, subprocess
+
+R=Path.cwd()
+E=R/'.evidence/qyh-price-visual-filter-sizing-20261015'
+report=json.loads((E/'candidate-source-r1.json').read_text())
+source=Path(report['source'])
+css='apps/web/src/styles/45-ecommerce-workshop.css'
+before=hashlib.sha256((R/css).read_bytes()).hexdigest()
+assert before==report['cssSha']
+assert json.loads((E/'green-metrics-r1.json').read_text())['allPass']
+for n,sha in report['manifest'].items():assert hashlib.sha256((source/n).read_bytes()).hexdigest()==sha
+config=E/'private/frozen-verification-config-r1.ts'
+with config.open('x') as f:
+    f.write('import base from '+json.dumps(str(source/'apps/web/vite.config.ts'))+';\nexport default {...base,cacheDir:'+json.dumps(str(E/'private/verification-cache-r1'))+',envDir:'+json.dumps(str(E/'private/no-env'))+',test:{...base.test,cache:false}};\n')
+node='/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin/node'
+commands={
+    'workshop-cumulative-r1':[node,'node_modules/vitest/vitest.mjs','run','src/components/workshop','src/api/ecommerceWorkshop','--config',str(config),'--no-cache'],
+    'web-typecheck-r1':[node,'node_modules/typescript/bin/tsc','--noEmit'],
+    'web-production-build-r1':[node,'node_modules/vite/bin/vite.js','build','--config',str(config)],
+}
+env={k:v for k,v in os.environ.items() if not k.startswith(('AOS_','PG','VITE_','OPENAI_'))}
+env.update(CI='1',NO_COLOR='1')
+results={}
+started=datetime.datetime.now(datetime.timezone.utc).isoformat()
+for name,command in commands.items():
+    with (E/(name+'.log')).open('x') as f:
+        p=subprocess.run(command,cwd=source/'apps/web',env=env,stdout=f,stderr=subprocess.STDOUT)
+    results[name]={'returncode':p.returncode,'command':command,'logSha':hashlib.sha256((E/(name+'.log')).read_bytes()).hexdigest()}
+after=hashlib.sha256((R/css).read_bytes()).hexdigest()
+assert before==after
+for n,sha in report['manifest'].items():assert hashlib.sha256((source/n).read_bytes()).hexdigest()==sha
+with (E/'source-verification-r1.json').open('x') as f:json.dump({'baseHead':report['head'],'cssBefore':before,'cssAfter':after,'onlyOneOwnedCSSOverlay':True,'originalComponentUnchanged':True,'noUserDirtyCopied':True,'privateBuildAndCache':True,'results':results,'startedAt':started,'finishedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'originalServicesTouched':False},f,indent=2)
+print(json.dumps({k:v['returncode'] for k,v in results.items()}))
+assert all(v['returncode']==0 for v in results.values())
+
+
+FILE plan-review-consumption-r2.json SHA 8229ed0fd121b2970fa09c32300fa6bc320e2cbe2a9e1d456a9179cdae558e63
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-price-visual-plan-r2-20261015",
+  "task_id": "qyh-price-visual-filter-sizing-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+    "authority_revision": "AOS-002033",
+    "files": {
+      ".evidence/qyh-price-visual-filter-sizing-20261015/plan-review-package-r2.txt": "4b0b46fe55755a7ba5e06c66108d61d503db8f299c3d651b1e444623a2ccf25d"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "c91ca70e95bf9966c6528f50a17ea91cbe3b050a712a3b0c22ea31206bf3488a",
+  "transport_sha256": "689b87f564d8a1418b5913efe53b16dea633d7d8a8d5ad2c3bae7ee8b485ce53"
+}
+
+EXACT ALL62 PASSED FILE LINES FROM RAW workshop-cumulative-r1.log SHA 0fc6ecd26791cdb44a348fe55aa22b7529af22f0319e460baf9672e5f62b164a
+ ✓ src/api/ecommerceWorkshop/parser.test.ts (37 tests) 25ms
+ ✓ src/api/ecommerceWorkshop/client.test.ts (17 tests) 25ms
+ ✓ src/components/workshop/production/production.test.tsx (15 tests) 110ms
+ ✓ src/components/workshop/PriceGovernancePage.test.tsx (9 tests) 320ms
+ ✓ src/components/workshop/CustomerPage.test.tsx (11 tests) 332ms
+ ✓ src/components/workshop/OperationsPage.test.tsx (7 tests) 321ms
+ ✓ src/components/workshop/ContentCampaignPage.test.tsx (10 tests) 342ms
+ ✓ src/components/workshop/MediaStudioPage.test.tsx (14 tests) 426ms
+ ✓ src/components/workshop/EcommerceWorkshopCatalogContext.test.tsx (8 tests) 81ms
+ ✓ src/components/workshop/AnalystPage.test.tsx (14 tests) 494ms
+ ✓ src/components/workshop/CreatorGrowthPage.test.tsx (21 tests) 712ms
+ ✓ src/components/workshop/EcommerceWorkshopHost.test.tsx (6 tests) 347ms
+ ✓ src/components/workshop/workshopOperationalReleaseDecision.test.ts (10 tests) 4ms
+ ✓ src/components/workshop/workshopLifecycleAcceptance.test.ts (14 tests) 3ms
+ ✓ src/components/workshop/SourceReadinessPanel.test.tsx (4 tests) 151ms
+ ✓ src/components/workshop/BusinessInvestigationTab.test.tsx (16 tests) 729ms
+ ✓ src/components/workshop/workshopCumulativeReleaseGate.test.ts (10 tests) 3ms
+ ✓ src/components/workshop/workshopOperatingReadiness.test.ts (7 tests) 6ms
+ ✓ src/components/workshop/workshopDisasterRecoveryReadiness.test.ts (8 tests) 3ms
+ ✓ src/api/ecommerceWorkshop/dispatchScenarioParser.test.ts (4 tests) 3ms
+ ✓ src/api/ecommerceWorkshop/learningScenarioParser.test.ts (4 tests) 13ms
+ ✓ src/components/workshop/EcommerceWorkshopShell.test.tsx (13 tests) 167ms
+ ✓ src/api/ecommerceWorkshop/investigation/parser.test.ts (4 tests) 14ms
+ ✓ src/api/ecommerceWorkshop/fullVideoScenarioParser.test.ts (3 tests) 7ms
+ ✓ src/api/ecommerceWorkshop/threeModuleClosureClient.test.ts (15 tests) 9ms
+ ✓ src/components/workshop/InstalledModuleNavigation.test.tsx (4 tests) 67ms
+ ✓ src/components/workshop/workshopAcceptance.test.ts (4 tests) 2ms
+ ✓ src/api/ecommerceWorkshop/mediaStudioLifecycleParser.test.ts (2 tests) 6ms
+ ✓ src/components/workshop/EcommerceWorkshopSharedContext.test.tsx (3 tests) 39ms
+ ✓ src/api/ecommerceWorkshop/mediaStudioPublishParser.test.ts (2 tests) 3ms
+ ✓ src/components/workshop/WorkshopInstallationDiagnosis.test.tsx (5 tests) 83ms
+ ✓ src/api/ecommerceWorkshop/batchScenarioParser.test.ts (2 tests) 5ms
+ ✓ src/api/ecommerceWorkshop/agentReadiness.test.ts (2 tests) 4ms
+ ✓ src/api/ecommerceWorkshop/remedyScenarioParser.test.ts (4 tests) 5ms
+ ✓ src/api/ecommerceWorkshop/customerClient.test.ts (3 tests) 5ms
+ ✓ src/api/ecommerceWorkshop/customerContactContributionClient.test.ts (4 tests) 6ms
+ ✓ src/components/workshop/TaskCockpitPage.test.tsx (33 tests) 1719ms
+ ✓ src/api/ecommerceWorkshop/priceGovernanceClient.test.ts (2 tests) 6ms
+ ✓ src/api/ecommerceWorkshop/growthScenarioParser.test.ts (2 tests) 9ms
+ ✓ src/components/workshop/AsyncJobDrawer.test.tsx (3 tests) 70ms
+ ✓ src/api/ecommerceWorkshop/mediaStudioCumulativeParser.test.ts (5 tests) 16ms
+ ✓ src/api/ecommerceWorkshop/creatorWorkflowClient.test.ts (3 tests) 6ms
+ ✓ src/api/ecommerceWorkshop/mediaWorkflowClient.test.ts (3 tests) 8ms
+ ✓ src/api/ecommerceWorkshop/customerLifecycleContributionClient.test.ts (3 tests) 4ms
+ ✓ src/api/ecommerceWorkshop/analystClient.test.ts (2 tests) 4ms
+ ✓ src/api/ecommerceWorkshop/mediaDeliveryParser.test.ts (3 tests) 2ms
+ ✓ src/api/ecommerceWorkshop/priceDispositionContributionClient.test.ts (2 tests) 4ms
+ ✓ src/components/workshop/AsyncStateBoundary.test.tsx (11 tests) 66ms
+ ✓ src/api/ecommerceWorkshop/mediaWorkflowParser.test.ts (2 tests) 3ms
+ ✓ src/api/ecommerceWorkshop/operationCaseWorkspace.test.ts (2 tests) 7ms
+ ✓ src/api/ecommerceWorkshop/priceResearchContributionClient.test.ts (2 tests) 4ms
+ ✓ src/api/ecommerceWorkshop/creatorLifecycleClient.test.ts (1 test) 5ms
+ ✓ src/api/ecommerceWorkshop/mediaStudioClient.test.ts (1 test) 10ms
+ ✓ src/components/workshop/WorkshopCumulativeReleaseGateCard.test.tsx (1 test) 31ms
+ ✓ src/api/ecommerceWorkshop/creatorContributionClient.test.ts (1 test) 4ms
+ ✓ src/components/workshop/WorkshopOperationalReleaseDecisionCard.test.tsx (1 test) 34ms
+ ✓ src/api/ecommerceWorkshop/contentCampaignClient.test.ts (1 test) 5ms
+ ✓ src/components/workshop/workshopViewState.test.ts (3 tests) 3ms
+ ✓ src/api/ecommerceWorkshop/creatorGrowthClient.test.ts (1 test) 4ms
+ ✓ src/components/workshop/WorkshopDisasterRecoveryCard.test.tsx (1 test) 21ms
+ ✓ src/components/workshop/WorkshopOperatingReadinessCard.test.tsx (1 test) 19ms
+ ✓ src/components/workshop/ThreeModuleClosureCard.test.tsx (1 test) 15ms
+RAW FINAL SUMMARY EXCERPT
+rkshopViewState.test.ts (3 tests) 3ms
+ ✓ src/api/ecommerceWorkshop/creatorGrowthClient.test.ts (1 test) 4ms
+ ✓ src/components/workshop/WorkshopDisasterRecoveryCard.test.tsx (1 test) 21ms
+ ✓ src/components/workshop/WorkshopOperatingReadinessCard.test.tsx (1 test) 19ms
+stderr | src/components/workshop/ThreeModuleClosureCard.test.tsx > ThreeModuleClosureCard > 分开展示五轴并保持零副作用
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+ ✓ src/components/workshop/ThreeModuleClosureCard.test.tsx (1 test) 15ms
+
+ Test Files  62 passed (62)
+      Tests  407 passed (407)
+   Start at  09:05:01
+   Duration  4.37s (transform 3.47s, setup 0ms, collect 10.36s, tests 6.95s, environment 24.38s, prepare 3.01s)
+
+
+
+RAW web-typecheck-r1.log SHA e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+BOUNDED EXCERPT start
+
+EXCERPT final
+
+
+RAW web-production-build-r1.log SHA c39705328cddaa23307a4a92f3f44155302d4df9cedf335ac391e6f9ee2b2656
+BOUNDED EXCERPT start
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+vite v5.4.21 building for production...
+transforming...
+✓ 415 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                          0.54 kB │ gzip:   0.33 kB
+dist/assets/SnapshotSchedulesPanel-Bv1tcOY0.css          2.10 kB │ gzip:   0.75 kB
+dist/assets/CanonicalTaskRunPanel-D7IOvora.css         
+EXCERPT final
+kB │ gzip:  14.22 kB
+dist/assets/data-V_BHVZsq.js                            47.03 kB │ gzip:  15.91 kB
+dist/assets/ProductionContractsPage-B_oKdkJp.js         54.65 kB │ gzip:  18.27 kB
+dist/assets/DraftInboxPage-SstPZtQ4.js                  58.57 kB │ gzip:  18.74 kB
+dist/assets/CapacityPage-RCc-ftEi.js                    63.56 kB │ gzip:  19.05 kB
+dist/assets/AssetBundlesPage-NwEU4t9Y.js                88.21 kB │ gzip:  25.61 kB
+dist/assets/LogicCanvasPage-DP7nVXGJ.js                102.83 kB │ gzip:  33.02 kB
+dist/assets/aip-Bev9uCTf.js                            112.74 kB │ gzip:  35.55 kB
+dist/assets/CanvasPage-BzFTPJC2.js                     157.71 kB │ gzip:  42.67 kB
+dist/assets/vendor-router-BH4iFUci.js                  164.65 kB │ gzip:  53.74 kB
+dist/assets/index-BG-BsOYD.js                          934.81 kB │ gzip: 249.40 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.95s
+
+
+EXACT SINGLE PRODUCT DIFF
+diff --git a/apps/web/src/styles/45-ecommerce-workshop.css b/apps/web/src/styles/45-ecommerce-workshop.css
+index df280a492..ca11b0db3 100644
+--- a/apps/web/src/styles/45-ecommerce-workshop.css
++++ b/apps/web/src/styles/45-ecommerce-workshop.css
+@@ -2669,7 +2669,7 @@
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-observations,
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-governance-readiness,
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-governance-panel > .media-studio-blockers { min-width: 0; overflow-y: auto; padding: 14px; }
+-.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-observations { grid-column: 1; grid-row: 1; grid-template-columns: minmax(0, 1fr); border-right: 1px solid #e2e8f0; background: #f7fafc; }
++.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-observations { grid-column: 1; grid-row: 1; grid-template-columns: minmax(0, 1fr); align-content: start; border-right: 1px solid #e2e8f0; background: #f7fafc; }
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-governance-readiness { grid-column: 2; grid-row: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 8px; border-right: 1px solid #e2e8f0; }
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-governance-panel > .media-studio-blockers { grid-column: 3; grid-row: 1; align-content: start; border: 0; background: #fff; }
+ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-governance-audit-context { order: 3; border-top: 1px solid #e2e8f0; background: #fff; }

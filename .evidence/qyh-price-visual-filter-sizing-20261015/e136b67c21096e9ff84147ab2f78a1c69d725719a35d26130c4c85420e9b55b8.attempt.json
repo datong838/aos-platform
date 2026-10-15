@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-price-visual-plan-r2-20261015",
+  "baseline": {
+    "head": "7a429875f58c6594323ca1e5cc475ea2b622b375",
+    "authority_revision": "AOS-002033",
+    "files": {
+      ".evidence/qyh-price-visual-filter-sizing-20261015/plan-review-package-r2.txt": "4b0b46fe55755a7ba5e06c66108d61d503db8f299c3d651b1e444623a2ccf25d"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "e1193bedf1dd8f1ac7a47495ab4c32bab658075dc679eb8caa755a0c86fcd197",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

@@ -1,0 +1,19 @@
+{
+  "images": {
+    "green-rich-1280-r1.png": "ec1295ca76516101577e7c3810b154aec1a62140c1ffe36b324c2d00cc08ddf9",
+    "green-empty-1920-r1.png": "26d86f333496acb01dceaf152996dafd39cc08cfe36a552607971358da89d5d1",
+    "green-filtered-empty-1920-r1.png": "61278d5bcaada6567d12e5912320408c66e5454035b077acc4f3d02ea2c16d89",
+    "green-rich-1920-r1.png": "de1f560a574aa29b3e86dcf6a38760cbb7ddde1ac4941a64a3170551bc6c0901",
+    "red-empty-1440-r1.png": "fda451536708e2c88e2886cfb68fae7a2a3d10dcdc745d9b219846801ea77ef6",
+    "green-filtered-empty-1280-r1.png": "dfdcc2947090c5798c74ff3cd9a531df5b2aac9035adc0f5eafa942e717cba5a",
+    "green-empty-1280-r1.png": "cfecac02530b79a79aa41b8fdc7778c3d549a740c7772718ce1a1c756147ff32",
+    "green-rich-1440-r1.png": "df84abf78137ec21c21a800c571c25bde83048b4e8c61733a512cbe841d4b082",
+    "red-empty-1920-r1.png": "cb475f9eb5af7924e89dcd271bbb8f593c4b01891bffb2df04715d2fb3437694",
+    "red-empty-1280-r1.png": "38ddca8e316d1f41c6397a9f237ac29e468cccd52afb2a1ae794da8a5bd913bd",
+    "green-filtered-empty-1440-r1.png": "0f58f387019d9f5c9688fde7e07f5ae4198b23140f30c5f63e010492e5d67469",
+    "green-empty-1440-r1.png": "c8e3587b97683b5aaa7e55c984bd1c836b672691515f6860d06ab0847193db64"
+  },
+  "allTwelveInspected": true,
+  "fixtureOnly": true,
+  "originalProductionVisualAccepted": false
+}

@@ -1,0 +1,3 @@
+PROPOSED DESIGN ONLY, product CSS untouched.
+- .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-observations { grid-column: 1; grid-row: 1; grid-template-columns: minmax(0, 1fr); border-right: 1px solid #e2e8f0; background: #f7fafc; }
++ .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.price-governance"] .price-observations { grid-column: 1; grid-row: 1; grid-template-columns: minmax(0, 1fr); border-right: 1px solid #e2e8f0; background: #f7fafc;  align-content: start; }
