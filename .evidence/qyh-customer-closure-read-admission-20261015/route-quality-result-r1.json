@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "3f203cc678c84fe9d5dd066276d3c9bf8cf190ccfce23b7b220ea6405cb992da",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-closure-read-admission-20261015-route-quality-r1",
+    "task_id": "qyh-customer-closure-read-admission-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "f3dd116e9c753e94af91667bf13da4f544938945",
+      "authority_revision": "AOS-002038",
+      "files": {
+        ".evidence/qyh-customer-closure-read-admission-20261015/route-quality-material-r1.txt": "dfdd838bff4b0308bfe2b872adf8c799d8e609a279e13170d5dedca79f40905b"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Only canonical customer closure GET adds ReadCatalog admission and dedicated reader, with typed module/tenant identity, query400 and stable503 before business access. Legacy success and creator/price/other GET/POST/compile/bind behavior remain unchanged; no current operating authority expansion.",
+        "evidence": "Diff: ecommerce_workshop.py新增CustomerClosureReadonlyReader import、get_customer_closure_readonly()工厂与CustomerClosureReadonlyDependency；路由函数新增customer_readonly依赖。CUSTOMER分支先调用read_catalog.get_readiness(module_id='ecommerce.customer', org_id/project_id/roles/markings与principal一致)，失败或模块/租户不匹配返回503 CUSTOMER_CLOSURE_READ_ADMISSION_UNAVAILABLE；含INSTALLED_ASSET_READONLY时调用customer_readonly.read(scope)，异常转503；否则回退service.contribution_view。_reject_query_parameters覆盖所有分支，query参数均返回400。无写入或新依赖新增。完整源码见路由函数与diff。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Supplied isolated native controller uses original W6-009 DDL in fresh labeled tmpfs PG, low role with readonly RR, original saved producer DTOs, genuine empty/nonempty/snapshot/creator/RLS/25006/SQL CASE/privacy and exact owned CID stop; recorded evidence is consistent without touching original volume or manufacturing current approval.",
+        "evidence": "native_fixture_r1.py: 使用sha256:7e7dbab8... PostgreSQL镜像，--tmpfs /var/lib/postgresql/data，--label aos.owner/aos.task；创建aos_runtime/fixture_reader角色并GRANT；从w6_009_three_module_closure.py AST提取_scope/upgrade/_BINDING_TABLES节点并exec upgrade()，SHA记录于exactW6DdlSha。低权限连接通过fixture_reader，SET LOCAL ROLE aos_runtime，显式设置conn.read_only=True/isolation_level=REPEATABLE_READ。插入自有customer_rows与creator authority_rows，拒绝foreign-fixture写入（WHERE过滤体现）。INSERT测试捕获sqlstate '25006'；MAX_ITEM_BYTES超限验证LIMIT_EXCEEDED；compiledBy修改验证PRIVACY_UNAVAILABLE。native-r1-result.json: originalVolumeTouched=false、wholeGoalComplete=false、connectionFacts全readonly+repeatable read，stop记录一致。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Reader PASS legally consumed and frozen r3 558 recorded results with current four-file hashes support candidate route. Tests retain unknown/null/immature/request_more and wrong module/tenant/error rejection; production SDK/650/browser/visual/controller/live independent gates remain pending, full231Goal not complete.",
+        "evidence": "source-verification-r3.json: baseHead=f3dd116e..., 四个文件前后SHA一致(readonly.py/customer测试/workshop路由/workshop HTTP测试)，returncode=0，frozenWithOnlyFourOwnedOverlays=true，originalVolumeTouched=false。test_ecommerce_workshop_read_http.py: wrong_module/wrong_tenant/None/object返回503；query/orgId/projectId/limit/mode返回400；AUTHORITY_DRIFT/PRIVACY_UNAVAILABLE/UNAVAILABLE/LIMIT_EXCEEDED返回503且无latestClosure；readonly=True/False与nonempty空/非空DTO断言allowedCommands为空、handoffConsumeAllowed/memoryPromotionAllowed/externalEffectsAllowed为False，快照字段含quantity=null/maturityStatus=immature/businessDecision=request_more。code-review-consumption-r1.json: status=CONSUMED_MATERIAL_REVIEW，transport/source SHA记录。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留AOS-002038基线与r3哈希；如需推进待补独立门禁，先补齐SDK集成验证、650端口连通、浏览器扩展路由命中、visual DTO一致性、controller依赖注入与live HTTP吞吐，最后关闭full231Goal。"
+  }
+}

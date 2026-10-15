@@ -1,0 +1,12 @@
+{
+  "baseHead": "f3dd116e9c753e94af91667bf13da4f544938945",
+  "overlay": {
+    "services/aos-api/aos_api/ecommerce_customer_closure_readonly.py": "1400d88963b41492eb684603503c85181cf984c236433f1f355a2b5695808535",
+    "services/aos-api/tests/test_ecommerce_customer_closure_readonly.py": "116b8b0c1b040ac33e897a45c0f37b3cb8645602870cdb5e368ec70e9ad267ad",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "149e38e67ef5a65d24616a05f99788667b31a24cc038ee10c35c5254ba576e1b",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "07a220b6c60d597cd0e73b25858b350c5ca7341b5ab6512ec46db12ed868cb31"
+  },
+  "privateSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r1",
+  "noUserDirtyCopied": true,
+  "noServiceEffects": true
+}

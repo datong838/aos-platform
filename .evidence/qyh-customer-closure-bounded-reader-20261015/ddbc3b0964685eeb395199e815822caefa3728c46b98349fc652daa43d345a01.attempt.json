@@ -1,0 +1,13 @@
+{
+  "request_id": "qyh-customer-closure-bounded-reader-20261015-code-r1",
+  "baseline": {
+    "head": "f3dd116e9c753e94af91667bf13da4f544938945",
+    "authority_revision": "AOS-002038",
+    "files": {
+      ".evidence/qyh-customer-closure-bounded-reader-20261015/code-review-material-r1.txt": "70fae6e5ffece0fdb6cee21af4e15c6984ef605eb5fd887fa908da2c4f78d362"
+    }
+  },
+  "status": "ATTEMPTED_UNKNOWN",
+  "runner_sha256": "c961d8c1e7b2d3378d2329185ac1e6a1ad6d0130cf33e99bf0ddcb4de4600d61",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}

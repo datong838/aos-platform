@@ -1,0 +1,69 @@
+{
+  "containerId": "57ab91d2c6c54b5066e7a5e52a7f832e06fc929852d85a0db6744ec8417441be",
+  "originalVolumeTouched": false,
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "e2be75ca114e98b188a1860e31b9db83e387abee715bfc54fbcd1c05d922014d",
+  "sourceSha": "1400d88963b41492eb684603503c85181cf984c236433f1f355a2b5695808535",
+  "originalCompilerWithSyntheticResolvers": true,
+  "productionAuthority": false,
+  "customerSavedSnapshotNotCurrentSourceAuthority": true,
+  "snapshotSourceIds": [
+    "customer-fixture",
+    "customer-after-cutoff"
+  ],
+  "trueEmptyFourBlockers": true,
+  "fiveAxesPreserved": true,
+  "creatorStillCreator": true,
+  "foreignRowsHiddenWithoutWhere": true,
+  "visibleClosureCounts": {
+    "creator": 1,
+    "customer": 2
+  },
+  "writeDeniedSqlstate": "25006",
+  "sqlCaseNull": true,
+  "oversizeError": "CUSTOMER_CLOSURE_READ_LIMIT_EXCEEDED",
+  "privacyError": "CUSTOMER_CLOSURE_READ_PRIVACY_UNAVAILABLE",
+  "connectionFacts": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "wholeGoalComplete": false
+}

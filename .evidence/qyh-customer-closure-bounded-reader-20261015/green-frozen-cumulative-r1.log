@@ -1,0 +1,111 @@
+.........................................................F.............. [ 12%]
+........................................................................ [ 25%]
+.................................................F...................... [ 38%]
+........................................................................ [ 51%]
+........................................................................ [ 64%]
+........................................................................ [ 77%]
+........................................................................ [ 90%]
+......................................................                   [100%]
+=================================== FAILURES ===================================
+______ test_original_customer_start_observation_and_store_status_mapping _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11afeb390>
+
+    def test_original_customer_start_observation_and_store_status_mapping(monkeypatch):
+        from tests.aip import test_w6_08_customer_contact as fixture
+        from aos_api import ecommerce_workshop_customer_contact as contact
+        from aos_api.ecommerce_workshop_three_module_closure import ThreeModule
+        from aos_api.ecommerce_workshop_three_module_closure_store import EcommerceWorkshopThreeModuleClosureStore
+        monkeypatch.setattr(fixture, 'SCOPE', SCOPE)
+        service, store, batch = fixture.service_fixture()
+        service.create_frequency_policy(SCOPE, fixture.CreateCustomerFrequencyPolicyRequest(
+            policyId='frequency-policy', revision=1, channel='wecom', purpose='retention', timezone='Asia/Shanghai',
+            quietHoursStart='22:00', quietHoursEnd='08:00', rollingWindowHours=168, maximumContacts=2), 'fixture-actor', now=fixture.NOW)
+        started = service.start_batch(SCOPE, batch.batch_id, fixture.start_request(batch), 'fixture-actor', now=fixture.NOW)
+        exact = fixture.full_ref('CustomerBatchStartDecisionRevision', started.decision_id, started.content_hash)
+        receipt = fixture.ref('ActionReceipt', 'fixture-receipt', 'f')
+        store.receipts[(*SCOPE.key, receipt.resource_id)] = (receipt.content_hash, started.items[0].binding_hash)
+        observation = service.record_dispatch_observation(SCOPE, fixture.RecordCustomerDispatchObservationRequest(
+            startDecisionRef=exact, itemKey=started.items[0].item_key, actionReceiptRef=receipt,
+            state='unknown', observedAt=fixture.NOW + timedelta(seconds=1)))
+        class SourceCursor:
+            def __init__(self, rows): self.rows = rows
+            def fetchone(self): return self.rows[0]
+            def fetchall(self): return self.rows
+        class SourceConnection:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def execute(self, sql, params):
+                assert sql.startswith('SELECT') and params[:2] == SCOPE.key
+                if 'FROM ecommerce_customer_batch_start_decision_revision ' in sql:
+                    return SourceCursor([dict(authority_data=contact.customer_start_authority_data(started), content_hash=started.content_hash)])
+                assert 'FROM ecommerce_customer_dispatch_observation ' in sql
+                return SourceCursor([dict(authority_data=observation.model_dump(mode='json', by_alias=True))])
+        original = EcommerceWorkshopThreeModuleClosureStore(read_connect_factory=lambda scope: SourceConnection())
+        items = original.resolve_domain_items(SCOPE, ThreeModule.CUSTOMER, exact)
+        assert len(items) == 1 and items[0].original_status == 'unknown'
+>       assert items[0].canonical_outcome.value == 'unknown' and items[0].receipt_ref == receipt
+E       AssertionError: assert ('unknown' == 'unknown'
+E         
+E           unknown and ClosureExactR...ture-receipt') == CustomerExact...ture-receipt')
+E         
+E         Use -v to get more diff)
+
+tests/test_ecommerce_customer_closure_readonly.py:194: AssertionError
+________ test_customer_closure_rejects_creator_admission_before_readers ________
+
+    def test_customer_closure_rejects_creator_admission_before_readers():
+        client, legacy, catalog = client_with_catalogs()
+        calls = closure_probes(client)
+        catalog.get_readiness = lambda **scope: lifecycle_admission()
+        response = client.get('/v1/ecommerce-workshop/views/customer/closure-contributions')
+        assert response.status_code == 503 and 'CUSTOMER_CLOSURE_READ_ADMISSION_UNAVAILABLE' in response.text
+>       assert not calls and not legacy.calls and len(catalog.calls) == 1
+E       assert (not [] and not [] and 0 == 1)
+E        +  where [] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x119eded50>.calls
+E        +  and   0 = len([])
+E        +    where [] = <test_ecommerce_workshop_read_http.RejectingCatalog object at 0x119edcb90>.calls
+
+tests/test_ecommerce_workshop_read_http.py:483: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"ts": "2026-10-15T12:03:23.369702+00:00", "level": "debug", "service": "aos-api", "logger": "asyncio", "msg": "Using selector: KqueueSelector", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T12:03:23.529265+00:00", "level": "warning", "service": "aos-api", "logger": "aos-api.errors", "msg": "api_error code=CUSTOMER_CLOSURE_READ_ADMISSION_UNAVAILABLE status=503", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-10-15T12:03:23.529782+00:00", "level": "info", "service": "aos-api", "logger": "httpx", "msg": "HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/closure-contributions \"HTTP/1.1 503 Service Unavailable\"", "trace_id": "-", "org_id": "-", "project_id": "-"}
+------------------------------ Captured log call -------------------------------
+DEBUG    asyncio:selector_events.py:54 Using selector: KqueueSelector
+WARNING  aos-api.errors:errors.py:119 api_error code=CUSTOMER_CLOSURE_READ_ADMISSION_UNAVAILABLE status=503
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/v1/ecommerce-workshop/views/customer/closure-contributions "HTTP/1.1 503 Service Unavailable"
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r1/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+../../../../../../services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_ecommerce_customer_closure_readonly.py::test_original_customer_start_observation_and_store_status_mapping
+FAILED tests/test_ecommerce_workshop_read_http.py::test_customer_closure_rejects_creator_admission_before_readers
+2 failed, 556 passed, 7 warnings in 30.58s

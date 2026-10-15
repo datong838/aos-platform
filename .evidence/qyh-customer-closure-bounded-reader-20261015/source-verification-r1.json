@@ -1,0 +1,48 @@
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_customer_closure_readonly.py": "1400d88963b41492eb684603503c85181cf984c236433f1f355a2b5695808535",
+    "services/aos-api/tests/test_ecommerce_customer_closure_readonly.py": "116b8b0c1b040ac33e897a45c0f37b3cb8645602870cdb5e368ec70e9ad267ad",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "149e38e67ef5a65d24616a05f99788667b31a24cc038ee10c35c5254ba576e1b",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "07a220b6c60d597cd0e73b25858b350c5ca7341b5ab6512ec46db12ed868cb31"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_customer_closure_readonly.py": "1400d88963b41492eb684603503c85181cf984c236433f1f355a2b5695808535",
+    "services/aos-api/tests/test_ecommerce_customer_closure_readonly.py": "116b8b0c1b040ac33e897a45c0f37b3cb8645602870cdb5e368ec70e9ad267ad",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "149e38e67ef5a65d24616a05f99788667b31a24cc038ee10c35c5254ba576e1b",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "07a220b6c60d597cd0e73b25858b350c5ca7341b5ab6512ec46db12ed868cb31"
+  },
+  "returncode": 1,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_customer_closure_readonly.py",
+    "tests/test_ecommerce_customer_contact_readonly.py",
+    "tests/test_customer_start_signing_material.py",
+    "tests/aip/test_w6_08_customer_contact.py",
+    "tests/aip/test_w6_08_customer_contact_store.py",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_customer_lifecycle_readonly.py",
+    "tests/test_w6_009_three_module_closure.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/aip/test_w6_07_customer_lifecycle.py",
+    "tests/aip/test_w6_07_customer_lifecycle_store.py"
+  ],
+  "baseHead": "f3dd116e9c753e94af91667bf13da4f544938945",
+  "frozenWithOnlyFourOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T12:03:05.456795+00:00",
+  "finishedAt": "2026-10-15T12:03:46.447428+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "715eb031785774fef10f1907757a93492345431c8787fb7d2f73095f6f13442c"
+}

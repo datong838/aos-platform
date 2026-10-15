@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "3f203cc678c84fe9d5dd066276d3c9bf8cf190ccfce23b7b220ea6405cb992da",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-customer-closure-read-admission-20261015-design-r1",
+    "task_id": "qyh-customer-closure-read-admission-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "route",
+    "baseline": {
+      "head": "f3dd116e9c753e94af91667bf13da4f544938945",
+      "authority_revision": "AOS-002038",
+      "files": {
+        ".evidence/qyh-customer-closure-read-admission-20261015/design-review-material-r1.txt": "3e45c043a0f785f13fc2f08d3554f319a08640c2d5bb0da755c8c93ca2f65bf6"
+      }
+    },
+    "verdict": "NEED_EVIDENCE",
+    "findings": [
+      {
+        "claim": "客户保存closure与三绑定是历史独立快照，方案沿用原typed hash/派生ID/ledger/exact refs而不读取或批准当前Start/Consent/ActionReceipt，unknown使用量null、immature和request_more不当成功；历史合同与范围陈述有原源码支持。",
+        "evidence": "Full source services/aos-api/aos_api/ecommerce_workshop_three_module_closure.py: ClosureExactRef requires content_hash pattern sha256; ThreeModuleClosureLedger._conserved enforces total=sum and state algebra; BindThreeModuleUsageRequest rejects non-ThreeModuleClosureRevision closure_ref; _unknown_has_no_quantity forbids unknown+quantity not None; ThreeModuleEffectBindingRevision._maturity_is_honest links effect_completed only to maturity_status=mature. Plan r1 states unknown usage.quantity=null, immature future cutoff legal, request_more not accepted; reads verify type/hash/format/source-derived refs without current Start signature/Consent/ActionReceipt authority.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "方案独立客户reader复用原_decode并补严格raw roundtrip、租户模块、SQL载荷限额、时间与只读RR、隐私与异常稳定拒绝；其同cutoff四行保存读取计划可实施且不更改达人价格原行为。",
+        "evidence": "Full source services/aos-api/aos_api/ecommerce_three_module_closure_readonly.py defines CreatorClosureReadonlyReader with _strict_price_raw, _visible, _time; _decode checks outer tenant, revision==1 integer, created_at<=cutoff, payload size limits MAX_ITEM_BYTES=64*1024 and MAX_TOTAL_BYTES=1 MiB, strict roundtrip for PRICE, privacy reduct sensitive plus PRICE keyword blocklist; shared Service._ref builds ClosureExactRef with sha256 prefix, content_hash matching row. Plan adds customer module isolation, stable error codes; does not modify PRICE branch or creator behavior.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "仅登记客户reader两文件及parent canonical GET/HTTP测试，先RED/原生产器/冻结累计/原DDL临时PG/独立质量后才提交部署与真实SDK650视觉现场门；完整Goal和原授权边界保留，方案未把未来证据当已完成。",
+        "evidence": "implementation-plan-r1.md scope新增 services/aos-api/aos_api/ecommerce_customer_closure_readonly.py 与 tests/test_ecommerce_customer_closure_readonly.py，parent仅修改 routers/ecommerce_workshop.py、tests/test_ecommerce_workshop_read_http.py；RED先证缺reader，冻结HEAD Git归档叠加四owned代码，原w6_009 DDL自有tmpfs PG验证；reader-scope-readback-r1.json lease ACTIVE，wholeGoalComplete:false，otherLeasesPreserved:40，nonOverlapping:true。",
+        "assessment": "insufficient"
+      }
+    ],
+    "next_safe_step": "补充证明材料：提供新建的 ecommerce_customer_closure_readonly.py 与 test_ecommerce_customer_closure_readonly.py 内容，或Git diff/提交SHA以证实两文件已在HEAD f3dd116e下登记并含RED/纯内存fixture/冻结累计/TEMP PG测试；同时确认parent路由与HTTP测试已登记待施工。"
+  }
+}

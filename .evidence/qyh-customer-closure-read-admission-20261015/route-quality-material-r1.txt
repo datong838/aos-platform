@@ -1,0 +1,1078 @@
+CANONICAL CUSTOMER CLOSURE GET ROUTE AND NATIVE CONTROLLER QUALITY. Reader code r1 PASS legally consumed; frozen r3 558 passing tests. NOT deployed, original business DB readonly. Full231Goal ACTIVE. Review supplied native controller source now; recorded native result supports only isolated fixture behavior.
+FULL SOURCE services/aos-api/aos_api/ecommerce_customer_closure_readonly.py SHA 1400d88963b41492eb684603503c85181cf984c236433f1f355a2b5695808535
+"""Bounded historical customer closure snapshots, never operating authority."""
+from time import monotonic
+import json
+
+import psycopg
+from psycopg import IsolationLevel
+
+from aos_api.db import connect_read_only
+from aos_api.ecommerce_three_module_closure_readonly import (
+    MAX_ITEM_BYTES, MAX_TOTAL_BYTES, _TABLES, _SavedBindings, _strict_price_raw,
+    _time, _visible, CreatorClosureReadonlyError, CreatorClosureReadonlyReader,
+)
+from aos_api.ecommerce_workshop_three_module_closure import (
+    EcommerceWorkshopThreeModuleClosureService, ThreeModule,
+)
+
+
+class CustomerClosureReadonlyError(RuntimeError):
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
+def _deny(suffix):
+    raise CustomerClosureReadonlyError('CUSTOMER_CLOSURE_READ_' + suffix)
+
+
+class CustomerClosureReadonlyReader:
+    def __init__(self, *, connect_factory=None):
+        self._connect = connect_factory or connect_read_only
+
+    @staticmethod
+    def _row(conn, scope, kind, closure_id):
+        table, _ = _TABLES[kind]
+        identity = 'closure_id' if kind == 'closure' else 'binding_id'
+        source = ('CASE WHEN length(source_id)<=240 THEN source_id ELSE NULL END AS source_id'
+                  if kind == 'closure' else 'NULL AS source_id')
+        predicate = 'module=%s' if kind == 'closure' else 'closure_id=%s'
+        return conn.execute(
+            f'''SELECT org_id,project_id,
+                CASE WHEN length({identity})<=240 THEN {identity} ELSE NULL END AS resource_id,
+                CASE WHEN length(closure_id)<=240 THEN closure_id ELSE NULL END AS closure_id,
+                revision,module,{source},content_hash,created_at,
+                octet_length(authority_data::text) AS payload_bytes,
+                CASE WHEN octet_length(authority_data::text)<={MAX_ITEM_BYTES}
+                     THEN authority_data ELSE NULL END AS authority_data
+                FROM {table} WHERE org_id=%s AND project_id=%s AND {predicate}
+                ORDER BY created_at DESC,{identity} LIMIT 1''',
+            (*scope.key, 'customer' if kind == 'closure' else closure_id),
+        ).fetchone()
+
+    @staticmethod
+    def _decode(row, scope, kind, cutoff, closure):
+        raw = row['authority_data']
+        if type(raw) is not dict:
+            _deny('AUTHORITY_DRIFT')
+        _strict_price_raw(raw)
+        item = CreatorClosureReadonlyReader._decode(
+            row, scope, kind, cutoff, closure, ThreeModule.CUSTOMER)
+        if item.model_dump(mode='json', by_alias=True) != raw:
+            _deny('AUTHORITY_DRIFT')
+        if kind == 'closure' and any(
+                value.receipt_ref is not None and value.receipt_ref.resource_type != 'ActionReceipt'
+                for value in item.items):
+            _deny('CONTENT_UNSUPPORTED')
+        visible = json.dumps(_visible(item.model_dump(mode='json', by_alias=True)), ensure_ascii=False).lower()
+        if any(word in visible for word in ('mobile', 'openid', 'email', 'address', 'contactvalue', 'providerpayload')):
+            _deny('CONTENT_UNSUPPORTED')
+        return item
+
+    def read(self, scope):
+        started = monotonic()
+
+        def deadline():
+            if monotonic() - started > 10:
+                _deny('LIMIT_EXCEEDED')
+
+        try:
+            with self._connect(scope) as conn:
+                if (conn.read_only is not True or conn.autocommit is not False
+                        or conn.isolation_level != IsolationLevel.REPEATABLE_READ):
+                    _deny('UNAVAILABLE')
+                deadline()
+                conn.execute("SET LOCAL statement_timeout='3000ms'")
+                conn.execute("SET LOCAL lock_timeout='500ms'")
+                cutoff = conn.execute('SELECT transaction_timestamp() AS cutoff').fetchone()['cutoff']
+                if not _time(cutoff, cutoff):
+                    _deny('AUTHORITY_DRIFT')
+                bindings = dict(closure=None, usage=None, effect=None, handoff=None)
+                total = 0
+                for kind in _TABLES:
+                    deadline()
+                    closure = bindings['closure']
+                    if kind != 'closure' and closure is None:
+                        break
+                    row = self._row(conn, scope, kind, getattr(closure, 'closure_id', None))
+                    if row is None:
+                        continue
+                    size = row['payload_bytes']
+                    if type(size) is not int or size < 1:
+                        _deny('AUTHORITY_DRIFT')
+                    total += size
+                    if size > MAX_ITEM_BYTES or total > MAX_TOTAL_BYTES:
+                        _deny('LIMIT_EXCEEDED')
+                    bindings[kind] = self._decode(row, scope, kind, cutoff, closure)
+                    deadline()
+                view = EcommerceWorkshopThreeModuleClosureService(_SavedBindings(bindings)).contribution_view(
+                    scope, ThreeModule.CUSTOMER, now=cutoff)
+                data = view.model_dump(mode='json', by_alias=True)
+                data.update(allowedCommands=[], handoffConsumeAllowed=False,
+                            memoryPromotionAllowed=False, externalEffectsAllowed=False)
+                result = type(view).model_validate(data)
+                if len(result.model_dump_json(by_alias=True).encode()) > MAX_TOTAL_BYTES:
+                    _deny('LIMIT_EXCEEDED')
+                deadline()
+                return result
+        except CustomerClosureReadonlyError:
+            raise
+        except CreatorClosureReadonlyError as exc:
+            raise CustomerClosureReadonlyError(
+                exc.code.replace('CREATOR_CLOSURE_READ_', 'CUSTOMER_CLOSURE_READ_', 1)) from exc
+        except RecursionError:
+            _deny('LIMIT_EXCEEDED')
+        except psycopg.Error:
+            _deny('UNAVAILABLE')
+        except (ValueError, KeyError, TypeError, AttributeError, OverflowError):
+            _deny('AUTHORITY_DRIFT')
+
+FULL SOURCE services/aos-api/aos_api/ecommerce_workshop_three_module_closure.py SHA abb7798aae5fe3ca87ec0a05e2445bdbbf16cb54663009709bff20252458ea40
+"""W6-09 canonical closure bridge for creator, price and customer modules.
+
+The bridge never accepts caller-declared aggregate success.  Item outcomes,
+usage, effect maturity and handoff decisions are resolved from their existing
+tenant authorities and remain five independent axes.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
+
+from pydantic import Field, model_validator
+
+from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.tenant_scope import TenantScope
+
+
+THREE_MODULE_CLOSURE_SCHEMA_VERSION = "aos.ecommerce-workshop.three-module-closure/v1"
+
+
+def canonical_hash(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+class ThreeModuleClosureBlocked(RuntimeError):
+    code = "THREE_MODULE_CLOSURE_BLOCKED"
+
+
+class ThreeModuleClosureConflict(ThreeModuleClosureBlocked):
+    code = "THREE_MODULE_CLOSURE_CONFLICT"
+
+
+class ThreeModule(StrEnum):
+    CREATOR = "creator"
+    PRICE = "price"
+    CUSTOMER = "customer"
+
+
+class CanonicalItemOutcome(StrEnum):
+    IN_PROGRESS = "in_progress"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+    DISPUTED = "disputed"
+    SKIPPED = "skipped"
+
+
+class ClosureState(StrEnum):
+    EMPTY = "empty"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    PARTIAL = "partial"
+    UNKNOWN = "unknown"
+
+
+class ClosureExactRef(AipContractModel):
+    resource_type: str = Field(min_length=1, max_length=120)
+    resource_id: str = Field(min_length=1, max_length=240)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    receipt_id: str = Field(min_length=1, max_length=240)
+
+
+class CompileThreeModuleClosureRequest(AipContractModel):
+    module: ThreeModule
+    source_ref: ClosureExactRef
+
+    @model_validator(mode="after")
+    def _source_type(self) -> "CompileThreeModuleClosureRequest":
+        expected = {
+            ThreeModule.CREATOR: "CreatorBatchStartDecisionRevision",
+            ThreeModule.PRICE: "PriceDispositionRevision",
+            ThreeModule.CUSTOMER: "CustomerBatchStartDecisionRevision",
+        }
+        if self.source_ref.resource_type != expected[self.module]:
+            raise ValueError("three-module sourceRef type drifted")
+        return self
+
+
+class ThreeModuleItemOutcome(AipContractModel):
+    item_key: str = Field(min_length=1, max_length=240)
+    original_status: str = Field(min_length=1, max_length=80)
+    canonical_outcome: CanonicalItemOutcome
+    original_ref: ClosureExactRef
+    receipt_ref: ClosureExactRef | None = None
+
+
+class ThreeModuleClosureLedger(AipContractModel):
+    total: int = Field(ge=0)
+    in_progress: int = Field(ge=0)
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    unknown: int = Field(ge=0)
+    disputed: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    state: ClosureState
+
+    @model_validator(mode="after")
+    def _conserved(self) -> "ThreeModuleClosureLedger":
+        values = [self.in_progress, self.succeeded, self.failed, self.unknown, self.disputed, self.skipped]
+        if self.total != sum(values):
+            raise ValueError("three-module closure ledger must conserve items")
+        nonzero = sum(value > 0 for value in values)
+        expected = (
+            ClosureState.EMPTY if self.total == 0 else
+            ClosureState.COMPLETED if self.succeeded == self.total else
+            ClosureState.FAILED if self.failed == self.total else
+            ClosureState.UNKNOWN if self.unknown == self.total else
+            ClosureState.IN_PROGRESS if self.in_progress == self.total else
+            ClosureState.PARTIAL if nonzero > 1 else
+            ClosureState.PARTIAL
+        )
+        if self.state is not expected:
+            raise ValueError("three-module closure state does not match item algebra")
+        return self
+
+
+class ThreeModuleClosureRevision(AipContractModel):
+    tenant: TenantContext
+    closure_id: str
+    revision: int = 1
+    module: ThreeModule
+    source_ref: ClosureExactRef
+    items: list[ThreeModuleItemOutcome] = Field(default_factory=list, max_length=2000)
+    ledger: ThreeModuleClosureLedger
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    compiled_by: str
+    compiled_at: datetime
+
+
+class BindThreeModuleUsageRequest(AipContractModel):
+    closure_ref: ClosureExactRef
+    usage_receipt_id: str = Field(min_length=1, max_length=240)
+
+    @model_validator(mode="after")
+    def _closure(self) -> "BindThreeModuleUsageRequest":
+        if self.closure_ref.resource_type != "ThreeModuleClosureRevision":
+            raise ValueError("closureRef drifted")
+        return self
+
+
+class ThreeModuleUsageBindingRevision(AipContractModel):
+    tenant: TenantContext
+    binding_id: str
+    revision: int = 1
+    closure_ref: ClosureExactRef
+    usage_receipt_ref: ClosureExactRef
+    lineage_id: str
+    quality: str = Field(pattern=r"^(measured|estimated|unknown)$")
+    quantity: float | None = Field(default=None, ge=0)
+    unit: str
+    adjustment_total: float = 0
+    settlement: str = Field(pattern=r"^(measured|estimated|unknown)$")
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    bound_at: datetime
+
+    @model_validator(mode="after")
+    def _unknown_has_no_quantity(self) -> "ThreeModuleUsageBindingRevision":
+        if self.quality == "unknown" and self.quantity is not None:
+            raise ValueError("unknown usage cannot invent zero or quantity")
+        if self.quality != "unknown" and self.quantity is None:
+            raise ValueError("known usage requires canonical quantity")
+        return self
+
+
+class BindThreeModuleEffectRequest(AipContractModel):
+    closure_ref: ClosureExactRef
+    effect_review_id: str = Field(min_length=1, max_length=240)
+
+    @model_validator(mode="after")
+    def _closure(self) -> "BindThreeModuleEffectRequest":
+        if self.closure_ref.resource_type != "ThreeModuleClosureRevision":
+            raise ValueError("closureRef drifted")
+        return self
+
+
+class ThreeModuleEffectBindingRevision(AipContractModel):
+    tenant: TenantContext
+    binding_id: str
+    revision: int = 1
+    closure_ref: ClosureExactRef
+    effect_review_ref: ClosureExactRef
+    maturity_status: str = Field(pattern=r"^(immature|mature|insufficient|unknown)$")
+    accepted: bool
+    effect_completed: bool
+    sample_count: int = Field(ge=0)
+    min_sample: int = Field(ge=1)
+    cutoff_at: datetime
+    observed_at: datetime
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    bound_at: datetime
+
+    @model_validator(mode="after")
+    def _maturity_is_honest(self) -> "ThreeModuleEffectBindingRevision":
+        if self.effect_completed != (self.maturity_status == "mature"):
+            raise ValueError("effectCompleted must follow canonical maturity only")
+        return self
+
+
+class BindThreeModuleHandoffRequest(AipContractModel):
+    closure_ref: ClosureExactRef
+    handoff_id: str = Field(min_length=1, max_length=240)
+
+    @model_validator(mode="after")
+    def _closure(self) -> "BindThreeModuleHandoffRequest":
+        if self.closure_ref.resource_type != "ThreeModuleClosureRevision":
+            raise ValueError("closureRef drifted")
+        return self
+
+
+class ThreeModuleHandoffBindingRevision(AipContractModel):
+    tenant: TenantContext
+    binding_id: str
+    revision: int = 1
+    closure_ref: ClosureExactRef
+    handoff_ref: ClosureExactRef
+    transport_status: str
+    business_decision: str | None = Field(default=None, pattern=r"^(accepted|rejected|request_more|returned)$")
+    task_ref: dict[str, Any]
+    task_run_ref: dict[str, Any]
+    disclosure_ref_count: int = Field(ge=0)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    bound_at: datetime
+
+
+class ThreeModuleClosureContributionView(AipContractModel):
+    schema_version: str = THREE_MODULE_CLOSURE_SCHEMA_VERSION
+    tenant: TenantContext
+    module: ThreeModule
+    evaluated_at: datetime
+    atomic_skill_ids: list[str]
+    logic_id: str
+    primary_colleague: str
+    collaborator_colleagues: list[str]
+    latest_closure: ThreeModuleClosureRevision | None
+    latest_usage: ThreeModuleUsageBindingRevision | None
+    latest_effect: ThreeModuleEffectBindingRevision | None
+    latest_handoff: ThreeModuleHandoffBindingRevision | None
+    blockers: list[str]
+    allowed_commands: list[str] = Field(default_factory=lambda: [
+        "COMPILE_THREE_MODULE_CLOSURE",
+        "BIND_CANONICAL_USAGE",
+        "BIND_CANONICAL_EFFECT_REVIEW",
+        "BIND_CANONICAL_HANDOFF",
+    ])
+    handoff_consume_allowed: bool = False
+    memory_promotion_allowed: bool = False
+    external_effects_allowed: bool = False
+
+
+_CONTRIBUTION = {
+    ThreeModule.CREATOR: (
+        ["creator-batch-prepare", "creator-lane-reconcile", "creator-relationship-review"],
+        "ecommerce-creator-growth",
+        "达人运营官",
+        ["内容官", "数据参谋"],
+    ),
+    ThreeModule.PRICE: (
+        ["compile-price-case", "prepare-price-handoff", "evaluate-price-effect"],
+        "ecommerce-price-governance",
+        "数据参谋",
+        ["活动策划师", "导购顾问"],
+    ),
+    ThreeModule.CUSTOMER: (
+        ["segment-customers", "design-customer-journey", "evaluate-dialogue-effect"],
+        "ecommerce-customer-relationship",
+        "私域管家",
+        ["内容官", "客服专员", "导购顾问", "数据参谋"],
+    ),
+}
+
+
+def _ledger(items: list[ThreeModuleItemOutcome]) -> ThreeModuleClosureLedger:
+    counts = {value.value: 0 for value in CanonicalItemOutcome}
+    for item in items:
+        counts[item.canonical_outcome.value] += 1
+    total = len(items)
+    nonzero = sum(value > 0 for value in counts.values())
+    state = (
+        ClosureState.EMPTY if total == 0 else
+        ClosureState.COMPLETED if counts["succeeded"] == total else
+        ClosureState.FAILED if counts["failed"] == total else
+        ClosureState.UNKNOWN if counts["unknown"] == total else
+        ClosureState.IN_PROGRESS if counts["in_progress"] == total else
+        ClosureState.PARTIAL if nonzero > 1 else
+        ClosureState.PARTIAL
+    )
+    return ThreeModuleClosureLedger(total=total, state=state, **counts)
+
+
+class EcommerceWorkshopThreeModuleClosureService:
+    def __init__(self, store: Any) -> None:
+        self.store = store
+
+    @staticmethod
+    def _tenant(scope: TenantScope) -> TenantContext:
+        return TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+
+    @staticmethod
+    def _ref(resource_type: str, resource_id: str, content_hash: str) -> ClosureExactRef:
+        return ClosureExactRef(
+            resourceType=resource_type,
+            resourceId=resource_id,
+            revision=1,
+            contentHash=f"sha256:{content_hash}",
+            receiptId=f"receipt-{resource_id}",
+        )
+
+    def compile(self, scope: TenantScope, request: CompileThreeModuleClosureRequest, actor: str, *, now: datetime | None = None) -> ThreeModuleClosureRevision:
+        at = now or datetime.now(UTC)
+        items = self.store.resolve_domain_items(scope, request.module, request.source_ref)
+        payload = {"module": request.module, "sourceRef": request.source_ref, "items": items}
+        content_hash = canonical_hash(payload)
+        closure_id = f"three-module-closure-{canonical_hash([*scope.key, request.module, request.source_ref.resource_id])[:24]}"
+        item = ThreeModuleClosureRevision(
+            tenant=self._tenant(scope), closureId=closure_id, module=request.module,
+            sourceRef=request.source_ref, items=items, ledger=_ledger(items),
+            contentHash=content_hash, compiledBy=actor, compiledAt=at,
+        )
+        return self.store.append_closure(scope, item)
+
+    def require_closure(self, scope: TenantScope, ref: ClosureExactRef) -> ThreeModuleClosureRevision:
+        return self.store.require_closure(scope, ref)
+
+    def bind_usage(self, scope: TenantScope, request: BindThreeModuleUsageRequest, *, now: datetime | None = None) -> ThreeModuleUsageBindingRevision:
+        at = now or datetime.now(UTC)
+        self.store.require_closure(scope, request.closure_ref)
+        resolved = self.store.resolve_usage(scope, request.usage_receipt_id)
+        payload = {"closureRef": request.closure_ref, **resolved}
+        content_hash = canonical_hash(payload)
+        item = ThreeModuleUsageBindingRevision(
+            tenant=self._tenant(scope), bindingId=f"three-module-usage-{content_hash[:24]}",
+            closureRef=request.closure_ref, contentHash=content_hash, boundAt=at, **resolved,
+        )
+        return self.store.append_usage_binding(scope, item)
+
+    def bind_effect(self, scope: TenantScope, request: BindThreeModuleEffectRequest, *, now: datetime | None = None) -> ThreeModuleEffectBindingRevision:
+        at = now or datetime.now(UTC)
+        closure = self.store.require_closure(scope, request.closure_ref)
+        resolved = self.store.resolve_effect(scope, request.effect_review_id, closure.source_ref)
+        payload = {"closureRef": request.closure_ref, **resolved}
+        content_hash = canonical_hash(payload)
+        item = ThreeModuleEffectBindingRevision(
+            tenant=self._tenant(scope), bindingId=f"three-module-effect-{content_hash[:24]}",
+            closureRef=request.closure_ref, contentHash=content_hash, boundAt=at, **resolved,
+        )
+        return self.store.append_effect_binding(scope, item)
+
+    def bind_handoff(self, scope: TenantScope, request: BindThreeModuleHandoffRequest, *, now: datetime | None = None) -> ThreeModuleHandoffBindingRevision:
+        at = now or datetime.now(UTC)
+        self.store.require_closure(scope, request.closure_ref)
+        resolved = self.store.resolve_handoff(scope, request.handoff_id)
+        payload = {"closureRef": request.closure_ref, **resolved}
+        content_hash = canonical_hash(payload)
+        item = ThreeModuleHandoffBindingRevision(
+            tenant=self._tenant(scope), bindingId=f"three-module-handoff-{content_hash[:24]}",
+            closureRef=request.closure_ref, contentHash=content_hash, boundAt=at, **resolved,
+        )
+        return self.store.append_handoff_binding(scope, item)
+
+    def contribution_view(self, scope: TenantScope, module: ThreeModule, *, now: datetime | None = None) -> ThreeModuleClosureContributionView:
+        at = now or datetime.now(UTC)
+        latest = self.store.latest_bindings(scope, module)
+        skills, logic, primary, collaborators = _CONTRIBUTION[module]
+        closure = latest["closure"]
+        blockers: list[str] = []
+        if closure is None:
+            blockers.append("THREE_MODULE_CLOSURE_NOT_COMPILED")
+        if latest["usage"] is None:
+            blockers.append("THREE_MODULE_USAGE_NOT_BOUND")
+        if latest["effect"] is None:
+            blockers.append("THREE_MODULE_EFFECT_NOT_BOUND")
+        elif latest["effect"].maturity_status != "mature":
+            blockers.append(f"THREE_MODULE_EFFECT_{latest['effect'].maturity_status.upper()}")
+        if latest["handoff"] is None:
+            blockers.append("THREE_MODULE_HANDOFF_NOT_BOUND")
+        return ThreeModuleClosureContributionView(
+            tenant=self._tenant(scope), module=module, evaluatedAt=at,
+            atomicSkillIds=skills, logicId=logic, primaryColleague=primary,
+            collaboratorColleagues=collaborators, latestClosure=closure,
+            latestUsage=latest["usage"], latestEffect=latest["effect"],
+            latestHandoff=latest["handoff"], blockers=blockers,
+        )
+
+
+__all__ = [name for name in globals() if name.startswith("ThreeModule") or name.startswith("BindThree") or name.startswith("CompileThree") or name == "EcommerceWorkshopThreeModuleClosureService"]
+
+FULL SOURCE .evidence/qyh-customer-closure-bounded-reader-20261015/native_fixture_r1.py SHA 931a8d7b0e4279a2774d72930e87725fad304e5cd018dc051ce6849e6aced998
+"""Original W6-009 DDL in an owned disposable tmpfs, never original business DB."""
+from pathlib import Path
+import ast
+import contextlib
+import datetime
+import hashlib
+import importlib.util
+import json
+import os
+import secrets
+import subprocess
+import sys
+import time
+import psycopg
+from psycopg import IsolationLevel, sql
+from psycopg.rows import dict_row
+E=Path(__file__).resolve().parent;R=E.parents[1]
+os.environ.update(AOS_DATABASE_URL='postgresql://placeholder@127.0.0.1:1/unused',AOS_DOTENV_DISABLED='1')
+F=E/'private/candidate-source-r3';sys.path.insert(0,str(F/'services/aos-api'));sys.path.insert(0,str(R/'scripts/memory'))
+import memoryctl as m
+from aos_api.tenant_scope import TenantScope
+from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyReader,CustomerClosureReadonlyError,MAX_ITEM_BYTES
+from aos_api.ecommerce_three_module_closure_readonly import CreatorClosureReadonlyReader
+from aos_api.ecommerce_workshop_three_module_closure import ThreeModule
+spec=importlib.util.spec_from_file_location('closure_native_fixture',F/'services/aos-api/tests/test_ecommerce_three_module_closure_readonly.py')
+f=importlib.util.module_from_spec(spec);spec.loader.exec_module(f)
+spec2=importlib.util.spec_from_file_location('customer_closure_native_fixture',F/'services/aos-api/tests/test_ecommerce_customer_closure_readonly.py')
+c=importlib.util.module_from_spec(spec2);spec2.loader.exec_module(c)
+OWNER='codex-01a13484-f019-7d82-94ce-812396db9124'
+NAME='qyh-customer-closure-native-20261015-r1';PORT=18625
+IMAGE='sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd'
+SCOPE=TenantScope('dev-org','fixture-project')
+def docker(*args):return subprocess.run(['docker','--context','colima-aos-extension',*args],capture_output=True,text=True)
+def save(name,value):
+    m.scan_secrets(value)
+    with (E/name).open('x') as stream:
+        json.dump(value,stream,indent=2);stream.flush();os.fsync(stream.fileno())
+lease=next(r for r in m.load_leases(m.DEFAULT_PATHS)['leases'] if r['task_id']==E.name)
+assert lease['owner']==OWNER and lease['base_revision']=='AOS-002038'
+assert datetime.datetime.fromisoformat(lease['lease_expires_at'])>datetime.datetime.now(datetime.timezone.utc)
+assert m.load_authority(m.DEFAULT_PATHS)['project_revision']=='AOS-002038'
+assert not (E/'native-r1-intent.json').exists() and docker('inspect',NAME).returncode!=0
+assert not subprocess.run(['lsof','-t',f'-iTCP:{PORT}','-sTCP:LISTEN'],capture_output=True,text=True).stdout.strip()
+password=secrets.token_hex(24)
+save('native-r1-intent.json',dict(name=NAME,port=PORT,tmpfs=True,owner=OWNER,originalVolumeTouched=False))
+created=docker('run','-d','--name',NAME,'--label','aos.owner='+OWNER,'--label','aos.task='+E.name,
+    '--tmpfs','/var/lib/postgresql/data:rw,size=512m','-p',f'127.0.0.1:{PORT}:5432','-e','POSTGRES_PASSWORD='+password,IMAGE)
+assert created.returncode==0;cid=created.stdout.strip()
+save('native-r1-created.json',dict(containerId=cid,name=NAME,owner=OWNER))
+args=dict(host='127.0.0.1',port=PORT,dbname='postgres',password=password,row_factory=dict_row,connect_timeout=1)
+try:
+    for _ in range(100):
+        try:
+            with psycopg.connect(user='postgres',**args) as conn:conn.execute('SELECT 1')
+            break
+        except psycopg.OperationalError:time.sleep(.1)
+    else:raise RuntimeError('fixture startup unresolved')
+    with psycopg.connect(user='postgres',**args) as conn:
+        conn.execute('CREATE ROLE aos_runtime NOLOGIN NOSUPERUSER NOBYPASSRLS')
+        conn.execute(sql.SQL('CREATE ROLE fixture_reader LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS PASSWORD {}').format(sql.Literal(password)))
+        conn.execute('GRANT aos_runtime TO fixture_reader')
+        conn.execute('CREATE TABLE meta_workspace(org_id text,project_id text,PRIMARY KEY(org_id,project_id))')
+        conn.execute('INSERT INTO meta_workspace VALUES(%s,%s),(%s,%s)',(*SCOPE.key,'foreign-fixture',SCOPE.project_id))
+        source=(F/'services/aos-api/alembic/versions/w6_009_three_module_closure.py').read_text();tree=ast.parse(source)
+        nodes=[n for n in tree.body if (isinstance(n,ast.FunctionDef) and n.name in {'_scope','upgrade'}) or
+               (isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='_BINDING_TABLES' for t in n.targets))]
+        class Op:
+            def execute(self,statement):conn.execute(statement)
+        env={'op':Op()};exec(compile(ast.Module(body=nodes,type_ignores=[]),'exact-owned-w6_009-ddl','exec'),env);env['upgrade']()
+    own=c.customer_rows(scope=SCOPE)
+    creator=f.authority_rows('creator',scope=SCOPE)
+    foreign=c.customer_rows(scope=TenantScope('foreign-fixture',SCOPE.project_id))
+    def insert_rows(rows):
+        with psycopg.connect(user='postgres',**args) as conn:
+            for kind,row in rows.items():
+                table=f.TABLES[kind];identity='closure_id' if kind=='closure' else 'binding_id'
+                extra_column='source_id' if kind=='closure' else 'closure_id'
+                extra_value=row['source_id'] if kind=='closure' else row['closure_id']
+                conn.execute(f'INSERT INTO {table}(org_id,project_id,{identity},revision,module,{extra_column},content_hash,authority_data,created_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s)',
+                    (row['org_id'],row['project_id'],row['resource_id'],1,row['module'],extra_value,row['content_hash'],json.dumps(row['authority_data']),row['created_at']))
+    injected=[False];connection_facts=[]
+    def concurrent_closure():
+        with psycopg.connect(user='postgres',**args) as conn:
+            now=conn.execute('SELECT transaction_timestamp() AS now').fetchone()['now']
+        store=f.ProducerFixture();service=f.EcommerceWorkshopThreeModuleClosureService(store)
+        item=service.compile(SCOPE,f.CompileThreeModuleClosureRequest(module='customer',sourceRef=f.ref('CustomerBatchStartDecisionRevision','customer-after-cutoff')),'synthetic-concurrent',now=now)
+        insert_rows({'closure':dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,
+            resource_id=item.closure_id,closure_id=item.closure_id,module='customer',source_id=item.source_ref.resource_id,
+            content_hash=item.content_hash,authority_data=item.model_dump(mode='json',by_alias=True),created_at=now)})
+    @contextlib.contextmanager
+    def connection(scope):
+        assert scope==SCOPE
+        with psycopg.connect(user='fixture_reader',**args) as conn:
+            conn.read_only=True;conn.isolation_level=IsolationLevel.REPEATABLE_READ
+            conn.execute('SET LOCAL ROLE aos_runtime')
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",scope.key)
+            connection_facts.append(dict(conn.execute("SELECT current_user AS role,current_setting('transaction_read_only') AS readonly,current_setting('transaction_isolation') AS isolation").fetchone()))
+            class Probe:
+                read_only=conn.read_only;autocommit=conn.autocommit;isolation_level=conn.isolation_level
+                def execute(self,statement,params=()):
+                    result=conn.execute(statement,params)
+                    if 'transaction_timestamp() AS cutoff' in statement and not injected[0]:
+                        injected[0]=True;concurrent_closure()
+                    return result
+            yield Probe()
+    reader=CustomerClosureReadonlyReader(connect_factory=connection)
+    injected[0]=True
+    empty=reader.read(SCOPE)
+    assert empty.latest_closure is empty.latest_usage is empty.latest_effect is empty.latest_handoff is None
+    assert len(empty.blockers)==4 and not empty.allowed_commands
+    injected[0]=False
+    for rows in (own,creator,foreign):insert_rows(rows)
+    first,second=reader.read(SCOPE),reader.read(SCOPE)
+    assert first.latest_closure.source_ref.resource_id=='customer-fixture'
+    assert second.latest_closure.source_ref.resource_id=='customer-after-cutoff'
+    assert first.latest_usage.quantity is None and first.latest_effect.maturity_status=='immature'
+    assert first.latest_handoff.business_decision=='request_more' and not first.allowed_commands
+    assert second.latest_usage is second.latest_effect is second.latest_handoff is None
+    creator_view=CreatorClosureReadonlyReader(connect_factory=connection).read(SCOPE)
+    assert creator_view.module is ThreeModule.CREATOR and creator_view.latest_closure.source_ref.resource_type=='CreatorBatchStartDecisionRevision'
+    with connection(SCOPE) as conn:
+        counts={row['module']:row['n'] for row in conn.execute('SELECT module,count(*) AS n FROM ecommerce_three_module_closure_revision GROUP BY module').fetchall()}
+        assert counts=={'creator':1,'customer':2}
+        try:conn.execute('INSERT INTO ecommerce_three_module_closure_revision SELECT * FROM ecommerce_three_module_closure_revision')
+        except psycopg.Error as error:state=error.sqlstate
+        else:raise AssertionError('native write not denied')
+    assert state=='25006'
+    latest=second.latest_closure
+    original=latest.model_dump(mode='json',by_alias=True)
+    def change(payload):
+        with psycopg.connect(user='postgres',**args) as conn:
+            conn.execute('UPDATE ecommerce_three_module_closure_revision SET authority_data=%s::jsonb WHERE org_id=%s AND project_id=%s AND closure_id=%s',
+                (json.dumps(payload),*SCOPE.key,latest.closure_id))
+    change({**original,'compiledBy':'x'*(MAX_ITEM_BYTES+1)})
+    try:reader.read(SCOPE)
+    except CustomerClosureReadonlyError as error:oversize=error.code
+    else:raise AssertionError('oversize not denied')
+    assert oversize=='CUSTOMER_CLOSURE_READ_LIMIT_EXCEEDED'
+    with connection(SCOPE) as conn:
+        row=reader._row(conn,SCOPE,'closure',None)
+        assert row['authority_data'] is None and row['payload_bytes']>MAX_ITEM_BYTES
+    change({**original,'compiledBy':'fixture@example.invalid'})
+    try:reader.read(SCOPE)
+    except CustomerClosureReadonlyError as error:privacy=error.code
+    else:raise AssertionError('private actor exposed')
+    assert privacy=='CUSTOMER_CLOSURE_READ_PRIVACY_UNAVAILABLE'
+    save('native-r1-result.json',dict(containerId=cid,originalVolumeTouched=False,fixtureOnlyNotOriginalSchema=True,
+        exactW6DdlSha=hashlib.sha256(source.encode()).hexdigest(),sourceSha=hashlib.sha256((F/'services/aos-api/aos_api/ecommerce_customer_closure_readonly.py').read_bytes()).hexdigest(),
+        originalCompilerWithSyntheticResolvers=True,productionAuthority=False,customerSavedSnapshotNotCurrentSourceAuthority=True,
+        snapshotSourceIds=[first.latest_closure.source_ref.resource_id,second.latest_closure.source_ref.resource_id],
+        trueEmptyFourBlockers=True,fiveAxesPreserved=True,creatorStillCreator=True,foreignRowsHiddenWithoutWhere=True,visibleClosureCounts=counts,
+        writeDeniedSqlstate=state,sqlCaseNull=True,oversizeError=oversize,privacyError=privacy,connectionFacts=connection_facts,wholeGoalComplete=False))
+    print(json.dumps(dict(snapshot=['customer-fixture','customer-after-cutoff'],creatorPreserved=True,writeDenied=state,sqlCaseNull=True,originalVolumeTouched=False)))
+finally:
+    owned=json.loads(docker('inspect',NAME).stdout)[0]
+    assert owned['Id']==cid and owned['Config']['Labels']['aos.owner']==OWNER
+    assert docker('stop',NAME).returncode==0
+    after=json.loads(docker('inspect',NAME).stdout)[0];assert after['Id']==cid and not after['State']['Running']
+    save('native-r1-stopped.json',dict(containerId=cid,stopped=True,originalVolumeTouched=False))
+
+COMPLETE SELECTED FUNCTIONS services/aos-api/aos_api/routers/ecommerce_workshop.py SHA 149e38e67ef5a65d24616a05f99788667b31a24cc038ee10c35c5254ba576e1b
+def get_customer_closure_readonly() -> CustomerClosureReadonlyReader:
+    return CustomerClosureReadonlyReader()
+def _reject_query_parameters(request: Request) -> None:
+    if request.query_params:
+        raise ApiError(
+            code="VALIDATION",
+            message="ecommerce Workshop reads do not accept query parameters",
+            status_code=400,
+        )
+@router.get(
+    "/views/{module}/closure-contributions",
+    response_model=ThreeModuleClosureContributionView,
+    operation_id="ecommerceWorkshopThreeModuleClosureContributionViewGet",
+    responses=_ERRORS,
+)
+def get_three_module_closure_contribution_view(
+    request: Request,
+    module: ThreeModule,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    read_catalog: ReadCatalogDependency,
+    service: ThreeModuleClosureDependency,
+    readonly: CreatorClosureReadonlyDependency,
+    price_readonly: PriceClosureReadonlyDependency,
+    customer_readonly: CustomerClosureReadonlyDependency,
+) -> ThreeModuleClosureContributionView:
+    _reject_query_parameters(request)
+    if module is ThreeModule.CREATOR:
+        admission = _require_creator_growth_installation(principal=principal, catalog=read_catalog)
+        if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+            raise ApiError(code="CREATOR_CLOSURE_READ_ADMISSION_UNAVAILABLE",
+                           message="当前闭环贡献读取准入不可核验。", status_code=503)
+        if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+            try:
+                return readonly.read(TenantScope(principal.org_id, principal.project_id))
+            except CreatorClosureReadonlyError as exc:
+                raise ApiError(code=exc.code, message="当前闭环贡献暂不可读，请核对保存记录或读取范围。",
+                               status_code=503) from exc
+        return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+    if module is ThreeModule.PRICE:
+        admission = _invoke(lambda: read_catalog.get_readiness(
+            module_id="ecommerce.price-governance", org_id=principal.org_id,
+            project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
+        ))
+        if not isinstance(admission, EcommerceWorkshopModuleReadinessResponse):
+            raise ApiError(code="PRICE_CLOSURE_READ_ADMISSION_UNAVAILABLE",
+                           message="当前价格闭环读取准入不可核验。", status_code=503)
+        if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+            try:
+                return price_readonly.read(TenantScope(principal.org_id, principal.project_id))
+            except PriceClosureReadonlyError as exc:
+                raise ApiError(code=exc.code, message="当前价格闭环暂不可读，请核对保存记录或读取范围。",
+                               status_code=503) from exc
+        return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+    if module is ThreeModule.CUSTOMER:
+        admission = _invoke(lambda: read_catalog.get_readiness(
+            module_id="ecommerce.customer", org_id=principal.org_id,
+            project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
+        ))
+        if (not isinstance(admission, EcommerceWorkshopModuleReadinessResponse)
+                or admission.item.module_id != "ecommerce.customer"
+                or (admission.tenant.org_id, admission.tenant.project_id) != (principal.org_id, principal.project_id)):
+            raise ApiError(code="CUSTOMER_CLOSURE_READ_ADMISSION_UNAVAILABLE",
+                           message="当前客户闭环读取准入不可核验。", status_code=503)
+        if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+            try:
+                return customer_readonly.read(TenantScope(principal.org_id, principal.project_id))
+            except CustomerClosureReadonlyError as exc:
+                raise ApiError(code=exc.code, message="当前客户闭环暂不可读，请核对保存记录或读取范围。",
+                               status_code=503) from exc
+        return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+    _require_three_module_installation(module, principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+COMPLETE SELECTED FUNCTIONS services/aos-api/tests/test_ecommerce_workshop_read_http.py SHA 311f4c92d57cbdfa121c8b6edcb01ad66f52b66b30162a9ae008ac2ed4b22b04
+def client_with_catalogs():
+    app = FastAPI()
+    register_exception_handlers(app)
+    app.include_router(routes.router)
+    legacy, reader = RejectingCatalog(), RejectingCatalog()
+    app.dependency_overrides[routes.get_ecommerce_workshop_catalog] = lambda: legacy
+    app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = lambda: reader
+    app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='scope-test', org_id='org-org', project_id='dev-project',
+        roles=['admin'], markings=[],
+    )
+    return TestClient(app), legacy, reader
+def test_customer_closure_rejects_creator_admission_before_readers():
+    client, legacy, catalog = client_with_catalogs()
+    calls = closure_probes(client)
+    def wrong_module(**scope):
+        catalog.calls.append(scope)
+        return lifecycle_admission()
+    catalog.get_readiness = wrong_module
+    response = client.get('/v1/ecommerce-workshop/views/customer/closure-contributions')
+    assert response.status_code == 503 and 'CUSTOMER_CLOSURE_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+def contact_admission(readonly=True, tenant=None):
+    from tests.test_ecommerce_workshop_read_catalog import make, ARGS
+    catalog, _ = make(); result = catalog.get_readiness(**ARGS)
+    if not readonly:
+        result = result.model_copy(update={'item': result.item.model_copy(update={
+            'blockers': [b for b in result.item.blockers if b.reason_code != 'INSTALLED_ASSET_READONLY']})})
+    if tenant:
+        result = result.model_copy(update={'tenant': result.tenant.model_copy(update={'org_id': tenant.org_id, 'project_id': tenant.project_id})})
+    return result
+def customer_closure_probes(client, failure=None):
+    calls = []
+    class Legacy:
+        def contribution_view(self, scope, module):
+            calls.append(('legacy', scope.key, module.value))
+            raise ReadReached('legacy-customer-closure')
+    class Readonly:
+        def read(self, scope):
+            calls.append(('readonly', scope.key, 'customer'))
+            if failure:
+                from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+                raise CustomerClosureReadonlyError(failure)
+            raise ReadReached('readonly-customer-closure')
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: Legacy()
+    client.app.dependency_overrides[getattr(routes, 'get_customer_closure_readonly', Readonly)] = lambda: Readonly()
+    return calls
+@pytest.mark.parametrize('readonly', [True, False])
+def test_customer_closure_selects_only_admitted_reader(readonly):
+    client, legacy, catalog = client_with_catalogs(); calls = customer_closure_probes(client)
+    def admit(**scope):
+        assert scope == dict(module_id='ecommerce.customer', org_id='org-org', project_id='dev-project', roles=['admin'], markings=[])
+        return contact_admission(readonly)
+    catalog.get_readiness = admit
+    kind = 'readonly' if readonly else 'legacy'
+    with pytest.raises(ReadReached, match=kind + '-customer-closure'): client.get(CUSTOMER_CLOSURE_PATH)
+    assert calls == [(kind, ('org-org', 'dev-project'), 'customer')] and not legacy.calls
+def test_customer_closure_denied_before_both_readers():
+    client, legacy, catalog = client_with_catalogs(); calls = customer_closure_probes(client)
+    assert client.get(CUSTOMER_CLOSURE_PATH).status_code == 404
+    assert not calls and not legacy.calls and len(catalog.calls) == 1
+@pytest.mark.parametrize('admission', [None, object(), 'wrong_module', 'wrong_tenant'])
+def test_customer_closure_unknown_admission_is_unavailable(admission):
+    client, legacy, catalog = client_with_catalogs(); calls = customer_closure_probes(client)
+    if admission == 'wrong_module': admission = price_admission()
+    elif admission == 'wrong_tenant':
+        admission = contact_admission(); admission = admission.model_copy(update={'tenant': admission.tenant.model_copy(update={'org_id': 'foreign'})})
+    catalog.get_readiness = lambda **scope: admission
+    response = client.get(CUSTOMER_CLOSURE_PATH)
+    assert response.status_code == 503 and 'CUSTOMER_CLOSURE_READ_ADMISSION_UNAVAILABLE' in response.text
+    assert not calls and not legacy.calls
+@pytest.mark.parametrize('code', ['CUSTOMER_CLOSURE_READ_AUTHORITY_DRIFT', 'CUSTOMER_CLOSURE_READ_PRIVACY_UNAVAILABLE',
+                                 'CUSTOMER_CLOSURE_READ_UNAVAILABLE', 'CUSTOMER_CLOSURE_READ_LIMIT_EXCEEDED'])
+def test_customer_closure_failure_does_not_become_null_success(code):
+    client, legacy, catalog = client_with_catalogs(); calls = customer_closure_probes(client, code)
+    catalog.get_readiness = lambda **scope: contact_admission()
+    response = client.get(CUSTOMER_CLOSURE_PATH)
+    assert response.status_code == 503 and code in response.text and 'latestClosure' not in response.text
+    assert calls == [('readonly', ('org-org', 'dev-project'), 'customer')] and not legacy.calls
+@pytest.mark.parametrize('query', ['orgId=foreign', 'projectId=foreign', 'limit=1', 'mode=legacy'])
+def test_customer_closure_query_cannot_change_scope(query):
+    client, legacy, catalog = client_with_catalogs(); calls = customer_closure_probes(client)
+    assert client.get(CUSTOMER_CLOSURE_PATH + '?' + query).status_code == 400
+    assert not calls and not legacy.calls and not catalog.calls
+@pytest.mark.parametrize('readonly,nonempty', [(True, True), (True, False), (False, False)])
+def test_customer_closure_complete_http_dto(readonly, nonempty):
+    from aos_api.tenant_scope import TenantScope
+    from aos_api.ecommerce_workshop_three_module_closure import EcommerceWorkshopThreeModuleClosureService
+    from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyReader
+    from tests.test_ecommerce_customer_closure_readonly import customer_rows, CustomerConnection
+    scope = TenantScope('org-org', 'dev-project')
+    conn = CustomerConnection(customer_rows(scope=scope) if nonempty else {}, scope=scope)
+    client, legacy, catalog = client_with_catalogs()
+    catalog.get_readiness = lambda **args: contact_admission(readonly)
+    class EmptyStore:
+        def latest_bindings(self, scope, module):
+            assert scope.key == ('org-org', 'dev-project') and module.value == 'customer'
+            return dict(closure=None, usage=None, effect=None, handoff=None)
+    client.app.dependency_overrides[routes.get_customer_closure_readonly] = lambda: CustomerClosureReadonlyReader(connect_factory=lambda incoming: conn)
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_three_module_closure] = lambda: EcommerceWorkshopThreeModuleClosureService(EmptyStore())
+    response = client.get(CUSTOMER_CLOSURE_PATH)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['module'] == 'customer' and body['tenant'] == dict(orgId='org-org', projectId='dev-project')
+    assert body['allowedCommands'] == ([] if readonly else ['COMPILE_THREE_MODULE_CLOSURE', 'BIND_CANONICAL_USAGE', 'BIND_CANONICAL_EFFECT_REVIEW', 'BIND_CANONICAL_HANDOFF'])
+    assert body['handoffConsumeAllowed'] is body['memoryPromotionAllowed'] is body['externalEffectsAllowed'] is False
+    if nonempty:
+        assert body['latestClosure']['ledger']['state'] == 'partial'
+        assert body['latestUsage']['quantity'] is None and body['latestEffect']['maturityStatus'] == 'immature'
+        assert body['latestHandoff']['businessDecision'] == 'request_more'
+    else:
+        assert body['latestClosure'] is body['latestUsage'] is body['latestEffect'] is body['latestHandoff'] is None
+    assert bool(conn.queries) == readonly and not legacy.calls
+EXACT COMPLETE ROUTER DIFF
+diff --git a/services/aos-api/aos_api/routers/ecommerce_workshop.py b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+index 1dadbf6ec..8bba389b7 100644
+--- a/services/aos-api/aos_api/routers/ecommerce_workshop.py
++++ b/services/aos-api/aos_api/routers/ecommerce_workshop.py
+@@ -224,6 +224,7 @@ from aos_api.ecommerce_price_research_readonly import PriceResearchReadonlyError
+ from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader, PriceDispositionReadonlyError
+ from aos_api.ecommerce_customer_lifecycle_readonly import CustomerLifecycleReadonlyError, CustomerLifecycleReadonlyReader
+ from aos_api.ecommerce_customer_contact_readonly import CustomerContactReadonlyError, CustomerContactReadonlyReader
++from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError, CustomerClosureReadonlyReader
+ from aos_api.ecommerce_workshop_price_disposition import (
+     CreatePriceCaseRequest,
+     CreatePriceDispositionContractRequest,
+@@ -653,6 +654,15 @@ CustomerContactReadonlyDependency = Annotated[
+ ]
+ 
+ 
++def get_customer_closure_readonly() -> CustomerClosureReadonlyReader:
++    return CustomerClosureReadonlyReader()
++
++
++CustomerClosureReadonlyDependency = Annotated[
++    CustomerClosureReadonlyReader, Depends(get_customer_closure_readonly)
++]
++
++
+ @lru_cache(maxsize=1)
+ def get_ecommerce_workshop_customer_contact() -> EcommerceWorkshopCustomerContactService:
+     return EcommerceWorkshopCustomerContactService(
+@@ -2912,6 +2922,7 @@ def get_three_module_closure_contribution_view(
+     service: ThreeModuleClosureDependency,
+     readonly: CreatorClosureReadonlyDependency,
+     price_readonly: PriceClosureReadonlyDependency,
++    customer_readonly: CustomerClosureReadonlyDependency,
+ ) -> ThreeModuleClosureContributionView:
+     _reject_query_parameters(request)
+     if module is ThreeModule.CREATOR:
+@@ -2941,6 +2952,23 @@ def get_three_module_closure_contribution_view(
+                 raise ApiError(code=exc.code, message="当前价格闭环暂不可读，请核对保存记录或读取范围。",
+                                status_code=503) from exc
+         return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
++    if module is ThreeModule.CUSTOMER:
++        admission = _invoke(lambda: read_catalog.get_readiness(
++            module_id="ecommerce.customer", org_id=principal.org_id,
++            project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
++        ))
++        if (not isinstance(admission, EcommerceWorkshopModuleReadinessResponse)
++                or admission.item.module_id != "ecommerce.customer"
++                or (admission.tenant.org_id, admission.tenant.project_id) != (principal.org_id, principal.project_id)):
++            raise ApiError(code="CUSTOMER_CLOSURE_READ_ADMISSION_UNAVAILABLE",
++                           message="当前客户闭环读取准入不可核验。", status_code=503)
++        if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
++            try:
++                return customer_readonly.read(TenantScope(principal.org_id, principal.project_id))
++            except CustomerClosureReadonlyError as exc:
++                raise ApiError(code=exc.code, message="当前客户闭环暂不可读，请核对保存记录或读取范围。",
++                               status_code=503) from exc
++        return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+     _require_three_module_installation(module, principal=principal, catalog=catalog)
+     return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+ 
+
+source-verification-r3.json
+{
+  "sourceBefore": {
+    "services/aos-api/aos_api/ecommerce_customer_closure_readonly.py": "1400d88963b41492eb684603503c85181cf984c236433f1f355a2b5695808535",
+    "services/aos-api/tests/test_ecommerce_customer_closure_readonly.py": "2102354dc66e2cc1cbff7166297b5d0f24eab387cf79068b1bc5033d276b3f3b",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "149e38e67ef5a65d24616a05f99788667b31a24cc038ee10c35c5254ba576e1b",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "311f4c92d57cbdfa121c8b6edcb01ad66f52b66b30162a9ae008ac2ed4b22b04"
+  },
+  "sourceAfter": {
+    "services/aos-api/aos_api/ecommerce_customer_closure_readonly.py": "1400d88963b41492eb684603503c85181cf984c236433f1f355a2b5695808535",
+    "services/aos-api/tests/test_ecommerce_customer_closure_readonly.py": "2102354dc66e2cc1cbff7166297b5d0f24eab387cf79068b1bc5033d276b3f3b",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "149e38e67ef5a65d24616a05f99788667b31a24cc038ee10c35c5254ba576e1b",
+    "services/aos-api/tests/test_ecommerce_workshop_read_http.py": "311f4c92d57cbdfa121c8b6edcb01ad66f52b66b30162a9ae008ac2ed4b22b04"
+  },
+  "returncode": 0,
+  "command": [
+    "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/test_ecommerce_customer_closure_readonly.py",
+    "tests/test_ecommerce_customer_contact_readonly.py",
+    "tests/test_customer_start_signing_material.py",
+    "tests/aip/test_w6_08_customer_contact.py",
+    "tests/aip/test_w6_08_customer_contact_store.py",
+    "tests/test_ecommerce_workshop_read_http.py",
+    "tests/aip/test_ecommerce_price_disposition_readonly.py",
+    "tests/aip/test_w6_06_price_disposition.py",
+    "tests/aip/test_w6_06_price_disposition_store.py",
+    "tests/test_ecommerce_price_research_readonly.py",
+    "tests/aip/test_w6_05_price_research.py",
+    "tests/test_ecommerce_workshop_read_catalog.py",
+    "tests/test_ecommerce_customer_lifecycle_readonly.py",
+    "tests/test_w6_009_three_module_closure.py",
+    "tests/test_ecommerce_three_module_closure_readonly.py",
+    "tests/aip/test_w6_07_customer_lifecycle.py",
+    "tests/aip/test_w6_07_customer_lifecycle_store.py"
+  ],
+  "baseHead": "f3dd116e9c753e94af91667bf13da4f544938945",
+  "frozenWithOnlyFourOwnedOverlays": true,
+  "noUserDirtyCopied": true,
+  "originalVolumeTouched": false,
+  "at": "2026-10-15T12:06:06.720640+00:00",
+  "finishedAt": "2026-10-15T12:06:47.808087+00:00",
+  "knownSeparateFailure": "Unchanged historical migration test expects w6_009, current committed migration head a0v_162; prior raw failure retained, no schema changes.",
+  "logSha": "5dbcff3df9b0289c229304f67189e36fa18fdd8f312baa63912a58ab4a5f96a1"
+}
+native-r1-result.json
+{
+  "containerId": "57ab91d2c6c54b5066e7a5e52a7f832e06fc929852d85a0db6744ec8417441be",
+  "originalVolumeTouched": false,
+  "fixtureOnlyNotOriginalSchema": true,
+  "exactW6DdlSha": "e2be75ca114e98b188a1860e31b9db83e387abee715bfc54fbcd1c05d922014d",
+  "sourceSha": "1400d88963b41492eb684603503c85181cf984c236433f1f355a2b5695808535",
+  "originalCompilerWithSyntheticResolvers": true,
+  "productionAuthority": false,
+  "customerSavedSnapshotNotCurrentSourceAuthority": true,
+  "snapshotSourceIds": [
+    "customer-fixture",
+    "customer-after-cutoff"
+  ],
+  "trueEmptyFourBlockers": true,
+  "fiveAxesPreserved": true,
+  "creatorStillCreator": true,
+  "foreignRowsHiddenWithoutWhere": true,
+  "visibleClosureCounts": {
+    "creator": 1,
+    "customer": 2
+  },
+  "writeDeniedSqlstate": "25006",
+  "sqlCaseNull": true,
+  "oversizeError": "CUSTOMER_CLOSURE_READ_LIMIT_EXCEEDED",
+  "privacyError": "CUSTOMER_CLOSURE_READ_PRIVACY_UNAVAILABLE",
+  "connectionFacts": [
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    },
+    {
+      "role": "aos_runtime",
+      "readonly": "on",
+      "isolation": "repeatable read"
+    }
+  ],
+  "wholeGoalComplete": false
+}
+native-r1-stopped.json
+{
+  "containerId": "57ab91d2c6c54b5066e7a5e52a7f832e06fc929852d85a0db6744ec8417441be",
+  "stopped": true,
+  "originalVolumeTouched": false
+}
+code-review-consumption-r1.json
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-closure-bounded-reader-20261015-code-r1",
+  "task_id": "qyh-customer-closure-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "f3dd116e9c753e94af91667bf13da4f544938945",
+    "authority_revision": "AOS-002038",
+    "files": {
+      ".evidence/qyh-customer-closure-bounded-reader-20261015/code-review-material-r1.txt": "70fae6e5ffece0fdb6cee21af4e15c6984ef605eb5fd887fa908da2c4f78d362"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "c5274fac63ae1927f3c73a046e476a78e47ae2c29b49dce1de513526f0268e52",
+  "transport_sha256": "772ecc58d6ac548eda2e3ec840eeb5bb4e3c6ebf04ef83807db197b3c861bafe"
+}
+customer_closure_probes test constant CUSTOMER_CLOSURE_PATH=/v1/ecommerce-workshop/views/customer/closure-contributions; in full HTTP module. ReadReached deliberately raises after dispatch to identify the selected reader. RejectingCatalog records get_readiness kwargs then raises AssetNotFoundError. Formal DTO test uses original saved-reader producer fixture; no production identity claimed.

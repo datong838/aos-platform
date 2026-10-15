@@ -1,0 +1,1312 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                [100%]
+=================================== FAILURES ===================================
+______________ test_empty_is_true_missing_history_and_no_commands ______________
+
+    def test_empty_is_true_missing_history_and_no_commands():
+>       conn = CustomerConnection({}); value = reader(conn).read(SCOPE)
+                                               ^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7db050>
+
+    def reader(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyReader
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:53: ModuleNotFoundError
+_____ test_actual_original_producer_hashes_preserve_five_independent_axes ______
+
+    def test_actual_original_producer_hashes_preserve_five_independent_axes():
+>       conn = CustomerConnection(customer_rows()); value = reader(conn).read(SCOPE)
+                                                            ^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x119eeb290>
+
+    def reader(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyReader
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:53: ModuleNotFoundError
+_________ test_each_outer_authority_is_checked[org_id-foreign-closure] _________
+
+kind = 'closure', field = 'org_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7ef010>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+__________ test_each_outer_authority_is_checked[org_id-foreign-usage] __________
+
+kind = 'usage', field = 'org_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7ae6d0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_________ test_each_outer_authority_is_checked[org_id-foreign-effect] __________
+
+kind = 'effect', field = 'org_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7bdf90>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_________ test_each_outer_authority_is_checked[org_id-foreign-handoff] _________
+
+kind = 'handoff', field = 'org_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a816c10>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______ test_each_outer_authority_is_checked[project_id-foreign-closure] _______
+
+kind = 'closure', field = 'project_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7daa10>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+________ test_each_outer_authority_is_checked[project_id-foreign-usage] ________
+
+kind = 'usage', field = 'project_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7eedd0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______ test_each_outer_authority_is_checked[project_id-foreign-effect] ________
+
+kind = 'effect', field = 'project_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7ce390>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______ test_each_outer_authority_is_checked[project_id-foreign-handoff] _______
+
+kind = 'handoff', field = 'project_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7bc110>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_________ test_each_outer_authority_is_checked[revision-True-closure] __________
+
+kind = 'closure', field = 'revision', value = True
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7929d0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+__________ test_each_outer_authority_is_checked[revision-True-usage] ___________
+
+kind = 'usage', field = 'revision', value = True
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7bd5d0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+__________ test_each_outer_authority_is_checked[revision-True-effect] __________
+
+kind = 'effect', field = 'revision', value = True
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a79efd0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_________ test_each_outer_authority_is_checked[revision-True-handoff] __________
+
+kind = 'handoff', field = 'revision', value = True
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7bf510>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+______ test_each_outer_authority_is_checked[resource_id-foreign-closure] _______
+
+kind = 'closure', field = 'resource_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7cea10>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______ test_each_outer_authority_is_checked[resource_id-foreign-usage] ________
+
+kind = 'usage', field = 'resource_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7da990>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______ test_each_outer_authority_is_checked[resource_id-foreign-effect] _______
+
+kind = 'effect', field = 'resource_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7f1cd0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+______ test_each_outer_authority_is_checked[resource_id-foreign-handoff] _______
+
+kind = 'handoff', field = 'resource_id', value = 'foreign'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a778f90>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_each_outer_authority_is_checked[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-closure] _
+
+kind = 'closure', field = 'content_hash'
+value = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7cca10>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_each_outer_authority_is_checked[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-usage] _
+
+kind = 'usage', field = 'content_hash'
+value = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7ce850>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_each_outer_authority_is_checked[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-effect] _
+
+kind = 'effect', field = 'content_hash'
+value = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7cd710>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_each_outer_authority_is_checked[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-handoff] _
+
+kind = 'handoff', field = 'content_hash'
+value = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7ae590>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+__________ test_each_outer_authority_is_checked[module-price-closure] __________
+
+kind = 'closure', field = 'module', value = 'price'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a778190>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+___________ test_each_outer_authority_is_checked[module-price-usage] ___________
+
+kind = 'usage', field = 'module', value = 'price'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a793d50>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+__________ test_each_outer_authority_is_checked[module-price-effect] ___________
+
+kind = 'effect', field = 'module', value = 'price'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7796d0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+__________ test_each_outer_authority_is_checked[module-price-handoff] __________
+
+kind = 'handoff', field = 'module', value = 'price'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a67dd50>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______ test_each_outer_authority_is_checked[created_at-value6-closure] ________
+
+kind = 'closure', field = 'created_at'
+value = datetime.datetime(2026, 10, 15, 1, 0, 11, tzinfo=datetime.timezone.utc)
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a6b3090>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+________ test_each_outer_authority_is_checked[created_at-value6-usage] _________
+
+kind = 'usage', field = 'created_at'
+value = datetime.datetime(2026, 10, 15, 1, 0, 11, tzinfo=datetime.timezone.utc)
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7ec4d0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+________ test_each_outer_authority_is_checked[created_at-value6-effect] ________
+
+kind = 'effect', field = 'created_at'
+value = datetime.datetime(2026, 10, 15, 1, 0, 11, tzinfo=datetime.timezone.utc)
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a6b1b10>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______ test_each_outer_authority_is_checked[created_at-value6-handoff] ________
+
+kind = 'handoff', field = 'created_at'
+value = datetime.datetime(2026, 10, 15, 1, 0, 11, tzinfo=datetime.timezone.utc)
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    @pytest.mark.parametrize('field,value', [('org_id', 'foreign'), ('project_id', 'foreign'),
+        ('revision', True), ('resource_id', 'foreign'), ('content_hash', 'b' * 64),
+        ('module', 'price'), ('created_at', CUTOFF + timedelta(seconds=1))])
+    def test_each_outer_authority_is_checked(kind, field, value):
+        rows = customer_rows(); rows[kind][field] = value
+>       assert denied(CustomerConnection(rows)).endswith('AUTHORITY_DRIFT')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7eccd0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______________ test_single_payload_limit_before_decode[closure] _______________
+
+kind = 'closure'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_single_payload_limit_before_decode(kind):
+        rows = customer_rows(); rows[kind].update(payload_bytes=65537, authority_data=None)
+>       assert denied(CustomerConnection(rows)).endswith('LIMIT_EXCEEDED')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a6770d0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+________________ test_single_payload_limit_before_decode[usage] ________________
+
+kind = 'usage'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_single_payload_limit_before_decode(kind):
+        rows = customer_rows(); rows[kind].update(payload_bytes=65537, authority_data=None)
+>       assert denied(CustomerConnection(rows)).endswith('LIMIT_EXCEEDED')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7da990>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______________ test_single_payload_limit_before_decode[effect] ________________
+
+kind = 'effect'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_single_payload_limit_before_decode(kind):
+        rows = customer_rows(); rows[kind].update(payload_bytes=65537, authority_data=None)
+>       assert denied(CustomerConnection(rows)).endswith('LIMIT_EXCEEDED')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7ced50>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______________ test_single_payload_limit_before_decode[handoff] _______________
+
+kind = 'handoff'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_single_payload_limit_before_decode(kind):
+        rows = customer_rows(); rows[kind].update(payload_bytes=65537, authority_data=None)
+>       assert denied(CustomerConnection(rows)).endswith('LIMIT_EXCEEDED')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a6b3b10>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_coercion_or_nonfinite_never_fabricates_canonical_evidence[closure-revision-1.0] _
+
+kind = 'closure', field = 'revision', value = 1.0
+
+    @pytest.mark.parametrize('kind,field,value', [('closure', 'revision', 1.0),
+        ('effect', 'sampleCount', True), ('effect', 'minSample', 10.0),
+        ('effect', 'accepted', 1), ('handoff', 'disclosureRefCount', False),
+        ('usage', 'adjustmentTotal', float('inf')), ('usage', 'quantity', float('nan'))])
+    def test_coercion_or_nonfinite_never_fabricates_canonical_evidence(kind, field, value):
+        rows = customer_rows(); rows[kind]['authority_data'][field] = value
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a793290>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_coercion_or_nonfinite_never_fabricates_canonical_evidence[effect-sampleCount-True] _
+
+kind = 'effect', field = 'sampleCount', value = True
+
+    @pytest.mark.parametrize('kind,field,value', [('closure', 'revision', 1.0),
+        ('effect', 'sampleCount', True), ('effect', 'minSample', 10.0),
+        ('effect', 'accepted', 1), ('handoff', 'disclosureRefCount', False),
+        ('usage', 'adjustmentTotal', float('inf')), ('usage', 'quantity', float('nan'))])
+    def test_coercion_or_nonfinite_never_fabricates_canonical_evidence(kind, field, value):
+        rows = customer_rows(); rows[kind]['authority_data'][field] = value
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a676090>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_coercion_or_nonfinite_never_fabricates_canonical_evidence[effect-minSample-10.0] _
+
+kind = 'effect', field = 'minSample', value = 10.0
+
+    @pytest.mark.parametrize('kind,field,value', [('closure', 'revision', 1.0),
+        ('effect', 'sampleCount', True), ('effect', 'minSample', 10.0),
+        ('effect', 'accepted', 1), ('handoff', 'disclosureRefCount', False),
+        ('usage', 'adjustmentTotal', float('inf')), ('usage', 'quantity', float('nan'))])
+    def test_coercion_or_nonfinite_never_fabricates_canonical_evidence(kind, field, value):
+        rows = customer_rows(); rows[kind]['authority_data'][field] = value
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a677f10>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_coercion_or_nonfinite_never_fabricates_canonical_evidence[effect-accepted-1] _
+
+kind = 'effect', field = 'accepted', value = 1
+
+    @pytest.mark.parametrize('kind,field,value', [('closure', 'revision', 1.0),
+        ('effect', 'sampleCount', True), ('effect', 'minSample', 10.0),
+        ('effect', 'accepted', 1), ('handoff', 'disclosureRefCount', False),
+        ('usage', 'adjustmentTotal', float('inf')), ('usage', 'quantity', float('nan'))])
+    def test_coercion_or_nonfinite_never_fabricates_canonical_evidence(kind, field, value):
+        rows = customer_rows(); rows[kind]['authority_data'][field] = value
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a778990>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_coercion_or_nonfinite_never_fabricates_canonical_evidence[handoff-disclosureRefCount-False] _
+
+kind = 'handoff', field = 'disclosureRefCount', value = False
+
+    @pytest.mark.parametrize('kind,field,value', [('closure', 'revision', 1.0),
+        ('effect', 'sampleCount', True), ('effect', 'minSample', 10.0),
+        ('effect', 'accepted', 1), ('handoff', 'disclosureRefCount', False),
+        ('usage', 'adjustmentTotal', float('inf')), ('usage', 'quantity', float('nan'))])
+    def test_coercion_or_nonfinite_never_fabricates_canonical_evidence(kind, field, value):
+        rows = customer_rows(); rows[kind]['authority_data'][field] = value
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7ed190>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_coercion_or_nonfinite_never_fabricates_canonical_evidence[usage-adjustmentTotal-inf] _
+
+kind = 'usage', field = 'adjustmentTotal', value = inf
+
+    @pytest.mark.parametrize('kind,field,value', [('closure', 'revision', 1.0),
+        ('effect', 'sampleCount', True), ('effect', 'minSample', 10.0),
+        ('effect', 'accepted', 1), ('handoff', 'disclosureRefCount', False),
+        ('usage', 'adjustmentTotal', float('inf')), ('usage', 'quantity', float('nan'))])
+    def test_coercion_or_nonfinite_never_fabricates_canonical_evidence(kind, field, value):
+        rows = customer_rows(); rows[kind]['authority_data'][field] = value
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7f1cd0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_coercion_or_nonfinite_never_fabricates_canonical_evidence[usage-quantity-nan] _
+
+kind = 'usage', field = 'quantity', value = nan
+
+    @pytest.mark.parametrize('kind,field,value', [('closure', 'revision', 1.0),
+        ('effect', 'sampleCount', True), ('effect', 'minSample', 10.0),
+        ('effect', 'accepted', 1), ('handoff', 'disclosureRefCount', False),
+        ('usage', 'adjustmentTotal', float('inf')), ('usage', 'quantity', float('nan'))])
+    def test_coercion_or_nonfinite_never_fabricates_canonical_evidence(kind, field, value):
+        rows = customer_rows(); rows[kind]['authority_data'][field] = value
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7ee210>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+______________ test_nested_tenant_and_unknown_field_fail[closure] ______________
+
+kind = 'closure'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_nested_tenant_and_unknown_field_fail(kind):
+        rows = customer_rows(); rows[kind]['authority_data']['tenant']['projectId'] = 'foreign'
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7ad8d0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______________ test_nested_tenant_and_unknown_field_fail[usage] _______________
+
+kind = 'usage'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_nested_tenant_and_unknown_field_fail(kind):
+        rows = customer_rows(); rows[kind]['authority_data']['tenant']['projectId'] = 'foreign'
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a732290>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+______________ test_nested_tenant_and_unknown_field_fail[effect] _______________
+
+kind = 'effect'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_nested_tenant_and_unknown_field_fail(kind):
+        rows = customer_rows(); rows[kind]['authority_data']['tenant']['projectId'] = 'foreign'
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a7cd810>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+______________ test_nested_tenant_and_unknown_field_fail[handoff] ______________
+
+kind = 'handoff'
+
+    @pytest.mark.parametrize('kind', list(TABLES))
+    def test_nested_tenant_and_unknown_field_fail(kind):
+        rows = customer_rows(); rows[kind]['authority_data']['tenant']['projectId'] = 'foreign'
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a674150>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+____________ test_exact_binding_never_borrows_other_closure[usage] _____________
+
+kind = 'usage'
+
+    @pytest.mark.parametrize('kind', ['usage', 'effect', 'handoff'])
+    def test_exact_binding_never_borrows_other_closure(kind):
+        rows = customer_rows(); rows[kind]['authority_data']['closureRef']['contentHash'] = 'sha256:' + 'b' * 64
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a79e850>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+____________ test_exact_binding_never_borrows_other_closure[effect] ____________
+
+kind = 'effect'
+
+    @pytest.mark.parametrize('kind', ['usage', 'effect', 'handoff'])
+    def test_exact_binding_never_borrows_other_closure(kind):
+        rows = customer_rows(); rows[kind]['authority_data']['closureRef']['contentHash'] = 'sha256:' + 'b' * 64
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a6b1490>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+___________ test_exact_binding_never_borrows_other_closure[handoff] ____________
+
+kind = 'handoff'
+
+    @pytest.mark.parametrize('kind', ['usage', 'effect', 'handoff'])
+    def test_exact_binding_never_borrows_other_closure(kind):
+        rows = customer_rows(); rows[kind]['authority_data']['closureRef']['contentHash'] = 'sha256:' + 'b' * 64
+>       denied(CustomerConnection(rows))
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a78a050>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+____________ test_transaction_required_before_sql[read_only-False] _____________
+
+field = 'read_only', value = False
+
+    @pytest.mark.parametrize('field,value', [('read_only', False), ('autocommit', True),
+        ('isolation_level', IsolationLevel.READ_COMMITTED)])
+    def test_transaction_required_before_sql(field, value):
+        conn = CustomerConnection({}); setattr(conn, field, value)
+>       assert denied(conn).endswith('UNAVAILABLE') and not conn.queries
+               ^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a67d010>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+____________ test_transaction_required_before_sql[autocommit-True] _____________
+
+field = 'autocommit', value = True
+
+    @pytest.mark.parametrize('field,value', [('read_only', False), ('autocommit', True),
+        ('isolation_level', IsolationLevel.READ_COMMITTED)])
+    def test_transaction_required_before_sql(field, value):
+        conn = CustomerConnection({}); setattr(conn, field, value)
+>       assert denied(conn).endswith('UNAVAILABLE') and not conn.queries
+               ^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a740cd0>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+___________ test_transaction_required_before_sql[isolation_level-2] ____________
+
+field = 'isolation_level', value = <IsolationLevel.READ_COMMITTED: 2>
+
+    @pytest.mark.parametrize('field,value', [('read_only', False), ('autocommit', True),
+        ('isolation_level', IsolationLevel.READ_COMMITTED)])
+    def test_transaction_required_before_sql(field, value):
+        conn = CustomerConnection({}); setattr(conn, field, value)
+>       assert denied(conn).endswith('UNAVAILABLE') and not conn.queries
+               ^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a733950>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+___________________ test_db_exception_is_not_empty_or_leaked ___________________
+
+    def test_db_exception_is_not_empty_or_leaked():
+        conn = CustomerConnection({})
+        def fail(*args): raise psycopg.OperationalError('private credential detail')
+        conn.execute = fail
+>       assert denied(conn) == 'CUSTOMER_CLOSURE_READ_UNAVAILABLE'
+               ^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a67d290>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_______ test_private_free_text_never_reaches_public_output[13800138000] ________
+
+actor = '13800138000'
+
+    @pytest.mark.parametrize('actor', ['13800138000', 'operator@example.invalid', 'providerPayload-in-actor'])
+    def test_private_free_text_never_reaches_public_output(actor):
+        rows = customer_rows(); rows['closure']['authority_data']['compiledBy'] = actor
+>       assert denied(CustomerConnection(rows)).split('_')[-1] in {'UNAVAILABLE', 'UNSUPPORTED'}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a67f790>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_private_free_text_never_reaches_public_output[operator@example.invalid] _
+
+actor = 'operator@example.invalid'
+
+    @pytest.mark.parametrize('actor', ['13800138000', 'operator@example.invalid', 'providerPayload-in-actor'])
+    def test_private_free_text_never_reaches_public_output(actor):
+        rows = customer_rows(); rows['closure']['authority_data']['compiledBy'] = actor
+>       assert denied(CustomerConnection(rows)).split('_')[-1] in {'UNAVAILABLE', 'UNSUPPORTED'}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a804d50>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+_ test_private_free_text_never_reaches_public_output[providerPayload-in-actor] _
+
+actor = 'providerPayload-in-actor'
+
+    @pytest.mark.parametrize('actor', ['13800138000', 'operator@example.invalid', 'providerPayload-in-actor'])
+    def test_private_free_text_never_reaches_public_output(actor):
+        rows = customer_rows(); rows['closure']['authority_data']['compiledBy'] = actor
+>       assert denied(CustomerConnection(rows)).split('_')[-1] in {'UNAVAILABLE', 'UNSUPPORTED'}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a732e50>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+____________ test_deep_driver_json_fails_limit_not_unhandled_error _____________
+
+    def test_deep_driver_json_fails_limit_not_unhandled_error():
+        conn = CustomerConnection({})
+        def fail(*args): return json.loads('[' * 1100 + '0' + ']' * 1100)
+        conn.execute = fail
+>       assert denied(conn) == 'CUSTOMER_CLOSURE_READ_LIMIT_EXCEEDED'
+               ^^^^^^^^^^^^
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:152: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+conn = <test_ecommerce_customer_closure_readonly.CustomerConnection object at 0x11a79ee10>
+
+    def denied(conn):
+>       from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError
+E       ModuleNotFoundError: No module named 'aos_api.ecommerce_customer_closure_readonly'
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:58: ModuleNotFoundError
+___________________________ test_deadline_is_bounded ___________________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11a7af250>
+
+    def test_deadline_is_bounded(monkeypatch):
+>       from aos_api import ecommerce_customer_closure_readonly as module
+E       ImportError: cannot import name 'ecommerce_customer_closure_readonly' from 'aos_api' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/__init__.py)
+
+services/aos-api/tests/test_ecommerce_customer_closure_readonly.py:156: ImportError
+=============================== warnings summary ===============================
+services/aos-api/aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+services/aos-api/aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+services/aos-api/aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+services/aos-api/aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+services/aos-api/aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+services/aos-api/aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_empty_is_true_missing_history_and_no_commands
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_actual_original_producer_hashes_preserve_five_independent_axes
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[org_id-foreign-closure]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[org_id-foreign-usage]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[org_id-foreign-effect]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[org_id-foreign-handoff]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[project_id-foreign-closure]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[project_id-foreign-usage]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[project_id-foreign-effect]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[project_id-foreign-handoff]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[revision-True-closure]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[revision-True-usage]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[revision-True-effect]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[revision-True-handoff]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[resource_id-foreign-closure]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[resource_id-foreign-usage]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[resource_id-foreign-effect]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[resource_id-foreign-handoff]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-closure]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-usage]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-effect]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[content_hash-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-handoff]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[module-price-closure]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[module-price-usage]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[module-price-effect]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[module-price-handoff]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[created_at-value6-closure]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[created_at-value6-usage]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[created_at-value6-effect]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_each_outer_authority_is_checked[created_at-value6-handoff]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_single_payload_limit_before_decode[closure]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_single_payload_limit_before_decode[usage]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_single_payload_limit_before_decode[effect]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_single_payload_limit_before_decode[handoff]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_coercion_or_nonfinite_never_fabricates_canonical_evidence[closure-revision-1.0]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_coercion_or_nonfinite_never_fabricates_canonical_evidence[effect-sampleCount-True]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_coercion_or_nonfinite_never_fabricates_canonical_evidence[effect-minSample-10.0]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_coercion_or_nonfinite_never_fabricates_canonical_evidence[effect-accepted-1]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_coercion_or_nonfinite_never_fabricates_canonical_evidence[handoff-disclosureRefCount-False]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_coercion_or_nonfinite_never_fabricates_canonical_evidence[usage-adjustmentTotal-inf]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_coercion_or_nonfinite_never_fabricates_canonical_evidence[usage-quantity-nan]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_nested_tenant_and_unknown_field_fail[closure]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_nested_tenant_and_unknown_field_fail[usage]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_nested_tenant_and_unknown_field_fail[effect]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_nested_tenant_and_unknown_field_fail[handoff]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_exact_binding_never_borrows_other_closure[usage]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_exact_binding_never_borrows_other_closure[effect]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_exact_binding_never_borrows_other_closure[handoff]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_transaction_required_before_sql[read_only-False]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_transaction_required_before_sql[autocommit-True]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_transaction_required_before_sql[isolation_level-2]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_db_exception_is_not_empty_or_leaked
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_private_free_text_never_reaches_public_output[13800138000]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_private_free_text_never_reaches_public_output[operator@example.invalid]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_private_free_text_never_reaches_public_output[providerPayload-in-actor]
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_deep_driver_json_fails_limit_not_unhandled_error
+FAILED services/aos-api/tests/test_ecommerce_customer_closure_readonly.py::test_deadline_is_bounded
+57 failed, 7 warnings in 0.23s

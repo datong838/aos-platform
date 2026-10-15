@@ -1,0 +1,25 @@
+{
+  "base_revision": "AOS-002038",
+  "created_at": "2026-10-15T19:16:54+08:00",
+  "excluded_scope": [
+    "aos-platform/apps/web",
+    "aos-platform/maintenance/qiyuehui-restored-data-volume",
+    "aos-platform/services/aos-api/aos_api/aip_action_execution.py",
+    "aos-platform/services/aos-api/aos_api/aip_action_store.py"
+  ],
+  "expected_outputs": [
+    "Full231Goal/sole original human authorization retained. Audit canonical customer closure saved contribution GET original compiler/Store/customer source/private signing data/DTO/tenant/privacy/same cutoff/limits before independent design; no compile/bind/consume/current Contact/Consent/Receipt authority.",
+    "Register any additional shared reader/test/Web files before coding. Frozen/native/genuine SDK/650/original visual/live independent reviews and accurate Delivery, no copied whitelist/source/oldRun or operating approval expansion."
+  ],
+  "lease_expires_at": "2026-10-15T16:00:00+00:00",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "schema": "aos-memory-task-receipt/v1",
+  "scope": [
+    "aos-platform/services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "aos-platform/services/aos-api/tests/test_ecommerce_workshop_read_http.py",
+    "docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-13-QYH-八台只读入口恢复与经营链接续清单.md",
+    "aos-platform/.evidence/qyh-customer-closure-read-admission-20261015"
+  ],
+  "status": "ACTIVE",
+  "task_id": "qyh-customer-closure-read-admission-20261015"
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-closure-read-admission-20261015-design-r1",
+  "task_id": "qyh-customer-closure-read-admission-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "f3dd116e9c753e94af91667bf13da4f544938945",
+    "authority_revision": "AOS-002038",
+    "files": {
+      ".evidence/qyh-customer-closure-read-admission-20261015/design-review-material-r1.txt": "3e45c043a0f785f13fc2f08d3554f319a08640c2d5bb0da755c8c93ca2f65bf6"
+    }
+  },
+  "status": "NEED_EVIDENCE",
+  "execution_authorized": false,
+  "result_sha256": "2d2f4f1d700171975676243017dcfe0e79ec2d97b2a122c16f9a3f7994cc876f",
+  "transport_sha256": "8e2817b97171e9db0c062e8a50e52d49b8e49c461d856e42587776f428408fe5"
+}

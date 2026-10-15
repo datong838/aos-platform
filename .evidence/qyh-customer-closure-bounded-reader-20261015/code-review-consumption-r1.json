@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-closure-bounded-reader-20261015-code-r1",
+  "task_id": "qyh-customer-closure-bounded-reader-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "f3dd116e9c753e94af91667bf13da4f544938945",
+    "authority_revision": "AOS-002038",
+    "files": {
+      ".evidence/qyh-customer-closure-bounded-reader-20261015/code-review-material-r1.txt": "70fae6e5ffece0fdb6cee21af4e15c6984ef605eb5fd887fa908da2c4f78d362"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "c5274fac63ae1927f3c73a046e476a78e47ae2c29b49dce1de513526f0268e52",
+  "transport_sha256": "772ecc58d6ac548eda2e3ec840eeb5bb4e3c6ebf04ef83807db197b3c861bafe"
+}

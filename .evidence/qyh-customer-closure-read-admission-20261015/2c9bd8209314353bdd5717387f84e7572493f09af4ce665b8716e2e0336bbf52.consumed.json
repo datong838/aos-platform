@@ -1,0 +1,17 @@
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-customer-closure-read-admission-20261015-route-quality-r1",
+  "task_id": "qyh-customer-closure-read-admission-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "f3dd116e9c753e94af91667bf13da4f544938945",
+    "authority_revision": "AOS-002038",
+    "files": {
+      ".evidence/qyh-customer-closure-read-admission-20261015/route-quality-material-r1.txt": "dfdd838bff4b0308bfe2b872adf8c799d8e609a279e13170d5dedca79f40905b"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "8928e1771a66b4fd66fd9d229dc9aad245dd9acb49bad20fd5f4b8951ba5ec1b",
+  "transport_sha256": "fe2226ce98c42147d1d429032f35b6407c189d1c833f336ba646f5d8570f9393"
+}

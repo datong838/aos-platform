@@ -224,6 +224,7 @@ from aos_api.ecommerce_price_research_readonly import PriceResearchReadonlyError
 from aos_api.ecommerce_price_disposition_readonly import EcommercePriceDispositionReadonlyReader, PriceDispositionReadonlyError
 from aos_api.ecommerce_customer_lifecycle_readonly import CustomerLifecycleReadonlyError, CustomerLifecycleReadonlyReader
 from aos_api.ecommerce_customer_contact_readonly import CustomerContactReadonlyError, CustomerContactReadonlyReader
+from aos_api.ecommerce_customer_closure_readonly import CustomerClosureReadonlyError, CustomerClosureReadonlyReader
 from aos_api.ecommerce_workshop_price_disposition import (
     CreatePriceCaseRequest,
     CreatePriceDispositionContractRequest,
@@ -650,6 +651,15 @@ def get_customer_contact_readonly() -> CustomerContactReadonlyReader:
 
 CustomerContactReadonlyDependency = Annotated[
     CustomerContactReadonlyReader, Depends(get_customer_contact_readonly)
+]
+
+
+def get_customer_closure_readonly() -> CustomerClosureReadonlyReader:
+    return CustomerClosureReadonlyReader()
+
+
+CustomerClosureReadonlyDependency = Annotated[
+    CustomerClosureReadonlyReader, Depends(get_customer_closure_readonly)
 ]
 
 
@@ -2912,6 +2922,7 @@ def get_three_module_closure_contribution_view(
     service: ThreeModuleClosureDependency,
     readonly: CreatorClosureReadonlyDependency,
     price_readonly: PriceClosureReadonlyDependency,
+    customer_readonly: CustomerClosureReadonlyDependency,
 ) -> ThreeModuleClosureContributionView:
     _reject_query_parameters(request)
     if module is ThreeModule.CREATOR:
@@ -2939,6 +2950,23 @@ def get_three_module_closure_contribution_view(
                 return price_readonly.read(TenantScope(principal.org_id, principal.project_id))
             except PriceClosureReadonlyError as exc:
                 raise ApiError(code=exc.code, message="当前价格闭环暂不可读，请核对保存记录或读取范围。",
+                               status_code=503) from exc
+        return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
+    if module is ThreeModule.CUSTOMER:
+        admission = _invoke(lambda: read_catalog.get_readiness(
+            module_id="ecommerce.customer", org_id=principal.org_id,
+            project_id=principal.project_id, roles=principal.roles, markings=principal.markings,
+        ))
+        if (not isinstance(admission, EcommerceWorkshopModuleReadinessResponse)
+                or admission.item.module_id != "ecommerce.customer"
+                or (admission.tenant.org_id, admission.tenant.project_id) != (principal.org_id, principal.project_id)):
+            raise ApiError(code="CUSTOMER_CLOSURE_READ_ADMISSION_UNAVAILABLE",
+                           message="当前客户闭环读取准入不可核验。", status_code=503)
+        if any(b.reason_code == "INSTALLED_ASSET_READONLY" for b in admission.item.blockers):
+            try:
+                return customer_readonly.read(TenantScope(principal.org_id, principal.project_id))
+            except CustomerClosureReadonlyError as exc:
+                raise ApiError(code=exc.code, message="当前客户闭环暂不可读，请核对保存记录或读取范围。",
                                status_code=503) from exc
         return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
     _require_three_module_installation(module, principal=principal, catalog=catalog)

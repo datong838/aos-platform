@@ -1,0 +1,92 @@
+.........................................................F.............. [ 12%]
+........................................................................ [ 25%]
+........................................................................ [ 38%]
+........................................................................ [ 51%]
+........................................................................ [ 64%]
+........................................................................ [ 77%]
+........................................................................ [ 90%]
+......................................................                   [100%]
+=================================== FAILURES ===================================
+______ test_original_customer_start_observation_and_store_status_mapping _______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11f433a90>
+
+    def test_original_customer_start_observation_and_store_status_mapping(monkeypatch):
+        from tests.aip import test_w6_08_customer_contact as fixture
+        from aos_api import ecommerce_workshop_customer_contact as contact
+        from aos_api.ecommerce_workshop_three_module_closure import ThreeModule
+        from aos_api.ecommerce_workshop_three_module_closure_store import EcommerceWorkshopThreeModuleClosureStore
+        monkeypatch.setattr(fixture, 'SCOPE', SCOPE)
+        service, store, batch = fixture.service_fixture()
+        service.create_frequency_policy(SCOPE, fixture.CreateCustomerFrequencyPolicyRequest(
+            policyId='frequency-policy', revision=1, channel='wecom', purpose='retention', timezone='Asia/Shanghai',
+            quietHoursStart='22:00', quietHoursEnd='08:00', rollingWindowHours=168, maximumContacts=2), 'fixture-actor', now=fixture.NOW)
+        started = service.start_batch(SCOPE, batch.batch_id, fixture.start_request(batch), 'fixture-actor', now=fixture.NOW)
+        exact = fixture.full_ref('CustomerBatchStartDecisionRevision', started.decision_id, started.content_hash)
+        receipt = fixture.ref('ActionReceipt', 'fixture-receipt', 'f')
+        store.receipts[(*SCOPE.key, receipt.resource_id)] = (receipt.content_hash, started.items[0].binding_hash)
+        observation = service.record_dispatch_observation(SCOPE, fixture.RecordCustomerDispatchObservationRequest(
+            startDecisionRef=exact, itemKey=started.items[0].item_key, actionReceiptRef=receipt,
+            state='unknown', observedAt=fixture.NOW + timedelta(seconds=1)))
+        class SourceCursor:
+            def __init__(self, rows): self.rows = rows
+            def fetchone(self): return self.rows[0]
+            def fetchall(self): return self.rows
+        class SourceConnection:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def execute(self, sql, params):
+                assert sql.startswith('SELECT') and params[:2] == SCOPE.key
+                if 'FROM ecommerce_customer_batch_start_decision_revision ' in sql:
+                    return SourceCursor([dict(authority_data=contact.customer_start_authority_data(started), content_hash=started.content_hash)])
+                assert 'FROM ecommerce_customer_dispatch_observation ' in sql
+                return SourceCursor([dict(authority_data=observation.model_dump(mode='json', by_alias=True))])
+        original = EcommerceWorkshopThreeModuleClosureStore(read_connect_factory=lambda scope: SourceConnection())
+        items = original.resolve_domain_items(SCOPE, ThreeModule.CUSTOMER, exact)
+        assert len(items) == 1 and items[0].original_status == 'unknown'
+        assert items[0].canonical_outcome.value == 'unknown'
+        assert items[0].receipt_ref.model_dump(mode='json', by_alias=True) == receipt.model_dump(mode='json', by_alias=True)
+        original.resolve_domain_items = lambda *args: items
+        original.append_closure = lambda scope, value: value
+        closure = EcommerceWorkshopThreeModuleClosureService(original).compile(SCOPE,
+>           CompileThreeModuleClosureRequest(module='customer', sourceRef=exact), 'fixture-actor', now=NOW)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for CompileThreeModuleClosureRequest
+E       sourceRef
+E         Input should be a valid dictionary or instance of ClosureExactRef [type=model_type, input_value=CustomerExactRef(resource...7971728e81c1aca4e64fc9'), input_type=CustomerExactRef]
+E           For further information visit https://errors.pydantic.dev/2.13/v/model_type
+
+tests/test_ecommerce_customer_closure_readonly.py:199: ValidationError
+=============================== warnings summary ===============================
+aos_api/media_set.py:70
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r2/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+    class MediaSet(BaseModel):
+
+aos_api/materialized_access_control.py:130
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r2/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+    class AgentTool(BaseModel):
+
+aos_api/routers/materialized_access_control.py:83
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r2/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+    class CreateAgentToolRequest(BaseModel):
+
+aos_api/aip_logic_dry_run_executor.py:45
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r2/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+    class _InputConfig(_Config):
+
+aos_api/phase5_pipeline_engine.py:126
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r2/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+    class Dataset(BaseModel):
+
+aos_api/routers/phase5_datasets.py:32
+  /Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-customer-closure-bounded-reader-20261015/private/candidate-source-r2/services/aos-api/aos_api/routers/phase5_datasets.py:32: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+    class CreateDatasetRequest(BaseModel):
+
+../../../../../../services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1
+  /Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_ecommerce_customer_closure_readonly.py::test_original_customer_start_observation_and_store_status_mapping
+1 failed, 557 passed, 7 warnings in 30.46s
