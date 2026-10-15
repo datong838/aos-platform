@@ -1,0 +1,47 @@
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "view": {
+    "schemaVersion": "aos.ecommerce-workshop.three-module-closure/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "module": "customer",
+    "evaluatedAt": "2026-10-15T12:15:35.064089Z",
+    "atomicSkillIds": [
+      "segment-customers",
+      "design-customer-journey",
+      "evaluate-dialogue-effect"
+    ],
+    "logicId": "ecommerce-customer-relationship",
+    "primaryColleague": "私域管家",
+    "collaboratorColleagues": [
+      "内容官",
+      "客服专员",
+      "导购顾问",
+      "数据参谋"
+    ],
+    "latestClosure": null,
+    "latestUsage": null,
+    "latestEffect": null,
+    "latestHandoff": null,
+    "blockers": [
+      "THREE_MODULE_CLOSURE_NOT_COMPILED",
+      "THREE_MODULE_USAGE_NOT_BOUND",
+      "THREE_MODULE_EFFECT_NOT_BOUND",
+      "THREE_MODULE_HANDOFF_NOT_BOUND"
+    ],
+    "allowedCommands": [],
+    "handoffConsumeAllowed": false,
+    "memoryPromotionAllowed": false,
+    "externalEffectsAllowed": false
+  },
+  "deny": {
+    "queryStatus": 400,
+    "anonymousStatus": 401
+  }
+}

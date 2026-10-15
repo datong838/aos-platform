@@ -1,0 +1,85 @@
+{
+  "stage": "1280 filter click after four tab switches",
+  "error": "customer-tabs intercepted ordinary pointer; no force click; viewport cleared in finally",
+  "currentAfterViewportReset": {
+    "viewport": [
+      1449,
+      804
+    ],
+    "windowScroll": [
+      0,
+      0
+    ],
+    "tabs": [
+      {
+        "rect": {
+          "x": 308,
+          "y": 203.25,
+          "width": 280,
+          "height": 220,
+          "top": 203.25,
+          "right": 588,
+          "bottom": 423.25,
+          "left": 308
+        },
+        "scroll": 0
+      }
+    ],
+    "buttons": [
+      {
+        "text": "全部",
+        "rect": {
+          "x": 322,
+          "y": 217.25,
+          "width": 48,
+          "height": 32,
+          "top": 217.25,
+          "right": 370,
+          "bottom": 249.25,
+          "left": 322
+        }
+      },
+      {
+        "text": "可披露",
+        "rect": {
+          "x": 376,
+          "y": 217.25,
+          "width": 61,
+          "height": 32,
+          "top": 217.25,
+          "right": 437,
+          "bottom": 249.25,
+          "left": 376
+        }
+      },
+      {
+        "text": "待复核",
+        "rect": {
+          "x": 443,
+          "y": 217.25,
+          "width": 61,
+          "height": 32,
+          "top": 217.25,
+          "right": 504,
+          "bottom": 249.25,
+          "left": 443
+        }
+      },
+      {
+        "text": "已排除",
+        "rect": {
+          "x": 510,
+          "y": 217.25,
+          "width": 61,
+          "height": 32,
+          "top": 217.25,
+          "right": 571,
+          "bottom": 249.25,
+          "left": 510
+        }
+      }
+    ],
+    "scrollers": []
+  },
+  "wholeVisualComplete": false
+}

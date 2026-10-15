@@ -1,0 +1,423 @@
+{
+  "metrics": [
+    {
+      "width": 1280,
+      "height": 720,
+      "geometry": {
+        "viewportWidth": 1280,
+        "documentWidth": 1280,
+        "loading": false,
+        "buttons": [
+          {
+            "text": "全部",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          },
+          {
+            "text": "可披露",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          },
+          {
+            "text": "待复核",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          },
+          {
+            "text": "已排除",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          }
+        ],
+        "selectedTabs": [
+          "客户最小投影等待条件 · 正式来源 0"
+        ]
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "geometry": {
+        "viewportWidth": 1440,
+        "documentWidth": 1440,
+        "loading": false,
+        "buttons": [
+          {
+            "text": "全部",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          },
+          {
+            "text": "可披露",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          },
+          {
+            "text": "待复核",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          },
+          {
+            "text": "已排除",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          }
+        ],
+        "selectedTabs": [
+          "客户最小投影等待条件 · 正式来源 0"
+        ]
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "geometry": {
+        "viewportWidth": 1920,
+        "documentWidth": 1920,
+        "loading": false,
+        "buttons": [
+          {
+            "text": "全部",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          },
+          {
+            "text": "可披露",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          },
+          {
+            "text": "待复核",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          },
+          {
+            "text": "已排除",
+            "height": 32,
+            "normalPointerHitsButton": false,
+            "hitRole": "tablist",
+            "hitClass": "customer-tabs"
+          }
+        ],
+        "selectedTabs": [
+          "客户最小投影等待条件 · 正式来源 0"
+        ]
+      }
+    }
+  ],
+  "verifiedTabs": [
+    [
+      "客户最小投影等待条件 · 正式来源 0"
+    ],
+    [
+      "客户最小投影等待条件 · 正式来源 0"
+    ],
+    [
+      "客户最小投影等待条件 · 正式来源 0"
+    ],
+    [
+      "客户最小投影等待条件 · 正式来源 0"
+    ]
+  ],
+  "filterClickFailed": true,
+  "filterFailure": "customer-tabs intercepted ordinary pointer",
+  "trace": [
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/orgs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/installed-readonly-modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/me",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 400
+    },
+    {
+      "path": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+      "method": "GET",
+      "status": 401
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/runtime-workshop/modules",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/v1/health",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "normalAuthPosts": [
+    {
+      "path": "/api/v1/auth/token",
+      "method": "POST",
+      "status": 200
+    }
+  ],
+  "businessNonGet": [],
+  "temporaryViewportCleared": true,
+  "wholeVisualComplete": false
+}

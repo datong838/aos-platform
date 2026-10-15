@@ -1,0 +1,13 @@
+# 客户历史闭环保存读取：原系统API更新方案
+
+Rules：完整231Goal/原唯一真人安装全恢复本机管理员授权保留，唯一m1写者与Authority2038/maintenance-r11有效非重叠Lease。用户dirty保护；原DB只读/HostworkerProvider OFF/unknown及旧12不重放/disabled Schedule不启/商城源不读/noPush。每日及每次实际aos最新m1原权威卷完整PG→API→Web及aos2不重启不变，本Goal continuation中的API读取更新不替代每日全面重启。
+
+候选0b0c88882ce6e9cdab168baf485ef50fa5baefb7仅客户closure reader/test/router/HTTP四文件；冻结r3累计558通过与原W6-009独立临时PG空态/五轴/snapshot/creator/RLS/25006/SQLCASE证明、准确CID停止；reader质量r1及route/native质量r1 PASS合法消费。历史保存closure及三个绑定不是当前Start/Consent/Receipt/当前预算或运营批准。shared creator/price、原domain/Store/DDL/Web未改。
+
+控制器新增于本维护证据目录customer_closure_api_switch_r1.py，只复用已验证原readonly wrapper。fresh freeze_current_api.py固定已提交0b0c888完整manifest/sourceguard，拒绝dirty/.env；fresh650 READONLY before。核HEAD/m1/Authority2038/本Task同owner有效Lease、两个精确代码质量门及当前四文件SHA、原API44093/18080/准确cwd源17164/原命令、Web89803/18434/原entry及前端树f036、原PG准确CID84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c/原卷aos-qyh-history159-prepared-data-20261011/Started2026-10-14T20:36:36.408087963Z及schema161/650/绑定0。原management_readonly预检。
+
+先缺审负向真实调用API阶段，在quality检查内、意图和signal前拒绝且原PID/Web/PG全状态相等。独立controller当前PASS合法消费且源码SHA绑定后才可一次新意图，SIGTERM准确44093、端口释放后原身份/OIDC/安装/bundles/trust+新冻源启动。禁止向PG/Web/Chrome发信号；unknown只读对账，不重跑任何旧意图。spawn不是完成。
+
+后效必须核实际监听/cwd/新源guard，原唯一真人正式SDK客户closure GET读取实际保存记录及四blockers/各独立轴，commands空及handoffConsume/memoryPromotion/external三false；query400/匿名401/无业务nonGET，其他已交付读取不重复冒充本接口证据。650 after完整逐表行数/hash等于before，同原CID/卷/Started/schema/cluster。客户实际页面与workshop-customer.html三宽1280x720/1440x900/1920x1080同CSS截图检查及基本只读交互，导航/横幅/任务计划日志/产物分层360/宽屏空白/页脚过强语义等未完成项继续登记，绝不填4207演示客户或宣称八台视觉完成。
+
+冻结独立现场Prime后才reader/parent精确Delivery及maintenance全部remaining同owner接续、Authority七强；完整fullC唯一真人最终真预算及原部署、自然有来源首链/安装全生命周期/八场景及视觉/连续观察发布均未完成。回滚只通过新门控方案回到已知旧只读冻源，不重用本次意图，不改业务数据。

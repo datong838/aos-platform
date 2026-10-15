@@ -1,0 +1,41 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "af18dd609d61d57c876cbc45fb3534a47789e77b7b748d18b179c422b85102ac",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r11-20261015-closure-live-r2",
+    "task_id": "qyh-restoration-readonly-continuation-r11-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "0b0c88882ce6e9cdab168baf485ef50fa5baefb7",
+      "authority_revision": "AOS-002038",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r11-20261015/closure-live-review-material-r2.txt": "bace9f57e316807438140676f82f768bd31454d5876bd002236f24346478778e"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Recorded current original-user SDK reads customer saved closure successfully with exact org-org/dev-project identity, actual four missing records/four blockers, empty commands/three false flags; query400/anonymous401/businessNonGET empty consistent. Not current Start/Consent/Receipt or operating authority.",
+        "evidence": "Materials closure-native-identity-sdk-r1.json (SHA 28d2e607...) contains subject org-org/dev-project with latestClosure/latestUsage/latestEffect/latestHandoff all null, blockers array with exactly FOUR NOT_COMPILED/NOT_BOUND codes, allowedCommands=[], handoffConsumeAllowed/memoryPromotionAllowed/externalEffectsAllowed all false, deny.queryStatus=400, deny.anonymousStatus=401, deny.businessNonGet=[]. closure-runtime-proof-r1.json asserts actualCustomerClosureSdk200=true, fourRealMissingBlockers=true, commandsEmpty=true, allThreeEffectsFalse=true, query400=true, anonymous401=true, businessNonGet=[]. Report section '正式身份、保存读取与原库' confirms these are original library reads, not fixture nulls, and explicitly states no current Start/Consent/Receipt or budget authority is granted.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Current source guard, committed four-file freeze, API54057/source0b0c888, unchanged Web/original PG and main-writer recorded complete650 equality with raw before/after SHAs support saved-read slice. Controller review legal consumption preceded one fresh switch; spawn alone not acceptance. Raw650 DB fingerprints not supplied to reviewer, no claim reviewer independently read them.",
+        "evidence": "source-verification-r3.json shows same before/after SHA for four files (ecommerce_customer_closure_readonly.py, test_ecommerce_customer_closure_readonly.py, routers/ecommerce_workshop, test_ecommerce_workshop_read_http). api-started-r1.json confirms pid=54057, head=0b0c888, source path match, spawnOnly structure. closure-runtime-proof-r1.json asserts apiSource correct, webPid=89803, webSourceHead=f036, originalContainerId/volume/pgStartedAt unchanged, tables=650, all650BeforeAfterEqual=true, onlyApiSwitched=true, dailyFullRestartSubstitute=false. MAIN WRITER COMPLETE650 COMPARISON block shows beforeSha=1fdb1e05... afterSha=ff04b06a..., count=650, allEqual=true, but reviewer only receives recorded evidence not raw DB fingerprints. api-controller-review-consumption-r1.json status=CONSUMED_MATERIAL_REVIEW precedes this request. code-review-consumption-r1.json also CONSUMED.",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Six PNG hashes/dimensions and three-width geometry support no horizontal overflow/32px filters only. Ordinary filters FAILED from tablist interception all widths; tabs UNVERIFIED, no force click or visual PASS. Full visual/business/install/Goal remain; manual pixel inspection is distinct from this text review.",
+        "evidence": "closure-live-shas-r1.json lists six PNGs at 1280x720/1440x900/1920x1080 with distinct sha256 values, temporaryViewportCleared=true. closure-native-geometry-deny-r1.json metrics show all three widths: noHorizontalOverflow true (documentWidth equals viewportWidth), all four buttons height=32px, but normalPointerHitsButton=false for all with hitRole=tablist/hitClass=customer-tabs. selectedTabs always first tab '客户最小投影等待条件'. filterClickFailed=true, filterFailure='customer-tabs intercepted ordinary pointer'. verifiedTabs array contains first-tab string four times. closure-pointer-interception-observation-r1.json confirms 'customer-tabs intercepted ordinary pointer; no force click'. closure-runtime-proof-r1.json asserts filterPointerFailureAllWidths=true, tabsSwitchVerified=false, tabsNormalClickDidNotChangeSelection=true, wholeVisualComplete=false, wholeGoalComplete=false. Report explicitly states manual pixel inspection by main writer is NOT visible to reviewer.",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "Register a new independent Task for customer-tab interception fix (z-index/CSS layer fix) and tab switching diagnosis, with separate RED proposal and Lease before any code changes. Continue remaining Goal work under current owner without claiming visual/business/install complete."
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "af18dd609d61d57c876cbc45fb3534a47789e77b7b748d18b179c422b85102ac",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r11-20261015-api-controller-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r11-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "0b0c88882ce6e9cdab168baf485ef50fa5baefb7",
+      "authority_revision": "AOS-002038",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r11-20261015/api-controller-review-package-r1.txt": "839d2092cd447f9e27533a06583e05bc3995895f9ea067e2a007f8b813cdd1bc"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "Current controller requires this independent review PASS/legal consumption and exact controller SHA before fresh intent/signal/spawn; actual missing-review probe denied inside quality, with original API/Web/PG and effect artifacts unchanged.",
+        "evidence": "customer_closure_api_switch_r1.py quality()第34行要求读取api-controller-review-request-r1.json；pre-effect-gate-deny-result-r1.json statesExactlyEqual:true/returned 1/gateMissingReview:true；before/after apiListener=44093、webListener=89803、pgId/StartedAt相等、apiEffectsArtifacts全false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "Current readonly preflight, two exact independent code PASS consumptions and frozen four-file SHA/source manifest checks bind committed 0b0c888. Exact API44093/source17164 identity, Web89803/frontend and original PG volume/StartedAt guard permit only one readonly API replacement. No daily full restart, PG/Web/Chrome action, operating authority or post-effect SDK/650/visual acceptance is claimed.",
+        "evidence": "api-preflight-r1.json head=0b0c888/pgStartedAt=cid StartedAt/old apiPid=44093/cwd source17164/webPid=89803/serviceEffects:false；route-quality-consumption-r1.json与code-review-consumption-r1.json均为CONSUMED_MATERIAL_REVIEW/execution_authorized:false；freeze JSON outcome=CURRENT_M1_API_SOURCE_CANDIDATE_FROZEN_NO_START/apiStarted:false；before summary 650 fingerprints与volume/CID一致；deny结果wholeGoalComplete=false。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前r11/0b0c888只读冻结状态，不重跑旧意图；后续由同owner凭新Start/Consent/Receipt authority发起新一轮独立门禁（含SDK/650/visual），再按新门控方案决定是否切换。"
+  }
+}
