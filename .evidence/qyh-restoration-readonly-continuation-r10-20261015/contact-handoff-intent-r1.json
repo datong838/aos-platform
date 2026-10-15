@@ -1,0 +1,15 @@
+{
+  "head": "0c76d03d2e552b8977e9d647e94cc5a32daf647a",
+  "code": "17164dc7b71bdb897db501d03657741f42c8122b",
+  "signingCode": "90a601fd1ad2a57c128bf05416dbf97239412865",
+  "before": "AOS-002037",
+  "expected": "AOS-002038",
+  "tasks": [
+    "qyh-customer-start-signing-material-20261015",
+    "qyh-customer-contact-bounded-reader-20261015",
+    "qyh-customer-contact-read-admission-20261015",
+    "qyh-restoration-readonly-continuation-r10-20261015"
+  ],
+  "otherLeasesPreserved": 38,
+  "wholeGoalComplete": false
+}
