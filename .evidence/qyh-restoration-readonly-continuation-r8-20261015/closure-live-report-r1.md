@@ -1,0 +1,17 @@
+# 价格闭环保存贡献：真实只读现场
+
+Rules：完整231Goal、原唯一真人安装/全恢复/本机admin授权、唯一m1写者、原卷只读/用户dirty保护、独立Prime逐波Loop。Authority2035，maintenance-r8/priceclosure父与reader Lease同owner至08UTC。
+
+四文件04092c82精确提交后原freeze入口冻结8693文件、完整sourceguard和owned SHA对应；方案r2、reader code r2、route quality r1均PASS合法消费，冻结335通过。独立tmpfs原W6-009/creator正常/快照/RLS/25006/SQLCASE/privacy通过，准确CID已停止。probe合成mixed-price仅compiler合同，不代表原PRICE source resolver已能产出mixed经营cohort。
+
+维护控制器先真实原限制身份management readonly预检；本机缺少必需独立审查文件的负向API阶段调用在quality读取缺失request处拒绝，原API95375/Web89803/PG与效果意图缺失状态完全相同，无signal/spawn。独立controller quality r1 PASS合法消费后一次新意图API95375→8498。实际18080监听/cwd/source04092/fullmanifest核对，Web89803/f036、原PG CID/卷/Started20:36:36保持。无PG/Web/Chrome信号，不把spawn当成功。
+
+9244原授权target7263AE405334660557A7840F95B4446F一直存在。旧自动化句柄closed，只读probe确认endpoint在原9244后重连同一target；不另开Chrome或操作其他标签。实际原价页路径显示原正常登录表单，form两input和idle登录按钮已核后，用原私有材料完成一次正常表单POST200，密码只内存即清理。没有unknown登录重放、凭据输出或cookie/storage/Auth header复制。
+
+原真人me subject6f31cfdc-a26c-4f1f-ad6b-95a8559cc657/org-org/dev-project。正式SDK getThreeModuleClosureContributionView('price')由旧404变200，module price/数据参谋，四latest全部null、四真实未compiled/usage/effect/handoff缺口、commands[]及handoffConsumeAllowed/memoryPromotionAllowed/externalEffectsAllowed全false。原creator同SDK仍creator/达人运营官/四null四缺口空命令，证明未串模块。真实空不是原reader异常补null，不制造compiled closure或当前业务批准。query foreign400、新无凭据401；customer canonical closure保持旧404。业务nonGet[]，唯一正常登录POST不当业务mutation。
+
+原价格页已settled；1280×720/1440×900/1920×1080各四筛选32px、无页面横溢出，各宽四切换/唯一aria-pressed通过。当前六份actual/reference-r1 PNG准确尺寸逐一核对并逐图检视，沿已修复采集方式避免前波倍率/裁切问题；临时视口已清。三栏/标题骨架接近，实际顶部真实等待条件保留约100px、页签较原稿下移；真实空卡片与原稿47SKU/异常/报价不是同业务态，不能宣称整屏像素或非空场景通过。全页签/a11y、达人1280裁切/参谋层级/Page辅助失败假0等仍待，不复制演示或删除真实禁入。
+
+fresh原650表before/after完整行数+hash字典逐表全等，cluster7695302940039200809/schema161/绑定0、原CID/卷/PGStartedAt完全保持。保存全部650表名比较、原双文件SHA和本机比较代码；只读业务读取没有改原安装/预算/角色/绑定/Provider/旧unknown12/disabledSchedule/source。
+
+现场独立Prime后才精确两slice Delivery、maintenance全部remaining同owner接续、Authority七强及下一个customer贡献辅助GET只读审计。daily/every实际aos最新m1同原卷全面PG→API→Web/aos2不重启保留，此API读取波不替代daily。fullC唯一真人最终预算/原部署、自然CaseRun有来源建议exact评审内部内容受约束能力产物真人续跑总控Wiki、安装全生命周期/八真实场景与全部视觉/连续观察发布全部保留；HostworkerProviderOFF/原DBREADONLY/oldunknown12不重放/disabledSchedule不启用/source不读/noPush/个人Codex记忆不写，Goal ACTIVE。

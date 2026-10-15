@@ -1,0 +1,49 @@
+{
+  "finalScreens": [
+    {
+      "file": "closure-actual-1280-r1.png",
+      "sha256": "fcf50a9e7c3e61bb06f517a34e52f5776aa40f3c40f3365e8733cb90f9e9bc47",
+      "width": 1280,
+      "height": 720,
+      "inspected": true
+    },
+    {
+      "file": "closure-reference-1280-r1.png",
+      "sha256": "c28c32af1390c82b6581d10ccc928c078b27fbfdcd8b7b1e3279510a642d3526",
+      "width": 1280,
+      "height": 720,
+      "inspected": true
+    },
+    {
+      "file": "closure-actual-1440-r1.png",
+      "sha256": "3c9c498011b931a5865bb328e55a4c7d743d8a9f7e91d5dfbd0ca3d3828ef65d",
+      "width": 1440,
+      "height": 900,
+      "inspected": true
+    },
+    {
+      "file": "closure-reference-1440-r1.png",
+      "sha256": "5c93306ba6780bda5f57edd8ca0c535c160359d2aeae1f223df837506beb1de3",
+      "width": 1440,
+      "height": 900,
+      "inspected": true
+    },
+    {
+      "file": "closure-actual-1920-r1.png",
+      "sha256": "918fa15fbffea5c45201cb4d1a866abcbc5fc18c779f305183464ea6874b92ee",
+      "width": 1920,
+      "height": 1080,
+      "inspected": true
+    },
+    {
+      "file": "closure-reference-1920-r1.png",
+      "sha256": "9c8d3b7502593df906343e62e4b3118f405c53d111ecd16c7c4468af82787d81",
+      "width": 1920,
+      "height": 1080,
+      "inspected": true
+    }
+  ],
+  "captureMethod": "actual native scale=css; reference stable native paint then explicit CSS clip scale1",
+  "temporaryOverridesCleared": true,
+  "wholeVisualComplete": false
+}

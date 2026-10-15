@@ -1,0 +1,36 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "runner_sha256": "a78c816967efff113f587475fd4521cfe31e8bcd4b384db0ca37cc3f6f58dcc3",
+  "validator_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f",
+  "execution_authorized": false,
+  "network_connect_timeout_ms": 60000,
+  "review_model": "agnes-2.5-flash",
+  "result": {
+    "request_id": "qyh-restoration-readonly-continuation-r8-20261015-api-controller-r1",
+    "task_id": "qyh-restoration-readonly-continuation-r8-20261015",
+    "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+    "kind": "quality",
+    "baseline": {
+      "head": "04092c82f9dcaccf7b23ff6e61d536a9f650aa38",
+      "authority_revision": "AOS-002035",
+      "files": {
+        ".evidence/qyh-restoration-readonly-continuation-r8-20261015/api-controller-review-package-r1.txt": "cda90362f706875cf96c6f826a06d2432e3c78af29870b4f9dd95e6146fb3e95"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "控制器源码将本次独立复审PASS合法消费置于新意图和信号之前；本机缺少必需审查文件的负向实验已在quality处拒绝，旧API/Web/PG及意图缺失状态前后一致。",
+        "evidence": "price_closure_api_switch_r1.py 第34-38行：quality()在quality();assert not (E/'api-switch-intent-r1.json').exists() and not (E/'api-started-r1.json').exists() 之前执行，读取并验证review request。pre-effect-gate-deny-result-r1.json statesExactlyEqual=true，返回returncode=1，deniedBeforeIntentAndSignal=true，gateMissingReview=true，apiEffectsArtifacts均为false。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前真实只读预检、两个独立代码PASS及其消费、原只读wrapper与准确API95375身份可核；所供前效代码仅更新指定API，不向PG/Web/Chrome发信号，不替代daily或后效SDK/650/视觉验收。",
+        "evidence": "api-preflight-r1.json nativeManagementReadonly.outcome='RESTORED_HTTP_ATTACHMENT_INVENTORY_ONLY'，tables=650，enabledBindings=0，apiStartAuthorized=false，databaseStartedAt匹配；route-quality-result-r1.json verdict=PASS consumed；code-review-result-r2.json verdict=PASS consumed；price_closure_api_switch_r1.py base()验证HEAD/owner/lease/source hashes/pg/web/listeners。controller不向PG/Web/Chrome发信号。plan.md明确本波不代替daily/SDK/650/视觉验收。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留本 PASS 消费记录；如需推进 API 信号与 restart，等待独立 post-effect review 完成后按原计划顺序执行 unknown 只读对账与八页面浏览器验收。"
+  }
+}

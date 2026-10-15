@@ -1,0 +1,75 @@
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "price": {
+    "schemaVersion": "aos.ecommerce-workshop.three-module-closure/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "module": "price",
+    "evaluatedAt": "2026-10-15T04:14:00.671606Z",
+    "atomicSkillIds": [
+      "compile-price-case",
+      "prepare-price-handoff",
+      "evaluate-price-effect"
+    ],
+    "logicId": "ecommerce-price-governance",
+    "primaryColleague": "数据参谋",
+    "collaboratorColleagues": [
+      "活动策划师",
+      "导购顾问"
+    ],
+    "latestClosure": null,
+    "latestUsage": null,
+    "latestEffect": null,
+    "latestHandoff": null,
+    "blockers": [
+      "THREE_MODULE_CLOSURE_NOT_COMPILED",
+      "THREE_MODULE_USAGE_NOT_BOUND",
+      "THREE_MODULE_EFFECT_NOT_BOUND",
+      "THREE_MODULE_HANDOFF_NOT_BOUND"
+    ],
+    "allowedCommands": [],
+    "handoffConsumeAllowed": false,
+    "memoryPromotionAllowed": false,
+    "externalEffectsAllowed": false
+  },
+  "creator": {
+    "schemaVersion": "aos.ecommerce-workshop.three-module-closure/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "module": "creator",
+    "evaluatedAt": "2026-10-15T04:14:01.897793Z",
+    "atomicSkillIds": [
+      "creator-batch-prepare",
+      "creator-lane-reconcile",
+      "creator-relationship-review"
+    ],
+    "logicId": "ecommerce-creator-growth",
+    "primaryColleague": "达人运营官",
+    "collaboratorColleagues": [
+      "内容官",
+      "数据参谋"
+    ],
+    "latestClosure": null,
+    "latestUsage": null,
+    "latestEffect": null,
+    "latestHandoff": null,
+    "blockers": [
+      "THREE_MODULE_CLOSURE_NOT_COMPILED",
+      "THREE_MODULE_USAGE_NOT_BOUND",
+      "THREE_MODULE_EFFECT_NOT_BOUND",
+      "THREE_MODULE_HANDOFF_NOT_BOUND"
+    ],
+    "allowedCommands": [],
+    "handoffConsumeAllowed": false,
+    "memoryPromotionAllowed": false,
+    "externalEffectsAllowed": false
+  }
+}

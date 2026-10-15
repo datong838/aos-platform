@@ -1,0 +1,322 @@
+POST-EFFECT READONLY LIVE QUALITY. Actual API8498/source04092 switch completed once after controller quality r1 PASS legal. Full business/install/visual Goal NOT complete; no production/gate permission sought. Geometry and six local PNG hash/dimension evidence are supplied, NOT a claim this tools-disabled reviewer has viewed image pixels or all eight workbenches.
+
+
+FILE closure-live-report-r1.md SHA 5ec6f18e33772cb27330297539eda53916c4d949d0f1785a00fe28d48838aa9a
+# 价格闭环保存贡献：真实只读现场
+
+Rules：完整231Goal、原唯一真人安装/全恢复/本机admin授权、唯一m1写者、原卷只读/用户dirty保护、独立Prime逐波Loop。Authority2035，maintenance-r8/priceclosure父与reader Lease同owner至08UTC。
+
+四文件04092c82精确提交后原freeze入口冻结8693文件、完整sourceguard和owned SHA对应；方案r2、reader code r2、route quality r1均PASS合法消费，冻结335通过。独立tmpfs原W6-009/creator正常/快照/RLS/25006/SQLCASE/privacy通过，准确CID已停止。probe合成mixed-price仅compiler合同，不代表原PRICE source resolver已能产出mixed经营cohort。
+
+维护控制器先真实原限制身份management readonly预检；本机缺少必需独立审查文件的负向API阶段调用在quality读取缺失request处拒绝，原API95375/Web89803/PG与效果意图缺失状态完全相同，无signal/spawn。独立controller quality r1 PASS合法消费后一次新意图API95375→8498。实际18080监听/cwd/source04092/fullmanifest核对，Web89803/f036、原PG CID/卷/Started20:36:36保持。无PG/Web/Chrome信号，不把spawn当成功。
+
+9244原授权target7263AE405334660557A7840F95B4446F一直存在。旧自动化句柄closed，只读probe确认endpoint在原9244后重连同一target；不另开Chrome或操作其他标签。实际原价页路径显示原正常登录表单，form两input和idle登录按钮已核后，用原私有材料完成一次正常表单POST200，密码只内存即清理。没有unknown登录重放、凭据输出或cookie/storage/Auth header复制。
+
+原真人me subject6f31cfdc-a26c-4f1f-ad6b-95a8559cc657/org-org/dev-project。正式SDK getThreeModuleClosureContributionView('price')由旧404变200，module price/数据参谋，四latest全部null、四真实未compiled/usage/effect/handoff缺口、commands[]及handoffConsumeAllowed/memoryPromotionAllowed/externalEffectsAllowed全false。原creator同SDK仍creator/达人运营官/四null四缺口空命令，证明未串模块。真实空不是原reader异常补null，不制造compiled closure或当前业务批准。query foreign400、新无凭据401；customer canonical closure保持旧404。业务nonGet[]，唯一正常登录POST不当业务mutation。
+
+原价格页已settled；1280×720/1440×900/1920×1080各四筛选32px、无页面横溢出，各宽四切换/唯一aria-pressed通过。当前六份actual/reference-r1 PNG准确尺寸逐一核对并逐图检视，沿已修复采集方式避免前波倍率/裁切问题；临时视口已清。三栏/标题骨架接近，实际顶部真实等待条件保留约100px、页签较原稿下移；真实空卡片与原稿47SKU/异常/报价不是同业务态，不能宣称整屏像素或非空场景通过。全页签/a11y、达人1280裁切/参谋层级/Page辅助失败假0等仍待，不复制演示或删除真实禁入。
+
+fresh原650表before/after完整行数+hash字典逐表全等，cluster7695302940039200809/schema161/绑定0、原CID/卷/PGStartedAt完全保持。保存全部650表名比较、原双文件SHA和本机比较代码；只读业务读取没有改原安装/预算/角色/绑定/Provider/旧unknown12/disabledSchedule/source。
+
+现场独立Prime后才精确两slice Delivery、maintenance全部remaining同owner接续、Authority七强及下一个customer贡献辅助GET只读审计。daily/every实际aos最新m1同原卷全面PG→API→Web/aos2不重启保留，此API读取波不替代daily。fullC唯一真人最终预算/原部署、自然CaseRun有来源建议exact评审内部内容受约束能力产物真人续跑总控Wiki、安装全生命周期/八真实场景与全部视觉/连续观察发布全部保留；HostworkerProviderOFF/原DBREADONLY/oldunknown12不重放/disabledSchedule不启用/source不读/noPush/个人Codex记忆不写，Goal ACTIVE。
+
+
+FILE verify_closure_runtime_r1.py SHA 7f207e4bd525307467bb52560e0a27e2f0dd72834274771508f5dc76eb125fcb
+"""Reconcile exact live sources, original data and native SDK after one API switch."""
+from pathlib import Path
+import hashlib
+import json
+import os
+import struct
+import subprocess
+import sys
+E=Path(__file__).resolve().parent;R=E.parents[1];S=R/'.evidence/qyh-restoration-successor-latest-restart-20261013'
+sys.path.insert(0,str(R/'scripts'));import a0v_qyh_restored_http as guard
+HEAD='04092c82f9dcaccf7b23ff6e61d536a9f650aa38'
+def read(path):return json.loads(path.read_text())
+def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+def command(*args):return subprocess.check_output(args,cwd=R,text=True).strip()
+def save(name,value):
+    with (E/name).open('x') as stream:
+        json.dump(value,stream,ensure_ascii=False,indent=2);stream.flush();os.fsync(stream.fileno())
+assert command('git','rev-parse','HEAD')==HEAD
+source=guard.require_api_source_candidate(R/'.evidence/qyh-full-system-restoration-20261011/price-closure-api-20261015.json')
+assert command('lsof','-t','-nP','-iTCP:18080','-sTCP:LISTEN')=='8498'
+assert str(source) in command('lsof','-a','-p','8498','-d','cwd','-Fn')
+assert command('lsof','-t','-nP','-iTCP:18434','-sTCP:LISTEN')=='89803'
+assert not command('git','diff','f036e46c643308651b415179e6e991870dbc26ab','HEAD','--','apps/web')
+before_path=S/'price-closure-before-20261015.json';after_path=S/'price-closure-after-20261015.json'
+before,after=read(before_path),read(after_path)
+assert len(before['fingerprints'])==len(after['fingerprints'])==650
+assert before['fingerprints']==after['fingerprints']
+for key in ['native','containerId','volume','pgStartedAt']:assert before[key]==after[key]
+pg=json.loads(command('docker','--context','colima-aos-extension','inspect','qyh-restored-pg-20261011'))[0]
+assert pg['Id']==before['containerId'] and pg['State']['StartedAt']==before['pgStartedAt'] and pg['Mounts'][0]['Name']==before['volume']
+sdk=read(E/'closure-native-identity-sdk-r1.json')
+assert sdk['me']==dict(subject='6f31cfdc-a26c-4f1f-ad6b-95a8559cc657',orgId='org-org',projectId='dev-project')
+for module in ['price','creator']:
+    view=sdk[module]
+    assert view['module']==module and view['tenant']==dict(orgId='org-org',projectId='dev-project')
+    assert all(view[key] is None for key in ['latestClosure','latestUsage','latestEffect','latestHandoff'])
+    assert len(view['blockers'])==4 and view['allowedCommands']==[]
+    assert view['handoffConsumeAllowed'] is view['memoryPromotionAllowed'] is view['externalEffectsAllowed'] is False
+browser=read(E/'closure-native-geometry-deny-r1.json')
+assert browser['deny']['anonymousStatus']==401 and not browser['businessNonGet']
+assert any(x['path'].endswith('/price/closure-contributions') and x['status']==400 for x in browser['trace'])
+assert any(x['path'].endswith('/customer/closure-contributions') and x['status']==404 for x in browser['trace'])
+screens=[]
+for width,height in [(1280,720),(1440,900),(1920,1080)]:
+    metric=next(x for x in browser['metrics'] if x['width']==width)
+    assert all(x['height']==32 for x in metric['geometry']['buttons'])
+    assert metric['geometry']['documentWidth']<=width and not metric['geometry']['loading']
+    assert [x['pressed'] for x in metric['filters']]==[['可比'],['待复核'],['已排除'],['全部']]
+    for kind in ['actual','reference']:
+        path=E/f'closure-{kind}-{width}-r1.png'
+        assert struct.unpack('>II',path.read_bytes()[16:24])==(width,height)
+        screens.append(dict(file=path.name,sha256=sha(path),width=width,height=height,inspected=True))
+save('closure-full650-comparison-r1.json',dict(beforeFile=str(before_path.relative_to(R)),beforeSha=sha(before_path),
+    afterFile=str(after_path.relative_to(R)),afterSha=sha(after_path),count=650,allEqual=True,differences=[],
+    tableEquality={table:before['fingerprints'][table]==after['fingerprints'][table] for table in sorted(before['fingerprints'])}))
+save('closure-live-shas-r1.json',dict(finalScreens=screens,
+    captureMethod='actual native scale=css; reference stable native paint then explicit CSS clip scale1',
+    temporaryOverridesCleared=True,wholeVisualComplete=False))
+save('closure-runtime-proof-r1.json',dict(head=HEAD,apiPid=8498,apiSource=str(source),sourceGuard=True,
+    webPid=89803,webSourceHead='f036e46c643308651b415179e6e991870dbc26ab',frontendTreesUnchanged=True,
+    originalContainerId=before['containerId'],originalVolume=before['volume'],pgStartedAt=before['pgStartedAt'],
+    schema='a0v_161',tables=650,enabledBindings=0,all650BeforeAfterEqual=True,actualPriceSdk200=True,
+    actualCreatorSdkStillCreator=True,fourActualGapsEach=True,commandsEmpty=True,allThreePublicEffectFlagsFalse=True,
+    query400=True,anonymous401=True,customerClosureStill404=True,businessNonGet=[],actualThreeViewportFilters32px=True,
+    actualDataEmptyNotFixture=True,onlyApiSwitched=True,dailyFullPgApiWebRestartSubstitute=False,wholeGoalComplete=False))
+print(json.dumps(dict(apiPid=8498,all650Equal=True,priceAndCreatorSdk200=True,sameSizeScreens=6,businessNonGet=[],wholeGoalComplete=False)))
+
+
+FILE closure-runtime-proof-r1.json SHA f08971f6254848ca2fda2bc4e820b097ea99cf88ef5021e4a45108dd47d1326d
+{
+  "head": "04092c82f9dcaccf7b23ff6e61d536a9f650aa38",
+  "apiPid": 8498,
+  "apiSource": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-04092c82f9dcaccf7b23ff6e61d536a9f650aa38",
+  "sourceGuard": true,
+  "webPid": 89803,
+  "webSourceHead": "f036e46c643308651b415179e6e991870dbc26ab",
+  "frontendTreesUnchanged": true,
+  "originalContainerId": "84989681fb7d3fc0f42d750672547ca0208fbba08dfef0d93837d8e64245dc3c",
+  "originalVolume": "aos-qyh-history159-prepared-data-20261011",
+  "pgStartedAt": "2026-10-14T20:36:36.408087963Z",
+  "schema": "a0v_161",
+  "tables": 650,
+  "enabledBindings": 0,
+  "all650BeforeAfterEqual": true,
+  "actualPriceSdk200": true,
+  "actualCreatorSdkStillCreator": true,
+  "fourActualGapsEach": true,
+  "commandsEmpty": true,
+  "allThreePublicEffectFlagsFalse": true,
+  "query400": true,
+  "anonymous401": true,
+  "customerClosureStill404": true,
+  "businessNonGet": [],
+  "actualThreeViewportFilters32px": true,
+  "actualDataEmptyNotFixture": true,
+  "onlyApiSwitched": true,
+  "dailyFullPgApiWebRestartSubstitute": false,
+  "wholeGoalComplete": false
+}
+
+FILE closure-native-identity-sdk-r1.json SHA 71342c6f18aa933f5b867cad3b8d71b6e0b332397ffe81e056dd4f30858ad99a
+{
+  "me": {
+    "subject": "6f31cfdc-a26c-4f1f-ad6b-95a8559cc657",
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "price": {
+    "schemaVersion": "aos.ecommerce-workshop.three-module-closure/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "module": "price",
+    "evaluatedAt": "2026-10-15T04:14:00.671606Z",
+    "atomicSkillIds": [
+      "compile-price-case",
+      "prepare-price-handoff",
+      "evaluate-price-effect"
+    ],
+    "logicId": "ecommerce-price-governance",
+    "primaryColleague": "数据参谋",
+    "collaboratorColleagues": [
+      "活动策划师",
+      "导购顾问"
+    ],
+    "latestClosure": null,
+    "latestUsage": null,
+    "latestEffect": null,
+    "latestHandoff": null,
+    "blockers": [
+      "THREE_MODULE_CLOSURE_NOT_COMPILED",
+      "THREE_MODULE_USAGE_NOT_BOUND",
+      "THREE_MODULE_EFFECT_NOT_BOUND",
+      "THREE_MODULE_HANDOFF_NOT_BOUND"
+    ],
+    "allowedCommands": [],
+    "handoffConsumeAllowed": false,
+    "memoryPromotionAllowed": false,
+    "externalEffectsAllowed": false
+  },
+  "creator": {
+    "schemaVersion": "aos.ecommerce-workshop.three-module-closure/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "module": "creator",
+    "evaluatedAt": "2026-10-15T04:14:01.897793Z",
+    "atomicSkillIds": [
+      "creator-batch-prepare",
+      "creator-lane-reconcile",
+      "creator-relationship-review"
+    ],
+    "logicId": "ecommerce-creator-growth",
+    "primaryColleague": "达人运营官",
+    "collaboratorColleagues": [
+      "内容官",
+      "数据参谋"
+    ],
+    "latestClosure": null,
+    "latestUsage": null,
+    "latestEffect": null,
+    "latestHandoff": null,
+    "blockers": [
+      "THREE_MODULE_CLOSURE_NOT_COMPILED",
+      "THREE_MODULE_USAGE_NOT_BOUND",
+      "THREE_MODULE_EFFECT_NOT_BOUND",
+      "THREE_MODULE_HANDOFF_NOT_BOUND"
+    ],
+    "allowedCommands": [],
+    "handoffConsumeAllowed": false,
+    "memoryPromotionAllowed": false,
+    "externalEffectsAllowed": false
+  }
+}
+
+FILE closure-live-shas-r1.json SHA 7aebf35a0d2d4c6234e5366620505fbcadc37adc6bed6a520dfd4a10c962e80d
+{
+  "finalScreens": [
+    {
+      "file": "closure-actual-1280-r1.png",
+      "sha256": "fcf50a9e7c3e61bb06f517a34e52f5776aa40f3c40f3365e8733cb90f9e9bc47",
+      "width": 1280,
+      "height": 720,
+      "inspected": true
+    },
+    {
+      "file": "closure-reference-1280-r1.png",
+      "sha256": "c28c32af1390c82b6581d10ccc928c078b27fbfdcd8b7b1e3279510a642d3526",
+      "width": 1280,
+      "height": 720,
+      "inspected": true
+    },
+    {
+      "file": "closure-actual-1440-r1.png",
+      "sha256": "3c9c498011b931a5865bb328e55a4c7d743d8a9f7e91d5dfbd0ca3d3828ef65d",
+      "width": 1440,
+      "height": 900,
+      "inspected": true
+    },
+    {
+      "file": "closure-reference-1440-r1.png",
+      "sha256": "5c93306ba6780bda5f57edd8ca0c535c160359d2aeae1f223df837506beb1de3",
+      "width": 1440,
+      "height": 900,
+      "inspected": true
+    },
+    {
+      "file": "closure-actual-1920-r1.png",
+      "sha256": "918fa15fbffea5c45201cb4d1a866abcbc5fc18c779f305183464ea6874b92ee",
+      "width": 1920,
+      "height": 1080,
+      "inspected": true
+    },
+    {
+      "file": "closure-reference-1920-r1.png",
+      "sha256": "9c8d3b7502593df906343e62e4b3118f405c53d111ecd16c7c4468af82787d81",
+      "width": 1920,
+      "height": 1080,
+      "inspected": true
+    }
+  ],
+  "captureMethod": "actual native scale=css; reference stable native paint then explicit CSS clip scale1",
+  "temporaryOverridesCleared": true,
+  "wholeVisualComplete": false
+}
+
+FILE api-switch-intent-r1.json SHA 718a5062e4e480bd89444a775ad166997bf29b5e04e62ae6f89d0ea83bf0609f
+{
+  "head": "04092c82f9dcaccf7b23ff6e61d536a9f650aa38",
+  "oldPid": 95375,
+  "oldCwd": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-4e038063368cc41fe17aec7b9f6148fa66bd7192",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-04092c82f9dcaccf7b23ff6e61d536a9f650aa38",
+  "pgWebChromeTouched": false
+}
+
+FILE api-old-stop-r1.json SHA aac185e4494c06bb7cc8fc4c661709e78247a63e6d7042d87e27dea6a93db4f2
+{
+  "oldPid": 95375,
+  "portFree": true
+}
+
+FILE api-started-r1.json SHA 981e9caeae7b08363b31db3d39451be152c10a1c33ad65aa049308cda73a6294
+{
+  "pid": 8498,
+  "head": "04092c82f9dcaccf7b23ff6e61d536a9f650aa38",
+  "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-full-system-restoration-20261011/private/api-source-04092c82f9dcaccf7b23ff6e61d536a9f650aa38",
+  "spawnedOnly": true
+}
+
+FILE api-controller-review-consumption-r1.json SHA 4cb05f312f7fcd66361d17757aade1de7bf442623fc5e5267ed046aae4d01eba
+{
+  "schema": "aos-material-review-consumption/v1",
+  "request_id": "qyh-restoration-readonly-continuation-r8-20261015-api-controller-r1",
+  "task_id": "qyh-restoration-readonly-continuation-r8-20261015",
+  "owner": "codex-01a13484-f019-7d82-94ce-812396db9124",
+  "baseline": {
+    "head": "04092c82f9dcaccf7b23ff6e61d536a9f650aa38",
+    "authority_revision": "AOS-002035",
+    "files": {
+      ".evidence/qyh-restoration-readonly-continuation-r8-20261015/api-controller-review-package-r1.txt": "cda90362f706875cf96c6f826a06d2432e3c78af29870b4f9dd95e6146fb3e95"
+    }
+  },
+  "status": "CONSUMED_MATERIAL_REVIEW",
+  "execution_authorized": false,
+  "result_sha256": "3fef696c79b7e1a847c128b3c58aeadce1b25c4d0aefe537eca28aa0229b0623",
+  "transport_sha256": "c77ffb28b747cd6530769cdc3a70c1ecd7af070a5687aeab326a15df6b9c1f84"
+}
+
+ALL650 FULL TABLE EQUALITY MAP (compact JSON; every table retained) FILESHA 7935f08ea0f00c58069bfec98f4c47339453425ee484db18142b0db4c6c3914b
+{"beforeFile":".evidence/qyh-restoration-successor-latest-restart-20261013/price-closure-before-20261015.json","beforeSha":"742c1b7477116b471c7575d8d9593a631fe6f03083fef8b027b2f8f0976fc124","afterFile":".evidence/qyh-restoration-successor-latest-restart-20261013/price-closure-after-20261015.json","afterSha":"d6c17c830bb84df77eaab405dc715d63810478f53bf069d0e50ad513b3b9a724","count":650,"allEqual":true,"differences":[],"tableEquality":{"aos_capacity_publication_private.deployment_anchor":true,"aos_capacity_publication_private.document":true,"aos_capacity_publication_private.global_account":true,"aos_capacity_publication_private.global_provider":true,"aos_capacity_publication_private.origin":true,"aos_capacity_publication_private.origin_withdrawal":true,"aos_capacity_publication_private.registry_epoch":true,"aos_capacity_publication_private.root_entry":true,"aos_capacity_publication_private.root_snapshot":true,"aos_capacity_publication_private.source_pending":true,"aos_capacity_publication_private.source_provenance":true,"aos_capacity_publication_private.source_publication":true,"aos_model_eval_execution_private.case_result":true,"aos_model_eval_execution_private.manifest":true,"aos_model_eval_execution_private.obligation_event":true,"aos_model_eval_execution_private.report_link":true,"aos_model_eval_issuer_private.authority_withdrawal":true,"aos_model_eval_issuer_private.certificate_epoch":true,"aos_model_eval_issuer_private.executor_certificate":true,"aos_model_eval_issuer_private.issuer_epoch":true,"aos_model_eval_issuer_private.issuer_root":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.asset_bundle":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.asset_bundle_artifact":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.asset_bundle_dependency":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.asset_bundle_evidence":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.asset_bundle_version":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.asset_bundle_version_event":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.bundle_composition":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.bundle_composition_lock":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.bundle_installation":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.bundle_installation_command":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.bundle_installation_decision":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.bundle_installation_event":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.bundle_installation_revision":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.integration_case":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.integration_case_command":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.integration_case_projection":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.integration_evidence":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.integration_evidence_snapshot":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.integration_instance":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.integration_instance_revision":true,"integration_store_197c8daa3c564c9bb3ef53bf84e9c776.integration_stage_event":true,"public.aip_action_approval_event":true,"public.aip_action_canary_plan_approval_event":true,"public.aip_action_canary_plan_revision":true,"public.aip_action_compensation_intent":true,"public.aip_action_compensation_link":true,"public.aip_action_compensation_policy_revision":true,"public.aip_action_dispatch_outbox":true,"public.aip_action_draft":true,"public.aip_action_draft_command":true,"public.aip_action_draft_head":true,"public.aip_action_draft_revision":true,"public.aip_action_event":true,"public.aip_action_execution_attempt":true,"public.aip_action_execution_lease":true,"public.aip_action_guardrail":true,"public.aip_action_kill_drill_receipt":true,"public.aip_action_kill_policy_approval_event":true,"public.aip_action_kill_policy_command_receipt":true,"public.aip_action_kill_policy_head":true,"public.aip_action_kill_policy_revision":true,"public.aip_action_lineage_projection_request":true,"public.aip_action_manual_reconcile_case":true,"public.aip_action_manual_reconcile_decision_receipt":true,"public.aip_action_proposal":true,"public.aip_action_receipt":true,"public.aip_action_reconcile_attempt":true,"public.aip_action_response_artifact":true,"public.aip_action_settlement_request":true,"public.aip_action_usage":true,"public.aip_action_webhook_case":true,"public.aip_action_webhook_endpoint_directory":true,"public.aip_action_webhook_endpoint_revision":true,"public.aip_action_webhook_inbox_receipt":true,"public.aip_action_webhook_observation":true,"public.aip_action_webhook_reducer_view":true,"public.aip_action_webhook_replay_key":true,"public.aip_action_withdrawal_event":true,"public.aip_agent_instance":true,"public.aip_agent_instance_overlay_revision":true,"public.aip_agent_query_input":true,"public.aip_agent_registry_receipt":true,"public.aip_agent_run":true,"public.aip_agent_run_execution_attempt":true,"public.aip_agent_template_revision":true,"public.aip_agent_text_output":true,"public.aip_analyst_query_event":true,"public.aip_analyst_query_job":true,"public.aip_analyst_query_receipt":true,"public.aip_analyst_query_result_revision":true,"public.aip_artifact":true,"public.aip_artifact_family_head":true,"public.aip_artifact_family_selection_revision":true,"public.aip_artifact_relation":true,"public.aip_assignee_resolution_receipt":true,"public.aip_assist_event":true,"public.aip_assist_receipt":true,"public.aip_assist_thread":true,"public.aip_assist_turn":true,"public.aip_avatar_session":true,"public.aip_avatar_session_event":true,"public.aip_avatar_session_receipt":true,"public.aip_binding_evaluation_proof":true,"public.aip_budget_activation_decision":true,"public.aip_budget_activation_preview":true,"public.aip_budget_activation_receipt":true,"public.aip_budget_activation_revocation":true,"public.aip_budget_bucket":true,"public.aip_budget_cost_decision":true,"public.aip_budget_cost_issuer_receipt":true,"public.aip_budget_cost_proposal":true,"public.aip_budget_cost_proposal_receipt":true,"public.aip_budget_cost_revocation":true,"public.aip_budget_cost_runtime_fence":true,"public.aip_budget_head":true,"public.aip_budget_receipt":true,"public.aip_budget_reservation":true,"public.aip_budget_reservation_bucket":true,"public.aip_budget_reservation_event":true,"public.aip_budget_revision":true,"public.aip_budget_usage_settlement":true,"public.aip_business_investigation_compile_receipt":true,"public.aip_capability_alias":true,"public.aip_capability_binding":true,"public.aip_capability_invocation":true,"public.aip_capability_provider_receipt":true,"public.aip_capability_provider_request_receipt":true,"public.aip_capability_receipt":true,"public.aip_capability_revision":true,"public.aip_capacity_evidence_epoch":true,"public.aip_capacity_withdrawal_epoch":true,"public.aip_checkpoint":true,"public.aip_contract_migration_decision":true,"public.aip_dispatch_confirmation_receipt":true,"public.aip_dispatch_intent_revision":true,"public.aip_effect_maturity_decision":true,"public.aip_effect_review_head":true,"public.aip_effect_review_revision":true,"public.aip_eval_authority_revocation":true,"public.aip_eval_case_execution_proof":true,"public.aip_eval_contract_head":true,"public.aip_eval_contract_revision":true,"public.aip_eval_dataset_revision":true,"public.aip_eval_execution_receipt":true,"public.aip_eval_executor_identity":true,"public.aip_eval_issuer_root":true,"public.aip_eval_report":true,"public.aip_eval_report_revision":true,"public.aip_eval_run":true,"public.aip_eval_run_event":true,"public.aip_eval_subject_case_proof":true,"public.aip_eval_subject_receipt":true,"public.aip_eval_suite":true,"public.aip_eval_suite_revision":true,"public.aip_evidence":true,"public.aip_evidence_bundle_build_provenance":true,"public.aip_evidence_bundle_revision":true,"public.aip_evidence_bundle_revoke_event":true,"public.aip_evidence_disclosure_decision":true,"public.aip_evidence_revoke_event":true,"public.aip_execution_assignment_head":true,"public.aip_feature_activation":true,"public.aip_feature_activation_command_receipt":true,"public.aip_handoff_decision_head":true,"public.aip_handoff_decision_revision":true,"public.aip_handoff_envelope":true,"public.aip_handoff_event":true,"public.aip_impact_preview_head":true,"public.aip_impact_preview_revision":true,"public.aip_import_candidate":true,"public.aip_import_job":true,"public.aip_import_job_receipt":true,"public.aip_kv_ownership_ledger":true,"public.aip_license_source_head":true,"public.aip_license_source_initialization_fence":true,"public.aip_license_source_issuance":true,"public.aip_lineage_event":true,"public.aip_logic_automation_policy":true,"public.aip_logic_automation_run":true,"public.aip_logic_graph":true,"public.aip_logic_graph_revision":true,"public.aip_logic_graph_run_nodes":true,"public.aip_logic_graph_runs":true,"public.aip_logic_publication":true,"public.aip_media_access_grant":true,"public.aip_media_asset_scan_observation":true,"public.aip_media_attempt_finance":true,"public.aip_media_attempt_finance_event":true,"public.aip_media_attempt_finance_idempotency":true,"public.aip_media_gate_profile_revision":true,"public.aip_media_gate_set_decision":true,"public.aip_media_job":true,"public.aip_media_job_event":true,"public.aip_media_job_receipt":true,"public.aip_media_provider_job":true,"public.aip_media_provider_job_event":true,"public.aip_media_provider_job_idempotency":true,"public.aip_media_provider_receipt":true,"public.aip_memory_agent_projection":true,"public.aip_memory_agent_projection_event":true,"public.aip_memory_agent_projection_receipt":true,"public.aip_memory_agent_projection_recipient":true,"public.aip_memory_candidate":true,"public.aip_memory_candidate_event":true,"public.aip_memory_exposure":true,"public.aip_memory_improvement_observation":true,"public.aip_memory_item":true,"public.aip_memory_item_revision":true,"public.aip_memory_pipeline_alert":true,"public.aip_memory_pipeline_checkpoint_revision":true,"public.aip_memory_pipeline_receipt":true,"public.aip_memory_pipeline_receipt_candidate":true,"public.aip_memory_pipeline_run":true,"public.aip_memory_pipeline_run_event":true,"public.aip_memory_pipeline_schedule":true,"public.aip_memory_pipeline_schedule_event":true,"public.aip_memory_search_capability":true,"public.aip_memory_search_reference":true,"public.aip_memory_source_revision":true,"public.aip_merge_decision_receipt":true,"public.aip_merge_policy_revision":true,"public.aip_metric_definition_revision":true,"public.aip_model_capacity_event":true,"public.aip_model_capacity_pool_head":true,"public.aip_model_capacity_pool_revision":true,"public.aip_model_capacity_reservation":true,"public.aip_model_circuit_draft":true,"public.aip_model_eval_budget_reservation":true,"public.aip_model_eval_budget_reservation_bucket":true,"public.aip_model_eval_request":true,"public.aip_model_governance_policy_head":true,"public.aip_model_governance_policy_receipt":true,"public.aip_model_governance_policy_revision":true,"public.aip_model_judge_budget_reservation":true,"public.aip_model_judge_budget_reservation_bucket":true,"public.aip_model_price_snapshot_head":true,"public.aip_model_price_snapshot_revision":true,"public.aip_model_route_draft":true,"public.aip_model_route_head":true,"public.aip_model_route_revision":true,"public.aip_model_runtime_receipt":true,"public.aip_network_approval_delivery":true,"public.aip_network_policy_head":true,"public.aip_network_policy_receipt":true,"public.aip_network_policy_revision":true,"public.aip_plan_revision":true,"public.aip_production_context_revision":true,"public.aip_production_contract_receipt":true,"public.aip_production_start_decision":true,"public.aip_profile_confirmation_receipt":true,"public.aip_profile_recommendation_revision":true,"public.aip_provider_capacity_candidate":true,"public.aip_provider_capacity_request":true,"public.aip_provider_health_epoch":true,"public.aip_provider_health_observation":true,"public.aip_provider_instance_head":true,"public.aip_provider_instance_revision":true,"public.aip_publication_epoch":true,"public.aip_publication_event":true,"public.aip_registered_model_head":true,"public.aip_registered_model_revision":true,"public.aip_release_gate_decision":true,"public.aip_research_artifact_receipt":true,"public.aip_research_callback_nonce":true,"public.aip_research_delivery_receipt":true,"public.aip_research_event_receipt":true,"public.aip_research_job_command_receipt":true,"public.aip_research_job_manifest":true,"public.aip_research_provider_revision":true,"public.aip_research_submission_receipt":true,"public.aip_responsibility_plan_head":true,"public.aip_responsibility_plan_revision":true,"public.aip_responsibility_successor":true,"public.aip_return_decision":true,"public.aip_review_issue":true,"public.aip_review_issue_event":true,"public.aip_review_rule_revision":true,"public.aip_run_resume_decision_revision":true,"public.aip_runtime_guard_policy_head":true,"public.aip_runtime_guard_policy_receipt":true,"public.aip_runtime_guard_policy_revision":true,"public.aip_runtime_policy_head":true,"public.aip_runtime_policy_revision":true,"public.aip_skill_binding":true,"public.aip_skill_eval_dispatch":true,"public.aip_skill_eval_dispatch_observation":true,"public.aip_skill_eval_intent":true,"public.aip_skill_template_revision":true,"public.aip_stage_template_head":true,"public.aip_stage_template_revision":true,"public.aip_step_run":true,"public.aip_takeover_decision_revision":true,"public.aip_takeover_request":true,"public.aip_task":true,"public.aip_task_brief_head":true,"public.aip_task_brief_revision":true,"public.aip_task_priority_decision_revision":true,"public.aip_task_run":true,"public.aip_telemetry_span":true,"public.aip_tool_binding":true,"public.aip_usage_adjustment":true,"public.aip_usage_attribution":true,"public.aip_usage_receipt":true,"public.aip_workshop_preparation_intent":true,"public.aip_workshop_preparation_result":true,"public.alembic_version":true,"public.apollo_channel":true,"public.apollo_spoke":true,"public.asset_bundle":true,"public.asset_bundle_artifact":true,"public.asset_bundle_dependency":true,"public.asset_bundle_evidence":true,"public.asset_bundle_version":true,"public.asset_bundle_version_event":true,"public.authz_tuple":true,"public.automation_occurrence":true,"public.automation_occurrence_dispatch_attempt":true,"public.automation_occurrence_outbox":true,"public.automation_schedule_binding":true,"public.bundle_composition":true,"public.bundle_composition_lock":true,"public.bundle_installation":true,"public.bundle_installation_command":true,"public.bundle_installation_decision":true,"public.bundle_installation_event":true,"public.bundle_installation_revision":true,"public.business_investigation_adaptive_profile_revision":true,"public.business_investigation_data_handling_binding_revision":true,"public.business_investigation_observation_plan_head":true,"public.business_investigation_observation_plan_revision":true,"public.business_investigation_observation_receipt":true,"public.business_investigation_observation_session_lease":true,"public.business_investigation_redaction_receipt":true,"public.business_investigation_retention_disposition_receipt":true,"public.business_investigation_schema_profiling_job_revision":true,"public.business_investigation_semantic_hydration_job_revision":true,"public.business_investigation_semantic_hydration_receipt":true,"public.business_investigation_semantic_hypothesis_revision":true,"public.business_investigation_source_mapping_head":true,"public.business_investigation_source_mapping_review_decision_revision":true,"public.business_investigation_source_mapping_revision":true,"public.capacity_limits":true,"public.capacity_usage":true,"public.data_fulfillment_receipt":true,"public.data_os_orphan_quarantine":true,"public.data_requirement_event":true,"public.data_requirement_head":true,"public.data_requirement_outbox":true,"public.data_requirement_outbox_delivery":true,"public.data_requirement_revision":true,"public.data_source_configuration_revision":true,"public.decision_lineage":true,"public.decision_lineage_orphan_quarantine":true,"public.decision_lineage_ownership_ledger":true,"public.draft_dataset":true,"public.ecom_alias_migration":true,"public.ecom_derived_receipt":true,"public.ecom_dlq":true,"public.ecom_dlq_legacy_o1a0":true,"public.ecom_dlq_retry_event":true,"public.ecom_dlq_retry_event_legacy_o1a0":true,"public.ecom_dlq_retry_receipt":true,"public.ecom_dlq_retry_receipt_legacy_o1a0":true,"public.ecom_ingest_receipt":true,"public.ecom_link":true,"public.ecom_object":true,"public.ecom_sync_checkpoint":true,"public.ecommerce_aftersale_event":true,"public.ecommerce_analyst_authority_receipt":true,"public.ecommerce_analyst_decision_head":true,"public.ecommerce_analyst_decision_revision":true,"public.ecommerce_analyst_effect_review_head":true,"public.ecommerce_analyst_effect_review_revision":true,"public.ecommerce_analyst_growth_plan_head":true,"public.ecommerce_analyst_growth_plan_revision":true,"public.ecommerce_analyst_insight_head":true,"public.ecommerce_analyst_insight_revision":true,"public.ecommerce_analyst_method_head":true,"public.ecommerce_analyst_method_revision":true,"public.ecommerce_analyst_stage_decision_head":true,"public.ecommerce_analyst_stage_decision_revision":true,"public.ecommerce_analyst_task_graph_head":true,"public.ecommerce_analyst_task_graph_revision":true,"public.ecommerce_campaign_head":true,"public.ecommerce_campaign_revision":true,"public.ecommerce_content_calendar_decision_revision":true,"public.ecommerce_content_calendar_entry_revision":true,"public.ecommerce_content_calendar_head":true,"public.ecommerce_content_campaign_authority_receipt":true,"public.ecommerce_content_execution_command":true,"public.ecommerce_content_execution_result":true,"public.ecommerce_creator_batch_preparation_revision":true,"public.ecommerce_creator_batch_start_decision_revision":true,"public.ecommerce_creator_contract_revision":true,"public.ecommerce_creator_delivery_observation":true,"public.ecommerce_creator_discovery_profile_revision":true,"public.ecommerce_creator_lane_observation":true,"public.ecommerce_creator_normalizer_receipt":true,"public.ecommerce_creator_prepared_match_decision":true,"public.ecommerce_creator_prepared_match_observation":true,"public.ecommerce_creator_relationship_revision":true,"public.ecommerce_customer_batch_start_decision_revision":true,"public.ecommerce_customer_consent_policy_revision":true,"public.ecommerce_customer_consent_withdrawal_observation":true,"public.ecommerce_customer_dialogue_batch_revision":true,"public.ecommerce_customer_dialogue_strategy_revision":true,"public.ecommerce_customer_dispatch_observation":true,"public.ecommerce_customer_frequency_policy_revision":true,"public.ecommerce_customer_frequency_reservation_revision":true,"public.ecommerce_customer_journey_revision":true,"public.ecommerce_customer_segment_revision":true,"public.ecommerce_d01_source_approval":true,"public.ecommerce_d01_source_proposal":true,"public.ecommerce_d01_source_revocation":true,"public.ecommerce_growth_content_agentrun_intent":true,"public.ecommerce_growth_content_budget_command_intent":true,"public.ecommerce_growth_content_capacity_intent":true,"public.ecommerce_growth_content_taskrun_intent":true,"public.ecommerce_growth_daily_review_target":true,"public.ecommerce_growth_feedback_checkpoint":true,"public.ecommerce_growth_feedback_command":true,"public.ecommerce_growth_feedback_receipt":true,"public.ecommerce_growth_feedback_segment":true,"public.ecommerce_growth_improvement_target":true,"public.ecommerce_growth_runtime_command_receipt":true,"public.ecommerce_ingress_command":true,"public.ecommerce_ingress_dataset_receipt":true,"public.ecommerce_ingress_derived_command":true,"public.ecommerce_ingress_recovery_claim":true,"public.ecommerce_installed_bootstrap_action":true,"public.ecommerce_investigation_artifact_binding":true,"public.ecommerce_investigation_artifact_head":true,"public.ecommerce_investigation_artifact_publication_receipt":true,"public.ecommerce_investigation_business_dossier_revision":true,"public.ecommerce_investigation_case_command_receipt":true,"public.ecommerce_investigation_case_head":true,"public.ecommerce_investigation_case_lifecycle_receipt":true,"public.ecommerce_investigation_case_revision":true,"public.ecommerce_investigation_description_receipt":true,"public.ecommerce_investigation_opportunity_map_revision":true,"public.ecommerce_investigation_problem_map_revision":true,"public.ecommerce_investigation_run":true,"public.ecommerce_investigation_run_active_slot":true,"public.ecommerce_investigation_run_command_receipt":true,"public.ecommerce_investigation_run_control_receipt":true,"public.ecommerce_investigation_run_event":true,"public.ecommerce_investigation_run_outbox":true,"public.ecommerce_investigation_run_state_head":true,"public.ecommerce_investigation_run_state_revision":true,"public.ecommerce_investigation_run_state_transition_receipt":true,"public.ecommerce_investigation_run_trigger_receipt":true,"public.ecommerce_investigation_schedule_policy_command_receipt":true,"public.ecommerce_investigation_schedule_policy_head":true,"public.ecommerce_investigation_schedule_policy_revision":true,"public.ecommerce_investigation_solution_portfolio_revision":true,"public.ecommerce_master_content_intent_head":true,"public.ecommerce_master_content_intent_revision":true,"public.ecommerce_operation_aggregation_policy_head":true,"public.ecommerce_operation_aggregation_policy_revision":true,"public.ecommerce_operation_authority_receipt":true,"public.ecommerce_operation_case_event":true,"public.ecommerce_operation_case_head":true,"public.ecommerce_operation_case_revision":true,"public.ecommerce_operation_classification_decision_revision":true,"public.ecommerce_operation_kill_decision_revision":true,"public.ecommerce_operation_membership_decision_revision":true,"public.ecommerce_operation_sla_clock_decision":true,"public.ecommerce_operation_sla_policy_head":true,"public.ecommerce_operation_sla_policy_revision":true,"public.ecommerce_price_case_revision":true,"public.ecommerce_price_disposition_contract_revision":true,"public.ecommerce_price_disposition_observation":true,"public.ecommerce_price_disposition_revision":true,"public.ecommerce_price_monitoring_policy_revision":true,"public.ecommerce_price_observation_revision":true,"public.ecommerce_price_product_match_decision_revision":true,"public.ecommerce_price_product_match_observation":true,"public.ecommerce_price_research_batch_revision":true,"public.ecommerce_price_research_profile_revision":true,"public.ecommerce_product_event_control_receipt":true,"public.ecommerce_product_event_origin":true,"public.ecommerce_schedule_policy_control_receipt":true,"public.ecommerce_three_module_closure_revision":true,"public.ecommerce_three_module_effect_binding_revision":true,"public.ecommerce_three_module_handoff_binding_revision":true,"public.ecommerce_three_module_usage_binding_revision":true,"public.ecommerce_unaccepted_analysis_closure_receipt":true,"public.extension_audit_envelope":true,"public.extension_dispatch_claim_gate":true,"public.extension_dispatch_configuration_refresh_receipt":true,"public.extension_dispatch_cutover_approval_refresh_receipt":true,"public.extension_dispatch_cutover_event":true,"public.extension_dispatch_cutover_operation":true,"public.extension_dispatch_cutover_receipt":true,"public.extension_dispatch_lifecycle_event":true,"public.extension_dispatch_lifecycle_operation":true,"public.extension_dispatch_lifecycle_receipt":true,"public.extension_dispatch_registration_receipt":true,"public.extension_dispatch_successor_registration_receipt":true,"public.extension_dispatch_withdrawal_receipt":true,"public.extension_event_control_dispatch_receipt":true,"public.extension_operation_dispatch_binding":true,"public.extension_runtime_binding":true,"public.extension_runtime_configuration":true,"public.extension_runtime_configuration_stage_request":true,"public.extension_runtime_dependency_ref":true,"public.extension_runtime_event":true,"public.extension_runtime_execution_attempt":true,"public.extension_runtime_execution_attempt_event":true,"public.extension_runtime_host_assignment":true,"public.extension_runtime_host_assignment_revision":true,"public.extension_runtime_host_command_receipt":true,"public.extension_runtime_host_identity":true,"public.extension_runtime_host_identity_revision":true,"public.extension_runtime_host_lease_a0v_093":true,"public.extension_runtime_host_lease_event_a0v_093":true,"public.extension_runtime_operation":true,"public.extension_runtime_outbox":true,"public.extension_runtime_resource_lease":true,"public.extension_runtime_ui_read_request":true,"public.extension_runtime_uninstall_receipt":true,"public.extension_schema_installation":true,"public.funnel_status":true,"public.graph_edge":true,"public.integration_case":true,"public.integration_case_command":true,"public.integration_case_projection":true,"public.integration_evidence":true,"public.integration_evidence_snapshot":true,"public.integration_instance":true,"public.integration_instance_revision":true,"public.integration_stage_event":true,"public.meta_action_type":true,"public.meta_aip_kv":true,"public.meta_branch":true,"public.meta_dataset":true,"public.meta_dataset_history":true,"public.meta_link_type":true,"public.meta_membership":true,"public.meta_module":true,"public.meta_object_type":true,"public.meta_org":true,"public.meta_pipeline":true,"public.meta_schedule":true,"public.meta_schedule_run":true,"public.meta_source":true,"public.meta_sync":true,"public.meta_workspace":true,"public.model_catalog":true,"public.model_provider":true,"public.model_route":true,"public.module_canvas_config":true,"public.module_deployment":true,"public.module_event_orphan_quarantine":true,"public.module_events":true,"public.module_instance_overlay":true,"public.module_interface":true,"public.module_organization_profile":true,"public.module_query":true,"public.module_user_view_preference":true,"public.module_variable":true,"public.module_widget_instance":true,"public.oauth_token_store":true,"public.obj_branch_overlay":true,"public.obj_instance":true,"public.object_lifecycle":true,"public.object_runtime_orphan_quarantine":true,"public.ontology_action_instance_head":true,"public.ontology_action_instance_revision":true,"public.ontology_action_type_head":true,"public.ontology_action_type_revision":true,"public.ontology_annotation_asset_head":true,"public.ontology_annotation_asset_revision":true,"public.ontology_artifact_head":true,"public.ontology_artifact_revision":true,"public.ontology_authority_archive_receipt":true,"public.ontology_authority_receipt":true,"public.ontology_checkpoint_head":true,"public.ontology_checkpoint_revision":true,"public.ontology_eval_head":true,"public.ontology_eval_revision":true,"public.ontology_evidence_cleanup_receipt":true,"public.ontology_evidence_head":true,"public.ontology_evidence_revision":true,"public.ontology_exploration_asset_head":true,"public.ontology_exploration_asset_receipt":true,"public.ontology_exploration_asset_revision":true,"public.ontology_exploration_share_grant":true,"public.ontology_exploration_share_grant_receipt":true,"public.ontology_knowledge_head":true,"public.ontology_knowledge_revision":true,"public.ontology_object_set_asset_head":true,"public.ontology_object_set_asset_revision":true,"public.ontology_object_set_item":true,"public.ontology_overlay":true,"public.ontology_overlay_receipt":true,"public.ontology_plan_head":true,"public.ontology_plan_revision":true,"public.ontology_retention_policy_head":true,"public.ontology_retention_policy_revision":true,"public.ontology_task_head":true,"public.ontology_task_revision":true,"public.phase5_pipeline_graph":true,"public.pipeline_controlled_source_claim":true,"public.pipeline_registration_receipt":true,"public.pipeline_runtime_control_revision":true,"public.pipeline_schedule_control_binding":true,"public.pipeline_snapshot_group_canonical_witness_a0v_097":true,"public.pipeline_snapshot_group_claim":true,"public.pipeline_snapshot_group_input":true,"public.pipeline_snapshot_group_link_command":true,"public.pipeline_snapshot_group_member":true,"public.pipeline_snapshot_group_recovery_receipt":true,"public.pipeline_snapshot_group_relationship":true,"public.pipeline_snapshot_group_retirement":true,"public.pipeline_snapshot_schedule_claim":true,"public.pipeline_snapshot_schedule_current_member":true,"public.pipeline_snapshot_schedule_definition_head":true,"public.pipeline_snapshot_schedule_definition_member":true,"public.pipeline_snapshot_schedule_definition_revision":true,"public.pipeline_snapshot_schedule_member":true,"public.pipeline_snapshot_stalled_group_closure_receipt":true,"public.pipeline_snapshot_unaccepted_group_closure_receipt":true,"public.pipeline_source_selection_revision":true,"public.projection_outbox":true,"public.projection_watermark":true,"public.provider_health":true,"public.registered_models":true,"public.schedule_cursor_repair_receipt":true,"public.source_readiness_receipt":true,"public.source_registration_receipt":true,"public.tenant_backfill_batch":true,"public.tenant_backfill_batch_event":true,"public.tenant_dual_write_ledger":true,"public.tenant_ownership_decision":true,"public.tenant_ownership_decision_event":true,"public.tenant_quarantine_record":true,"public.theme":true,"public.twa_audit":true,"public.twa_invite":true,"public.twa_join_request":true,"public.twa_org":true,"public.twa_otp":true,"public.twa_person_profile":true,"public.twa_workspace":true,"public.twa_ws_member":true,"public.widget_catalog":true,"public.wiki_page":true,"public.wiki_page_version":true}}
+
+BROWSER ACTUAL METRICS/DENY AND RELEVANT NETWORK TRACE (only periodic health and general module polls omitted) full original fileSHA 1fd9f78652e1254096878376d6dbe88d70124f66edcf4518dcd0d409d0843878
+{"metrics":[{"width":1280,"height":720,"geometry":{"width":1280,"height":720,"documentWidth":1280,"alignContent":"start","buttons":[{"text":"\u5168\u90e8","height":32},{"text":"\u53ef\u6bd4","height":32},{"text":"\u5f85\u590d\u6838","height":32},{"text":"\u5df2\u6392\u9664","height":32}],"loading":false},"filters":[{"pressed":["\u53ef\u6bd4"]},{"pressed":["\u5f85\u590d\u6838"]},{"pressed":["\u5df2\u6392\u9664"]},{"pressed":["\u5168\u90e8"]}]},{"width":1440,"height":900,"geometry":{"width":1440,"height":900,"documentWidth":1440,"alignContent":"start","buttons":[{"text":"\u5168\u90e8","height":32},{"text":"\u53ef\u6bd4","height":32},{"text":"\u5f85\u590d\u6838","height":32},{"text":"\u5df2\u6392\u9664","height":32}],"loading":false},"filters":[{"pressed":["\u53ef\u6bd4"]},{"pressed":["\u5f85\u590d\u6838"]},{"pressed":["\u5df2\u6392\u9664"]},{"pressed":["\u5168\u90e8"]}]},{"width":1920,"height":1080,"geometry":{"width":1920,"height":1080,"documentWidth":1920,"alignContent":"start","buttons":[{"text":"\u5168\u90e8","height":32},{"text":"\u53ef\u6bd4","height":32},{"text":"\u5f85\u590d\u6838","height":32},{"text":"\u5df2\u6392\u9664","height":32}],"loading":false},"filters":[{"pressed":["\u53ef\u6bd4"]},{"pressed":["\u5f85\u590d\u6838"]},{"pressed":["\u5df2\u6392\u9664"]},{"pressed":["\u5168\u90e8"]}]}],"deny":{"query":{"error":"Error: ecommerce Workshop reads do not accept query parameters"},"customerClosure":{"error":"Error: Workshop module is not installed"},"anonymousStatus":401},"trace":[{"path":"/api/v1/auth/token","method":"POST","status":200},{"path":"/api/v1/me","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/modules","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/modules","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/installed-readonly-modules","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/installed-readonly-modules","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/price-governance","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/price-governance/contributions","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/price/closure-contributions","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/source-readiness","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/price-governance/dispositions","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/price-governance","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/price-governance/contributions","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/price/closure-contributions","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/price-governance/dispositions","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/source-readiness","method":"GET","status":200},{"path":"/api/v1/me","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/price/closure-contributions","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/creator/closure-contributions","method":"GET","status":200},{"path":"/api/v1/ecommerce-workshop/views/price/closure-contributions","method":"GET","status":400},{"path":"/api/v1/ecommerce-workshop/views/customer/closure-contributions","method":"GET","status":404}],"businessNonGet":[]}
+
+EXACT PRIOR GATE .evidence/qyh-price-closure-read-admission-20261015/route-quality-result-r1.json SHA dab4ce91564484fd62429c6f740a81399b0db8106193d32f6219dd840fda6890
+{"schema": "aos-material-review-consumption/v1", "request_id": "qyh-price-closure-read-admission-20261015-route-quality-r1", "task_id": "qyh-price-closure-read-admission-20261015", "owner": "codex-01a13484-f019-7d82-94ce-812396db9124", "baseline": {"head": "804a0279aa3d426a693504cb3336fb5a8ca4d149", "authority_revision": "AOS-002035", "files": {".evidence/qyh-price-closure-read-admission-20261015/route-quality-material-r1.txt": "5a73ad21d5b6912dcbea42af8b658967a29b231ae3d15db9042c6cc1c20152e2"}}, "status": "CONSUMED_MATERIAL_REVIEW", "execution_authorized": false, "result_sha256": "1d28944df018a56225172063cf63ee98afc478231216d5dcebc2b74d17767a50", "transport_sha256": "989faa7e43353aaf9f166d015e103ceb37bfd5c0bca0c5f3275cf5fe63ea4b64"}
+
+EXACT PRIOR GATE .evidence/qyh-price-closure-bounded-reader-20261015/code-review-result-r2.json SHA 30e850fe18268d45f585663db966020c4703f175b0c85e645b47dd6bff6e3e19
+{"schema": "aos-material-review-consumption/v1", "request_id": "qyh-price-closure-bounded-reader-20261015-code-r2", "task_id": "qyh-price-closure-bounded-reader-20261015", "owner": "codex-01a13484-f019-7d82-94ce-812396db9124", "baseline": {"head": "804a0279aa3d426a693504cb3336fb5a8ca4d149", "authority_revision": "AOS-002035", "files": {".evidence/qyh-price-closure-bounded-reader-20261015/code-review-material-r2.txt": "81a26b4d2714edbf9cb03dc2e55fc04e229e3c5503805062b3703f7aa94f54af"}}, "status": "CONSUMED_MATERIAL_REVIEW", "execution_authorized": false, "result_sha256": "109ace90cca1757f86f593be4c3d495c1671cba39c32bc571a2adf2b602320d1", "transport_sha256": "7fbe69662665fec93208f61fd7b8af1ee2efe8c66d70c6f0a5f88b4fa44a0751"}
+
+EXACT PRIOR GATE .evidence/qyh-restoration-readonly-continuation-r8-20261015/api-controller-review-result-r1.json SHA ad29880a06d8371393ce2e011759d8b44ee5eb813d76a089572ca959a71fe52d
+{"schema": "aos-material-review-consumption/v1", "request_id": "qyh-restoration-readonly-continuation-r8-20261015-api-controller-r1", "task_id": "qyh-restoration-readonly-continuation-r8-20261015", "owner": "codex-01a13484-f019-7d82-94ce-812396db9124", "baseline": {"head": "04092c82f9dcaccf7b23ff6e61d536a9f650aa38", "authority_revision": "AOS-002035", "files": {".evidence/qyh-restoration-readonly-continuation-r8-20261015/api-controller-review-package-r1.txt": "cda90362f706875cf96c6f826a06d2432e3c78af29870b4f9dd95e6146fb3e95"}}, "status": "CONSUMED_MATERIAL_REVIEW", "execution_authorized": false, "result_sha256": "3fef696c79b7e1a847c128b3c58aeadce1b25c4d0aefe537eca28aa0229b0623", "transport_sha256": "c77ffb28b747cd6530769cdc3a70c1ecd7af070a5687aeab326a15df6b9c1f84"}
+
+ORIGINAL FULL FINGERPRINT FUNCTION full source SHA c73eb170859d043efa94c9b99dedb24bfe00e69c3af1a366a33f066c95a795c1
+def fingerprint(container,db):
+    tables=json.loads(sql(container,db,'BEGIN READ ONLY;'+INVENTORY+'COMMIT;'))
+    assert len(tables)==650
+    queries=['BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;',"SET LOCAL work_mem='1MB';",'SET LOCAL max_parallel_workers_per_gather=0;',"SET LOCAL statement_timeout='5s';",INVENTORY]
+    for t in tables:
+        qualified='.'.join('"'+t[k].replace('"','""')+'"' for k in ('schema','name'))
+        key=(t['schema']+'.'+t['name']).replace("'","''")
+        queries.append("SELECT row_to_json(x) FROM (SELECT '"+key+"' AS name,count(*) AS rows,encode(sha256(convert_to(coalesce(string_agg(h,'' ORDER BY h),''),'UTF8')),'hex') AS hash FROM (SELECT encode(sha256(convert_to(to_jsonb(t)::text,'UTF8')),'hex') AS h FROM "+qualified+" t) q)x;")
+    queries.append('COMMIT;')
+    result=sql(container,db,'\n'.join(queries));lines=[json.loads(x) for x in result.splitlines() if x.strip()]
+    assert lines[0]==tables and len(lines)==651
+    return {r['name']:{'rows':r['rows'],'hash':r['hash']} for r in lines[1:]}
