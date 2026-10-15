@@ -1,0 +1,13 @@
+{
+  "head": "04687f7fc7900a64fa964a3f5d92840987dec944",
+  "code": "0b0c88882ce6e9cdab168baf485ef50fa5baefb7",
+  "before": "AOS-002038",
+  "expected": "AOS-002039",
+  "tasks": [
+    "qyh-customer-closure-bounded-reader-20261015",
+    "qyh-customer-closure-read-admission-20261015",
+    "qyh-restoration-readonly-continuation-r11-20261015"
+  ],
+  "otherLeasesPreserved": 38,
+  "wholeGoalComplete": false
+}
