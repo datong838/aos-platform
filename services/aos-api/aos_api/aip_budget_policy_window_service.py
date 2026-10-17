@@ -34,7 +34,7 @@ from aos_api.aip_network_issuer_attempt import (
 
 PACKAGE_FILES = tuple(sorted(set(LEGACY_PACKAGE_FILES) | {
     'services/aos-api/aos_api/aip_budget_policy_window_'+name for name in
-    ('commands.py', 'identity.py', 'store.py', 'service.py', 'authority.sql')
+    ('commands.py', 'identity.py', 'store.py', 'catalog.py', 'service.py', 'authority.sql')
 } | {'services/aos-api/alembic/versions/a0v_163_budget_policy_window.py'} | {
     'services/aos-api/aos_api/'+name for name in (
         'auth.py', 'oidc.py', 'tenant_scope.py', 'env_load.py', 'aip_network_issuer_attempt.py',
