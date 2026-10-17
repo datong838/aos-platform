@@ -28,7 +28,7 @@ EXPECTED = {'database': 'aos_meta_head', 'cluster': '7695302940039200809',
     'projectId': 'dev-project', 'tables': 647}
 # Physical contracts for independently rehearsed migrations of this preserved
 # cluster. Unknown revisions must be reviewed before the attachment gate opens.
-SCHEMA_TABLE_COUNTS = {'a0v_159': 647, 'a0v_160': 650, 'a0v_161': 650}
+SCHEMA_TABLE_COUNTS = {'a0v_159': 647, 'a0v_160': 650, 'a0v_161': 650, 'a0v_163': 658}
 SELECTED_VERSIONS = {'domain.ecommerce.core': '1.4.3',
     'platform.ecommerce.niushop': '1.23.2', 'solution.ecommerce.growth': '1.13.0',
     'solution.ecommerce.operations-base': '1.2.2'}

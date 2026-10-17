@@ -449,3 +449,20 @@ def test_management_launch_revalidates_selected_installation_and_scrubs_inherite
         entry.serve_management_readonly(identity_file=tmp_path/'identity',bundle_root=tmp_path,
             trust_roots_file=tmp_path/'trust',source_candidate=tmp_path/'source',
             management_oidc_config=tmp_path/'oidc',installed_readonly_installation=selected)
+
+
+def test_current_163_exact_physical_contract(entry):
+    observed = {**baseline(), 'schema': 'a0v_163', 'tables': 658}
+    entry.require_identity(observed, code_head='a0v_163')
+
+
+@pytest.mark.parametrize('schema,tables', [('a0v_163', 657), ('a0v_163', 659), ('a0v_164', 658)])
+def test_current_163_contract_keeps_unknown_and_partial_schema_closed(entry, schema, tables):
+    with pytest.raises(entry.RestorationBlocked):
+        entry.require_identity({**baseline(), 'schema': schema, 'tables': tables}, code_head=schema)
+
+
+def test_current_163_never_bypasses_original_161_migration(entry):
+    with pytest.raises(entry.RestorationBlocked, match='RESTORED_CODE_SCHEMA_DRIFT'):
+        entry.require_identity({**baseline(), 'schema': 'a0v_161', 'tables': 650},
+            code_head='a0v_163', management_readonly=True, pending_renewal_absent=True)
