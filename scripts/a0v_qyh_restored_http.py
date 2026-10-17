@@ -160,7 +160,12 @@ def _identity_parameters(identity_file):
     data['pgpassFile'] = str(_private(Path(data.pop('pgpassfile'))))
     return data
 
-def preflight(identity_file, *, management_readonly=False):
+def preflight(identity_file, *, management_readonly=False, source_candidate=None):
+    frozen_code_head = None
+    if source_candidate is not None:
+        if management_readonly is not True:
+            raise RestorationBlocked('RESTORED_FROZEN_SCHEMA_READONLY_REQUIRED')
+        frozen_code_head = _readonly_candidate_schema_head(source_candidate)
     data = _identity_parameters(identity_file)
     previous._verify_limited_login(data)
     proc = subprocess.run(['docker','--context',CONTEXT,'inspect','--format',
@@ -197,7 +202,8 @@ def preflight(identity_file, *, management_readonly=False):
     observed = json.loads(proc.stdout)
     inventory = observed.pop('inventory')
     pending_absent=observed.pop('pendingRenewalAbsent')
-    code_head=previous._code_schema_head()
+    code_head = (frozen_code_head if frozen_code_head is not None
+                 else previous._code_schema_head())
     require_identity(observed,code_head=code_head,management_readonly=management_readonly,
                      pending_renewal_absent=pending_absent)
     report = inventory_report(observed, inventory)
@@ -229,11 +235,17 @@ def require_selected_installation(view, *, installation_id):
         'currentConfigurationVerified': False, 'eightWorkbenchesVerified': False}
 
 def select_current_installation(*, identity_file, bundle_root, trust_roots_file, installation_id,
-                                management_readonly=False):
+                                management_readonly=False, source_candidate=None):
     if type(management_readonly) is not bool:
         raise RestorationBlocked('RESTORED_READONLY_COMPATIBILITY_INVALID')
-    report = (preflight(identity_file,management_readonly=True) if management_readonly is True
-              else preflight(identity_file))
+    if source_candidate is not None:
+        if management_readonly is not True:
+            raise RestorationBlocked('RESTORED_FROZEN_SCHEMA_READONLY_REQUIRED')
+        report = preflight(identity_file, management_readonly=True,
+                           source_candidate=source_candidate)
+    else:
+        report = (preflight(identity_file,management_readonly=True) if management_readonly is True
+                  else preflight(identity_file))
     parameters = _identity_parameters(identity_file)
     sys.path.insert(0, str(ROOT / 'services/aos-api'))
     from psycopg import connect
@@ -324,6 +336,20 @@ def require_api_source_candidate(report_path):
         raise RestorationBlocked('RESTORED_CURRENT_STARTUP_FLAGS_SOURCE_DRIFT')
     return source
 
+
+def _readonly_candidate_schema_head(report_path):
+    """Compare the database with the exact committed source that will run."""
+    source = require_api_source_candidate(report_path)
+    try:
+        config = previous.Config()
+        config.set_main_option('script_location', str(source / 'services/aos-api/alembic'))
+        heads = previous.ScriptDirectory.from_config(config).get_heads()
+    except Exception:
+        raise RestorationBlocked('RESTORED_FROZEN_CODE_SCHEMA_UNAVAILABLE') from None
+    if len(heads) != 1 or not isinstance(heads[0], str) or not heads[0]:
+        raise RestorationBlocked('RESTORED_FROZEN_CODE_SCHEMA_UNAVAILABLE')
+    return heads[0]
+
 def prepare_limited_launch(*, identity_file, bundle_root, trust_roots_file,
                            installation_id, source_candidate):
     # Existing authentication gate runs before any DB or process action.
@@ -396,8 +422,8 @@ def serve_management_readonly(*, identity_file, bundle_root, trust_roots_file, s
     if installed_readonly_installation is not None:
         select_current_installation(identity_file=identity_file, bundle_root=bundle_root,
             trust_roots_file=trust_roots_file, installation_id=installed_readonly_installation,
-            management_readonly=True)
-    preflight(identity_file,management_readonly=True)
+            management_readonly=True, source_candidate=source_candidate)
+    preflight(identity_file,management_readonly=True, source_candidate=source_candidate)
     identity = _identity_parameters(identity_file)
     from psycopg import connect
     from psycopg.conninfo import make_conninfo

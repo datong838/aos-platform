@@ -425,10 +425,12 @@ def test_management_launch_revalidates_selected_installation_and_scrubs_inherite
     monkeypatch.setattr(entry.previous,'_port_free',lambda port:True)
     monkeypatch.setattr(entry,'require_api_source_candidate',lambda path:tmp_path)
     monkeypatch.setattr(entry,'load_management_oidc_config',lambda path:{'AOS_AUTH_ALLOW_DEV':'0'})
-    def readonly_preflight(path,*,management_readonly=False):
+    def readonly_preflight(path,*,management_readonly=False,source_candidate=None):
         assert management_readonly is True
+        assert source_candidate == tmp_path/'source'
     monkeypatch.setattr(entry,'preflight',readonly_preflight)
-    monkeypatch.setattr(entry,'select_current_installation',lambda **kw:observed.append(kw['installation_id']))
+    monkeypatch.setattr(entry,'select_current_installation',lambda **kw:observed.append(
+        (kw['installation_id'],kw['source_candidate'])))
     monkeypatch.setattr(entry,'_identity_parameters',lambda path:{'host':'127.0.0.1','port':1,'dbname':'fixture','user':'fixture','pgpassFile':'/protected/passfile'})
     class Connection:
         def __enter__(self):return self
@@ -442,7 +444,7 @@ def test_management_launch_revalidates_selected_installation_and_scrubs_inherite
         assert json.loads(environment['AOS_INSTALLED_READONLY_CATALOG'])['installationId']==selected
         assert environment['AOS_AUTH_ALLOW_DEV']=='0'
         assert 'default_transaction_read_only=on' in environment['AOS_DATABASE_URL']
-        assert observed == [selected]
+        assert observed == [(selected,tmp_path/'source')]
         raise CapturedLaunch()
     monkeypatch.setattr(entry.os,'execve',capture)
     with pytest.raises(CapturedLaunch):
@@ -466,3 +468,90 @@ def test_current_163_never_bypasses_original_161_migration(entry):
     with pytest.raises(entry.RestorationBlocked, match='RESTORED_CODE_SCHEMA_DRIFT'):
         entry.require_identity({**baseline(), 'schema': 'a0v_161', 'tables': 650},
             code_head='a0v_163', management_readonly=True, pending_renewal_absent=True)
+
+
+def _candidate_with_graph(source_candidate, revisions):
+    import json,hashlib
+    report,oldsource,root,git=source_candidate
+    for name,data in revisions.items():
+        path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
+        git('add',name)
+    git('commit','-m','isolated committed migration graph')
+    head=git('rev-parse','HEAD').decode().strip();previous=json.loads(report.read_text())
+    source=oldsource.parent/('api-source-'+head);source.mkdir(mode=0o700)
+    manifest={}
+    members={str(p.relative_to(oldsource)):p.read_bytes() for p in oldsource.rglob('*') if p.is_file()}
+    members.update(revisions)
+    for name,data in members.items():
+        target=source/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data);target.chmod(0o600)
+        manifest[name]=hashlib.sha256(data).hexdigest()
+    for path in source.rglob('*'):
+        if path.is_dir():path.chmod(0o700)
+    raw=json.dumps(manifest,sort_keys=True).encode();mp=source.parent/('api-manifest-'+head+'.json');mp.write_bytes(raw);mp.chmod(0o600)
+    report.write_text(json.dumps(dict(previous,head=head,source=str(source),fileCount=len(manifest),manifestSha256=hashlib.sha256(raw).hexdigest())))
+    return report,source,root,git
+
+
+def test_readonly_candidate_schema_ignores_uncommitted_future_migrations(entry, source_candidate):
+    revision='services/aos-api/alembic/versions/baseline.py'
+    report,source,root,git=_candidate_with_graph(source_candidate,{revision:b"revision='a0v_163'\ndown_revision=None\n"})
+    (root/revision).with_name('future.py').write_text("revision='a0v_165'\ndown_revision='a0v_163'\n")
+    assert entry._readonly_candidate_schema_head(report)=='a0v_163'
+
+
+def test_readonly_candidate_schema_rejects_multiple_committed_heads(entry,source_candidate):
+    report,_,_,_=_candidate_with_graph(source_candidate,{
+        'services/aos-api/alembic/versions/a.py':b"revision='a0v_163'\ndown_revision=None\n",
+        'services/aos-api/alembic/versions/b.py':b"revision='a0v_165'\ndown_revision=None\n"})
+    with pytest.raises(entry.RestorationBlocked,match='RESTORED_FROZEN_CODE_SCHEMA_UNAVAILABLE'):
+        entry._readonly_candidate_schema_head(report)
+
+
+def test_readonly_candidate_schema_rejects_newly_committed_future_head(entry,source_candidate):
+    report,_,root,git=_candidate_with_graph(source_candidate,{
+        'services/aos-api/alembic/versions/a.py':b"revision='a0v_163'\ndown_revision=None\n"})
+    path=root/'services/aos-api/alembic/versions/future.py';path.write_text("revision='a0v_165'\ndown_revision='a0v_163'\n")
+    git('add',str(path.relative_to(root)));git('commit','-m','isolated future committed head')
+    with pytest.raises(entry.RestorationBlocked,match='RESTORED_CURRENT_API_SOURCE_DRIFT'):
+        entry._readonly_candidate_schema_head(report)
+
+
+def test_readonly_preflight_uses_validated_candidate_and_preserves_identity_gate(entry,source_candidate,monkeypatch):
+    import json,subprocess
+    report,_,_,_=_candidate_with_graph(source_candidate,{
+        'services/aos-api/alembic/versions/a.py':b"revision='a0v_163'\ndown_revision=None\n"})
+    monkeypatch.setattr(entry,'_identity_parameters',lambda p:{'fixture':True})
+    monkeypatch.setattr(entry.previous,'_verify_limited_login',lambda p:None)
+    monkeypatch.setattr(entry.previous,'_code_schema_head',lambda:'a0v_165')
+    observed={**baseline(),'schema':'a0v_163','tables':658,'pendingRenewalAbsent':False,'inventory':{}}
+    container={'Image':entry.IMAGE,'Mounts':[{'Name':entry.VOLUME}],
+        'Ports':{'5432/tcp':[{'HostIp':'127.0.0.1','HostPort':'18446'}]},
+        'State':{'Running':True,'StartedAt':'fixture'}}
+    original_run=subprocess.run
+    def run(args,**kwargs):
+        if args[0]!='docker':return original_run(args,**kwargs)
+        return SimpleNamespace(stdout=json.dumps(container if 'inspect' in args else observed).encode())
+    monkeypatch.setattr(entry.subprocess,'run',run)
+    assert entry.preflight(Path('/fixture'),management_readonly=True,source_candidate=report)['codeSchema']=='a0v_163'
+    with pytest.raises(entry.RestorationBlocked,match='RESTORED_CODE_SCHEMA_DRIFT'):
+        entry.preflight(Path('/fixture'),management_readonly=True)
+    observed['orgId']='dev-org'
+    with pytest.raises(entry.RestorationBlocked,match='RESTORED_IDENTITY_DRIFT'):
+        entry.preflight(Path('/fixture'),management_readonly=True,source_candidate=report)
+
+
+def test_readonly_candidate_schema_rejects_invalid_source_before_graph_loading(entry,tmp_path):
+    with pytest.raises(entry.RestorationBlocked,match='RESTORED_API_SOURCE_CANDIDATE_INVALID'):
+        entry._readonly_candidate_schema_head(tmp_path/'not-a-candidate.json')
+
+
+def test_readonly_candidate_schema_rejects_missing_graph(entry,source_candidate):
+    report,_,_,_=source_candidate
+    with pytest.raises(entry.RestorationBlocked,match='RESTORED_FROZEN_CODE_SCHEMA_UNAVAILABLE'):
+        entry._readonly_candidate_schema_head(report)
+
+
+def test_non_readonly_preflight_cannot_select_frozen_schema(entry,tmp_path,monkeypatch):
+    monkeypatch.setattr(entry,'_identity_parameters',lambda p:pytest.fail('database identity touched'))
+    with pytest.raises(entry.RestorationBlocked,match='RESTORED_FROZEN_SCHEMA_READONLY_REQUIRED'):
+        entry.preflight(tmp_path/'identity',source_candidate=tmp_path/'candidate')
