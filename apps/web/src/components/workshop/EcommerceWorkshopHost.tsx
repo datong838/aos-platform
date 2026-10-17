@@ -17,21 +17,24 @@ import { CustomerPage } from "./CustomerPage";
 import { EcommerceWorkshopSharedContext } from "./EcommerceWorkshopSharedContext";
 import { getAuthRevision, getTenant } from "../../api/tenant";
 import { WorkshopInstallationDiagnosis } from "./WorkshopInstallationDiagnosis";
+import { WorkshopSessionRecovery } from "./WorkshopSessionRecovery";
 
 function HostState({
   state,
   onRetry,
+  authenticationRejected = false,
 }: {
   state: "loading" | "empty" | "forbidden" | "failed";
   onRetry?: () => void;
+  authenticationRejected?: boolean;
 }) {
   return (
     <div className="ecommerce-workshop-host-state">
       <h1>电商工作台</h1>
       <AsyncStateBoundary
         state={state}
-        title={state === "empty" ? "当前工作台入口不可用" : undefined}
-        description={state === "empty" ? "当前目录没有此工作台的可见入口。请核对安装配置与访问权限后重新读取。" : undefined}
+        title={authenticationRejected ? "当前身份认证未通过" : state === "empty" ? "当前工作台入口不可用" : undefined}
+        description={authenticationRejected ? "请重新登录后再次读取当前工作区；此拒绝不表示安装已失效。" : state === "empty" ? "当前目录没有此工作台的可见入口。请核对安装配置与访问权限后重新读取。" : undefined}
         action={
           onRetry ? (
             <button type="button" onClick={onRetry}>重新读取目录</button>
@@ -43,7 +46,7 @@ function HostState({
   );
 }
 
-export function EcommerceWorkshopHost({ onCatalogReload }: { onCatalogReload?: () => void } = {}) {
+function EcommerceWorkshopContent({ onCatalogReload }: { onCatalogReload?: () => void } = {}) {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const contextId = searchParams.get("context");
@@ -69,9 +72,13 @@ export function EcommerceWorkshopHost({ onCatalogReload }: { onCatalogReload?: (
     );
   }
   if (catalog.phase === "loading") return <HostState state="loading" />;
-  if (catalog.phase === "forbidden") return <HostState state="forbidden" />;
+  if (catalog.phase === "forbidden") return <HostState state="forbidden" authenticationRejected={catalog.error?.status === 401} />;
   if (catalog.phase === "failed") {
     return <HostState state="failed" onRetry={onCatalogReload ?? catalog.reload} />;
   }
   return <HostState state="empty" onRetry={onCatalogReload ?? catalog.reload} />;
+}
+
+export function EcommerceWorkshopHost(props: { onCatalogReload?: () => void } = {}) {
+  return <><WorkshopSessionRecovery /><EcommerceWorkshopContent {...props} /></>;
 }
