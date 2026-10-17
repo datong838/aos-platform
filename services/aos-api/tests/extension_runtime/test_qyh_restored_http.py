@@ -555,3 +555,26 @@ def test_non_readonly_preflight_cannot_select_frozen_schema(entry,tmp_path,monke
     monkeypatch.setattr(entry,'_identity_parameters',lambda p:pytest.fail('database identity touched'))
     with pytest.raises(entry.RestorationBlocked,match='RESTORED_FROZEN_SCHEMA_READONLY_REQUIRED'):
         entry.preflight(tmp_path/'identity',source_candidate=tmp_path/'candidate')
+
+
+@pytest.mark.parametrize('initial_flag', [False, True])
+@pytest.mark.parametrize('broken', [False, True])
+def test_frozen_schema_inspection_never_writes_bytecode_and_restores_flag(
+        entry, source_candidate, monkeypatch, initial_flag, broken):
+    import sys
+    graph = b"raise RuntimeError('broken migration')\n" if broken else b"revision='a0v_163'\ndown_revision=None\n"
+    report, source, _, _ = _candidate_with_graph(source_candidate, {
+        'services/aos-api/alembic/versions/baseline.py': graph})
+    before = {str(p.relative_to(source)) for p in source.rglob('*')}
+    monkeypatch.setattr(sys, 'dont_write_bytecode', initial_flag)
+    try:
+        if broken:
+            with pytest.raises(entry.RestorationBlocked, match='RESTORED_FROZEN_CODE_SCHEMA_UNAVAILABLE'):
+                entry._readonly_candidate_schema_head(report)
+        else:
+            assert entry._readonly_candidate_schema_head(report) == 'a0v_163'
+        assert sys.dont_write_bytecode is initial_flag
+        assert {str(p.relative_to(source)) for p in source.rglob('*')} == before
+        assert entry.require_api_source_candidate(report) == source
+    finally:
+        sys.dont_write_bytecode = True

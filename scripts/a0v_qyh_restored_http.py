@@ -340,12 +340,17 @@ def require_api_source_candidate(report_path):
 def _readonly_candidate_schema_head(report_path):
     """Compare the database with the exact committed source that will run."""
     source = require_api_source_candidate(report_path)
+    # Startup inspection must not mutate the frozen source it validates.
+    original_bytecode_flag = sys.dont_write_bytecode
     try:
+        sys.dont_write_bytecode = True
         config = previous.Config()
         config.set_main_option('script_location', str(source / 'services/aos-api/alembic'))
         heads = previous.ScriptDirectory.from_config(config).get_heads()
     except Exception:
         raise RestorationBlocked('RESTORED_FROZEN_CODE_SCHEMA_UNAVAILABLE') from None
+    finally:
+        sys.dont_write_bytecode = original_bytecode_flag
     if len(heads) != 1 or not isinstance(heads[0], str) or not heads[0]:
         raise RestorationBlocked('RESTORED_FROZEN_CODE_SCHEMA_UNAVAILABLE')
     return heads[0]
