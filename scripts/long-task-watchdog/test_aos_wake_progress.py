@@ -368,7 +368,7 @@ class StepCheckpointTest(CheckpointSafetyTest):
             self.assertEqual(self.read(repo,context)['next_step'],'LOCAL_STEPS_RECORDED')
 
 class ThreadTransferTest(unittest.TestCase):
-    NEW = '01a107a2-e9e4-7670-bc44-1144fa9b27e2'
+    NEW = '01a13484-f019-7d82-94ce-812396db9124'
     OLD = '01a0e5ff-d1a0-70f2-828f-9fc997519d04'
 
     def cli(self, home, *args):
@@ -414,5 +414,55 @@ class ThreadTransferTest(unittest.TestCase):
                 checkpoint_snapshot(repo, self.NEW, '.evidence/task/checkpoint.json', context)
             cp['thread'] = self.NEW; file.write_text(json.dumps(cp))
             self.assertEqual(checkpoint_snapshot(repo, self.NEW, '.evidence/task/checkpoint.json', context)['owner'], 'owner')
+
+
+class SuccessorThreadCliTest(unittest.TestCase):
+    CURRENT = '01a13484-f019-7d82-94ce-812396db9124'
+    LEGACY = '01a107a2-e9e4-7670-bc44-1144fa9b27e2'
+
+    def invoke(self, directory, thread, *, shadow=True):
+        import sys
+        command = [sys.executable, '-B', str(Path(__file__).with_name('aos_wake_progress.py')),
+                   '--thread', thread, '--event', '2026-10-17T00:00:00Z']
+        if shadow:
+            command.append('--shadow')
+        return run(command, capture_output=True, text=True, timeout=30,
+                   env={'PATH': os.environ.get('PATH', '/usr/bin:/bin'),
+                        'CODEX_HOME': str(directory), 'LC_ALL': 'C'})
+
+    def test_formal_successor_shadow_reports_identity_without_state_write(self):
+        with tempfile.TemporaryDirectory() as d:
+            result = self.invoke(d, self.CURRENT)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            value = json.loads(result.stdout)
+            self.assertEqual(value['thread'], self.CURRENT)
+            self.assertIn('never work authorization', value['meaning'])
+            self.assertEqual(list(Path(d).iterdir()), [])
+
+    def test_retired_and_foreign_callers_fail_before_state_creation(self):
+        for thread in (self.LEGACY, '01a00000-0000-7000-8000-000000000000'):
+            with self.subTest(thread=thread), tempfile.TemporaryDirectory() as d:
+                result = self.invoke(d, thread, shadow=False)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn('does not match current writer binding', result.stderr)
+                self.assertEqual(list(Path(d).iterdir()), [])
+
+    def test_successor_observation_preserves_legacy_state_and_deduplicates_event(self):
+        with tempfile.TemporaryDirectory() as d:
+            parent = Path(d) / 'automations' / 'aos-2'
+            parent.mkdir(parents=True)
+            legacy = parent / ('progress-' + self.LEGACY + '.json')
+            original = b'{"legacy":"keep original bytes and unknown history"}\n'
+            legacy.write_bytes(original)
+            result = self.invoke(d, self.CURRENT, shadow=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            current = parent / ('progress-' + self.CURRENT + '.json')
+            first = current.read_bytes()
+            repeated = self.invoke(d, self.CURRENT, shadow=False)
+            self.assertEqual(repeated.returncode, 0, repeated.stderr)
+            self.assertEqual(current.read_bytes(), first)
+            self.assertEqual(legacy.read_bytes(), original)
+            self.assertFalse(legacy.with_suffix('.lock').exists())
+            self.assertEqual(current.stat().st_mode & 0o777, 0o600)
 
 if __name__=='__main__': unittest.main()

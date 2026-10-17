@@ -12,7 +12,9 @@ import subprocess
 import tempfile
 import time
 
-THREAD = '01a107a2-e9e4-7670-bc44-1144fa9b27e2'
+# Formal 2026-10-13 handoff: observe only the sole successor thread.
+# The per-thread state path leaves the retired thread's history untouched.
+THREAD = '01a13484-f019-7d82-94ce-812396db9124'
 
 
 CODE_ROOTS = ('services', 'apps', 'bundles', 'scripts')
