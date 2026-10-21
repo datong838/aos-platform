@@ -25,6 +25,7 @@ import { OrgSwitcher } from "../components/OrgSwitcher";
 import { PlatformBaseSwitcher } from "../components/PlatformBaseSwitcher";
 import { EnvReadonlyBadge } from "../components/EnvReadonlyBadge";
 import { getTenant } from "../api/tenant";
+import { AnalystSelectionProvider, useAnalystSelection } from "../components/workshop/AnalystSelectionContext";
 import {
   DEMO_VERSION,
   findNavPage,
@@ -337,6 +338,14 @@ function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
   </>;
 }
 
+function AnalystChannelSelection() {
+  const selection = useAnalystSelection();
+  return <label><span>渠道视角</span><select aria-label="当前渠道视角" value={selection?.channelId ?? ""} disabled>
+    <option value="">渠道未知</option>
+    {selection && <option value={selection.channelId}>{selection.channelLabel}</option>}
+  </select></label>;
+}
+
 export function AppShell() {
   const [pref, setPref] = useState<AppearancePreference>(() =>
     readAppearancePreference(),
@@ -587,6 +596,7 @@ export function AppShell() {
   }, [collapsedSections, toggleSection, active?.id, activeSection, workshopCatalog.modules, sidebarCollapsed]);
 
   return (
+    <AnalystSelectionProvider active={onAnalystVisualRoute}>
     <div className={`p-app${workshopFocusMode ? " is-workshop-focus" : ""}${onWorkshopPrimaryVisualRoute ? " is-workshop-primary-visual" : ""}${onAnalystVisualRoute ? " is-analyst-visual" : ""}${onTaskCockpitVisualRoute ? " is-task-cockpit-visual" : ""}`}>
       <GlobalNav
         onToggleSidebar={toggleSidebar}
@@ -602,7 +612,7 @@ export function AppShell() {
               <span>工作台 › 增长指挥域 › 经营参谋</span>
             </div>
             <div className="analyst-exact-header-right">
-              <label><span>渠道视角</span><select aria-label="渠道视角" defaultValue=""><option value="">渠道未知</option></select></label>
+              <AnalystChannelSelection />
               <span className="analyst-exact-owner" title="经营参谋（负责人未绑定）">经营参谋（负责人未绑定）</span>
               <button type="button" onClick={() => document.getElementById("analyst-tab-plan")?.click()}><NavIcon name="table" />查看今日方案</button>
             </div>
@@ -684,5 +694,6 @@ export function AppShell() {
       </div>
       <span className="sr-only" data-appearance-key={APPEARANCE_STORAGE_KEY} />
     </div>
+    </AnalystSelectionProvider>
   );
 }

@@ -1,8 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { parseInvestigationCaseList, parseInvestigationHandoffCompile, parseInvestigationRunList, parseInvestigationWorkbenchView } from "./parser";
+import { parseInvestigationCaseSelection, parseInvestigationCaseList, parseInvestigationHandoffCompile, parseInvestigationRunList, parseInvestigationWorkbenchView } from "./parser";
 
 const hash = `sha256:${"a".repeat(64)}`; const tenant = { orgId: "org-org", projectId: "dev-project" };
 const ref = (resourceType: string, resourceId: string, revision = 1) => ({ resourceType, resourceId, revision, contentHash: hash });
+const caseSelection = () => ({ schemaVersion: "aos.ecommerce.business-investigation-case-selection/v1", tenant, analysisType: "initial_store_analysis", sourceReadinessStatus: "blocked", sourceReadinessCheckedAt: "2026-10-20T08:00:00Z", sourceReadinessCutoffAt: null, channelRef: ref("ChannelRevision", "niushop:1"), businessEntityRef: ref("BusinessEntityRevision", "shop-1"), entityChannelBindingRef: ref("BusinessEntityChannelBindingRevision", "niushop:1:shop-1"), investigationProfileRef: null, scopeRef: null, caseCreatable: false, runCreatable: false, blockers: ["INVESTIGATION_PROFILE_AUTHORITY_MISSING"], runBlockers: ["CASE_SELECTION_NOT_CREATABLE"] });
+
+describe("正式默认店铺选择合同", () => {
+  it("保留已确认 Shop 与真实 blocker，不把 blocked 变成不存在", () => {
+    expect(parseInvestigationCaseSelection(caseSelection(), tenant)).toEqual(caseSelection());
+  });
+  it("允许真实缺少 Shop 且无任何可创建授权", () => {
+    const payload = { ...caseSelection(), channelRef: null, businessEntityRef: null, entityChannelBindingRef: null };
+    expect(parseInvestigationCaseSelection(payload, tenant).businessEntityRef).toBeNull();
+  });
+  it("完整五引用和空 blocker 可忠实呈现后端可创建投影", () => {
+    const payload = { ...caseSelection(), investigationProfileRef: ref("InvestigationProfileRevision", "profile-1"), scopeRef: ref("InvestigationScopeRevision", "scope-1"), caseCreatable: true, runCreatable: true, blockers: [], runBlockers: [] };
+    expect(parseInvestigationCaseSelection(payload, tenant)).toEqual(payload);
+  });
+  it.each([
+    { injected: true }, { caseCreatable: "false" }, { runCreatable: 1 },
+    { tenant: { orgId: "dev-org", projectId: "dev-project" } },
+    { sourceReadinessStatus: "pretend_ready" }, { sourceReadinessCheckedAt: "2026-10-20" },
+    { channelRef: ref("BusinessEntityRevision", "niushop:1") },
+    { businessEntityRef: { ...ref("BusinessEntityRevision", "shop-1"), contentHash: "invalid" } },
+    { caseCreatable: true }, { runCreatable: true }, { blockers: [7] },
+  ])("拒绝字段漂移、错租户或可创建状态不自洽 %j", (change) => {
+    expect(() => parseInvestigationCaseSelection({ ...caseSelection(), ...change }, tenant)).toThrow();
+  });
+});
 const caseItem = { schemaVersion: "aos.ecommerce.business-investigation-case/v1", tenant, caseId: "case-1", revision: 1, version: 1, priorRef: null, contentHash: hash, lifecycle: "ACTIVE", analysisType: "initial_store_analysis", title: "首次全店经营分析", purposeCode: "business.investigation.initial", channelRef: ref("ChannelRevision", "private-mall"), businessEntityRef: ref("BusinessEntityRevision", "store-1"), entityChannelBindingRef: ref("BusinessEntityChannelBindingRevision", "binding-1"), investigationProfileRef: ref("InvestigationProfileRevision", "profile-1"), scopeRef: ref("InvestigationScopeRevision", "scope-1"), schedulePolicyRef: null, createdBy: "user-1", createdAt: "2026-08-26T08:00:00Z" };
 const runItem = { authority: { schemaVersion: "aos.ecommerce.business-investigation-run/v1", tenant, runId: "run-1", version: 1, contentHash: hash, caseRef: ref("BusinessInvestigationCaseRevision", "case-1"), analysisType: "initial_store_analysis", triggerKind: "manual", triggerKey: "manual:run-1", lifecycle: "PREPARING", control: "RUNNING", createdBy: "user-1", createdAt: "2026-08-26T08:01:00Z" }, state: { schemaVersion: "aos.ecommerce.business-investigation-run-state/v1", tenant, runId: "run-1", version: 1, priorRef: null, lifecycle: "PREPARING", control: "RUNNING", eventSequence: 1, contentHash: hash, pendingRequirementRef: null, uncertainCommand: null, createdBy: "user-1", createdAt: "2026-08-26T08:01:00Z" } };
 const resourceRef = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: "1", authority: "test-authority" });

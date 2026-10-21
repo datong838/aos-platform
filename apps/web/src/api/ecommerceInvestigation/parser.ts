@@ -1,6 +1,7 @@
 import type {
   InvestigationAnalysisType,
   InvestigationCaseListResponse,
+  InvestigationCaseSelection,
   InvestigationCaseRevision,
   InvestigationExactRef,
   InvestigationRunControl,
@@ -38,6 +39,33 @@ const LEGACY_ARTIFACT_TYPES = ["BusinessDossierRevision", "ProblemMapRevision", 
 const ARTIFACT_TYPES = ["BusinessDossierRevision", "ProblemMapRevision", "OpportunityMapRevision", "SolutionPortfolioRevision"] as const;
 const TIMELINE_TYPES = ["case_revision", "run_created", "state_revision", "artifact_bound"] as const;
 const RUN_COMMANDS = ["PAUSE_RUN", "RESUME_RUN", "CANCEL_RUN", "REQUEST_DATA", "CONFIRM_DATA_REQUIREMENT"] as const;
+
+export function parseInvestigationCaseSelection(value: unknown, expectedTenant?: InvestigationTenant): InvestigationCaseSelection {
+  const raw = record(value, "caseSelection");
+  exact(raw, ["schemaVersion", "tenant", "analysisType", "sourceReadinessStatus", "sourceReadinessCheckedAt", "sourceReadinessCutoffAt", "channelRef", "businessEntityRef", "entityChannelBindingRef", "investigationProfileRef", "scopeRef", "caseCreatable", "runCreatable", "blockers", "runBlockers"], "caseSelection");
+  if (raw.schemaVersion !== "aos.ecommerce.business-investigation-case-selection/v1" || raw.analysisType !== "initial_store_analysis") throw new TypeError("caseSelection 合同漂移");
+  if (typeof raw.caseCreatable !== "boolean" || typeof raw.runCreatable !== "boolean") throw new TypeError("caseSelection 可创建状态必须是布尔值");
+  const codes = (value: unknown, label: string) => {
+    if (!Array.isArray(value) || value.length > 200) throw new TypeError(`${label} 非法`);
+    return value.map((item) => text(item, label, 200));
+  };
+  const result: InvestigationCaseSelection = {
+    schemaVersion: "aos.ecommerce.business-investigation-case-selection/v1", tenant: tenant(raw.tenant, expectedTenant), analysisType: "initial_store_analysis",
+    sourceReadinessStatus: enumValue(raw.sourceReadinessStatus, ["ready", "empty", "degraded", "unknown", "stale", "failed", "blocked", "forbidden"] as const, "caseSelection.sourceReadinessStatus"),
+    sourceReadinessCheckedAt: raw.sourceReadinessCheckedAt === null ? null : timestamp(raw.sourceReadinessCheckedAt, "caseSelection.sourceReadinessCheckedAt"),
+    sourceReadinessCutoffAt: raw.sourceReadinessCutoffAt === null ? null : timestamp(raw.sourceReadinessCutoffAt, "caseSelection.sourceReadinessCutoffAt"),
+    channelRef: nullableRef(raw.channelRef, "caseSelection.channelRef", "ChannelRevision"),
+    businessEntityRef: nullableRef(raw.businessEntityRef, "caseSelection.businessEntityRef", "BusinessEntityRevision"),
+    entityChannelBindingRef: nullableRef(raw.entityChannelBindingRef, "caseSelection.entityChannelBindingRef", "BusinessEntityChannelBindingRevision"),
+    investigationProfileRef: nullableRef(raw.investigationProfileRef, "caseSelection.investigationProfileRef", "InvestigationProfileRevision"),
+    scopeRef: nullableRef(raw.scopeRef, "caseSelection.scopeRef", "InvestigationScopeRevision"),
+    caseCreatable: raw.caseCreatable, runCreatable: raw.runCreatable,
+    blockers: codes(raw.blockers, "caseSelection.blockers"), runBlockers: codes(raw.runBlockers, "caseSelection.runBlockers"),
+  };
+  if (result.caseCreatable && (result.blockers.length || [result.channelRef, result.businessEntityRef, result.entityChannelBindingRef, result.investigationProfileRef, result.scopeRef].some((item) => item === null))) throw new TypeError("caseSelection 可创建状态不自洽");
+  if (result.runCreatable && (!result.caseCreatable || result.runBlockers.length)) throw new TypeError("caseSelection Run 可创建状态不自洽");
+  return result;
+}
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) throw new TypeError(`${label} 必须是对象`);

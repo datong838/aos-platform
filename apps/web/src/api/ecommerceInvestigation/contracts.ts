@@ -197,6 +197,23 @@ export type InvestigationWorkbenchView = {
   commandProjection?: InvestigationCommandProjection | null;
 };
 export type InvestigationCaseListResponse = { tenant: InvestigationTenant; items: InvestigationCaseRevision[]; count: number };
+export type InvestigationCaseSelection = {
+  schemaVersion: "aos.ecommerce.business-investigation-case-selection/v1";
+  tenant: InvestigationTenant;
+  analysisType: "initial_store_analysis";
+  sourceReadinessStatus: "ready" | "empty" | "degraded" | "unknown" | "stale" | "failed" | "blocked" | "forbidden";
+  sourceReadinessCheckedAt: string | null;
+  sourceReadinessCutoffAt: string | null;
+  channelRef: InvestigationExactRef | null;
+  businessEntityRef: InvestigationExactRef | null;
+  entityChannelBindingRef: InvestigationExactRef | null;
+  investigationProfileRef: InvestigationExactRef | null;
+  scopeRef: InvestigationExactRef | null;
+  caseCreatable: boolean;
+  runCreatable: boolean;
+  blockers: string[];
+  runBlockers: string[];
+};
 export type InvestigationRunListResponse = { tenant: InvestigationTenant; items: InvestigationRunView[]; count: number };
 export type InvestigationRunStateCommandResponse = { tenant: InvestigationTenant; authority: InvestigationRunState; replayed: boolean };
 export type InvestigationDataRequirementStatus = "requested" | "accepted" | "rejected" | "fulfilled" | "cancelled" | "stale" | "unknown";
@@ -295,6 +312,7 @@ export type InvestigationStageReviewResult = {
   projection: InvestigationStageReviewProjection;
 };
 export type InvestigationReadClient = {
+  getCaseSelection?(signal?: AbortSignal): Promise<InvestigationCaseSelection>;
   listCases(signal?: AbortSignal): Promise<InvestigationCaseListResponse>;
   listRuns(caseId: string, signal?: AbortSignal): Promise<InvestigationRunListResponse>;
   getRunView?(runId: string, signal?: AbortSignal): Promise<InvestigationWorkbenchView>;

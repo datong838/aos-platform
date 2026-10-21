@@ -4,6 +4,17 @@ import { EcommerceInvestigationClient } from "./client";
 const tenant = { orgId: "org-org", projectId: "dev-project" };
 const hash = `sha256:${"a".repeat(64)}`; const ref = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: 1, contentHash: hash });
 describe("EcommerceInvestigationClient", () => {
+  it("正式默认选择仅 GET、精确 analysisType、传递取消且校验发起租户", async () => {
+    const selection = { schemaVersion: "aos.ecommerce.business-investigation-case-selection/v1", tenant, analysisType: "initial_store_analysis", sourceReadinessStatus: "blocked", sourceReadinessCheckedAt: null, sourceReadinessCutoffAt: null, channelRef: null, businessEntityRef: null, entityChannelBindingRef: null, investigationProfileRef: null, scopeRef: null, caseCreatable: false, runCreatable: false, blockers: ["CANONICAL_SHOP_SELECTION_UNAVAILABLE"], runBlockers: ["CASE_SELECTION_NOT_CREATABLE"] };
+    const fetch = vi.fn().mockImplementation(async () => new Response(JSON.stringify(selection), { status: 200 }));
+    const client = new EcommerceInvestigationClient({ fetch, getBaseUrl: () => "http://aos.test/", getAuthHeaders: () => ({ "X-Org-Id": "org-org", "X-Project-Id": "dev-project" }) });
+    const signal = new AbortController().signal;
+    expect(await client.getCaseSelection(signal)).toEqual(selection);
+    expect(fetch).toHaveBeenCalledWith("http://aos.test/v1/ecommerce/investigations/case-selection?analysisType=initial_store_analysis", expect.objectContaining({ method: "GET", signal }));
+    selection.tenant = { orgId: "dev-org", projectId: "dev-project" };
+    await expect(client.getCaseSelection()).rejects.toThrow(/tenant/);
+    expect(fetch.mock.calls.every(([, init]) => init.method === "GET" && init.body === undefined)).toBe(true);
+  });
   it("只发出 canonical Case/Run GET 且不提交 tenant", async () => {
     const fetch = vi.fn().mockImplementation(async () => new Response(JSON.stringify({ tenant, items: [], count: 0 }), { status: 200, headers: { "Content-Type": "application/json" } }));
     const client = new EcommerceInvestigationClient({ fetch, getBaseUrl: () => "http://aos.test", getAuthHeaders: () => ({ Authorization: "Bearer test" }) });

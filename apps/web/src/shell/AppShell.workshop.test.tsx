@@ -11,10 +11,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EcommerceWorkshopClientError } from "../api/ecommerceWorkshop";
 import { setTenant } from "../api/tenant";
-import { EcommerceWorkshopCatalogProvider } from "../components/workshop";
+import { EcommerceWorkshopCatalogProvider, useEcommerceWorkshopCatalog } from "../components/workshop";
 import { workshopCatalogFixture, workshopModuleFixture } from "../components/workshop/workshopTestFixtures";
 import { EcommerceWorkshopEntryRoute } from "../pages/s2/ecommerce/routes";
 import { AppShell } from "./AppShell";
+import { usePublishAnalystSelection } from "../components/workshop/AnalystSelectionContext";
+
+const headerSelection = { tenant: { orgId: "org-org", projectId: "dev-project" }, channelId: "niushop:1", entityId: "store-a", channelLabel: "私域商城", sourceCutoffAt: null };
+const headerClient = {};
+function HeaderSelectionFixture() {
+  const catalog = useEcommerceWorkshopCatalog();
+  // Real business data arrives after directory admission, not from a cached pre-entry value.
+  usePublishAnalystSelection(catalog.phase === "ready" ? headerSelection : null, headerClient);
+  return <p>正文正式来源</p>;
+}
 
 vi.mock("../components/ApiStatusBar", () => ({ ApiStatusBar: () => null }));
 vi.mock("../components/OfflineBanner", () => ({ OfflineBanner: () => null }));
@@ -109,6 +119,20 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
   afterEach(() => {
     act(() => root.unmount());
     host.remove();
+  });
+
+  it("经营参谋顶部与Outlet使用同一正式只读选择，无第二个业务改选入口", async () => {
+    const client = { listModules: async () => primaryWorkshopCatalog() };
+    await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/analyst"]}>
+      <EcommerceWorkshopCatalogProvider client={client}><Routes><Route element={<AppShell />}>
+        <Route path="workshop/analyst" element={<HeaderSelectionFixture />} />
+      </Route></Routes></EcommerceWorkshopCatalogProvider>
+    </MemoryRouter>));
+    await flush();
+    const selected = host.querySelector<HTMLSelectElement>('.analyst-exact-header-right select[aria-label="当前渠道视角"]');
+    expect(selected?.value).toBe("niushop:1"); expect(selected?.disabled).toBe(true);
+    expect(selected?.selectedOptions[0]?.textContent).toBe("私域商城");
+    expect(host.querySelector(".analyst-exact-owner")?.textContent).toBe("经营参谋（负责人未绑定）");
   });
 
   it("replacement active 后旧订单入口 replace 到 canonical 且全壳只有一个 active", async () => {
@@ -281,7 +305,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelector('.nav a[aria-current="page"]')?.textContent).toContain("经营参谋 · 增长指挥中心");
     expect(host.querySelector(".brand-block")).toBeNull();
     expect(host.querySelector(".analyst-exact-header-left h1")?.textContent).toBe("经营参谋 · 增长指挥中心");
-    expect(host.querySelector<HTMLSelectElement>('.analyst-exact-header-right select[aria-label="渠道视角"]')?.disabled).toBe(false);
+    expect(host.querySelector<HTMLSelectElement>('.analyst-exact-header-right select[aria-label="当前渠道视角"]')?.disabled).toBe(true);
     expect(host.querySelector(".analyst-exact-owner")?.textContent).toBe("经营参谋（负责人未绑定）");
     expect(host.querySelector(".analyst-exact-owner")?.getAttribute("title")).toBe("经营参谋（负责人未绑定）");
     const planButton = Array.from(host.querySelectorAll<HTMLButtonElement>(".analyst-exact-header-right button")).find((item) => item.textContent === "查看今日方案");

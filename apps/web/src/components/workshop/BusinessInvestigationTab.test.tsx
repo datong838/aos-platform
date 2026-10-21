@@ -1,31 +1,138 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { InvestigationCaseRevision, InvestigationCommandClient, InvestigationReadClient, InvestigationRunListResponse, InvestigationWorkbenchView } from "../../api/ecommerceInvestigation";
+import type { InvestigationCaseSelection, InvestigationCaseRevision, InvestigationCommandClient, InvestigationReadClient, InvestigationRunListResponse, InvestigationWorkbenchView } from "../../api/ecommerceInvestigation";
 import { EcommerceInvestigationClientError } from "../../api/ecommerceInvestigation";
+import { getTenant, setTenant } from "../../api/tenant";
 import { BusinessInvestigationTab } from "./BusinessInvestigationTab";
 import type { SourceReadinessSnapshot } from "./SourceReadinessContext";
+import { AnalystSelectionProvider, useAnalystSelection } from "./AnalystSelectionContext";
+
+function HeaderSelectionProbe() {
+  const value = useAnalystSelection();
+  return <output data-testid="header-selection">{value ? `${value.channelLabel}/${value.channelId}/${value.entityId}` : "unknown"}</output>;
+}
 
 const hash = `sha256:${"a".repeat(64)}`; const tenant = { orgId: "org-org", projectId: "dev-project" }; const ref = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: 1, contentHash: hash });
 const makeCase = (caseId: string, channelId: string, entityId: string, title: string): InvestigationCaseRevision => ({ schemaVersion: "aos.ecommerce.business-investigation-case/v1", tenant, caseId, revision: 1, version: 1, priorRef: null, contentHash: hash, lifecycle: "ACTIVE", analysisType: "initial_store_analysis", title, purposeCode: "business.investigation.initial", channelRef: ref("ChannelRevision", channelId), businessEntityRef: ref("BusinessEntityRevision", entityId), entityChannelBindingRef: ref("BusinessEntityChannelBindingRevision", `${channelId}-${entityId}`), investigationProfileRef: ref("InvestigationProfileRevision", `profile-${entityId}`), scopeRef: ref("InvestigationScopeRevision", `scope-${entityId}`), schedulePolicyRef: null, createdBy: "user-1", createdAt: "2026-08-26T08:00:00Z" });
-const cases = [makeCase("case-a", "private-mall", "store-a", "私域首析"), makeCase("case-b", "private-mall", "store-b", "私域复盘"), makeCase("case-c", "wechat-store", "store-c", "微信首析")];
+const cases = [makeCase("case-a", "niushop:1", "store-a", "私域首析"), makeCase("case-b", "niushop:1", "store-b", "私域复盘"), makeCase("case-c", "wechat-store", "store-c", "微信首析")];
+const defaultSelection = (): InvestigationCaseSelection => ({ schemaVersion: "aos.ecommerce.business-investigation-case-selection/v1", tenant, analysisType: "initial_store_analysis", sourceReadinessStatus: "blocked", sourceReadinessCheckedAt: null, sourceReadinessCutoffAt: null, channelRef: ref("ChannelRevision", "niushop:1"), businessEntityRef: ref("BusinessEntityRevision", "store-a"), entityChannelBindingRef: ref("BusinessEntityChannelBindingRevision", "niushop:1:store-a"), investigationProfileRef: null, scopeRef: null, caseCreatable: false, runCreatable: false, blockers: ["INVESTIGATION_PROFILE_AUTHORITY_MISSING"], runBlockers: ["CASE_SELECTION_NOT_CREATABLE"] });
 const emptyRuns = (): InvestigationRunListResponse => ({ tenant, items: [], count: 0 });
 const resourceRef = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: "1", authority: "test-authority" });
-const workbenchView = (pendingRequirementRef: InvestigationWorkbenchView["pendingRequirementRef"] = null): InvestigationWorkbenchView => ({ schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v3", drilldownVersion: "legacy-v3", tenant, projectionHash: hash, sourceWatermark: { caseRevision: 1, runVersion: 1, stateVersion: 1, bindingHashes: [], runtimeHash: hash, contentHash: hash }, observedAt: "2026-08-26T08:10:00Z", caseRef: ref("BusinessInvestigationCaseRevision", "case-a"), runRef: ref("BusinessInvestigationRun", "run-a"), stateRef: ref("BusinessInvestigationRunStateRevision", "run-a"), caseEnvelope: { title: "私域首析", analysisType: "initial_store_analysis", lifecycle: "ACTIVE", channelRef: ref("ChannelRevision", "private-mall"), businessEntityRef: ref("BusinessEntityRevision", "store-a"), investigationProfileRef: ref("InvestigationProfileRevision", "profile-store-a"), scopeRef: ref("InvestigationScopeRevision", "scope-store-a"), schedulePolicyRef: null, createdBy: "user-1", createdAt: "2026-08-26T08:00:00Z" }, lifecycle: "PORTRAIT", control: "RUNNING", pendingRequirementRef, uncertainCommand: null, runtime: { bindingStatus: "bound", taskId: "task-a", planRef: ref("PlanRevision", "plan-a"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-a", version: 2 }, taskRunStatus: "running", checkpoint: { checkpointId: "checkpoint-1", sequence: 1, stepKey: "portrait", stateHash: "a".repeat(64), createdAt: "2026-08-26T08:09:00Z" }, stages: [{ stageId: "portrait", title: "经营画像", status: "completed", stepRunId: "step-1", attempt: 1 }, { stageId: "diagnosis", title: "问题与机会", status: "running", stepRunId: "step-2", attempt: 1 }, { stageId: "solution-design", title: "方案设计", status: "not_started", stepRunId: null, attempt: null }], completed: 1, total: 3, currentStageId: "diagnosis" }, currentWorkspace: { stageId: "diagnosis", title: "问题与机会", question: "哪些问题与机会被证据支持，哪些替代解释仍需保留？", status: "running", responsibilitySlotIds: ["slot-diagnosis"], assigneeRefs: [resourceRef("AgentInstance", "data-advisor")], inputRefs: [resourceRef("EvidenceBundleRevision", "evidence-1")], outputRefs: [], areas: [{ area: "known", title: "已知与可回链输入", status: "reference_only", summary: "仅确认存在可回链输入；其内容尚不能自动声称为经营事实。", resourceRefs: [resourceRef("EvidenceBundleRevision", "evidence-1")], exactRefs: [] }, { area: "unknown", title: "未知与缺口", status: "present", summary: "当前阶段运行中，未形成专门权威的内容仍保持未知。", resourceRefs: [], exactRefs: [] }, { area: "assumption", title: "关键假设", status: "unknown", summary: "尚无专门的假设 authority。", resourceRefs: [], exactRefs: [] }, { area: "counter_evidence", title: "反证与替代解释", status: "unknown", summary: "尚无专门的反证 authority。", resourceRefs: [], exactRefs: [] }], nonClaims: ["可回链输入不等于已确认经营事实。", "当前阶段状态不代表方案已执行。", "不展示模型私有过程。"] }, artifacts: ["BusinessDossierRevision", "ProblemMapRevision", "SolutionSetRevision", "DecisionReportRevision"].map((artifactType) => ({ artifactType: artifactType as InvestigationWorkbenchView["artifacts"][number]["artifactType"], status: "missing" as const, artifactRef: null, bindingId: null, bindingHash: null, selectionRevision: null, dataCutoff: null, lineageRef: null })), evidence: { status: "missing", exactRefs: [], locatorRefs: [] }, timeline: [] });
+const workbenchView = (pendingRequirementRef: InvestigationWorkbenchView["pendingRequirementRef"] = null): InvestigationWorkbenchView => ({ schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v3", drilldownVersion: "legacy-v3", tenant, projectionHash: hash, sourceWatermark: { caseRevision: 1, runVersion: 1, stateVersion: 1, bindingHashes: [], runtimeHash: hash, contentHash: hash }, observedAt: "2026-08-26T08:10:00Z", caseRef: ref("BusinessInvestigationCaseRevision", "case-a"), runRef: ref("BusinessInvestigationRun", "run-a"), stateRef: ref("BusinessInvestigationRunStateRevision", "run-a"), caseEnvelope: { title: "私域首析", analysisType: "initial_store_analysis", lifecycle: "ACTIVE", channelRef: ref("ChannelRevision", "niushop:1"), businessEntityRef: ref("BusinessEntityRevision", "store-a"), investigationProfileRef: ref("InvestigationProfileRevision", "profile-store-a"), scopeRef: ref("InvestigationScopeRevision", "scope-store-a"), schedulePolicyRef: null, createdBy: "user-1", createdAt: "2026-08-26T08:00:00Z" }, lifecycle: "PORTRAIT", control: "RUNNING", pendingRequirementRef, uncertainCommand: null, runtime: { bindingStatus: "bound", taskId: "task-a", planRef: ref("PlanRevision", "plan-a"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-a", version: 2 }, taskRunStatus: "running", checkpoint: { checkpointId: "checkpoint-1", sequence: 1, stepKey: "portrait", stateHash: "a".repeat(64), createdAt: "2026-08-26T08:09:00Z" }, stages: [{ stageId: "portrait", title: "经营画像", status: "completed", stepRunId: "step-1", attempt: 1 }, { stageId: "diagnosis", title: "问题与机会", status: "running", stepRunId: "step-2", attempt: 1 }, { stageId: "solution-design", title: "方案设计", status: "not_started", stepRunId: null, attempt: null }], completed: 1, total: 3, currentStageId: "diagnosis" }, currentWorkspace: { stageId: "diagnosis", title: "问题与机会", question: "哪些问题与机会被证据支持，哪些替代解释仍需保留？", status: "running", responsibilitySlotIds: ["slot-diagnosis"], assigneeRefs: [resourceRef("AgentInstance", "data-advisor")], inputRefs: [resourceRef("EvidenceBundleRevision", "evidence-1")], outputRefs: [], areas: [{ area: "known", title: "已知与可回链输入", status: "reference_only", summary: "仅确认存在可回链输入；其内容尚不能自动声称为经营事实。", resourceRefs: [resourceRef("EvidenceBundleRevision", "evidence-1")], exactRefs: [] }, { area: "unknown", title: "未知与缺口", status: "present", summary: "当前阶段运行中，未形成专门权威的内容仍保持未知。", resourceRefs: [], exactRefs: [] }, { area: "assumption", title: "关键假设", status: "unknown", summary: "尚无专门的假设 authority。", resourceRefs: [], exactRefs: [] }, { area: "counter_evidence", title: "反证与替代解释", status: "unknown", summary: "尚无专门的反证 authority。", resourceRefs: [], exactRefs: [] }], nonClaims: ["可回链输入不等于已确认经营事实。", "当前阶段状态不代表方案已执行。", "不展示模型私有过程。"] }, artifacts: ["BusinessDossierRevision", "ProblemMapRevision", "SolutionSetRevision", "DecisionReportRevision"].map((artifactType) => ({ artifactType: artifactType as InvestigationWorkbenchView["artifacts"][number]["artifactType"], status: "missing" as const, artifactRef: null, bindingId: null, bindingHash: null, selectionRevision: null, dataCutoff: null, lineageRef: null })), evidence: { status: "missing", exactRefs: [], locatorRefs: [] }, timeline: [] });
 const sourceReadinessSnapshot = (requirementId = "requirement-1"): SourceReadinessSnapshot => ({ phase: "ready", reload: vi.fn(), response: { schemaVersion: "aos.source-readiness/v1", tenant, checkedAt: "2026-08-26T08:10:00Z", cutoffAt: "2026-08-26T08:10:00Z", status: "blocked", sources: [], receiptRef: null, investigation: { requirementRef: { resourceType: "DataRequirementRevision", resourceId: requirementId, revision: "2", contentHash: "a".repeat(64), authority: "Data" }, status: "blocked", evaluatedAt: "2026-08-26T08:10:00Z", requiredCutoff: "2026-08-26T08:10:00Z", freshnessExpiresAt: null, requiredFactCount: 3, coveredFactCount: 1, coverageRatio: 1 / 3, unmetFacts: ["customer_segment", "repeat_purchase"], blockers: [{ code: "FACT_COVERAGE_PARTIAL", fact: "customer_segment", sourceIds: ["niushop-qyh"], reason: "当前事实覆盖不足" }] } } });
 const runView = { authority: { schemaVersion: "aos.ecommerce.business-investigation-run/v1" as const, tenant, runId: "run-a", version: 1 as const, contentHash: hash, caseRef: ref("BusinessInvestigationCaseRevision", "case-a"), analysisType: "initial_store_analysis" as const, triggerKind: "manual" as const, triggerKey: "manual:run-a", lifecycle: "PREPARING" as const, control: "RUNNING" as const, createdBy: "user-1", createdAt: "2026-08-26T08:01:00Z" }, state: { schemaVersion: "aos.ecommerce.business-investigation-run-state/v1" as const, tenant, runId: "run-a", version: 1, priorRef: null, lifecycle: "PORTRAIT" as const, control: "RUNNING" as const, eventSequence: 1, contentHash: hash, pendingRequirementRef: null, uncertainCommand: null, createdBy: "user-1", createdAt: "2026-08-26T08:02:00Z" } };
+
+Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);
 
 describe("BusinessInvestigationTab", () => {
   let host: HTMLDivElement; let root: Root;
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { act(() => root.unmount()); host.remove(); });
-  it("展示 canonical 三级选择并保持 GET-only 边界", async () => {
-    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()), getRunView: vi.fn() };
+  it("同一正式默认选择发布到顶部，刷新中清空并在成功后恢复，不新增命令", async () => {
+    setTenant(tenant);
+    const listCases = vi.fn().mockResolvedValue({ tenant, items: cases, count: cases.length });
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases, listRuns: vi.fn().mockResolvedValue(emptyRuns()) };
+    await act(async () => root.render(<AnalystSelectionProvider active><HeaderSelectionProbe /><BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled={false} /></AnalystSelectionProvider>));
+    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("私域商城/niushop:1/store-a");
+    let release!: (value: { tenant: typeof tenant; items: typeof cases; count: number }) => void;
+    listCases.mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
+    await act(async () => [...host.querySelectorAll("button")].find((b) => b.textContent === "重新读取列表")!.click());
+    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("unknown");
+    await act(async () => release({ tenant, items: cases, count: cases.length }));
+    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("私域商城/niushop:1/store-a");
+    const channel = host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')!;
+    await act(async () => { channel.value = "wechat-store"; channel.dispatchEvent(new Event("change", { bubbles: true })); });
+    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("wechat-store/wechat-store/store-c");
+    expect(host.querySelector('[aria-label="Run 受控命令"]')).toBeNull();
+  });
+  it("空Case仍发布正式店铺，重新读取403后顶部不保留旧租户数据", async () => {
+    setTenant(tenant);
+    const listCases = vi.fn().mockResolvedValue({ tenant, items: [], count: 0 });
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases, listRuns: vi.fn() };
+    await act(async () => root.render(<AnalystSelectionProvider active><HeaderSelectionProbe /><BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled={false} /></AnalystSelectionProvider>));
+    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("私域商城/niushop:1/store-a");
+    expect(host.textContent).toContain("当前没有可见分析记录"); expect(client.listRuns).not.toHaveBeenCalled();
+    listCases.mockRejectedValueOnce(new EcommerceInvestigationClientError("forbidden", 403, "FORBIDDEN"));
+    await act(async () => [...host.querySelectorAll("button")].find((b) => b.textContent === "重新读取列表")!.click());
+    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("unknown");
+    expect(host.querySelector('.business-investigation-state.is-forbidden')).not.toBeNull();
+  });
+  it("按正式商城选择而非列表首 Case 默认，空 Case 不伪造运行", async () => {
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: [cases[2], cases[1], cases[0]], count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()) };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
-    expect(host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')?.value).toBe("private-mall"); expect(host.querySelectorAll('[role="radio"]')).toHaveLength(2); expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-a"); expect(host.textContent).toContain("当前 Case 尚无 Run"); expect(host.textContent).toContain("写入口 0"); expect(host.textContent).not.toMatch(/创建 Case|开始分析|继续运行|请求补数|执行 Handoff/);
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')?.value).toBe("niushop:1");
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-a");
+    expect(host.textContent).toContain("栖月汇小程序店铺");
+    const emptyClient = { ...client, listCases: vi.fn().mockResolvedValue({ tenant, items: [], count: 0 }), listRuns: vi.fn() };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={emptyClient} />));
+    expect(host.textContent).toContain("栖月汇小程序店铺");
+    expect(host.textContent).toContain("当前没有可见分析记录");
+    expect(emptyClient.listRuns).not.toHaveBeenCalled();
+  });
+  it("来源无店铺、非商城或缺少方法时不默选首个 Case", async () => {
+    for (const selection of [null, { ...defaultSelection(), channelRef: null, businessEntityRef: null }, { ...defaultSelection(), channelRef: ref("ChannelRevision", "wechat-store") }]) {
+      const client: InvestigationReadClient = { ...(selection ? { getCaseSelection: vi.fn().mockResolvedValue(selection) } : {}), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn() };
+      await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
+      expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("");
+      expect(client.listRuns).not.toHaveBeenCalled();
+      expect(host.textContent).toContain("默认店铺待核对");
+    }
+  });
+  it("Case 列表和正式选择错租户时清空并失败关闭", async () => {
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue({ ...defaultSelection(), tenant: { orgId: "dev-org", projectId: "dev-project" } }), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn() };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
+    expect(host.textContent).toContain("分析记录读取失败");
+    expect(host.textContent).not.toContain("store-a");
+    expect(client.listRuns).not.toHaveBeenCalled();
+  });
+  it("展示 canonical 三级选择并保持 GET-only 边界", async () => {
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()), getRunView: vi.fn() };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')?.value).toBe("niushop:1"); expect(host.querySelectorAll('[role="radio"]')).toHaveLength(2); expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-a"); expect(host.textContent).toContain("当前 Case 尚无 Run"); expect(host.textContent).toContain("写入口 0"); expect(host.textContent).not.toMatch(/创建 Case|开始分析|继续运行|请求补数|执行 Handoff/);
+  });
+  it("手动选择后刷新保留该实体和 Case，不被默认店铺覆盖", async () => {
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()) };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
+    await act(async () => host.querySelectorAll<HTMLButtonElement>('[role="radio"]')[1]?.click());
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-b");
+    await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "重新读取列表")?.click());
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-b");
+    expect(client.listRuns).toHaveBeenLastCalledWith("case-b", expect.any(AbortSignal));
+  });
+  it("client 切换取消旧选择请求，晚到响应不得覆盖新选择", async () => {
+    let oldSelection!: (value: InvestigationCaseSelection) => void;
+    const pending = new Promise<InvestigationCaseSelection>((resolve) => { oldSelection = resolve; });
+    const oldClient: InvestigationReadClient = { getCaseSelection: vi.fn().mockReturnValue(pending), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn() };
+    const nextClient: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue({ ...defaultSelection(), businessEntityRef: ref("BusinessEntityRevision", "store-b"), entityChannelBindingRef: ref("BusinessEntityChannelBindingRevision", "niushop:1:store-b") }), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()) };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={oldClient} />));
+    const signal = vi.mocked(oldClient.getCaseSelection!).mock.calls[0]![0]!;
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={nextClient} />));
+    expect(signal.aborted).toBe(true);
+    await act(async () => oldSelection(defaultSelection()));
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-b");
+    expect(oldClient.listRuns).not.toHaveBeenCalled();
+  });
+  it("租户事件清空旧上下文并拒绝晚到 Run，不把 canary 标成栖月汇", async () => {
+    const original = { ...getTenant() }; const other = { orgId: "dev-org", projectId: "dev-project" };
+    let oldRun!: (value: InvestigationRunListResponse) => void;
+    const client: InvestigationReadClient = {
+      getCaseSelection: vi.fn().mockImplementation(async () => ({ ...defaultSelection(), tenant: { orgId: getTenant().orgId, projectId: getTenant().projectId } })),
+      listCases: vi.fn().mockImplementation(async () => getTenant().orgId === tenant.orgId ? { tenant, items: cases, count: 3 } : { tenant: other, items: [], count: 0 }),
+      listRuns: vi.fn().mockImplementation(() => new Promise<InvestigationRunListResponse>((resolve) => { oldRun = resolve; })), getRunView: vi.fn(),
+    };
+    try {
+      await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
+      await act(async () => setTenant(other));
+      await act(async () => oldRun({ tenant, items: [runView], count: 1 }));
+      expect(host.textContent).toContain("默认店铺待核对");
+      expect(host.textContent).not.toContain("栖月汇小程序店铺");
+      expect(host.textContent).not.toContain("私域首析");
+      expect(client.getRunView).not.toHaveBeenCalled();
+    } finally { await act(async () => setTenant(original)); }
   });
   it("经营实体 radio 使用 roving tabindex 与方向键原子切换", async () => {
-    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()), getRunView: vi.fn() };
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
     const radios = host.querySelectorAll<HTMLButtonElement>('[role="radio"]');
     expect(Array.from(radios, (item) => item.tabIndex)).toEqual([0, -1]);
@@ -38,14 +145,14 @@ describe("BusinessInvestigationTab", () => {
   });
   it("切换渠道时原子替换实体与 Case 并忽略晚到 Run", async () => {
     let resolveOld!: (value: InvestigationRunListResponse) => void; const oldRun = new Promise<InvestigationRunListResponse>((resolve) => { resolveOld = resolve; });
-    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockImplementation((caseId) => caseId === "case-a" ? oldRun : Promise.resolve(emptyRuns())), getRunView: vi.fn() };
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockImplementation((caseId) => caseId === "case-a" ? oldRun : Promise.resolve(emptyRuns())), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />)); const channel = host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')!;
     await act(async () => { channel.value = "wechat-store"; channel.dispatchEvent(new Event("change", { bubbles: true })); });
     expect(host.textContent).toContain("store-c"); expect(host.textContent).toContain("微信首析"); expect(host.textContent).not.toContain("store-a");
     await act(async () => resolveOld(emptyRuns())); expect(host.textContent).toContain("微信首析"); expect(host.textContent).not.toContain("私域首析");
   });
   it("区分空态、无权限和失败且不保留旧选择", async () => {
-    const emptyClient: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: [], count: 0 }), listRuns: vi.fn(), getRunView: vi.fn() };
+    const emptyClient: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: [], count: 0 }), listRuns: vi.fn(), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={emptyClient} />));
     expect(host.textContent).toContain("当前没有可见分析记录");
     expect(host.querySelector(".business-investigation-empty-casebar")).not.toBeNull();
@@ -55,12 +162,12 @@ describe("BusinessInvestigationTab", () => {
     expect(host.textContent).toContain("数据读取 0");
     expect(host.textContent).toContain("不注入演示经营事实");
     expect(host.textContent).toContain("不注入演示经营事实");
-    const forbidden: InvestigationReadClient = { listCases: vi.fn().mockRejectedValue(new EcommerceInvestigationClientError("forbidden", 403, "FORBIDDEN")), listRuns: vi.fn(), getRunView: vi.fn() };
+    const forbidden: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockRejectedValue(new EcommerceInvestigationClientError("forbidden", 403, "FORBIDDEN")), listRuns: vi.fn(), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={forbidden} />)); expect(host.textContent).toContain("无权读取生意探究"); expect(host.textContent).not.toContain("store-a");
   });
   it("展示服务端 Case 信封、三波进度与 Checkpoint，不在前端推演", async () => {
     const run = { authority: { schemaVersion: "aos.ecommerce.business-investigation-run/v1" as const, tenant, runId: "run-a", version: 1 as const, contentHash: hash, caseRef: ref("BusinessInvestigationCaseRevision", "case-a"), analysisType: "initial_store_analysis" as const, triggerKind: "manual" as const, triggerKey: "manual:run-a", lifecycle: "PREPARING" as const, control: "RUNNING" as const, createdBy: "user-1", createdAt: "2026-08-26T08:01:00Z" }, state: { schemaVersion: "aos.ecommerce.business-investigation-run-state/v1" as const, tenant, runId: "run-a", version: 1, priorRef: null, lifecycle: "PORTRAIT" as const, control: "RUNNING" as const, eventSequence: 1, contentHash: hash, pendingRequirementRef: null, uncertainCommand: null, createdBy: "user-1", createdAt: "2026-08-26T08:02:00Z" } };
-    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [run], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView()) };
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [run], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView()) };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
     expect(client.getRunView).toHaveBeenCalledWith("run-a", expect.any(AbortSignal)); expect(host.textContent).toContain("1/3 波完成"); expect(host.textContent).toContain("checkpoint-1 · #1"); expect(host.textContent).toContain("经营画像"); expect(host.textContent).toContain("问题与机会"); expect(host.textContent).toContain("方案设计"); expect(host.textContent).toContain("不代表真实业务方案已执行");
     expect(host.querySelector<HTMLDetailsElement>(".business-investigation-envelope")?.open).toBe(false); expect(host.querySelector(".business-investigation-envelope summary")?.textContent).toContain("Case / Run exact 信封");
@@ -69,7 +176,7 @@ describe("BusinessInvestigationTab", () => {
   it("只消费同一 pending DataRequirement 的 canonical readiness 与 blocker", async () => {
     const pendingRequirementRef = { ...ref("DataRequirementRevision", "requirement-1"), revision: 2 };
     const run = { authority: { schemaVersion: "aos.ecommerce.business-investigation-run/v1" as const, tenant, runId: "run-a", version: 1 as const, contentHash: hash, caseRef: ref("BusinessInvestigationCaseRevision", "case-a"), analysisType: "initial_store_analysis" as const, triggerKind: "manual" as const, triggerKey: "manual:run-a", lifecycle: "PREPARING" as const, control: "RUNNING" as const, createdBy: "user-1", createdAt: "2026-08-26T08:01:00Z" }, state: { schemaVersion: "aos.ecommerce.business-investigation-run-state/v1" as const, tenant, runId: "run-a", version: 1, priorRef: null, lifecycle: "WAITING_DATA" as const, control: "BLOCKED" as const, eventSequence: 1, contentHash: hash, pendingRequirementRef, uncertainCommand: null, createdBy: "user-1", createdAt: "2026-08-26T08:02:00Z" } };
-    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [run], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView(pendingRequirementRef)) };
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [run], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView(pendingRequirementRef)) };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} sourceReadinessSnapshot={sourceReadinessSnapshot()} />));
     expect(host.textContent).toContain("requirement-1 · r2"); expect(host.textContent).toContain("同一 requirement revision/hash"); expect(host.textContent).toContain("1/3"); expect(host.textContent).toContain("FACT_COVERAGE_PARTIAL"); expect(host.textContent).toContain("customer_segment");
     expect(Array.from(host.querySelectorAll("button"), (button) => button.textContent ?? "").join(" ")).not.toMatch(/忽略阻断继续|请求补数/);
@@ -87,14 +194,14 @@ describe("BusinessInvestigationTab", () => {
       { eventId: "run:run-a:v1", eventType: "run_created", title: "Run 建立", occurredAt: "2026-08-26T08:01:00Z", exactRef: ref("BusinessInvestigationRun", "run-a"), relatedRef: null },
       { eventId: "state:run-a:v1", eventType: "state_revision", title: "Run state revision", occurredAt: "2026-08-26T08:02:00Z", exactRef: ref("BusinessInvestigationRunStateRevision", "run-a"), relatedRef: null },
     ] };
-    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [run], count: 1 }), getRunView: vi.fn().mockResolvedValue(canonical) };
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [run], count: 1 }), getRunView: vi.fn().mockResolvedValue(canonical) };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
     expect(host.textContent).toContain("Evidence / Artifact / Timeline"); expect(host.textContent).toContain("evidence-exact-1"); expect(host.textContent).toContain("仅定位 refs · 非 exact"); expect(host.textContent).toContain("dossier-1 · r1"); expect(host.textContent).toContain("Run state revision"); expect(host.textContent).not.toContain("推理链");
   });
   it("只按同版 readiness 区分 stale/partial，并用 GET-only 重核", async () => {
     const pendingRequirementRef = { ...ref("DataRequirementRevision", "requirement-1"), revision: 2 };
     const stale = sourceReadinessSnapshot(); stale.reload = vi.fn(); stale.response = { ...stale.response!, status: "stale", investigation: { ...stale.response!.investigation!, status: "stale" } };
-    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView(pendingRequirementRef)) };
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView(pendingRequirementRef)) };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} sourceReadinessSnapshot={stale} />));
     expect(host.textContent).toContain("数据截止面已过期"); expect(host.textContent).toContain("不把旧数据冒充当前事实");
     await act(async () => host.querySelector<HTMLButtonElement>(".ecommerce-workshop-state-action button")?.click()); expect(stale.reload).toHaveBeenCalledOnce();
@@ -103,10 +210,10 @@ describe("BusinessInvestigationTab", () => {
     expect(host.textContent).toContain("当前仅有部分事实可用"); expect(host.textContent).toContain("未满足范围保持缺口"); expect(host.textContent).toContain("1/3");
   });
   it("Run 与 View 失败只重试原 GET，并清空旧层级", async () => {
-    const runClient: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(emptyRuns()), getRunView: vi.fn() };
+    const runClient: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(emptyRuns()), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={runClient} />)); expect(host.textContent).toContain("Run 读取失败"); expect(host.textContent).not.toContain("run-a ·");
     await act(async () => host.querySelectorAll<HTMLButtonElement>("button").forEach((button) => { if (button.textContent === "重新读取 Run") button.click(); })); expect(runClient.listRuns).toHaveBeenCalledTimes(2); expect(host.textContent).toContain("当前 Case 尚无 Run");
-    const viewClient: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(workbenchView()) };
+    const viewClient: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(workbenchView()) };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={viewClient} />)); expect(host.textContent).toContain("运行进度读取失败"); expect(host.textContent).not.toContain("1/3 波完成");
     await act(async () => host.querySelectorAll<HTMLButtonElement>("button").forEach((button) => { if (button.textContent === "重新读取运行进度") button.click(); })); expect(viewClient.getRunView).toHaveBeenCalledTimes(2); expect(host.textContent).toContain("1/3 波完成");
   });
@@ -114,7 +221,7 @@ describe("BusinessInvestigationTab", () => {
     const initial: InvestigationWorkbenchView = { ...workbenchView(), schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", drilldownVersion: "canonical-v4", commandProjection: { expectedStateVersion: 1, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
     const next: InvestigationWorkbenchView = { ...initial, stateRef: { ...initial.stateRef, revision: 2 }, control: "PAUSED", commandProjection: { expectedStateVersion: 2, allowedCommands: ["RESUME_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
     const executeRunCommand = vi.fn().mockResolvedValue({ commandId: "command-intent-1", command: "PAUSE_RUN", replayed: false, authority: { ...runView.state, version: 2, priorRef: ref("BusinessInvestigationRunStateRevision", "run-a"), eventSequence: 2, control: "PAUSED" }, view: next });
-    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand, requestMissingData: vi.fn(), confirmDataRequirement: vi.fn(), getStageReview: vi.fn().mockResolvedValue({ tenant, runRef: ref("BusinessInvestigationRun", "run-a"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-a", version: 2 }, items: [], externalEffectsAllowed: false }), reviewStage: vi.fn() };
+    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand, requestMissingData: vi.fn(), confirmDataRequirement: vi.fn(), getStageReview: vi.fn().mockResolvedValue({ tenant, runRef: ref("BusinessInvestigationRun", "run-a"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-a", version: 2 }, items: [], externalEffectsAllowed: false }), reviewStage: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled createCommandId={() => "command-intent-1"} />));
     expect(host.textContent).toContain("暂停 Run"); expect(host.textContent).toContain("取消 Run"); expect(host.textContent).not.toContain("继续 Run");
     await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "暂停 Run")?.click());
@@ -126,7 +233,7 @@ describe("BusinessInvestigationTab", () => {
     const initial: InvestigationWorkbenchView = { ...workbenchView(), schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", drilldownVersion: "canonical-v4", runtime: { ...workbenchView().runtime, taskRunStatus: "paused" }, commandProjection: { expectedStateVersion: 1, allowedCommands: ["CANCEL_RUN", "REQUEST_DATA"], externalEffectsAllowed: false } };
     const next: InvestigationWorkbenchView = { ...initial, stateRef: { ...initial.stateRef, revision: 2 }, lifecycle: "WAITING_DATA", pendingRequirementRef: requirementRef, commandProjection: { expectedStateVersion: 2, allowedCommands: ["CANCEL_RUN", "CONFIRM_DATA_REQUIREMENT"], externalEffectsAllowed: false } };
     const requestMissingData = vi.fn().mockResolvedValue({ commandId: "data-command-1", command: "REQUEST_DATA", response: { tenant, requirementRef, requirementStatus: "requested", runAuthority: { ...runView.state, version: 2, priorRef: ref("BusinessInvestigationRunStateRevision", "run-a"), lifecycle: "WAITING_DATA", eventSequence: 2, pendingRequirementRef: requirementRef }, dataReplayed: false, runReplayed: false, sourceReadPerformed: false, externalEffectAuthorized: false }, view: next });
-    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand: vi.fn(), requestMissingData, confirmDataRequirement: vi.fn(), getStageReview: vi.fn().mockResolvedValue({ tenant, runRef: ref("BusinessInvestigationRun", "run-a"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-a", version: 2 }, items: [], externalEffectsAllowed: false }), reviewStage: vi.fn() };
+    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand: vi.fn(), requestMissingData, confirmDataRequirement: vi.fn(), getStageReview: vi.fn().mockResolvedValue({ tenant, runRef: ref("BusinessInvestigationRun", "run-a"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-a", version: 2 }, items: [], externalEffectsAllowed: false }), reviewStage: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled createCommandId={() => "data-command-1"} />));
     const form = host.querySelector<HTMLFormElement>('[aria-label="创建补数需求"]')!;
     expect(form.textContent).toContain("Receipt-first"); expect(form.textContent).toContain("不读取源数据");
@@ -144,7 +251,7 @@ describe("BusinessInvestigationTab", () => {
     const resolvedIssue = { ...issue, status: "resolved" as const, version: 2, updatedAt: "2026-08-26T08:12:00Z" }; const resolvedProjection = { ...projection, items: [{ ...projection.items[0]!, issue: resolvedIssue, allowedDecisions: [] }] };
     const reviewStage = vi.fn().mockResolvedValue({ commandId: "review-command-1", response: { tenant, decision: "accept", issue: resolvedIssue, returnDecision: null, replayedOutcomePossible: true, externalEffectsAllowed: false }, projection: resolvedProjection });
     const initial: InvestigationWorkbenchView = { ...workbenchView(), schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", drilldownVersion: "canonical-v4", commandProjection: { expectedStateVersion: 1, allowedCommands: [], externalEffectsAllowed: false } };
-    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand: vi.fn(), requestMissingData: vi.fn(), confirmDataRequirement: vi.fn(), getStageReview: vi.fn().mockResolvedValue(projection), reviewStage };
+    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand: vi.fn(), requestMissingData: vi.fn(), confirmDataRequirement: vi.fn(), getStageReview: vi.fn().mockResolvedValue(projection), reviewStage };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled createCommandId={() => "review-command-1"} />));
     expect(host.textContent).toContain("canonical ReviewIssue · TaskRun task-run-a"); expect(host.textContent).toContain("eval-1 · r1"); expect(host.textContent).toContain("artifact-1 · r1"); expect(host.textContent).toContain("接受阶段产物"); expect(host.textContent).toContain("退回当前阶段"); expect(host.textContent).toContain("request_more");
     await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "接受阶段产物")?.click());
@@ -153,7 +260,7 @@ describe("BusinessInvestigationTab", () => {
   });
   it("阶段评审读取失败时显式失败关闭且不出现写入口", async () => {
     const initial: InvestigationWorkbenchView = { ...workbenchView(), schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", drilldownVersion: "canonical-v4", commandProjection: { expectedStateVersion: 1, allowedCommands: [], externalEffectsAllowed: false } };
-    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand: vi.fn(), requestMissingData: vi.fn(), confirmDataRequirement: vi.fn(), getStageReview: vi.fn().mockRejectedValue(new Error("offline")), reviewStage: vi.fn() };
+    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand: vi.fn(), requestMissingData: vi.fn(), confirmDataRequirement: vi.fn(), getStageReview: vi.fn().mockRejectedValue(new Error("offline")), reviewStage: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled />));
     expect(host.textContent).toContain("阶段评审读取失败"); expect(host.textContent).not.toContain("接受阶段产物"); expect(client.reviewStage).not.toHaveBeenCalled();
   });
@@ -161,7 +268,7 @@ describe("BusinessInvestigationTab", () => {
     const initial: InvestigationWorkbenchView = { ...workbenchView(), schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", drilldownVersion: "canonical-v4", commandProjection: { expectedStateVersion: 1, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
     const executeRunCommand = vi.fn().mockRejectedValue(new EcommerceInvestigationClientError("offline", 0, "COMMAND_OUTCOME_UNKNOWN"));
     const getRunView = vi.fn().mockResolvedValue(initial);
-    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView, executeRunCommand, requestMissingData: vi.fn(), confirmDataRequirement: vi.fn(), getStageReview: vi.fn().mockResolvedValue({ tenant, runRef: ref("BusinessInvestigationRun", "run-a"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-a", version: 2 }, items: [], externalEffectsAllowed: false }), reviewStage: vi.fn() };
+    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView, executeRunCommand, requestMissingData: vi.fn(), confirmDataRequirement: vi.fn(), getStageReview: vi.fn().mockResolvedValue({ tenant, runRef: ref("BusinessInvestigationRun", "run-a"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-a", version: 2 }, items: [], externalEffectsAllowed: false }), reviewStage: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled createCommandId={() => "command-unknown-1"} />));
     await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "暂停 Run")?.click());
     expect(host.textContent).toContain("命令结果未知"); expect(host.textContent).not.toContain("暂停 Run");
@@ -170,7 +277,7 @@ describe("BusinessInvestigationTab", () => {
   });
   it("Handoff 只提交批准方案 exact ref，并展示服务端编译阻断", async () => {
     const rawHash = "a".repeat(64); const compileHandoff = vi.fn().mockResolvedValue({ schemaVersion: "aos.ecommerce.business-investigation-handoff-compile/v1", tenant, runRef: { ...ref("BusinessInvestigationRun", "run-a"), contentHash: rawHash }, approvedPlanRef: { resourceType: "GrowthPlanRevision", resourceId: "growth-plan-1", revision: 2, contentHash: rawHash }, compilationReceiptRef: { ...ref("BusinessInvestigationCompilationReceipt", "compile-1"), contentHash: rawHash }, artifactRefs: ["BusinessDossierRevision", "ProblemMapRevision", "OpportunityMapRevision", "SolutionPortfolioRevision"].map((resourceType, index) => ({ resourceType, resourceId: `artifact-${index + 1}`, revision: 1, contentHash: rawHash })), handoff: { schemaVersion: "aos.ecommerce-workshop.module-handoff-compile/v1", tenant, runId: "run-a", taskId: "task-a", evaluatedAt: "2026-08-27T08:00:00Z", responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: "responsibility-1", revision: 1, contentHash: rawHash }, sourceModuleId: "ecommerce.analyst", targetModuleId: "ecommerce.task-cockpit", sourceSlotId: "slot-diagnosis", targetSlotId: "slot-cockpit", readiness: "blocked", blockers: [{ code: "TARGET_INSTANCE_NOT_READY", dependency: "slot-cockpit", requiredAction: "重新核验目标职责绑定" }], issueCommand: null, sideEffects: { handoffsIssued: 0, tokensMinted: 0, decisionsCreated: 0, agentRunsStarted: 0 } } });
-    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView()), compileHandoff };
+    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView()), compileHandoff };
     const handoffClient = { issueHandoff: vi.fn(), consumeHandoff: vi.fn(), listHandoffDecisions: vi.fn(), createHandoffDecision: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} handoffClient={handoffClient} commandsEnabled createCommandId={() => "handoff-command-1"} />));
     const setInput = async (label: string, value: string) => { const input = host.querySelector<HTMLInputElement>(`[aria-label="${label}"]`)!; await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); }); };
@@ -181,7 +288,7 @@ describe("BusinessInvestigationTab", () => {
   });
   it("Handoff 编译失败后不显示签发、接收或假成功入口", async () => {
     const rawHash = "a".repeat(64); const compileHandoff = vi.fn().mockRejectedValue(new EcommerceInvestigationClientError("offline", 0, "COMMAND_OUTCOME_UNKNOWN"));
-    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView()), compileHandoff };
+    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView()), compileHandoff };
     const handoffClient = { issueHandoff: vi.fn(), consumeHandoff: vi.fn(), listHandoffDecisions: vi.fn(), createHandoffDecision: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} handoffClient={handoffClient} commandsEnabled createCommandId={() => "handoff-unknown"} />));
     const setInput = async (label: string, value: string) => { const input = host.querySelector<HTMLInputElement>(`[aria-label="${label}"]`)!; await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); }); };

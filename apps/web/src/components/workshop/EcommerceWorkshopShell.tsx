@@ -5,6 +5,7 @@ import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { CapabilityBlocker } from "./CapabilityBlocker";
 import { SourceReadinessProvider } from "./SourceReadinessContext";
 import { SourceReadinessPanel } from "./SourceReadinessPanel";
+import { useAnalystSelection } from "./AnalystSelectionContext";
 
 export const WORKSHOP_FOCUS_EVENT = "aos-workshop-focus-mode";
 
@@ -37,6 +38,7 @@ export function EcommerceWorkshopShell({
   children?: ReactNode;
 }) {
   const [focusMode, setFocusMode] = useState(false);
+  const analystSelection = useAnalystSelection();
   const focusButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -78,9 +80,9 @@ export function EcommerceWorkshopShell({
       </a>
       <header className="ecommerce-workshop-context-header">
         {analystVisualContext ? <div className="analyst-exact-context-strip">
-          <span className="is-blue">渠道未选择 · 数据截止未验证</span>
+          <span className="is-blue">{analystSelection ? `${analystSelection.channelLabel} · 选店来源截止 ${analystSelection.sourceCutoffAt ?? "待核对"}` : "渠道未选择 · 数据截止未验证"}</span>
           <span className="is-purple">经营参谋（负责人未绑定）</span>
-          <span className="is-gray">数据截止未验证 · 新鲜度待核对</span>
+          <span className="is-gray">经营数据截止待核对 · 新鲜度待核对</span>
           <i aria-hidden="true" />
           <span className="is-red">业务操作：只读</span>
           <button ref={focusButton} type="button" className="is-yellow" aria-pressed={focusMode} onClick={toggleFocus}>{focusMode ? "退出专注" : "专注模式"}</button>

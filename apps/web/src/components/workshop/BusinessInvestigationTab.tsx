@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePublishAnalystSelection, type AnalystSelection } from "./AnalystSelectionContext";
 
 import {
   EcommerceInvestigationClientError,
   ecommerceInvestigationClient,
   type InvestigationCaseRevision,
+  type InvestigationCaseSelection,
   type InvestigationCommandClient,
   type InvestigationControlCommand,
   type InvestigationHandoffCompileResponse,
@@ -16,6 +18,7 @@ import {
   type InvestigationWorkbenchView,
 } from "../../api/ecommerceInvestigation";
 import { aipAgentControl, type IssuedHandoff } from "../../api/aipAgentControl";
+import { getTenant } from "../../api/tenant";
 import type { SourceReadinessExactRef } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { BUSINESS_INVESTIGATION_COMMAND_FLAG, BUSINESS_INVESTIGATION_READ_FLAG, isBusinessInvestigationCommandEnabled, resolveBusinessInvestigationFeatureFlags } from "./businessInvestigationFeatureFlags";
@@ -59,6 +62,13 @@ function entityChoices(cases: InvestigationCaseRevision[], channelId: string): E
   }
   return result;
 }
+function defaultShop(selection: InvestigationCaseSelection | null, tenant: InvestigationTenant | null): EntityChoice | null {
+  if (!selection || tenant?.orgId !== "org-org" || tenant.projectId !== "dev-project"
+    || !selection.channelRef || !/^niushop:[^\s]+$/.test(selection.channelRef.resourceId)
+    || !selection.businessEntityRef || !selection.entityChannelBindingRef) return null;
+  const channelId = selection.channelRef.resourceId; const entityId = selection.businessEntityRef.resourceId;
+  return { channelId, entityId, key: entityKey(channelId, entityId) };
+}
 function casesForEntity(cases: InvestigationCaseRevision[], selectedEntityKey: string): InvestigationCaseRevision[] {
   return cases.filter((item) => entityKey(item.channelRef.resourceId, item.businessEntityRef.resourceId) === selectedEntityKey);
 }
@@ -83,52 +93,105 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
   const [runReloadRevision, setRunReloadRevision] = useState(0); const [viewReloadRevision, setViewReloadRevision] = useState(0);
   const contextReadinessSnapshot = useSourceReadinessSnapshot(); const readinessSnapshot = sourceReadinessSnapshot ?? contextReadinessSnapshot;
   const caseRequest = useRef(0); const runRequest = useRef(0); const viewRequest = useRef(0); const reviewRequest = useRef(0);
-  const channels = useMemo(() => Array.from(new Set(cases.map((item) => item.channelRef.resourceId))), [cases]);
-  const entities = useMemo(() => entityChoices(cases, selectedChannelId), [cases, selectedChannelId]);
+  const [canonicalSelection, setCanonicalSelection] = useState<InvestigationCaseSelection | null>(null);
+  const [contextRevision, setContextRevision] = useState(0);
+  const caseController = useRef<AbortController | null>(null);
+  const loadedClient = useRef<InvestigationTabClient | null>(null);
+  const manualSelection = useRef<{ channelId: string; key: string; caseId: string } | null>(null);
+  const defaultEntity = defaultShop(canonicalSelection, tenant);
+  const channels = Array.from(new Set([...(defaultEntity ? [defaultEntity.channelId] : []), ...cases.map((item) => item.channelRef.resourceId)]));
+  const entities = entityChoices(cases, selectedChannelId);
+  if (defaultEntity?.channelId === selectedChannelId && !entities.some((item) => item.key === defaultEntity.key)) entities.unshift(defaultEntity);
   const visibleCases = useMemo(() => casesForEntity(cases, selectedEntityKey), [cases, selectedEntityKey]);
   const selectedCase = visibleCases.find((item) => item.caseId === selectedCaseId) ?? null;
+  const displayEntityId = entities.find((item) => item.key === selectedEntityKey)?.entityId ?? "";
+  const defaultChannelId = defaultEntity?.channelId;
+  const defaultEntityKey = defaultEntity?.key;
+  const selectionCutoff = canonicalSelection?.sourceReadinessCutoffAt ?? null;
+  // Memoize primitives: publishing must not recreate a value on every Context render.
+  const headerSelection = useMemo<AnalystSelection | null>(() => {
+    if (loadedClient.current !== client || (phase !== "ready" && phase !== "empty")
+      || !tenant || !selectedChannelId || !displayEntityId) return null;
+    return {
+      tenant: { orgId: tenant.orgId, projectId: tenant.projectId },
+      channelId: selectedChannelId,
+      entityId: displayEntityId,
+      channelLabel: selectedChannelId === defaultChannelId ? "私域商城" : selectedChannelId,
+      sourceCutoffAt: selectedChannelId === defaultChannelId && selectedEntityKey === defaultEntityKey ? selectionCutoff : null,
+    };
+  }, [client, phase, tenant?.orgId, tenant?.projectId, selectedChannelId, displayEntityId,
+      defaultChannelId, selectedEntityKey, defaultEntityKey, selectionCutoff, contextRevision]);
+  usePublishAnalystSelection(headerSelection, client);
 
   const resetHandoff = () => { setHandoffPhase("idle"); setHandoffFailure(""); setHandoffCompiled(null); setHandoffIssued(null); setHandoffToken(null); };
 
   const clearView = () => { viewRequest.current += 1; reviewRequest.current += 1; setWorkbenchView(null); setStageReview(null); setReviewPhase("idle"); setViewPhase("idle"); setCommandPhase("idle"); setCommandMessage(""); resetHandoff(); };
   const clearRuns = () => { runRequest.current += 1; setRuns([]); setSelectedRunId(""); setRunPhase("idle"); clearView(); };
-  const selectFromCases = (nextCases: InvestigationCaseRevision[]) => {
-    const channelId = nextCases[0]?.channelRef.resourceId ?? ""; const nextEntities = entityChoices(nextCases, channelId); const nextEntityKey = nextEntities[0]?.key ?? ""; const nextCasesForEntity = casesForEntity(nextCases, nextEntityKey);
-    setSelectedChannelId(channelId); setSelectedEntityKey(nextEntityKey); setSelectedCaseId(nextCasesForEntity[0]?.caseId ?? ""); clearRuns();
-  };
   const loadCases = () => {
-    const requestId = ++caseRequest.current; setPhase("loading"); setTenant(null); setCases([]); setSelectedChannelId(""); setSelectedEntityKey(""); setSelectedCaseId(""); clearRuns();
-    void client.listCases().then((response) => { if (requestId !== caseRequest.current) return; setTenant(response.tenant); setCases(response.items); selectFromCases(response.items); setPhase(response.items.length ? "ready" : "empty"); }, (error: unknown) => { if (requestId !== caseRequest.current || (error instanceof DOMException && error.name === "AbortError")) return; setPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
+    const requestId = ++caseRequest.current; loadedClient.current = null; caseController.current?.abort();
+    const controller = new AbortController(); caseController.current = controller;
+    const requestedTenant = { ...getTenant() }; const previousManual = manualSelection.current;
+    setPhase("loading"); setTenant(null); setCases([]); setCanonicalSelection(null);
+    setSelectedChannelId(""); setSelectedEntityKey(""); setSelectedCaseId(""); clearRuns();
+    const current = () => requestId === caseRequest.current && !controller.signal.aborted
+      && requestedTenant.orgId === getTenant().orgId && requestedTenant.projectId === getTenant().projectId;
+    void Promise.all([client.listCases(controller.signal), client.getCaseSelection?.(controller.signal) ?? Promise.resolve(null)]).then(([response, selection]) => {
+      if (!current()) return;
+      if (response.tenant.orgId !== requestedTenant.orgId || response.tenant.projectId !== requestedTenant.projectId
+        || (selection && (selection.tenant.orgId !== response.tenant.orgId || selection.tenant.projectId !== response.tenant.projectId))) throw new TypeError("默认店铺 tenant 漂移");
+      const shop = defaultShop(selection, response.tenant);
+      const manualExists = previousManual && (response.items.some((item) => entityKey(item.channelRef.resourceId, item.businessEntityRef.resourceId) === previousManual.key) || previousManual.key === shop?.key);
+      const chosen = manualExists ? previousManual : shop;
+      const nextCases = chosen ? casesForEntity(response.items, chosen.key) : [];
+      loadedClient.current = client; setTenant(response.tenant); setCases(response.items); setCanonicalSelection(selection);
+      setSelectedChannelId(chosen?.channelId ?? ""); setSelectedEntityKey(chosen?.key ?? "");
+      setSelectedCaseId((manualExists && nextCases.find((item) => item.caseId === previousManual.caseId)?.caseId) || nextCases[0]?.caseId || "");
+      if (!manualExists) manualSelection.current = null;
+      setPhase(response.items.length ? "ready" : "empty");
+    }).catch((error: unknown) => {
+      if (!current() || (error instanceof DOMException && error.name === "AbortError")) return;
+      setPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed");
+    });
   };
 
-  useEffect(() => { loadCases(); return () => { caseRequest.current += 1; runRequest.current += 1; viewRequest.current += 1; reviewRequest.current += 1; }; }, [client]);
+  useEffect(() => { loadCases(); return () => { caseController.current?.abort(); caseRequest.current += 1; runRequest.current += 1; viewRequest.current += 1; reviewRequest.current += 1; manualSelection.current = null; }; }, [client, contextRevision]);
   useEffect(() => {
-    if (!selectedCaseId) { setRuns([]); setSelectedRunId(""); setRunPhase("idle"); return; }
+    const changed = () => {
+      caseController.current?.abort(); caseRequest.current += 1; loadedClient.current = null; manualSelection.current = null;
+      setPhase("loading"); setTenant(null); setCases([]); setCanonicalSelection(null);
+      setSelectedChannelId(""); setSelectedEntityKey(""); setSelectedCaseId(""); clearRuns();
+      setContextRevision((value) => value + 1);
+    };
+    window.addEventListener("aos-tenant-updated", changed); window.addEventListener("aos-auth-updated", changed);
+    return () => { window.removeEventListener("aos-tenant-updated", changed); window.removeEventListener("aos-auth-updated", changed); };
+  }, []);
+  useEffect(() => {
+    if (loadedClient.current !== client || phase !== "ready" || !selectedCaseId) { setRuns([]); setSelectedRunId(""); setRunPhase("idle"); return; }
     const requestId = ++runRequest.current; const controller = new AbortController(); setRuns([]); setSelectedRunId(""); setRunPhase("loading");
     void client.listRuns(selectedCaseId, controller.signal).then((response) => { if (requestId !== runRequest.current) return; if (tenant && (tenant.orgId !== response.tenant.orgId || tenant.projectId !== response.tenant.projectId)) { setRunPhase("failed"); return; } setRuns(response.items); setSelectedRunId(response.items[0]?.authority.runId ?? ""); setRunPhase(response.items.length ? "ready" : "empty"); }, (error: unknown) => { if (requestId !== runRequest.current || (error instanceof DOMException && error.name === "AbortError")) return; setRunPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
     return () => controller.abort();
-  }, [client, selectedCaseId, tenant, runReloadRevision]);
+  }, [client, phase, selectedCaseId, tenant, runReloadRevision]);
   useEffect(() => {
-    if (!selectedRunId) { clearView(); return; }
+    if (loadedClient.current !== client || phase !== "ready" || !selectedRunId) { clearView(); return; }
     if (!client.getRunView) { setWorkbenchView(null); setViewPhase("failed"); return; }
     const requestId = ++viewRequest.current; const controller = new AbortController(); setWorkbenchView(null); setViewPhase("loading");
     void client.getRunView(selectedRunId, controller.signal).then((response) => { if (requestId !== viewRequest.current) return; if (tenant && (tenant.orgId !== response.tenant.orgId || tenant.projectId !== response.tenant.projectId)) { setViewPhase("failed"); return; } setWorkbenchView(response); setViewPhase("ready"); }, (error: unknown) => { if (requestId !== viewRequest.current || (error instanceof DOMException && error.name === "AbortError")) return; setViewPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
     return () => controller.abort();
-  }, [client, selectedRunId, tenant, viewReloadRevision]);
+  }, [client, phase, selectedRunId, tenant, viewReloadRevision]);
   useEffect(() => {
     const slotId = workbenchView?.currentWorkspace.responsibilitySlotIds[0] ?? "";
     if (slotId) setHandoffSourceSlot(slotId);
   }, [workbenchView]);
   useEffect(() => {
-    if (!selectedRunId || !client.getStageReview) { setStageReview(null); setReviewPhase("idle"); return; }
+    if (loadedClient.current !== client || phase !== "ready" || !selectedRunId || !client.getStageReview) { setStageReview(null); setReviewPhase("idle"); return; }
     const requestId = ++reviewRequest.current; const controller = new AbortController(); setStageReview(null); setReviewPhase("loading");
     void client.getStageReview(selectedRunId, controller.signal).then((response) => { if (requestId !== reviewRequest.current) return; if (tenant && (tenant.orgId !== response.tenant.orgId || tenant.projectId !== response.tenant.projectId)) { setStageReview(null); setReviewPhase("failed"); return; } setStageReview(response); setReviewPhase("ready"); }, (error: unknown) => { if (requestId !== reviewRequest.current || (error instanceof DOMException && error.name === "AbortError")) return; setStageReview(null); setReviewPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
     return () => controller.abort();
-  }, [client, selectedRunId, tenant, viewReloadRevision]);
+  }, [client, phase, selectedRunId, tenant, viewReloadRevision]);
 
-  const onChannelChange = (channelId: string) => { const nextEntities = entityChoices(cases, channelId); const nextEntityKey = nextEntities[0]?.key ?? ""; const nextCases = casesForEntity(cases, nextEntityKey); setSelectedChannelId(channelId); setSelectedEntityKey(nextEntityKey); setSelectedCaseId(nextCases[0]?.caseId ?? ""); clearRuns(); };
-  const onEntityChange = (key: string) => { const nextCases = casesForEntity(cases, key); setSelectedEntityKey(key); setSelectedCaseId(nextCases[0]?.caseId ?? ""); clearRuns(); };
-  const onCaseChange = (caseId: string) => { setSelectedCaseId(caseId); clearRuns(); };
+  const onChannelChange = (channelId: string) => { const nextEntities = entityChoices(cases, channelId); const nextEntityKey = nextEntities[0]?.key ?? ""; const nextCases = casesForEntity(cases, nextEntityKey); manualSelection.current = { channelId, key: nextEntityKey, caseId: nextCases[0]?.caseId ?? "" }; setSelectedChannelId(channelId); setSelectedEntityKey(nextEntityKey); setSelectedCaseId(nextCases[0]?.caseId ?? ""); clearRuns(); };
+  const onEntityChange = (key: string) => { const nextCases = casesForEntity(cases, key); manualSelection.current = { channelId: selectedChannelId, key, caseId: nextCases[0]?.caseId ?? "" }; setSelectedEntityKey(key); setSelectedCaseId(nextCases[0]?.caseId ?? ""); clearRuns(); };
+  const onCaseChange = (caseId: string) => { manualSelection.current = { channelId: selectedChannelId, key: selectedEntityKey, caseId }; setSelectedCaseId(caseId); clearRuns(); };
   const canonicalDataState = useMemo<AsyncState>(() => {
     if (!workbenchView || !readinessSnapshot || readinessSnapshot.phase !== "ready" || !readinessSnapshot.response) return "ready";
     const investigation = readinessSnapshot.response.investigation;
@@ -200,19 +263,19 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
       </aside>
 
       {phase === "loading" ? <div className="business-investigation-state is-loading" role="status"><strong>正在读取分析记录…</strong><p>等待当前租户的正式分析记录。</p><span className="business-investigation-skeleton" aria-hidden="true" /></div> : null}
-      {phase === "empty" ? <div className="business-investigation-empty-scaffold">
+      {phase === "empty" || (phase === "ready" && !selectedCase) ? <div className="business-investigation-empty-scaffold">
         <section className="business-investigation-empty-casebar" aria-label="当前生意探究案例为空">
           <div className="business-investigation-empty-case-main">
             <span className="business-investigation-empty-kicker">经营分析记录</span>
             <div className="business-investigation-empty-title"><strong>当前没有可见分析记录</strong><span>可信空</span><span>只读</span></div>
-            <div className="business-investigation-empty-target"><b>经营实体</b><span>未选择经营实体</span><small>等待正式分析记录</small></div>
+            <div className="business-investigation-empty-target"><b>经营实体</b><span>{defaultEntity && selectedEntityKey === defaultEntity.key ? "栖月汇小程序店铺" : selectedEntityKey ? entities.find((item) => item.key === selectedEntityKey)?.entityId : "未选择经营实体"}</span><small>{defaultEntity && selectedEntityKey === defaultEntity.key ? `私域商城 · ${defaultEntity.entityId}` : "等待正式分析记录"}</small></div>
             <div className="business-investigation-empty-meta"><span>分析类型：待核对</span><span>范围：当前租户 / 只读</span><span>负责人：未绑定</span><span>周期计划：尚未建立</span></div>
           </div>
           <div className="business-investigation-empty-actions"><button type="button" onClick={loadCases}>重新读取列表</button></div>
         </section>
         <aside className="business-investigation-empty-demo-boundary" aria-label="可信空展示边界">
           <strong>可信空边界</strong>
-          <span>当前租户没有正式分析记录；页面仅呈现可信空工作区，不注入演示经营事实。</span>
+          <span>当前选择下没有正式分析记录；页面仅呈现可信空工作区，不注入演示经营事实。</span>
         </aside>
         <section className="business-investigation-empty-stagebar" aria-label="生意探究三个业务阶段">
           {["经营画像", "问题与机会", "方案设计"].map((label, index) => <article key={label}><span>{index + 1}</span><div><strong>{label}</strong><small>待进入 · 需要正式分析记录</small></div></article>)}
@@ -225,8 +288,10 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
       {phase === "forbidden" ? <div className="business-investigation-state is-forbidden" role="alert"><strong>无权读取生意探究</strong><p>未泄露其他租户的渠道、实体或分析记录。</p></div> : null}
       {phase === "failed" ? <div className="business-investigation-state is-failed" role="alert"><strong>分析记录读取失败</strong><p>页面已失败关闭，未保留旧选择。</p><button type="button" onClick={loadCases}>重新读取</button></div> : null}
 
+      {phase === "ready" ? <button type="button" onClick={loadCases}>重新读取列表</button> : null}
+      {(phase === "ready" || phase === "empty") && !defaultEntity ? <p role="status">默认店铺待核对；未自动选择其他店铺，可手动查看已有分析记录。</p> : null}
       {phase === "ready" ? <div className="business-investigation-selector" aria-label="生意探究三级选择">
-        <label><span>1 · 渠道视角</span><select aria-label="渠道视角" value={selectedChannelId} onChange={(event) => onChannelChange(event.currentTarget.value)}>{channels.map((channelId) => <option key={channelId} value={channelId}>{channelId}</option>)}</select><small>来自 Case 的 exact ChannelRevision，不推测渠道名称。</small></label>
+        <label><span>1 · 渠道视角</span><select aria-label="渠道视角" value={selectedChannelId} onChange={(event) => onChannelChange(event.currentTarget.value)}><option value="" disabled>请选择渠道</option>{channels.map((channelId) => <option key={channelId} value={channelId}>{channelId === defaultEntity?.channelId ? "私域商城" : channelId}</option>)}</select><small>来自正式选择或 Case 的 exact ChannelRevision。</small></label>
         <fieldset><legend>2 · 经营实体</legend><div className="business-investigation-entities">{entities.map((entity, index) => <button type="button" role="radio" aria-checked={selectedEntityKey === entity.key} tabIndex={selectedEntityKey === entity.key ? 0 : -1} className={selectedEntityKey === entity.key ? "is-selected" : ""} key={entity.key} onClick={() => onEntityChange(entity.key)} onKeyDown={(event) => {
           if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
           event.preventDefault();
@@ -235,8 +300,8 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
           if (!next) return;
           onEntityChange(next.key);
           event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[nextIndex]?.focus();
-        }}><strong>{entity.entityId}</strong><span>{entity.channelId}</span></button>)}</div><small>同名实体按渠道隔离；上游切换后旧实体内容立即清空。</small></fieldset>
-        <label><span>3 · 分析记录</span><select aria-label="分析记录" value={selectedCaseId} onChange={(event) => onCaseChange(event.currentTarget.value)}>{visibleCases.map((item) => <option key={item.caseId} value={item.caseId}>{item.title} · {ANALYSIS_LABELS[item.analysisType]}</option>)}</select><small>Case revision、生命周期和运行记录均来自 canonical authority。</small></label>
+        }}><strong>{entity.key === defaultEntity?.key ? "栖月汇小程序店铺" : entity.entityId}</strong><span>{entity.channelId}</span></button>)}</div><small>同名实体按渠道隔离；上游切换后旧实体内容立即清空。</small></fieldset>
+        <label><span>3 · 分析记录</span><select aria-label="分析记录" value={selectedCaseId} onChange={(event) => onCaseChange(event.currentTarget.value)}><option value="" disabled>当前没有可见分析记录</option>{visibleCases.map((item) => <option key={item.caseId} value={item.caseId}>{item.title} · {ANALYSIS_LABELS[item.analysisType]}</option>)}</select><small>Case revision、生命周期和运行记录均来自 canonical authority。</small></label>
       </div> : null}
 
       {phase === "ready" && selectedCase ? <section className="business-investigation-current" aria-label="当前分析记录">
