@@ -9,6 +9,7 @@ from test_supervisor import pytestmark, CONTEXT
 from aos_api.extension_runtime.contracts import RegistrationDescription
 from aos_api.extension_runtime.oci_driver import OciDriver
 from aos_api.extension_runtime.supervisor import ResourceIdentity
+from owned_fixture_resources import current_scope
 
 
 def build_session_image(tmp_path):
@@ -33,7 +34,9 @@ def build_session_image(tmp_path):
     (tmp_path/"runtime.json").write_text(json.dumps({"entrypoint":"backend/example/__init__.py:register","pythonPackage":"example"}))
     (tmp_path/"runner.py").write_text("from aos_extension_sdk.runner import main\nmain()\n")
     (tmp_path/"Dockerfile").write_text("FROM python:3.11-alpine\nCOPY aos_extension_sdk /usr/local/lib/python3.11/site-packages/aos_extension_sdk\nCOPY bundle /aos/bundle\nCOPY runtime.json runner.py /aos/\n")
-    digest=subprocess.check_output(["docker","--context",CONTEXT,"build","--network=none","--pull=false","-q",str(tmp_path)],text=True,timeout=60).strip()
+    scope=current_scope(CONTEXT)
+    digest=(scope.build(tmp_path) if scope is not None else
+        subprocess.check_output(["docker","--context",CONTEXT,"build","--network=none","--pull=false","-q",str(tmp_path)],text=True,timeout=60).strip())
     return digest,claims
 
 

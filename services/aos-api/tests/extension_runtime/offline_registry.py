@@ -9,6 +9,7 @@ import tarfile
 import time
 import urllib.request
 import uuid
+from owned_fixture_resources import current_scope
 
 
 def cleanup(docker,name,ref,helper):
@@ -34,6 +35,8 @@ def cleanup(docker,name,ref,helper):
 
 @contextmanager
 def cached_registry_image(directory, image_id, context):
+    scope=current_scope(context)
+    if scope is not None:scope.require_image(image_id)
     directory.mkdir()
     docker=['docker','--context',context]
     # The user's global Docker config may point at a credential helper owned by
@@ -67,13 +70,18 @@ def cached_registry_image(directory, image_id, context):
     digest='sha256:'+hashlib.sha256(raw).hexdigest()
     shutil.copyfile(Path(__file__).with_name('static_registry_server.py'),directory/'server.py')
     (directory/'Dockerfile').write_text('FROM python:3.11-alpine\nCOPY fixture /fixture\nCOPY server.py /server.py\nUSER 65534:65534\nCMD ["python","/server.py"]\n')
-    helper=subprocess.check_output([*docker,'build','--network=none','--pull=false','-q',str(directory)],text=True,timeout=60).strip()
+    helper=(scope.build(directory) if scope is not None else
+        subprocess.check_output([*docker,'build','--network=none','--pull=false','-q',str(directory)],text=True,timeout=60).strip())
     name='ar1-registry-'+uuid.uuid4().hex
     ref='127.0.0.1:18433/aos-test@'+digest
+    body_error=None
     try:
-        subprocess.run([*docker,'run','-d','--name',name,'--read-only','--cap-drop=ALL',
-            '--security-opt=no-new-privileges','--memory=256m','--pids-limit=32',
-            '-p','127.0.0.1:18433:5000',helper],check=True,capture_output=True,timeout=15)
+        if scope is not None:
+            scope.create_registry(name,helper)
+        else:
+            subprocess.run([*docker,'run','-d','--name',name,'--read-only','--cap-drop=ALL',
+                '--security-opt=no-new-privileges','--memory=256m','--pids-limit=32',
+                '-p','127.0.0.1:18433:5000',helper],check=True,capture_output=True,timeout=15)
         end=time.monotonic()+10
         while True:
             try:
@@ -84,10 +92,16 @@ def cached_registry_image(directory, image_id, context):
                 if time.monotonic()>end:raise
                 time.sleep(.1)
         try:
+            if scope is not None:scope.before_pull(ref,image_id)
             subprocess.run([*pull_docker,'pull',ref],check=True,capture_output=True,timeout=60)
+            if scope is not None:scope.after_pull(ref,image_id)
         except subprocess.TimeoutExpired as exc:
             logs=subprocess.run([*docker,'logs',name],capture_output=True,text=True,timeout=15)
             raise RuntimeError('offline registry pull timed out; requests:\n'+logs.stderr[-8000:]) from exc
         yield digest,config['digest']
+    except BaseException as exc:
+        body_error=exc
+        raise
     finally:
-        cleanup(docker,name,ref,helper)
+        if scope is None:cleanup(docker,name,ref,helper)
+        else:scope.cleanup_registry(name,ref,helper,error=body_error)
