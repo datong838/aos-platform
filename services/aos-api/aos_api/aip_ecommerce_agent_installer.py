@@ -29,7 +29,7 @@ from aos_api.aip_agent_registry_store import (
 )
 from aos_api.aip_capability_registry import AipCapabilityRegistry
 from aos_api.aip_capability_binding_service import AipCapabilityBindingService
-from aos_api.aip_contracts import TenantContext
+from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.aip_solution_pack_publisher import (
     AIP_DEFINITION_SOURCE_VERSION,
@@ -39,6 +39,7 @@ from aos_api.aip_solution_pack_publisher import (
     LOGIC_IDS,
     SOLUTION_PACK_ID,
     SOLUTION_PACK_VERSION,
+    _exact_definition_version,
 )
 from aos_api.auth import Principal
 from aos_api.tenant_scope import TenantScope
@@ -193,7 +194,11 @@ class AipEcommerceAgentInstaller:
         capabilities: AipCapabilityRegistry | None = None,
         capability_bindings: AipCapabilityBindingService | None = None,
         clock=None,
+        source_revision: str | None = None,
     ) -> None:
+        self._source_revision = (
+            _exact_definition_version(source_revision) if source_revision is not None else None
+        )
         self._agents = agents or AipAgentRegistryStore()
         self._skills = skills or AipSkillRegistry()
         self._capabilities = capabilities or AipCapabilityRegistry()
@@ -209,16 +214,33 @@ class AipEcommerceAgentInstaller:
         return TenantContext(org_id=principal.org_id, project_id=principal.project_id)
 
     def _definitions(self, principal: Principal):
-        current_templates, current_skills, current_capabilities = self._source_definitions(
-            CURRENT_SIGNED_CANDIDATE_VERSION,
-        )
-        if current_templates or current_skills or current_capabilities:
-            if (len(current_templates), len(current_skills), len(current_capabilities)) != (6, 37, 10):
-                raise AipEcommerceCatalogInvalid("current ecommerce definition source is incomplete")
-            templates, skills, capabilities = current_templates, current_skills, current_capabilities
-        else:
-            templates, skills, capabilities = self._source_definitions(AIP_DEFINITION_SOURCE_VERSION)
         expected_skill_ids = {f"ecommerce.skill.{logic_id}" for logic_id in LOGIC_IDS}
+        if self._source_revision is not None:
+            templates, skills, capabilities = self._source_definitions(self._source_revision)
+            expected_source = ResourceRef(resource_type="SolutionPack",
+                resource_id=SOLUTION_PACK_ID, revision=self._source_revision, authority="asset-registry")
+            for rows, identifier, allowed in (
+                (templates, "template_id", set(AGENT_LOGIC_COUNTS)),
+                (skills, "skill_id", expected_skill_ids),
+                (capabilities, "capability_id", set(CAPABILITY_IDS)),
+            ):
+                seen = set()
+                for row in rows:
+                    key = (getattr(row, identifier), row.revision)
+                    if (row.source_ref != expected_source or key[0] not in allowed
+                            or type(row.revision) is not int or row.revision < 1 or key in seen):
+                        raise AipEcommerceCatalogInvalid("explicit ecommerce definition source drifted")
+                    seen.add(key)
+        else:
+            current_templates, current_skills, current_capabilities = self._source_definitions(
+                CURRENT_SIGNED_CANDIDATE_VERSION,
+            )
+            if current_templates or current_skills or current_capabilities:
+                if (len(current_templates), len(current_skills), len(current_capabilities)) != (6, 37, 10):
+                    raise AipEcommerceCatalogInvalid("current ecommerce definition source is incomplete")
+                templates, skills, capabilities = current_templates, current_skills, current_capabilities
+            else:
+                templates, skills, capabilities = self._source_definitions(AIP_DEFINITION_SOURCE_VERSION)
         latest_templates = self._latest(
             [item for item in templates if item.template_id in AGENT_LOGIC_COUNTS],
             "template_id",
@@ -282,8 +304,13 @@ class AipEcommerceAgentInstaller:
         return result
 
     @staticmethod
-    def _solution_version(templates) -> str:
+    def _solution_version(templates, *, source_revision: str | None = None) -> str:
         sources = {template.source_ref.revision for template in templates.values()}
+        if source_revision is not None:
+            source_revision = _exact_definition_version(source_revision)
+            if sources != {source_revision}:
+                raise AipEcommerceCatalogInvalid("ecommerce template source versions differ")
+            return source_revision
         if sources == {CURRENT_SIGNED_CANDIDATE_VERSION}:
             return CURRENT_SIGNED_CANDIDATE_VERSION
         if sources == {AIP_DEFINITION_SOURCE_VERSION}:
@@ -442,7 +469,8 @@ class AipEcommerceAgentInstaller:
 
     def install(self, principal: Principal, *, idempotency_key: str) -> AgentInstallResponse:
         templates, _, _ = self._definitions(principal)
-        solution_version = self._solution_version(templates)
+        solution_version = (self._solution_version(templates) if self._source_revision is None
+            else self._solution_version(templates, source_revision=self._source_revision))
         scope = self._scope(principal)
         results = []
         for template_id in sorted(templates):

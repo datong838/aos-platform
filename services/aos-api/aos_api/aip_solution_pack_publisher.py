@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
+from collections.abc import Mapping
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -63,6 +66,14 @@ COMPATIBILITY_CLASSIFICATIONS = frozenset(
 COMPATIBILITY_MAP_PATH = Path(
     "content/logic/ecommerce-37-skill-compatibility-map.json"
 )
+_DEFINITION_FILES = (
+    "bundle.yaml", "content/agents/ecommerce-six-coworkers.json",
+    "content/logic/ecommerce-37-logic-catalog.json",
+    "content/agents/ecommerce-capability-catalog.json",
+    "content/schemas/aip6-contribution-schemas.json",
+    "content/policies/aip6-runtime-policies.json",
+    "content/workshops/ecommerce-analyst-query-templates.json",
+)
 SOLUTION_PACK_ID = "solution.ecommerce.growth"
 SOLUTION_PACK_VERSION = "1.3.0"
 AIP_DEFINITION_SOURCE_VERSION = "1.2.0"
@@ -92,8 +103,24 @@ class SolutionPackCandidateInspection:
     capability_count: int
 
 
+@dataclass(frozen=True)
+class _DefinitionRequests:
+    bundle_id: str
+    bundle_version: str
+    agents: tuple[PublishAgentTemplateRequest, ...]
+    skills: tuple[PublishSkillTemplateRequest, ...]
+    capabilities: tuple[PublishCapabilityRevisionRequest, ...]
+
+
 class AipSolutionPackInvalid(ValueError):
     pass
+
+
+def _exact_definition_version(value: str) -> str:
+    if (type(value) is not str or len(value) > 64
+            or re.fullmatch(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)", value) is None):
+        raise AipSolutionPackInvalid("exact definition version required")
+    return value
 
 
 class AipSolutionPackPublisher:
@@ -111,11 +138,23 @@ class AipSolutionPackPublisher:
     @classmethod
     def inspect_current_candidate(cls, bundle_dir: Path) -> SolutionPackCandidateInspection:
         """Validate current definition content without creating any authority row."""
+        return cls.inspect_exact_candidate(
+            bundle_dir, expected_version=CURRENT_SIGNED_CANDIDATE_VERSION,
+        )
+
+    @classmethod
+    def inspect_exact_candidate(
+        cls, bundle_dir: Path, *, expected_version: str,
+    ) -> SolutionPackCandidateInspection:
+        """Inspect an explicitly selected version; not signature or publication authority."""
+        expected_version = _exact_definition_version(expected_version)
+        if bundle_dir.is_symlink():
+            raise AipSolutionPackInvalid("solution pack directory must not be a symlink")
         root = bundle_dir.resolve(strict=True)
         manifest = cls._yaml(root / "bundle.yaml")
         metadata = manifest.get("metadata")
         if not isinstance(metadata, dict) or metadata.get("id") != SOLUTION_PACK_ID \
-                or metadata.get("version") != CURRENT_SIGNED_CANDIDATE_VERSION:
+                or metadata.get("version") != expected_version:
             raise AipSolutionPackInvalid("unsupported current solution pack identity or version")
         agents = cls._list(cls._json(root / "content/agents/ecommerce-six-coworkers.json"), "agents")
         logics = cls._list(cls._json(root / "content/logic/ecommerce-37-logic-catalog.json"), "logics")
@@ -126,7 +165,7 @@ class AipSolutionPackPublisher:
             cls._validate_compatibility_map(cls._json(compatibility), logics)
         cls._validate_analyst_templates(
             cls._json(root / "content/workshops/ecommerce-analyst-query-templates.json"),
-            agents, expected_bundle_version=CURRENT_SIGNED_CANDIDATE_VERSION,
+            agents, expected_bundle_version=expected_version,
         )
         schema_document = cls._json(root / "content/schemas/aip6-contribution-schemas.json")
         schema_names = schema_document.get("schemas")
@@ -143,7 +182,7 @@ class AipSolutionPackPublisher:
             "MemoryPolicy", "HandoffPolicy", "EffectReviewSchema", "LicensePolicy", "ReadinessPolicy", "ResponsibilityPolicy",
         } or len(policies) != 6:
             raise AipSolutionPackInvalid("runtime policy artifact types are incomplete")
-        return SolutionPackCandidateInspection(SOLUTION_PACK_ID, CURRENT_SIGNED_CANDIDATE_VERSION,
+        return SolutionPackCandidateInspection(SOLUTION_PACK_ID, expected_version,
             len(agents), len(logics), len(capabilities))
 
     @classmethod
@@ -196,6 +235,129 @@ class AipSolutionPackPublisher:
             source_revision=CURRENT_SIGNED_CANDIDATE_VERSION,
         )
 
+    def publish_exact_verified(
+        self, *, principal, connect_factory, reader, loader, signed_root: Path,
+        source_ref: str, idempotency_key: str, attempt_directory: Path,
+    ):
+        """Internal scoped metadata batch; no route, skill activation or business grant."""
+        from psycopg.pq import TransactionStatus
+        from aos_api.auth import Principal
+        from aos_api.tenant_scope import TenantScope
+        from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
+        from aos_api.asset_registry.registry_service import _require_publisher_access, PUBLISH_ROLES
+        from aos_api.aip_budget_activation_store import _member
+        from aos_api.aip_network_issuer_attempt import AttemptReceipt, _reserve_attempt_receipt
+        from aos_api.ecommerce_growth_host_ports import HostTransaction
+        from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+        from aos_api.aip_solution_pack_signed_preflight import (
+            inspect_exact_signed_source, read_exact_definition_documents,
+        )
+        if (type(principal) is not Principal or principal.token_kind != "oidc"
+                or type(principal.subject) is not str or not principal.subject
+                or principal.subject != principal.subject.strip()
+                or not principal.subject.isprintable() or not callable(connect_factory)
+                or type(idempotency_key) is not str or not 1 <= len(idempotency_key) <= 120
+                or idempotency_key != idempotency_key.strip()
+                or not idempotency_key.isprintable()):
+            raise AipSolutionPackInvalid("authenticated exact metadata command required")
+        scope = TenantScope(principal.org_id, principal.project_id)
+        _require_publisher_access(
+            actor=principal.subject, roles=principal.roles,
+            publisher_scopes=principal.asset_publishers, publisher="aos",
+            allowed_roles=PUBLISH_ROLES,
+        )
+        proof, documents = read_exact_definition_documents(
+            reader=reader, loader=loader, signed_root=signed_root, source_ref=source_ref,
+        )
+        batch = self._prepare_requests(documents, expected_version=proof.bundle_version,
+                                       source_revision=proof.bundle_version)
+        request_hash = self._hash({
+            "actor": principal.subject, "sourceRef": proof.source_ref,
+            "contentHash": proof.content_hash, "signatureFingerprint": proof.signature_fingerprint,
+            "requests": (*batch.capabilities, *batch.agents, *batch.skills),
+        })
+        operation = "solution_definitions.publish"
+
+        def require_current_source():
+            current = inspect_exact_signed_source(
+                reader=reader, loader=loader, signed_root=signed_root, source_ref=source_ref,
+            )
+            if ((current.source_ref, current.content_hash, current.signature_fingerprint)
+                    != (proof.source_ref, proof.content_hash, proof.signature_fingerprint)):
+                raise AipSolutionPackInvalid("exact definition source changed")
+
+        with connect_factory(scope) as conn:
+            if (conn.info.transaction_status != TransactionStatus.IDLE
+                    or conn.autocommit is not False or conn.read_only is not False):
+                raise AipSolutionPackInvalid("fresh writable scoped metadata transaction required")
+            with conn.transaction():
+                apply_asset_transaction_scope(conn, org_id=scope.org_id, project_id=scope.project_id)
+                _member(conn, scope, principal.subject, label="DEFINITION_PUBLISHER")
+                rows = conn.execute(
+                    """SELECT version.version_pk,version.content_hash,version.status
+                       FROM asset_bundle_version AS version
+                       JOIN asset_bundle AS bundle ON bundle.bundle_pk=version.bundle_pk
+                       WHERE bundle.publisher='aos' AND bundle.bundle_id=%s
+                         AND version.version=%s FOR SHARE OF bundle,version""",
+                    (SOLUTION_PACK_ID, proof.bundle_version),
+                ).fetchall()
+                if (len(rows) != 1 or rows[0]["content_hash"] != proof.content_hash
+                        or rows[0]["status"] != "published"):
+                    raise AipSolutionPackInvalid("exact Registry release lock unavailable")
+                bound = TransactionBoundConnectFactory(HostTransaction(conn), scope)
+                agents = AipAgentRegistryStore(bound)
+                scoped = AipSolutionPackPublisher(agent_store=agents,
+                    skill_store=AipSkillRegistry(bound), capability_store=AipCapabilityRegistry(bound))
+                agents._lock(conn, scope, operation, idempotency_key)
+                require_current_source()
+                prior = agents._receipt_row(conn, scope, operation, idempotency_key)
+                if prior is not None:
+                    agents._require_replay_hash(prior, request_hash)
+                    receipt = agents._receipt_from_row(scope, prior)
+                    if (receipt.status != "applied" or receipt.created_by != principal.subject
+                            or receipt.resource_ref != agents._ref(
+                                "SolutionPack", SOLUTION_PACK_ID, revision=proof.bundle_version)
+                            or receipt.result_ref != agents._ref(
+                                "SolutionPackDefinitionPublication", request_hash, revision="1")):
+                        raise AipSolutionPackInvalid("definition publication Receipt drifted")
+                    result = scoped._read_requests(batch)
+                else:
+                    _reserve_attempt_receipt(attempt_directory, AttemptReceipt(
+                        scope.org_id, scope.project_id, source_ref, idempotency_key,
+                        request_hash, principal.subject,
+                    ), namespace="aip-exact-definition-publication/v1")
+                    scoped._write_requests(batch, actor=principal.subject)
+                    result = scoped._read_requests(batch)
+                    require_current_source()
+                    receipt = agents._insert_receipt(
+                        conn, scope, operation, idempotency_key, request_hash,
+                        "SolutionPack", SOLUTION_PACK_ID, "SolutionPackDefinitionPublication",
+                        request_hash, principal.subject, datetime.now(timezone.utc),
+                        source_revision=proof.bundle_version, result_revision="1",
+                    )
+            return result, receipt
+
+    def _read_requests(self, batch):
+        groups = (
+            (batch.capabilities, self._capabilities.get, "capability_id"),
+            (batch.agents, self._agents.get_template, "template_id"),
+            (batch.skills, self._skills.get_skill, "skill_id"),
+        )
+        for requests, get, identifier in groups:
+            for request in requests:
+                observed = get(getattr(request, identifier), request.revision)
+                actual = observed.model_dump(mode="json", by_alias=True)
+                expected = request.model_dump(mode="json", by_alias=True)
+                if any(actual.get(k) != value for k, value in expected.items()):
+                    raise AipSolutionPackInvalid("immutable definition owner row drifted")
+        return SolutionPackPublication(
+            batch.bundle_id, batch.bundle_version, len(batch.agents), len(batch.skills),
+            len(batch.capabilities),
+            tuple(self._asset("AgentTemplate", x.template_id, x.content_hash) for x in batch.agents),
+            tuple(self._asset("SkillTemplate", x.skill_id, x.content_hash) for x in batch.skills),
+            tuple(self._asset("CapabilityRevision", x.capability_id, x.content_hash) for x in batch.capabilities),
+        )
+
     def _publish(
         self, bundle_dir: Path, *, actor: str, expected_version: str,
         source_revision: str,
@@ -203,7 +365,29 @@ class AipSolutionPackPublisher:
         if not actor.strip():
             raise ValueError("actor is required")
         root = bundle_dir.resolve(strict=True)
-        manifest = self._yaml(root / "bundle.yaml")
+        documents = {name: (root / name).read_bytes() for name in _DEFINITION_FILES}
+        if (root / COMPATIBILITY_MAP_PATH).is_file():
+            documents[str(COMPATIBILITY_MAP_PATH)] = (root / COMPATIBILITY_MAP_PATH).read_bytes()
+        return self._write_requests(self._prepare_requests(
+            documents, expected_version=expected_version, source_revision=source_revision,
+        ), actor=actor)
+
+    @classmethod
+    def _prepare_requests(cls, documents, *, expected_version: str, source_revision: str):
+        if (not isinstance(documents, Mapping)
+                or not set(_DEFINITION_FILES) <= set(documents)
+                or set(documents) - set(_DEFINITION_FILES) - {str(COMPATIBILITY_MAP_PATH)}
+                or any(type(v) is not bytes or len(v) > 1024 * 1024 for v in documents.values())
+                or sum(map(len, documents.values())) > 8 * 1024 * 1024):
+            raise AipSolutionPackInvalid("exact bounded definition documents required")
+        def document(name):
+            value = json.loads(documents[name])
+            if not isinstance(value, dict):
+                raise AipSolutionPackInvalid("definition document must be an object")
+            return value
+        manifest = yaml.safe_load(documents["bundle.yaml"])
+        if not isinstance(manifest, dict):
+            raise AipSolutionPackInvalid("bundle manifest must be an object")
         metadata = manifest.get("metadata")
         if not isinstance(metadata, dict):
             raise AipSolutionPackInvalid("bundle metadata is required")
@@ -212,27 +396,25 @@ class AipSolutionPackPublisher:
         if bundle_id != SOLUTION_PACK_ID or bundle_version != expected_version:
             raise AipSolutionPackInvalid("unsupported solution pack identity or version")
 
-        agent_document = self._json(root / "content/agents/ecommerce-six-coworkers.json")
-        logic_document = self._json(root / "content/logic/ecommerce-37-logic-catalog.json")
-        compatibility_path = root / COMPATIBILITY_MAP_PATH
+        agent_document = document("content/agents/ecommerce-six-coworkers.json")
+        logic_document = document("content/logic/ecommerce-37-logic-catalog.json")
+        compatibility_path = str(COMPATIBILITY_MAP_PATH)
         compatibility_document = (
-            self._json(compatibility_path) if compatibility_path.is_file() else None
+            document(compatibility_path) if compatibility_path in documents else None
         )
-        capability_document = self._json(root / "content/agents/ecommerce-capability-catalog.json")
-        schema_path = root / "content/schemas/aip6-contribution-schemas.json"
-        policy_path = root / "content/policies/aip6-runtime-policies.json"
-        schema_document = self._json(schema_path)
-        policy_document = self._json(policy_path)
-        analyst_templates = self._json(
-            root / "content/workshops/ecommerce-analyst-query-templates.json"
-        )
-        agents = self._list(agent_document, "agents")
-        logics = self._list(logic_document, "logics")
-        capabilities = self._list(capability_document, "capabilities")
-        self._validate(agents, logics, capabilities, manifest)
+        capability_document = document("content/agents/ecommerce-capability-catalog.json")
+        schema_path = "content/schemas/aip6-contribution-schemas.json"
+        policy_path = "content/policies/aip6-runtime-policies.json"
+        schema_document = document(schema_path)
+        policy_document = document(policy_path)
+        analyst_templates = document("content/workshops/ecommerce-analyst-query-templates.json")
+        agents = cls._list(agent_document, "agents")
+        logics = cls._list(logic_document, "logics")
+        capabilities = cls._list(capability_document, "capabilities")
+        cls._validate(agents, logics, capabilities, manifest)
         if compatibility_document is not None:
-            self._validate_compatibility_map(compatibility_document, logics)
-        self._validate_analyst_templates(
+            cls._validate_compatibility_map(compatibility_document, logics)
+        cls._validate_analyst_templates(
             analyst_templates, agents, expected_bundle_version=expected_version,
         )
         schema_names = schema_document.get("schemas")
@@ -256,9 +438,9 @@ class AipSolutionPackPublisher:
             revision=source_revision,
             authority="asset-registry",
         )
-        schema_hash = self._file_hash(schema_path)
-        policy_hash = self._file_hash(policy_path)
-        policy_artifacts = self._list(policy_document, "artifacts")
+        schema_hash = hashlib.sha256(documents[schema_path]).hexdigest()
+        policy_hash = hashlib.sha256(documents[policy_path]).hexdigest()
+        policy_artifacts = cls._list(policy_document, "artifacts")
         policy_types = [item.get("assetType") for item in policy_artifacts]
         required_policy_types = {
             "MemoryPolicy",
@@ -273,7 +455,7 @@ class AipSolutionPackPublisher:
         ):
             raise AipSolutionPackInvalid("runtime policy artifact types are incomplete")
         policy_refs = {
-            item["assetType"]: self._asset(
+            item["assetType"]: cls._asset(
                 item["assetType"], item["id"], policy_hash
             )
             for item in policy_artifacts
@@ -282,21 +464,11 @@ class AipSolutionPackPublisher:
         if not isinstance(schema_contract, dict):
             raise AipSolutionPackInvalid("schema contract must be an object")
 
-        capability_refs = []
-        for request in self._capability_requests(
+        capability_requests = cls._capability_requests(
             capabilities, capability_document, schema_hash, policy_refs,
             source, metadata["license"],
-        ):
-            revision = self._capabilities.publish(request, actor=actor)
-            capability_refs.append(
-                self._asset(
-                    "CapabilityRevision",
-                    revision.capability_id,
-                    revision.content_hash,
-                )
-            )
-
-        agent_refs = []
+        )
+        agent_requests = []
         for item in agents:
             agent_manifest = {
                 **item,
@@ -315,16 +487,10 @@ class AipSolutionPackPublisher:
             )
             request = PublishAgentTemplateRequest(
                 **agent_payload,
-                content_hash=self._hash(agent_payload),
+                content_hash=cls._hash(agent_payload),
             )
-            revision = self._agents.publish_template(request, actor=actor)
-            agent_refs.append(
-                self._asset(
-                    "AgentTemplate", revision.template_id, revision.content_hash
-                )
-            )
-
-        skill_refs = []
+            agent_requests.append(request)
+        skill_requests = []
         for item in logics:
             skill_payload = dict(
                 skill_id=f"ecommerce.skill.{item['id']}",
@@ -343,23 +509,22 @@ class AipSolutionPackPublisher:
             )
             request = PublishSkillTemplateRequest(
                 **skill_payload,
-                content_hash=self._hash(skill_payload),
+                content_hash=cls._hash(skill_payload),
             )
-            revision = self._skills.publish_skill(request, actor=actor)
-            skill_refs.append(
-                self._asset("SkillTemplate", revision.skill_id, revision.content_hash)
-            )
+            skill_requests.append(request)
+        return _DefinitionRequests(bundle_id, bundle_version, tuple(agent_requests),
+                                   tuple(skill_requests), tuple(capability_requests))
 
-        return SolutionPackPublication(
-            bundle_id=bundle_id,
-            bundle_version=bundle_version,
-            agent_count=len(agent_refs),
-            skill_count=len(skill_refs),
-            capability_count=len(capability_refs),
-            agent_refs=tuple(agent_refs),
-            skill_refs=tuple(skill_refs),
-            capability_refs=tuple(capability_refs),
-        )
+    def _write_requests(self, batch, *, actor):
+        capability_refs = tuple(self._asset("CapabilityRevision", item.capability_id,
+            self._capabilities.publish(item, actor=actor).content_hash) for item in batch.capabilities)
+        agent_refs = tuple(self._asset("AgentTemplate", item.template_id,
+            self._agents.publish_template(item, actor=actor).content_hash) for item in batch.agents)
+        skill_refs = tuple(self._asset("SkillTemplate", item.skill_id,
+            self._skills.publish_skill(item, actor=actor).content_hash) for item in batch.skills)
+        return SolutionPackPublication(batch.bundle_id, batch.bundle_version,
+            len(agent_refs), len(skill_refs), len(capability_refs),
+            agent_refs, skill_refs, capability_refs)
 
     @classmethod
     def _capability_requests(
