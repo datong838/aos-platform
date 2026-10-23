@@ -12,7 +12,8 @@ def _require(ok):
         raise RuntimeError('Skill finisher maintenance precondition differs')
 
 
-def install_skill_finisher_permissions(conn, *, expected_database, expected_cluster):
+def install_skill_finisher_permissions(conn, *, expected_database, expected_cluster,
+                                       expected_schema_head='a0v_161'):
     """Prepare an unused NOLOGIN role in the exact caller-owned maintenance DB.
 
     Formal zero-execution/backup/approval gates belong to the maintenance caller.
@@ -21,14 +22,16 @@ def install_skill_finisher_permissions(conn, *, expected_database, expected_clus
     """
     _require(conn.autocommit is False and conn.row_factory is dict_row
              and isinstance(expected_database,str) and bool(expected_database)
-             and isinstance(expected_cluster,str) and bool(expected_cluster))
+             and isinstance(expected_cluster,str) and bool(expected_cluster)
+             and type(expected_schema_head) is str
+             and expected_schema_head in ('a0v_161','a0v_163'))
     context=conn.execute("""SELECT current_user AS role,session_user AS login,
         current_database() AS database,
         current_setting('transaction_isolation') AS isolation""").fetchone()
     _require(context['role']==context['login']=='aos_app'
              and context['database']==expected_database and context['isolation']=='serializable')
     _require(conn.execute('SELECT system_identifier::text AS id FROM pg_control_system()').fetchone()['id']==expected_cluster)
-    _require(conn.execute('SELECT version_num FROM public.alembic_version').fetchone()['version_num']=='a0v_161')
+    _require(conn.execute('SELECT version_num FROM public.alembic_version').fetchone()['version_num']==expected_schema_head)
     relations=conn.execute("""SELECT c.oid,r.rolname,c.relrowsecurity,c.relforcerowsecurity
         FROM pg_class c JOIN pg_roles r ON r.oid=c.relowner
         WHERE c.oid IN ('public.aip_eval_run'::regclass,'public.aip_eval_run_event'::regclass)
