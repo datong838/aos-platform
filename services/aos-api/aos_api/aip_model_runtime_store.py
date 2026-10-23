@@ -9,6 +9,9 @@ from contextlib import AbstractContextManager
 from datetime import UTC, datetime
 from typing import Any, TypeVar
 
+from psycopg.pq import TransactionStatus
+from psycopg.rows import dict_row
+
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_model_runtime_contracts import (
     ModelEvalCandidate,
@@ -343,20 +346,88 @@ class AipModelRuntimeStore:
                 """, (*scope.key, *scope.key)).fetchall()
         candidates = []
         for row in rows:
-            model = RegisteredModelRevision if row['kind']=='registered_model' else ModelRouteRevision
-            item = model.model_validate(self._load(row['payload']))
-            self._check_scope(scope, item)
-            body = item.model_dump(mode='json', by_alias=True)
-            if canonical_hash({k:v for k,v in body.items() if k not in self._META_FIELDS}) != item.content_hash:
-                raise ModelRuntimeConflict('Eval source revision content hash drifted')
-            source = evaluation_candidate_ref(item).model_copy(update={'content_hash':item.content_hash})
-            if source.asset_id != row['asset_id'] or source.revision != row['revision']:
-                raise ModelRuntimeConflict('Eval source identity drifted')
-            target = evaluation_candidate_ref(item.model_copy(update={
-                'revision':item.revision+1, 'lifecycle':ModelRuntimeLifecycle.ACTIVE, 'eval_gate_ref':None}))
-            candidates.append(ModelEvalCandidate(source_ref=source,target_ref=target,
-                expected_head_version=row['version'],source_lifecycle=item.lifecycle.value))
+            candidates.append(self._eval_candidate_from_row(scope, row))
         return sorted(candidates,key=lambda item:(item.source_ref.asset_type,item.source_ref.asset_id))
+
+    def _eval_candidate_from_row(self, scope: TenantScope, row: Any) -> ModelEvalCandidate:
+        """Original list materialization, shared without adding authority."""
+        model = RegisteredModelRevision if row['kind']=='registered_model' else ModelRouteRevision
+        item = model.model_validate(self._load(row['payload']))
+        self._check_scope(scope, item)
+        body = item.model_dump(mode='json', by_alias=True)
+        if canonical_hash({k:v for k,v in body.items() if k not in self._META_FIELDS}) != item.content_hash:
+            raise ModelRuntimeConflict('Eval source revision content hash drifted')
+        source = evaluation_candidate_ref(item).model_copy(update={'content_hash':item.content_hash})
+        if source.asset_id != row['asset_id'] or source.revision != row['revision']:
+            raise ModelRuntimeConflict('Eval source identity drifted')
+        target = evaluation_candidate_ref(item.model_copy(update={
+            'revision':item.revision+1, 'lifecycle':ModelRuntimeLifecycle.ACTIVE, 'eval_gate_ref':None}))
+        return ModelEvalCandidate(source_ref=source,target_ref=target,
+            expected_head_version=row['version'],source_lifecycle=item.lifecycle.value)
+
+    def require_current_route_eval_candidate_for_update(
+        self, conn: Any, scope: TenantScope, source_ref: VersionedAssetRef,
+        target_ref: VersionedAssetRef, *, expected_head_version: int,
+    ) -> ModelEvalCandidate:
+        """Lock a Route head on the caller; this never authorizes execution.
+
+        The runtime caller retains its SERIAL transaction and lock through
+        its own atomic decision. This method neither ends that transaction
+        nor certifies Source, Owner, approval, budget or actual execution.
+        """
+        if (type(scope) is not TenantScope
+                or type(source_ref) is not VersionedAssetRef
+                or type(target_ref) is not VersionedAssetRef
+                or type(expected_head_version) is not int or expected_head_version < 1
+                or type(getattr(source_ref, 'revision', None)) is not int
+                or type(getattr(target_ref, 'revision', None)) is not int):
+            raise ModelRuntimeConflict('exact current Route Eval candidate required')
+        try:
+            source = VersionedAssetRef.model_validate(source_ref.model_dump(mode='json', by_alias=True))
+            target = VersionedAssetRef.model_validate(target_ref.model_dump(mode='json', by_alias=True))
+        except (TypeError, ValueError):
+            raise ModelRuntimeConflict('exact current Route Eval candidate required') from None
+        if (source.asset_type != 'ModelRouteRevision' or target.asset_type != source.asset_type
+                or source.asset_id != target.asset_id or target.revision != source.revision + 1):
+            raise ModelRuntimeConflict('exact current Route Eval candidate required')
+        if (getattr(conn, 'autocommit', None) is not False
+                or getattr(getattr(conn, 'info', None), 'transaction_status', None) != TransactionStatus.INTRANS
+                or getattr(conn, 'row_factory', None) is not dict_row):
+            raise ModelRuntimeConflict('scoped runtime SERIAL Route caller required')
+        context = conn.execute("""SELECT current_user AS role,
+            current_setting('aos.org_id',true) AS org_id,
+            current_setting('aos.project_id',true) AS project_id,
+            current_setting('transaction_isolation') AS isolation""").fetchone()
+        if (type(context) is not dict or
+                (context.get('role'), context.get('org_id'), context.get('project_id'), context.get('isolation'))
+                != ('aos_runtime', *scope.key, 'serializable')):
+            raise ModelRuntimeConflict('scoped runtime SERIAL Route caller required')
+        row = conn.execute("""SELECT 'model_route' AS kind,h.version,
+                   r.model_route_id AS asset_id,r.revision,r.content_hash,r.lifecycle,r.payload
+            FROM aip_model_route_head h JOIN aip_model_route_revision r
+              ON r.org_id=h.org_id AND r.project_id=h.project_id
+             AND r.model_route_id=h.model_route_id AND r.revision=h.current_revision
+            WHERE h.org_id=%s AND h.project_id=%s AND h.model_route_id=%s AND r.revision=%s
+            FOR UPDATE OF h""", (*scope.key, source.asset_id, source.revision)).fetchone()
+        try:
+            if (row is None or row['kind'] != 'model_route'
+                    or type(row['version']) is not int or type(row['revision']) is not int
+                    or row['version'] != expected_head_version or row['revision'] != source.revision
+                    or row['asset_id'] != source.asset_id or row['content_hash'] != source.content_hash
+                    or row['lifecycle'] not in {'draft', 'validated'}):
+                raise ModelRuntimeConflict('current Route Eval head or source drifted')
+            if type(self._load(row['payload'])) is not dict:
+                raise ModelRuntimeConflict('current Route Eval payload invalid')
+            candidate = self._eval_candidate_from_row(scope, row)
+            if (candidate.source_ref != source or candidate.target_ref != target
+                    or candidate.expected_head_version != expected_head_version
+                    or candidate.source_lifecycle != row['lifecycle']):
+                raise ModelRuntimeConflict('current Route Eval target or payload drifted')
+            return candidate
+        except ModelRuntimeConflict:
+            raise
+        except (KeyError, TypeError, ValueError, ModelRuntimeStoreError):
+            raise ModelRuntimeConflict('current Route Eval payload invalid') from None
 
     def require_current_model_eval_candidate_for_update(
         self, conn: Any, scope: TenantScope, source_ref: VersionedAssetRef,
