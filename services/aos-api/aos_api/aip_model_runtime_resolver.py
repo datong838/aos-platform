@@ -16,6 +16,7 @@ from aos_api.aip_model_runtime_contracts import (
     ModelRouteResolution,
     ModelRuntimeLifecycle,
     ModelRuntimeReadiness,
+    RouteStrategy,
 )
 from aos_api.aip_model_runtime_store import (
     AipModelRuntimeStore,
@@ -126,15 +127,68 @@ class AipModelRuntimeResolver:
         )
 
     def resolve(self, scope: TenantScope, route_id: str, *, now: datetime | None = None) -> ModelRouteResolution:
+        return self._resolve(scope, route_id, now=now)
+
+    def revalidate_selection(
+        self, scope: TenantScope, selection: ModelRouteResolution, *,
+        now: datetime | None = None,
+    ) -> ModelRouteResolution:
+        """Recheck a saved identity, never choose an alternative or grant admission.
+
+        Reads retain the original non-atomic resolution semantics. The original
+        invoker must still enforce its current execution dependencies.
+        """
+        checked_at = datetime.now(UTC) if now is None else now
+        if (type(scope) is not TenantScope
+            or type(selection) is not ModelRouteResolution
+            or getattr(selection, "readiness", None) is not ModelRuntimeReadiness.READY
+            or getattr(selection, "blocker_codes", None) != []
+            or (getattr(getattr(selection, "tenant", None), "org_id", None),
+                getattr(getattr(selection, "tenant", None), "project_id", None)) != scope.key
+            or not isinstance(checked_at, datetime)
+            or checked_at.utcoffset() is None
+            or not isinstance(getattr(selection, "resolved_at", None), datetime)
+            or selection.resolved_at.utcoffset() is None
+            or selection.resolved_at > checked_at):
+            raise ValueError("exact saved selection required")
+        refs = tuple(getattr(selection, name, None) for name in (
+            "route", "policy", "selected_model", "selected_provider", "selected_price_snapshot"))
+        if any(type(ref) is not VersionedAssetRef
+               or type(ref.revision) is not int or ref.revision < 1 for ref in refs):
+            raise ValueError("exact saved selection required")
+        snapshot = ModelRouteResolution.model_validate(
+            selection.model_dump(mode="json", by_alias=True)
+        )
+        return self._resolve(
+            scope, snapshot.route.asset_id, now=checked_at,
+            expected_selection=snapshot,
+        )
+
+    def _resolve(
+        self, scope: TenantScope, route_id: str, *, now: datetime | None = None,
+        expected_selection: ModelRouteResolution | None = None,
+    ) -> ModelRouteResolution:
         resolved_at = now or datetime.now(UTC)
         route = self._store.get_route(scope, route_id)
         route_ref = self._ref("ModelRouteRevision", route.route_id, route.revision, route.content_hash)
         policy_ref = route.runtime_policy_ref
         blockers: list[str] = []
+        if expected_selection is not None and (
+            route_ref != expected_selection.route
+            or policy_ref != expected_selection.policy
+            or (route.tenant.org_id, route.tenant.project_id) != scope.key
+        ):
+            blockers.append("saved_route_selection_drifted")
         if route.lifecycle is not ModelRuntimeLifecycle.ACTIVE:
             blockers.append("route_not_active")
         try:
             policy = self._store.get_policy(scope, policy_ref.asset_id, policy_ref.revision)
+            if expected_selection is not None and (
+                (policy.tenant.org_id, policy.tenant.project_id) != scope.key
+                or self._ref("RuntimePolicyRevision", policy.policy_id,
+                             policy.revision, policy.content_hash) != expected_selection.policy
+            ):
+                blockers.append("saved_policy_selection_drifted")
             if policy.content_hash != policy_ref.content_hash:
                 blockers.append("runtime_policy_drifted")
             elif policy.lifecycle is not ModelRuntimeLifecycle.ACTIVE:
@@ -152,8 +206,23 @@ class AipModelRuntimeResolver:
         selected_model = None
         selected_provider = None
         selected_price_snapshot = None
-        for candidate in route.candidates:
+        candidates = route.candidates
+        if expected_selection is not None:
+            candidates = [candidate for candidate in route.candidates
+                          if candidate.model == expected_selection.selected_model]
+            if len(candidates) != 1 or (
+                route.strategy is RouteStrategy.WEIGHTED and candidates[0].weight == 0
+            ):
+                blockers.append("saved_route_candidate_unavailable")
+                candidates = []
+        for candidate in candidates:
             candidate_blockers, model_ref, provider_ref, price_ref = self._candidate(scope, candidate.model, route, resolved_at)
+            if expected_selection is not None and (
+                model_ref != expected_selection.selected_model
+                or provider_ref != expected_selection.selected_provider
+                or price_ref != expected_selection.selected_price_snapshot
+            ):
+                candidate_blockers.append("saved_model_selection_drifted")
             if not candidate_blockers:
                 selected_model = model_ref
                 selected_provider = provider_ref

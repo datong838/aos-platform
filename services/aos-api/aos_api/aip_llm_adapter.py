@@ -37,12 +37,22 @@ class LLMAdapter:
         lineage_id: str,
         system_prompt: str = "",
         data_classification: str | None = None,
+        expected_selection: ModelRouteResolution | None = None,
     ) -> dict[str, Any]:
         if not lineage_id.strip():
             raise LLMRuntimeBlocked("lineage_id_required")
         if not data_classification:
             raise LLMRuntimeBlocked("data_classification_required")
-        resolution = self._resolver.resolve(scope, route_id)
+        if expected_selection is None:
+            resolution = self._resolver.resolve(scope, route_id)
+        else:
+            if (type(expected_selection) is not ModelRouteResolution
+                or getattr(getattr(expected_selection, "route", None), "asset_id", None) != route_id):
+                raise LLMRuntimeBlocked("expected_selection_invalid")
+            try:
+                resolution = self._resolver.revalidate_selection(scope, expected_selection)
+            except ValueError:
+                raise LLMRuntimeBlocked("expected_selection_invalid") from None
         if resolution.readiness is not ModelRuntimeReadiness.READY:
             blockers = ",".join(resolution.blocker_codes) or "model_runtime_not_ready"
             raise LLMRuntimeBlocked(blockers)

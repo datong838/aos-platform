@@ -34,7 +34,7 @@ from aos_api.aip_contracts import ArtifactRef, ResourceRef, TenantContext
 from aos_api.aip_eval_contracts import LineageRootType
 from aos_api.aip_lineage_service import AipLineageService
 from aos_api.aip_llm_adapter import LLMAdapter, LLMRuntimeBlocked
-from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
+from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
 from aos_api.aip_runtime_guard_policy_contracts import APPROVED_DATA_CLASSIFICATIONS
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_task_store import AipTaskStore
@@ -323,6 +323,16 @@ class AipAgentRunExecutor:
                 system_prompt=request.system_prompt,
                 data_classification=map_agent_run_data_classification(
                     request.data_classification
+                ),
+                expected_selection=ModelRouteResolution(
+                    tenant=attempt.tenant,
+                    route=attempt.route_ref,
+                    policy=attempt.policy_ref,
+                    readiness=ModelRuntimeReadiness.READY,
+                    selected_model=attempt.model_ref,
+                    selected_provider=attempt.provider_ref,
+                    selected_price_snapshot=attempt.price_snapshot_ref,
+                    resolved_at=attempt.prepared_at,
                 ),
             )
             failure_reason = "ARTIFACT_WRITE_FAILED"
