@@ -38,6 +38,11 @@ _EXPECTED_OPERATION_ROLES = {
         "developer",
         "asset-installer",
     },
+    "bundle_installations.reinstall": {
+        "admin",
+        "developer",
+        "asset-installer",
+    },
     "bundle_installations.submit": {
         "admin",
         "developer",
