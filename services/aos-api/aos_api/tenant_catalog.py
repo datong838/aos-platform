@@ -1,7 +1,7 @@
 """Boot / schema for Org · Workspace · Membership persistence (164 v1.1)."""
 from __future__ import annotations
 
-from aos_api.db import connect, connect_platform
+from aos_api.db import connect, connect_read_only
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.tenant-catalog")
@@ -31,7 +31,7 @@ def _catalog_tables_present() -> bool:
     """True when every catalog table already exists in this database."""
 
     try:
-        with connect_platform() as conn:
+        with connect_read_only(inherit_scope=False, platform_role=True) as conn:
             row = conn.execute(
                 """
                 SELECT count(*) AS n
