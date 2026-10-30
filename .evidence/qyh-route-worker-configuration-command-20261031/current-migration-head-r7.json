@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "aos.qyh-current-migration-head/v1",
+  "recordedAt": "2026-10-31T05:12:00+08:00",
+  "source": {
+    "database": "aos_meta_head",
+    "databaseOid": 16431,
+    "systemIdentifier": "7695302940039200809",
+    "clusterName": "",
+    "serverVersion": "16.14",
+    "container": "qyh-restored-pg-20261011",
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "migrationHeads": ["a0v_163"]
+  },
+  "code": {
+    "gitHead": "6bb266200",
+    "alembicHeads": ["a0v_170"]
+  },
+  "readMethod": {
+    "entry": "container local socket",
+    "databaseRole": "aos_app",
+    "transactionReadOnly": true,
+    "credentialRead": false,
+    "databaseWrite": false
+  },
+  "capacity": {
+    "databaseBytes": 126073879,
+    "sourceVolumeBytes": 274906373,
+    "filesystemAvailableBytes": 33911914496,
+    "connectionsObservedDuringPreflight": 1,
+    "activeOtherConnections": 0,
+    "preparedTransactions": 0
+  },
+  "conclusion": {
+    "migrationRequiredBeforeCurrentCodeAlignment": true,
+    "directCurrentDatabaseMigrationAuthorized": false,
+    "independentRestoreRehearsalRequired": true
+  }
+}
