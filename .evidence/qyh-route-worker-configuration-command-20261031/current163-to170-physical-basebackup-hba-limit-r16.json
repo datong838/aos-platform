@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "aos.qyh-current163-to170-physical-basebackup-hba-limit/v1",
+  "recordedAt": "2026-10-31T05:31:00+08:00",
+  "attempts": [
+    {
+      "volume": "qyh-current163-to170-physical-backup-r1-20261031",
+      "connection": "default replication pseudo-database",
+      "result": "HBA_REJECTED_BEFORE_BACKUP",
+      "bytes": 0
+    },
+    {
+      "volume": "qyh-current163-to170-physical-backup-r2-20261031",
+      "connection": "database-specific replication to aos_meta_head",
+      "result": "HBA_REJECTED_BEFORE_BACKUP",
+      "bytes": 0
+    }
+  ],
+  "source": {
+    "hbaChanged": false,
+    "migrationHead": "a0v_163",
+    "businessDataChanged": false,
+    "configurationChanged": false
+  },
+  "decision": "do not modify source HBA; use a clean-stop read-only volume snapshot during a bounded zero-execution window"
+}
