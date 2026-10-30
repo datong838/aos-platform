@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "aos.qyh-current163-to170-physical-backup-connection/v1",
+  "recordedAt": "2026-10-31T05:27:00+08:00",
+  "attempt": {
+    "backupVolume": "qyh-current163-to170-physical-backup-r1-20261031",
+    "connectionDatabase": "replication pseudo-database",
+    "result": "KNOWN_REJECTED_BEFORE_BACKUP",
+    "reason": "no local HBA rule for replication pseudo-database",
+    "baseTarBytes": 0,
+    "baseTarMode": "0600"
+  },
+  "sourceHba": {
+    "localAllAll": "trust",
+    "replicationRulePresent": false,
+    "changed": false
+  },
+  "sourceAfterAttempt": {
+    "migrationHead": "a0v_163",
+    "wal": "0/7F6FA90",
+    "preparedTransactions": 0,
+    "databaseWrite": false
+  },
+  "decision": "use a new backup volume and a database-specific replication connection to aos_meta_head so the existing local all/all trust rule applies",
+  "sameAttemptReplayed": false
+}
