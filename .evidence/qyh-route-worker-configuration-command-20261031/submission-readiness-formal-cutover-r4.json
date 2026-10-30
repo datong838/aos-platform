@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "aos.route-worker-submission-readiness-formal-cutover/v1",
+  "recordedAt": "2026-10-31T04:50:27+08:00",
+  "productCommit": "1389d5ae6",
+  "previousApiPid": 11411,
+  "currentApi": {
+    "pid": 38160,
+    "port": 18080,
+    "startedAt": "2026-10-31T04:49:41+08:00",
+    "healthHttp": 200,
+    "unauthenticatedPreviewHttp": 401,
+    "configurePostHttp": 405
+  },
+  "currentWeb": {
+    "pid": 4054,
+    "port": 18434,
+    "http": 200,
+    "restarted": false
+  },
+  "authenticatedPreview": {
+    "httpStatus": 200,
+    "status": "needs_input",
+    "approvalAllowed": false,
+    "checks": [
+      {"label": "当前客户安装", "passed": true},
+      {"label": "后台业务身份", "passed": true},
+      {"label": "受保护保存位置", "passed": true},
+      {"label": "身份凭据", "passed": true},
+      {"label": "配置保存通道", "passed": false}
+    ],
+    "sideEffects": {
+      "databaseWrite": false,
+      "configurationWrite": false,
+      "tokenRequest": false,
+      "businessProcessing": false,
+      "externalEffect": false
+    },
+    "canProcessBusinessTasks": false
+  },
+  "runtimeFences": {
+    "configurationPostEnabled": false,
+    "lifecycleCommandCredentialPresent": false,
+    "protectedConfigurationPresent": false,
+    "hostEnabled": false,
+    "workerEnabled": false,
+    "providerEnabled": false,
+    "migrationEnabled": false,
+    "shadowPortClosed": true
+  },
+  "qualification": "formal_readonly_business_semantics_corrected_not_customer_configuration_or_business_acceptance"
+}
