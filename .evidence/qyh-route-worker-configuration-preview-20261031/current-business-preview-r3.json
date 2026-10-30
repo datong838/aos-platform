@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "qyh-route-worker-current-business-preview/v3",
+  "observedAt": "2026-10-31T02:16:00+08:00",
+  "tenant": "org-org/dev-project",
+  "status": "needs_input",
+  "approvalAllowed": false,
+  "checks": [
+    {
+      "key": "current_customer_installation",
+      "label": "当前客户安装",
+      "passed": true
+    },
+    {
+      "key": "background_identity",
+      "label": "后台业务身份",
+      "passed": false
+    },
+    {
+      "key": "protected_storage",
+      "label": "受保护保存位置",
+      "passed": true
+    },
+    {
+      "key": "identity_credential",
+      "label": "身份凭据",
+      "passed": false
+    }
+  ],
+  "sideEffects": {
+    "databaseWrite": false,
+    "configurationWrite": false,
+    "tokenRequest": false,
+    "businessProcessing": false,
+    "externalEffect": false
+  },
+  "canProcessBusinessTasks": false,
+  "protectedStorage": {
+    "parentOwnedByCurrentUser": true,
+    "parentMode": "0700",
+    "targetFileExists": false
+  },
+  "runtime": {
+    "formalApiPid": 8459,
+    "formalApiPort": 18080,
+    "formalWebPid": 4054,
+    "formalWebPort": 18434,
+    "shadowApiListening": false,
+    "migrationEnabled": false,
+    "runtimeHostEnabled": false,
+    "workerEnabled": false,
+    "providerEnabled": false
+  },
+  "acceptance": "PROTECTED_STORAGE_PREPARED_ONLY_NOT_CONFIGURATION_OR_BUSINESS_ACCEPTANCE"
+}
