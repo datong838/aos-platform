@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "aos.route-worker-submission-readiness-shadow/v1",
+  "recordedAt": "2026-10-31T04:46:48+08:00",
+  "productCommit": "1389d5ae6",
+  "frozenSource": {
+    "path": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-route-worker-configuration-preview-runtime-20261031/private/api-source-1389d5ae6-r3",
+    "trackedSource": "git archive 1389d5ae6",
+    "protectedDirtyDependency": {
+      "path": "services/aos-api/aos_api/aip_route_release_request_context.py",
+      "sha256": "ba41413323e77b2fbd5a0566ad2a46718cbec64ec97a1038c980d293bda54b1f"
+    }
+  },
+  "shadow": {
+    "port": 18081,
+    "healthHttp": 200,
+    "unauthenticatedPreviewHttp": 401,
+    "defaultConfigurePostHttp": 405,
+    "stopped": true,
+    "portClosedAfterStop": true
+  },
+  "authenticatedPreview": {
+    "httpStatus": 200,
+    "status": "needs_input",
+    "approvalAllowed": false,
+    "checks": [
+      {"label": "当前客户安装", "passed": true},
+      {"label": "后台业务身份", "passed": true},
+      {"label": "受保护保存位置", "passed": true},
+      {"label": "身份凭据", "passed": true},
+      {"label": "配置保存通道", "passed": false}
+    ],
+    "sideEffects": {
+      "databaseWrite": false,
+      "configurationWrite": false,
+      "tokenRequest": false,
+      "businessProcessing": false,
+      "externalEffect": false
+    },
+    "canProcessBusinessTasks": false
+  },
+  "formalRuntimeAfterShadow": {
+    "apiPid": 11411,
+    "apiHealthHttp": 200,
+    "webPid": 4054,
+    "webHttp": 200,
+    "configurePostHttp": 405,
+    "protectedConfigurationPresent": false
+  },
+  "qualification": "engineering_readiness_semantics_only_not_customer_configuration_or_business_acceptance"
+}
