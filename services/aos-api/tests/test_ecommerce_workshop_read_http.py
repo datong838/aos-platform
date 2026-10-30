@@ -1,4 +1,4 @@
-"""HTTP scope fence: only explicitly audited GETs use installed read admission."""
+"""HTTP scope fence: only explicitly audited routes use installed read admission."""
 from __future__ import annotations
 
 import pytest
@@ -62,16 +62,16 @@ def test_unreviewed_get_still_uses_legacy_admission(path):
     assert not reader.calls
 
 
-def test_read_dependency_only_reaches_explicit_audited_get_routes():
+def test_read_dependency_only_reaches_explicit_audited_routes():
     actual = set()
     for route in routes.router.routes:
         uses_read = any(d.call is routes.get_ecommerce_workshop_read_catalog
                         for d in route.dependant.dependencies)
         if uses_read:
-            assert route.methods == {'GET'}
-            actual.add(route.path)
-    assert actual == {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+            actual.add((route.path, frozenset(route.methods)))
+    get_paths = {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
         '/v1/ecommerce-workshop/source-readiness',
+        '/v1/ecommerce-workshop/background-processing',
         '/v1/ecommerce-workshop/views/operations/cases',
         '/v1/ecommerce-workshop/commands/operations/readiness',
         '/v1/ecommerce-workshop/views/task-cockpit/feedback',
@@ -89,6 +89,15 @@ def test_read_dependency_only_reaches_explicit_audited_get_routes():
         '/v1/ecommerce-workshop/views/{module}/closure-contributions',
         '/v1/ecommerce-workshop/views/price-governance/contributions',
         '/v1/ecommerce-workshop/views/price-governance/dispositions',
+    }
+    post_paths = {
+        '/v1/ecommerce-workshop/background-processing/configure',
+        '/v1/ecommerce-workshop/background-processing/disable',
+        '/v1/ecommerce-workshop/background-processing/restore',
+    }
+    assert actual == {
+        *((path, frozenset({'GET'})) for path in get_paths),
+        *((path, frozenset({'POST'})) for path in post_paths),
     }
 
 

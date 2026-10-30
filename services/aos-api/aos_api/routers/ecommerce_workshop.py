@@ -7,7 +7,7 @@ from functools import lru_cache
 from datetime import UTC, datetime
 from typing import Annotated, Literal, TypeVar
 
-from fastapi import APIRouter, Depends, Header, Path, Query, Request, Security
+from fastapi import APIRouter, Body, Depends, Header, Path, Query, Request, Security
 from fastapi.security import HTTPBearer
 
 from aos_api.asset_registry.errors import AssetNotFoundError, AssetRegistryError
@@ -358,6 +358,16 @@ from aos_api.public_contracts import TaskStatus
 from aos_api.source_readiness import build_source_readiness_service
 from aos_api.source_readiness_contracts import SourceReadinessEnvelope
 from aos_api.tenant_scope import TenantScope
+from aos_api.aip_route_worker_customer_lifecycle import (
+    RouteWorkerCustomerLifecycleBlocked,
+    RouteWorkerCustomerReceiptEnvelope,
+    RouteWorkerCustomerStatusEnvelope,
+)
+from aos_api.aip_route_worker_customer_lifecycle_wiring import (
+    RouteWorkerBusinessEntryFactory,
+)
+from aos_api.aip_route_worker_identity import RouteWorkerIdentityBlocked
+from aos_api.aip_route_worker_installation import RouteWorkerInstallationBlocked
 
 _bearer = HTTPBearer(auto_error=False)
 router = APIRouter(
@@ -463,6 +473,11 @@ def get_ecommerce_workshop_source_readiness() -> EcommerceWorkshopSourceReadines
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_operations() -> EcommerceWorkshopOperations:
     return EcommerceWorkshopOperations()
+
+
+@lru_cache(maxsize=1)
+def get_route_worker_business_entry_factory() -> RouteWorkerBusinessEntryFactory:
+    return RouteWorkerBusinessEntryFactory()
 
 
 @lru_cache(maxsize=1)
@@ -772,6 +787,10 @@ OperationsDependency = Annotated[
     EcommerceWorkshopOperations,
     Depends(get_ecommerce_workshop_operations),
 ]
+RouteWorkerBusinessEntryFactoryDependency = Annotated[
+    RouteWorkerBusinessEntryFactory,
+    Depends(get_route_worker_business_entry_factory),
+]
 OperationCaseWorkspaceDependency = Annotated[
     EcommerceOperationCaseWorkspace,
     Depends(get_ecommerce_operation_case_workspace),
@@ -1079,8 +1098,8 @@ def _require_task_cockpit_installation(
 
 def _require_operations_installation(
     *, principal: Principal, catalog: EcommerceWorkshopCatalog
-) -> None:
-    _invoke(
+) -> EcommerceWorkshopModuleReadinessResponse:
+    return _invoke(
         lambda: catalog.get_readiness(
             module_id="ecommerce.operations",
             org_id=principal.org_id,
@@ -1089,6 +1108,80 @@ def _require_operations_installation(
             markings=principal.markings,
         )
     )
+
+
+def _route_worker_service(
+    *,
+    principal: Principal,
+    catalog: EcommerceWorkshopCatalog,
+    factory: RouteWorkerBusinessEntryFactory,
+):
+    readiness = _require_operations_installation(
+        principal=principal, catalog=catalog
+    )
+    try:
+        return factory.build(
+            installation_id=readiness.item.installation_ref.installation_id
+        )
+    except Exception:
+        raise ApiError(
+            code="BACKGROUND_PROCESSING_UNAVAILABLE",
+            message="当前环境尚未开放后台处理配置，请稍后重新读取。",
+            status_code=503,
+        ) from None
+
+
+def _route_worker_command(
+    *,
+    action: Literal["enable", "disable", "restore"],
+    principal: Principal,
+    catalog: EcommerceWorkshopCatalog,
+    factory: RouteWorkerBusinessEntryFactory,
+    idempotency_key: str,
+) -> RouteWorkerCustomerReceiptEnvelope:
+    service = _route_worker_service(
+        principal=principal, catalog=catalog, factory=factory
+    )
+    try:
+        result = getattr(service, action)(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            actor=principal.subject,
+            roles=principal.roles,
+            idempotency_key=idempotency_key,
+        )
+    except AssetRegistryError as exc:
+        raise ApiError(
+            code=exc.code.value,
+            message="当前账号不能执行该后台处理操作。",
+            status_code=exc.http_status,
+        ) from exc
+    except (
+        RouteWorkerCustomerLifecycleBlocked,
+        RouteWorkerIdentityBlocked,
+        RouteWorkerInstallationBlocked,
+    ) as exc:
+        raise ApiError(
+            code="BACKGROUND_PROCESSING_NEEDS_REVIEW",
+            message="后台处理状态需要核对，本次没有覆盖现有配置。",
+            status_code=409,
+        ) from exc
+    return RouteWorkerCustomerReceiptEnvelope(
+        tenant={"orgId": principal.org_id, "projectId": principal.project_id},
+        result=result,
+    )
+
+
+def _require_empty_background_processing_command(
+    request: Request, body: dict[str, object]
+) -> None:
+    _reject_query_parameters(request)
+    if body:
+        raise ApiError(
+            code="VALIDATION",
+            message="后台处理操作不接受安装或运行参数。",
+            status_code=400,
+        )
 
 
 def _require_content_campaign_installation(
@@ -1522,6 +1615,100 @@ def get_ecommerce_workshop_operations_view(
     return operations.read(
         org_id=principal.org_id,
         project_id=principal.project_id,
+    )
+
+
+@router.get(
+    "/background-processing",
+    response_model=RouteWorkerCustomerStatusEnvelope,
+    operation_id="ecommerceWorkshopBackgroundProcessingGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_background_processing(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    factory: RouteWorkerBusinessEntryFactoryDependency,
+) -> RouteWorkerCustomerStatusEnvelope:
+    _reject_query_parameters(request)
+    service = _route_worker_service(
+        principal=principal, catalog=catalog, factory=factory
+    )
+    return RouteWorkerCustomerStatusEnvelope(
+        tenant={"orgId": principal.org_id, "projectId": principal.project_id},
+        status=service.read_status(),
+    )
+
+
+@router.post(
+    "/background-processing/configure",
+    response_model=RouteWorkerCustomerReceiptEnvelope,
+    operation_id="ecommerceWorkshopBackgroundProcessingConfigure",
+    responses=_ERRORS,
+)
+def configure_ecommerce_workshop_background_processing(
+    request: Request,
+    body: Annotated[dict[str, object], Body()],
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    factory: RouteWorkerBusinessEntryFactoryDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> RouteWorkerCustomerReceiptEnvelope:
+    _require_empty_background_processing_command(request, body)
+    return _route_worker_command(
+        action="enable",
+        principal=principal,
+        catalog=catalog,
+        factory=factory,
+        idempotency_key=idempotency_key,
+    )
+
+
+@router.post(
+    "/background-processing/disable",
+    response_model=RouteWorkerCustomerReceiptEnvelope,
+    operation_id="ecommerceWorkshopBackgroundProcessingDisable",
+    responses=_ERRORS,
+)
+def disable_ecommerce_workshop_background_processing(
+    request: Request,
+    body: Annotated[dict[str, object], Body()],
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    factory: RouteWorkerBusinessEntryFactoryDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> RouteWorkerCustomerReceiptEnvelope:
+    _require_empty_background_processing_command(request, body)
+    return _route_worker_command(
+        action="disable",
+        principal=principal,
+        catalog=catalog,
+        factory=factory,
+        idempotency_key=idempotency_key,
+    )
+
+
+@router.post(
+    "/background-processing/restore",
+    response_model=RouteWorkerCustomerReceiptEnvelope,
+    operation_id="ecommerceWorkshopBackgroundProcessingRestore",
+    responses=_ERRORS,
+)
+def restore_ecommerce_workshop_background_processing(
+    request: Request,
+    body: Annotated[dict[str, object], Body()],
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    factory: RouteWorkerBusinessEntryFactoryDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> RouteWorkerCustomerReceiptEnvelope:
+    _require_empty_background_processing_command(request, body)
+    return _route_worker_command(
+        action="restore",
+        principal=principal,
+        catalog=catalog,
+        factory=factory,
+        idempotency_key=idempotency_key,
     )
 
 
