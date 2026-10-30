@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "aos.qyh-current163-to170-logical-grantor-limit/v1",
+  "recordedAt": "2026-10-31T05:23:00+08:00",
+  "result": "LOGICAL_RESTORE_CANNOT_PRESERVE_SOURCE_GRANTOR",
+  "sourceMemberships": {
+    "count": 15,
+    "businessMemberships": 12,
+    "grantor": "aos_app"
+  },
+  "r1": {
+    "result": "KNOWN_FAILED",
+    "reason": "restore_admin lacks preserved grantor authority",
+    "databaseRestored": false,
+    "migrationStarted": false
+  },
+  "r2": {
+    "result": "KNOWN_FAILED_ROLLED_BACK",
+    "temporaryAdminOptionAttempt": true,
+    "directAosAppSessionAttempt": true,
+    "failedStatementReplayedAgainstSource": false,
+    "membershipCountAfterRollback": 3,
+    "restoreAdminBusinessMembershipsAfterRollback": 0,
+    "databaseRestored": false,
+    "migrationStarted": false
+  },
+  "rootCause": "PostgreSQL 16 standard GRANT cannot reconstruct a historical self-grantor membership edge exactly",
+  "decision": "use a physical base backup and independent physical restore so pg_auth_members is preserved exactly",
+  "effects": {
+    "currentDatabaseWrite": false,
+    "currentConfigurationWrite": false,
+    "isolatedRestoreOnly": true,
+    "externalEffect": false
+  }
+}
