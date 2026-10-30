@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "aos.qyh-current163-to170-formal-migration-intent/v1",
+  "createdAt": "2026-10-31T06:15:00+08:00",
+  "status": "PREPARED_NOT_STARTED",
+  "source": {
+    "container": "qyh-restored-pg-20261011",
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "database": "aos_meta_head",
+    "port": 18446,
+    "systemIdentifier": "7695302940039200809",
+    "databaseOid": 16431,
+    "migrationHead": "a0v_163",
+    "preparedTransactions": 0,
+    "otherConnections": 0,
+    "isolatedTestReceiptCount": 0,
+    "specialConfigurationRoleCount": 0
+  },
+  "runtime": {
+    "formalApiPid": 46960,
+    "formalApiOpenApi": 200,
+    "formalWeb": 200,
+    "configurationPost": 405
+  },
+  "backup": {
+    "volume": "qyh-current163-to170-offline-backup-r1-20261031",
+    "tarSha256VerifiedNow": "7162687b4fe86413a2343f7da0eb7fbb5086daa5518929c1773850f5ec99f4a0"
+  },
+  "migrationSourceManifest": "current163-to170-formal-source-manifest-r22.json",
+  "allMigrationSourceHashesMatch": true,
+  "restoreRehearsalContainerStopped": true,
+  "nextAction": "stop formal API, recheck source head and sessions, run alembic upgrade head once",
+  "boundary": {
+    "configurationPostRemainsClosed": true,
+    "host": false,
+    "worker": false,
+    "provider": false,
+    "externalEffect": false
+  }
+}
