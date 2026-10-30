@@ -359,6 +359,7 @@ from aos_api.source_readiness import build_source_readiness_service
 from aos_api.source_readiness_contracts import SourceReadinessEnvelope
 from aos_api.tenant_scope import TenantScope
 from aos_api.aip_route_worker_customer_lifecycle import (
+    RouteWorkerConfigurationPreviewEnvelope,
     RouteWorkerCustomerLifecycleBlocked,
     RouteWorkerCustomerReceiptEnvelope,
     RouteWorkerCustomerStatusEnvelope,
@@ -1637,6 +1638,31 @@ def get_ecommerce_workshop_background_processing(
     return RouteWorkerCustomerStatusEnvelope(
         tenant={"orgId": principal.org_id, "projectId": principal.project_id},
         status=service.read_status(),
+    )
+
+
+@router.get(
+    "/background-processing/configuration-preview",
+    response_model=RouteWorkerConfigurationPreviewEnvelope,
+    operation_id="ecommerceWorkshopBackgroundProcessingConfigurationPreview",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_background_processing_configuration_preview(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    factory: RouteWorkerBusinessEntryFactoryDependency,
+) -> RouteWorkerConfigurationPreviewEnvelope:
+    _reject_query_parameters(request)
+    readiness = _require_operations_installation(
+        principal=principal, catalog=catalog
+    )
+    preview = factory.preview_configuration(
+        installation_id=readiness.item.installation_ref.installation_id
+    )
+    return RouteWorkerConfigurationPreviewEnvelope(
+        tenant={"orgId": principal.org_id, "projectId": principal.project_id},
+        preview=preview,
     )
 
 

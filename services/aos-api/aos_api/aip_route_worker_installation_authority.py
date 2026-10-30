@@ -123,6 +123,20 @@ class CurrentRouteWorkerInstallationAuthority:
                 "ROUTE_WORKER_SIGNED_INSTALLATION_REQUIRED"
             ) from None
 
+    def assert_installation_current(self, installation_id: str) -> bool:
+        """Confirm the selected installation without exposing its coordinates."""
+
+        try:
+            scope = TenantScope("org-org", "dev-project")
+            self._read_current(scope=scope, installation_id=installation_id)
+            return True
+        except RouteWorkerInstallationBlocked:
+            raise
+        except Exception:
+            raise RouteWorkerInstallationBlocked(
+                "ROUTE_WORKER_SIGNED_INSTALLATION_REQUIRED"
+            ) from None
+
     def assert_current(self, document: RouteWorkerIdentityInstallation) -> bool:
         try:
             if type(document) is not RouteWorkerIdentityInstallation:

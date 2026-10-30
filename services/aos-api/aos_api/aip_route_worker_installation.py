@@ -221,6 +221,12 @@ class RouteWorkerIdentityInstallationStore:
         return path
 
     @classmethod
+    def validate_target_path(cls, value: str | os.PathLike[str]) -> Path:
+        """Validate a future installation path without creating any file."""
+
+        return cls._path(value)
+
+    @classmethod
     @contextmanager
     def _exclusive_lock(cls, path: Path):
         lock_path = path.parent / f".{path.name}.lock"

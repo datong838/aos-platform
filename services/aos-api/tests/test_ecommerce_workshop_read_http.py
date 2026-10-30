@@ -72,6 +72,7 @@ def test_read_dependency_only_reaches_explicit_audited_routes():
     get_paths = {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
         '/v1/ecommerce-workshop/source-readiness',
         '/v1/ecommerce-workshop/background-processing',
+        '/v1/ecommerce-workshop/background-processing/configuration-preview',
         '/v1/ecommerce-workshop/views/operations/cases',
         '/v1/ecommerce-workshop/commands/operations/readiness',
         '/v1/ecommerce-workshop/views/task-cockpit/feedback',

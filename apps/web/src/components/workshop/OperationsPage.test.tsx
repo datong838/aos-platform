@@ -213,8 +213,9 @@ describe("OperationsPage", () => {
   });
   it("后台处理只显示业务语义，且只在运营人员显式点击后提交一次", async () => {
     const getBackgroundProcessingStatus = vi.fn().mockResolvedValue({ tenant: response.tenant, status: { schemaVersion: "aos.route-worker-customer-status/v1" as const, state: "unconfigured" as const, title: "后台处理尚未配置", summary: "完成配置后仍需单独满足运行条件。", canProcessBusinessTasks: false as const, checkedAt: "2026-10-30T01:00:00Z" } });
+    const getBackgroundProcessingConfigurationPreview = vi.fn().mockResolvedValue({ tenant: response.tenant, preview: { schemaVersion: "aos.route-worker-configuration-preview/v1" as const, status: "reviewable" as const, title: "后台处理配置可以确认", summary: "确认后只保存后台处理配置；当前不会自动处理业务。", approvalAllowed: true, checks: [{ key: "current_customer_installation" as const, label: "当前客户安装", passed: true, detail: "当前客户安装已通过正式校验。" }, { key: "background_identity" as const, label: "后台业务身份", passed: true, detail: "后台业务身份坐标已准备。" }, { key: "protected_storage" as const, label: "受保护保存位置", passed: true, detail: "受保护保存位置已准备。" }, { key: "identity_credential" as const, label: "身份凭据", passed: true, detail: "当前身份凭据已安全就绪。" }], nextActions: ["确认后只保存配置；运行仍需另行满足审批和预算。"], sideEffects: { databaseWrite: false as const, configurationWrite: false as const, tokenRequest: false as const, businessProcessing: false as const, externalEffect: false as const }, canProcessBusinessTasks: false as const, evaluatedAt: "2026-10-31T01:40:00Z" } });
     const executeBackgroundProcessing = vi.fn().mockResolvedValue({ tenant: response.tenant, result: { schemaVersion: "aos.route-worker-customer-receipt/v1" as const, receiptId: "receipt-business-1", action: "enable" as const, state: "configuration_ready" as const, title: "后台处理配置已就绪", summary: "配置已保存；当前不会自动处理业务。", canProcessBusinessTasks: false as const, completedAt: "2026-10-30T01:01:00Z" } });
-    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn(), getBackgroundProcessingStatus, executeBackgroundProcessing };
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn(), getBackgroundProcessingStatus, getBackgroundProcessingConfigurationPreview, executeBackgroundProcessing };
 
     await act(async () => root.render(<OperationsPage client={client} />));
     const card = host.querySelector<HTMLElement>('[aria-label="后台处理"]')!;
@@ -224,12 +225,33 @@ describe("OperationsPage", () => {
     expect(card.textContent).not.toContain("route_worker");
     expect(executeBackgroundProcessing).not.toHaveBeenCalled();
 
-    const configure = [...card.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "配置后台处理")!;
+    expect([...card.querySelectorAll<HTMLButtonElement>("button")].some((button) => button.textContent === "确认配置（不会启动业务）")).toBe(false);
+    const inspect = [...card.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "检查配置条件")!;
+    await act(async () => inspect.click());
+    expect(getBackgroundProcessingConfigurationPreview).toHaveBeenCalledTimes(1);
+    expect(card.textContent).toContain("当前客户安装");
+    expect(card.textContent).toContain("身份凭据");
+    const configure = [...card.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "确认配置（不会启动业务）")!;
     await act(async () => { configure.click(); configure.click(); });
     expect(executeBackgroundProcessing).toHaveBeenCalledTimes(1);
     expect(executeBackgroundProcessing).toHaveBeenCalledWith("configure", expect.any(String));
     expect(card.textContent).toContain("后台处理配置已就绪");
     expect(card.textContent).toContain("操作已记录");
+  });
+  it("配置条件未齐时只展示待补事项，不提交配置", async () => {
+    const executeBackgroundProcessing = vi.fn();
+    const getBackgroundProcessingConfigurationPreview = vi.fn().mockResolvedValue({ tenant: response.tenant, preview: { schemaVersion: "aos.route-worker-configuration-preview/v1" as const, status: "needs_input" as const, title: "后台处理配置条件未齐", summary: "当前不会自动处理业务；请先补齐配置条件。", approvalAllowed: false, checks: [{ key: "current_customer_installation" as const, label: "当前客户安装", passed: true, detail: "当前客户安装已通过正式校验。" }, { key: "background_identity" as const, label: "后台业务身份", passed: false, detail: "后台业务身份尚未准备。" }, { key: "protected_storage" as const, label: "受保护保存位置", passed: false, detail: "受保护保存位置尚未准备。" }, { key: "identity_credential" as const, label: "身份凭据", passed: false, detail: "当前身份凭据尚未安全就绪。" }], nextActions: ["配置当前客户的后台业务身份。"], sideEffects: { databaseWrite: false as const, configurationWrite: false as const, tokenRequest: false as const, businessProcessing: false as const, externalEffect: false as const }, canProcessBusinessTasks: false as const, evaluatedAt: "2026-10-31T01:40:00Z" } });
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn(), getBackgroundProcessingStatus: vi.fn().mockResolvedValue({ tenant: response.tenant, status: { schemaVersion: "aos.route-worker-customer-status/v1" as const, state: "unconfigured" as const, title: "后台处理尚未配置", summary: "完成配置后仍需单独满足运行条件。", canProcessBusinessTasks: false as const, checkedAt: "2026-10-30T01:00:00Z" } }), getBackgroundProcessingConfigurationPreview, executeBackgroundProcessing };
+
+    await act(async () => root.render(<OperationsPage client={client} />));
+    const card = host.querySelector<HTMLElement>('[aria-label="后台处理"]')!;
+    const inspect = [...card.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "检查配置条件")!;
+    await act(async () => inspect.click());
+
+    expect(card.textContent).toContain("后台业务身份尚未准备");
+    expect(card.textContent).toContain("受保护保存位置尚未准备");
+    expect([...card.querySelectorAll<HTMLButtonElement>("button")].some((button) => button.textContent === "确认配置（不会启动业务）")).toBe(false);
+    expect(executeBackgroundProcessing).not.toHaveBeenCalled();
   });
   it("后台处理操作结果未知时不重发，并切换为业务化待核对状态", async () => {
     const executeBackgroundProcessing = vi.fn().mockRejectedValue(new Error("unknown"));

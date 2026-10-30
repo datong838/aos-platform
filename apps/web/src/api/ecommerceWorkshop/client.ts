@@ -17,8 +17,8 @@ import type { MediaInternalWorkflowCommandInput, MediaInternalWorkflowCommandRes
 import { parseMediaInternalWorkflowCommand, parseMediaInternalWorkflowHistory, parseMediaInternalWorkflowList } from "./mediaWorkflowParser";
 import type { MediaDeliveryExportInput, MediaDeliveryExportResponse, MediaDeliveryPublishProposalInput, MediaDeliveryPublishProposalResponse, MediaDeliveryWorkspaceResponse } from "./contracts";
 import { parseMediaDeliveryExport, parseMediaDeliveryPublishProposal, parseMediaDeliveryWorkspace } from "./mediaDeliveryParser";
-import type { BackgroundProcessingAction, BackgroundProcessingReceiptResponse, BackgroundProcessingStatusResponse } from "./contracts";
-import { parseBackgroundProcessingReceipt, parseBackgroundProcessingStatus } from "./parser";
+import type { BackgroundProcessingAction, BackgroundProcessingConfigurationPreviewResponse, BackgroundProcessingReceiptResponse, BackgroundProcessingStatusResponse } from "./contracts";
+import { parseBackgroundProcessingConfigurationPreview, parseBackgroundProcessingReceipt, parseBackgroundProcessingStatus } from "./parser";
 
 type FetchImplementation = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 export type EcommerceWorkshopClientOptions = { fetch?: FetchImplementation; getBaseUrl?: () => string; getAuthHeaders?: () => Record<string, string> };
@@ -111,6 +111,7 @@ export class EcommerceWorkshopClient {
   async getSourceReadiness(): Promise<SourceReadinessEnvelope> { return parseSourceReadinessEnvelope(await this.get("ecommerceWorkshopSourceReadinessGet", "/v1/ecommerce-workshop/source-readiness")); }
   async getOperationsView(): Promise<OperationsViewResponse> { return parseOperationsView(await this.get("ecommerceWorkshopOperationsViewGet", "/v1/ecommerce-workshop/views/operations")); }
   async getBackgroundProcessingStatus(): Promise<BackgroundProcessingStatusResponse> { return parseBackgroundProcessingStatus(await this.get("ecommerceWorkshopBackgroundProcessingGet", "/v1/ecommerce-workshop/background-processing")); }
+  async getBackgroundProcessingConfigurationPreview(): Promise<BackgroundProcessingConfigurationPreviewResponse> { return parseBackgroundProcessingConfigurationPreview(await this.get("ecommerceWorkshopBackgroundProcessingConfigurationPreviewGet", "/v1/ecommerce-workshop/background-processing/configuration-preview")); }
   async executeBackgroundProcessing(action: BackgroundProcessingAction, idempotencyKey: string): Promise<BackgroundProcessingReceiptResponse> { if (!idempotencyKey.trim() || idempotencyKey.length > 160) throw new TypeError("后台处理操作参数无效"); return parseBackgroundProcessingReceipt(await this.post(`ecommerceWorkshopBackgroundProcessing${action[0]!.toUpperCase()}${action.slice(1)}`, `/v1/ecommerce-workshop/background-processing/${action}`, {}, { "Idempotency-Key": idempotencyKey }), action); }
   async getOperationCaseWorkspace(): Promise<OperationCaseWorkspaceResponse> { return parseOperationCaseWorkspace(await this.get("ecommerceWorkshopOperationCaseWorkspaceGet", "/v1/ecommerce-workshop/views/operations/cases")); }
   async getContentCampaignView(): Promise<ContentCampaignViewResponse> { return parseContentCampaignView(await this.get("ecommerceWorkshopContentCampaignViewGet", "/v1/ecommerce-workshop/views/content-campaign")); }

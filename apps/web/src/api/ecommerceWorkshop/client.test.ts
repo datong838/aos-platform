@@ -243,16 +243,38 @@ describe("后台处理业务入口", () => {
       completedAt: "2026-10-30T01:01:00Z",
     },
   };
+  const preview = {
+    tenant: envelope.tenant,
+    preview: {
+      schemaVersion: "aos.route-worker-configuration-preview/v1",
+      status: "reviewable",
+      title: "后台处理配置可以确认",
+      summary: "确认后只保存后台处理配置；当前不会自动处理业务。",
+      approvalAllowed: true,
+      checks: [
+        { key: "current_customer_installation", label: "当前客户安装", passed: true, detail: "当前客户安装已通过正式校验。" },
+        { key: "background_identity", label: "后台业务身份", passed: true, detail: "后台业务身份坐标已准备。" },
+        { key: "protected_storage", label: "受保护保存位置", passed: true, detail: "受保护保存位置已准备。" },
+        { key: "identity_credential", label: "身份凭据", passed: true, detail: "当前身份凭据已安全就绪。" },
+      ],
+      nextActions: ["确认后只保存配置；运行仍需另行满足审批和预算。"],
+      sideEffects: { databaseWrite: false, configurationWrite: false, tokenRequest: false, businessProcessing: false, externalEffect: false },
+      canProcessBusinessTasks: false,
+      evaluatedAt: "2026-10-31T01:40:00Z",
+    },
+  };
 
   it("按业务路径读取状态，并只在显式操作时携带幂等键", async () => {
-    const fetch = vi.fn().mockResolvedValueOnce(ok(status)).mockResolvedValueOnce(ok(receipt));
+    const fetch = vi.fn().mockResolvedValueOnce(ok(status)).mockResolvedValueOnce(ok(preview)).mockResolvedValueOnce(ok(receipt));
     const client = new EcommerceWorkshopClient({ fetch, getBaseUrl: () => "http://api.test", getAuthHeaders: () => ({ "X-Org-Id": "org-org", "X-Project-Id": "dev-project" }) });
 
     await expect(client.getBackgroundProcessingStatus()).resolves.toMatchObject({ status: { state: "unconfigured", canProcessBusinessTasks: false } });
+    await expect(client.getBackgroundProcessingConfigurationPreview()).resolves.toMatchObject({ preview: { status: "reviewable", approvalAllowed: true, canProcessBusinessTasks: false } });
     await expect(client.executeBackgroundProcessing("configure", "background-key-1")).resolves.toMatchObject({ result: { state: "configuration_ready", canProcessBusinessTasks: false } });
 
     expect(fetch).toHaveBeenNthCalledWith(1, "http://api.test/v1/ecommerce-workshop/background-processing", expect.objectContaining({ method: "GET" }));
-    expect(fetch).toHaveBeenNthCalledWith(2, "http://api.test/v1/ecommerce-workshop/background-processing/configure", expect.objectContaining({ method: "POST", body: "{}", headers: expect.objectContaining({ "Idempotency-Key": "background-key-1" }) }));
+    expect(fetch).toHaveBeenNthCalledWith(2, "http://api.test/v1/ecommerce-workshop/background-processing/configuration-preview", expect.objectContaining({ method: "GET" }));
+    expect(fetch).toHaveBeenNthCalledWith(3, "http://api.test/v1/ecommerce-workshop/background-processing/configure", expect.objectContaining({ method: "POST", body: "{}", headers: expect.objectContaining({ "Idempotency-Key": "background-key-1" }) }));
   });
 
   it("拒绝租户、业务状态和内部字段漂移", async () => {
@@ -264,5 +286,8 @@ describe("后台处理业务入口", () => {
 
     const internalField = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(ok({ ...status, status: { ...status.status, installationId: "internal-installation" } })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
     await expect(internalField.getBackgroundProcessingStatus()).rejects.toBeInstanceOf(TypeError);
+
+    const previewInternalField = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(ok({ ...preview, preview: { ...preview.preview, secretVersion: "v1" } })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
+    await expect(previewInternalField.getBackgroundProcessingConfigurationPreview()).rejects.toBeInstanceOf(TypeError);
   });
 });

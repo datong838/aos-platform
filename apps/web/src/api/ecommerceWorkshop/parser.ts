@@ -10,6 +10,7 @@ import {
   OPERATIONS_SCHEMA_VERSION,
   BACKGROUND_PROCESSING_STATUS_SCHEMA_VERSION,
   BACKGROUND_PROCESSING_RECEIPT_SCHEMA_VERSION,
+  BACKGROUND_PROCESSING_CONFIGURATION_PREVIEW_SCHEMA_VERSION,
   OPERATION_COMMAND_READINESS_SCHEMA_VERSION,
   OPERATION_COMMAND_PREVIEW_SCHEMA_VERSION,
   OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION,
@@ -161,6 +162,9 @@ import {
   type OperationsSliceId,
   type OperationsViewResponse,
   type BackgroundProcessingAction,
+  type BackgroundProcessingConfigurationCheck,
+  type BackgroundProcessingConfigurationCheckKey,
+  type BackgroundProcessingConfigurationPreviewResponse,
   type BackgroundProcessingReceiptResponse,
   type BackgroundProcessingStatusResponse,
   type OperationCommandBlocker,
@@ -1251,6 +1255,41 @@ export function parseBackgroundProcessingStatus(value: unknown, expectedTenant?:
   const expectedTitle = { unconfigured: "后台处理尚未配置", configuration_ready: "后台处理配置已就绪", disabled: "后台处理已停用", needs_review: "后台处理状态待核对" }[state];
   if (title !== expectedTitle) throw new TypeError("backgroundProcessing.status 业务语义漂移");
   return { tenant, status: { schemaVersion: BACKGROUND_PROCESSING_STATUS_SCHEMA_VERSION, state, title, summary: boundedText(status.summary, "backgroundProcessing.status.summary", 240), canProcessBusinessTasks: false, checkedAt: timestamp(status.checkedAt, "backgroundProcessing.status.checkedAt") } };
+}
+
+const BACKGROUND_CONFIGURATION_CHECKS = [
+  ["current_customer_installation", "当前客户安装"],
+  ["background_identity", "后台业务身份"],
+  ["protected_storage", "受保护保存位置"],
+  ["identity_credential", "身份凭据"],
+] as const satisfies readonly (readonly [BackgroundProcessingConfigurationCheckKey, string])[];
+
+export function parseBackgroundProcessingConfigurationPreview(value: unknown, expectedTenant?: WorkshopTenant): BackgroundProcessingConfigurationPreviewResponse {
+  const raw = record(value, "backgroundProcessingConfigurationPreview");
+  exact(raw, ["tenant", "preview"], "backgroundProcessingConfigurationPreview");
+  const tenant = parseTenant(raw.tenant);
+  if (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) throw new TypeError("backgroundProcessingConfigurationPreview.tenant 漂移");
+  const preview = record(raw.preview, "backgroundProcessingConfigurationPreview.preview");
+  exact(preview, ["schemaVersion", "status", "title", "summary", "approvalAllowed", "checks", "nextActions", "sideEffects", "canProcessBusinessTasks", "evaluatedAt"], "backgroundProcessingConfigurationPreview.preview");
+  if (preview.schemaVersion !== BACKGROUND_PROCESSING_CONFIGURATION_PREVIEW_SCHEMA_VERSION || preview.canProcessBusinessTasks !== false || typeof preview.approvalAllowed !== "boolean") throw new TypeError("backgroundProcessingConfigurationPreview contract 漂移");
+  const status = enumValue(preview.status, ["reviewable", "needs_input"] as const, "backgroundProcessingConfigurationPreview.status");
+  const expectedTitle = status === "reviewable" ? "后台处理配置可以确认" : "后台处理配置条件未齐";
+  if (preview.title !== expectedTitle || preview.approvalAllowed !== (status === "reviewable")) throw new TypeError("backgroundProcessingConfigurationPreview 业务语义漂移");
+  if (!Array.isArray(preview.checks) || preview.checks.length !== BACKGROUND_CONFIGURATION_CHECKS.length) throw new TypeError("backgroundProcessingConfigurationPreview.checks 漂移");
+  const rawChecks = preview.checks;
+  const checks = BACKGROUND_CONFIGURATION_CHECKS.map(([key, label], index): BackgroundProcessingConfigurationCheck => {
+    const item = record(rawChecks[index], `backgroundProcessingConfigurationPreview.checks[${index}]`);
+    exact(item, ["key", "label", "passed", "detail"], `backgroundProcessingConfigurationPreview.checks[${index}]`);
+    if (item.key !== key || item.label !== label || typeof item.passed !== "boolean") throw new TypeError("backgroundProcessingConfigurationPreview.checks 业务语义漂移");
+    return { key, label, passed: item.passed, detail: boundedText(item.detail, `backgroundProcessingConfigurationPreview.checks[${index}].detail`, 240) };
+  });
+  if (preview.approvalAllowed !== checks.every((item) => item.passed)) throw new TypeError("backgroundProcessingConfigurationPreview.approvalAllowed 漂移");
+  if (!Array.isArray(preview.nextActions) || !preview.nextActions.length) throw new TypeError("backgroundProcessingConfigurationPreview.nextActions 漂移");
+  const nextActions = preview.nextActions.map((item, index) => boundedText(item, `backgroundProcessingConfigurationPreview.nextActions[${index}]`, 240));
+  const sideEffects = record(preview.sideEffects, "backgroundProcessingConfigurationPreview.sideEffects");
+  exact(sideEffects, ["databaseWrite", "configurationWrite", "tokenRequest", "businessProcessing", "externalEffect"], "backgroundProcessingConfigurationPreview.sideEffects");
+  if (Object.values(sideEffects).some((item) => item !== false)) throw new TypeError("backgroundProcessingConfigurationPreview.sideEffects 必须全部关闭");
+  return { tenant, preview: { schemaVersion: BACKGROUND_PROCESSING_CONFIGURATION_PREVIEW_SCHEMA_VERSION, status, title: expectedTitle, summary: boundedText(preview.summary, "backgroundProcessingConfigurationPreview.summary", 240), approvalAllowed: preview.approvalAllowed, checks, nextActions, sideEffects: { databaseWrite: false, configurationWrite: false, tokenRequest: false, businessProcessing: false, externalEffect: false }, canProcessBusinessTasks: false, evaluatedAt: timestamp(preview.evaluatedAt, "backgroundProcessingConfigurationPreview.evaluatedAt") } };
 }
 
 export function parseBackgroundProcessingReceipt(value: unknown, expectedAction: BackgroundProcessingAction, expectedTenant?: WorkshopTenant): BackgroundProcessingReceiptResponse {

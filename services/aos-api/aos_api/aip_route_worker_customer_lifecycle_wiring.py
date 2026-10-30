@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from aos_api.aip_route_worker_customer_lifecycle import (
+    RouteWorkerConfigurationCheck,
+    RouteWorkerConfigurationPreview,
+    RouteWorkerConfigurationSideEffects,
     RouteWorkerCustomerLifecycleService,
 )
 from aos_api.aip_route_worker_identity import RouteWorkerIdentityConfig
@@ -43,6 +47,7 @@ class RouteWorkerBusinessEntryFactory:
             [], RouteWorkerIdentityConfig
         ] = RouteWorkerIdentityConfig.from_control_env,
         path_factory: Callable[[], Path] | None = None,
+        clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         if not all(
             callable(item)
@@ -51,6 +56,7 @@ class RouteWorkerBusinessEntryFactory:
                 read_connect_factory,
                 authority_factory,
                 config_factory,
+                clock,
             )
         ):
             raise ValueError(
@@ -62,6 +68,7 @@ class RouteWorkerBusinessEntryFactory:
         self._authority_factory = authority_factory
         self._config_factory = config_factory
         self._path_factory = path_factory or self._configured_path
+        self._clock = clock
 
     @staticmethod
     def _configured_path() -> Path:
@@ -87,6 +94,140 @@ class RouteWorkerBusinessEntryFactory:
             if not rows:
                 return None
             return rows[0]["response_json"]
+
+    def preview_configuration(
+        self, *, installation_id: str
+    ) -> RouteWorkerConfigurationPreview:
+        """Evaluate configuration prerequisites without writes or secret reads."""
+
+        authority = None
+        installation_ready = False
+        try:
+            authority = self._authority_factory()
+            installation_ready = (
+                authority.assert_installation_current(installation_id) is True
+            )
+        except Exception:
+            installation_ready = False
+
+        identity = None
+        identity_ready = False
+        try:
+            identity = self._config_factory()
+            identity_ready = type(identity) is RouteWorkerIdentityConfig
+        except Exception:
+            identity_ready = False
+
+        storage_ready = False
+        try:
+            RouteWorkerIdentityInstallationStore.validate_target_path(
+                self._path_factory()
+            )
+            storage_ready = True
+        except Exception:
+            storage_ready = False
+
+        credential_ready = False
+        if installation_ready and identity_ready and authority is not None:
+            try:
+                target = authority.build_document(
+                    config=identity, installation_id=installation_id
+                )
+                credential_ready = self._secret_client.exists(target.locator()) is True
+            except Exception:
+                credential_ready = False
+
+        states = (
+            installation_ready,
+            identity_ready,
+            storage_ready,
+            credential_ready,
+        )
+        checks = (
+            RouteWorkerConfigurationCheck(
+                key="current_customer_installation",
+                label="当前客户安装",
+                passed=installation_ready,
+                detail=(
+                    "当前客户安装已通过正式校验。"
+                    if installation_ready
+                    else "当前客户安装仍需完成正式校验。"
+                ),
+            ),
+            RouteWorkerConfigurationCheck(
+                key="background_identity",
+                label="后台业务身份",
+                passed=identity_ready,
+                detail=(
+                    "后台业务身份坐标已准备。"
+                    if identity_ready
+                    else "后台业务身份尚未准备。"
+                ),
+            ),
+            RouteWorkerConfigurationCheck(
+                key="protected_storage",
+                label="受保护保存位置",
+                passed=storage_ready,
+                detail=(
+                    "受保护保存位置已准备。"
+                    if storage_ready
+                    else "受保护保存位置尚未准备。"
+                ),
+            ),
+            RouteWorkerConfigurationCheck(
+                key="identity_credential",
+                label="身份凭据",
+                passed=credential_ready,
+                detail=(
+                    "当前身份凭据已安全就绪。"
+                    if credential_ready
+                    else "当前身份凭据尚未安全就绪。"
+                ),
+            ),
+        )
+        ready = all(states)
+        missing_actions = tuple(
+            action
+            for passed, action in zip(
+                states,
+                (
+                    "等待当前客户安装通过正式校验。",
+                    "配置当前客户的后台业务身份。",
+                    "准备受保护的配置保存位置。",
+                    "由安全管理员准备当前身份凭据。",
+                ),
+                strict=True,
+            )
+            if not passed
+        )
+        return RouteWorkerConfigurationPreview(
+            schemaVersion="aos.route-worker-configuration-preview/v1",
+            status="reviewable" if ready else "needs_input",
+            title=(
+                "后台处理配置可以确认" if ready else "后台处理配置条件未齐"
+            ),
+            summary=(
+                "确认后只保存后台处理配置；当前不会自动处理业务。"
+                if ready
+                else "当前不会自动处理业务；请先补齐配置条件。"
+            ),
+            approvalAllowed=ready,
+            checks=checks,
+            nextActions=(
+                ("确认后只保存配置；运行仍需另行满足审批和预算。",)
+                if ready
+                else missing_actions
+            ),
+            sideEffects=RouteWorkerConfigurationSideEffects(
+                databaseWrite=False,
+                configurationWrite=False,
+                tokenRequest=False,
+                businessProcessing=False,
+                externalEffect=False,
+            ),
+            canProcessBusinessTasks=False,
+            evaluatedAt=self._clock(),
+        )
 
     def build(self, *, installation_id: str) -> RouteWorkerCustomerLifecycleService:
         path = self._path_factory()

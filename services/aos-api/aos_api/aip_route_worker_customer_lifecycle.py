@@ -30,6 +30,99 @@ _COMPLETE_OPERATION = "route_worker_identity.customer_lifecycle.complete"
 _Action = Literal["enable", "disable", "restore"]
 
 
+class RouteWorkerConfigurationCheck(BaseModel):
+    """One customer-readable prerequisite without internal coordinates."""
+
+    model_config = ConfigDict(
+        strict=True,
+        frozen=True,
+        extra="forbid",
+        populate_by_name=True,
+        hide_input_in_errors=True,
+    )
+    key: Literal[
+        "current_customer_installation",
+        "background_identity",
+        "protected_storage",
+        "identity_credential",
+    ]
+    label: str = Field(min_length=1, max_length=80)
+    passed: bool
+    detail: str = Field(min_length=1, max_length=240)
+
+
+class RouteWorkerConfigurationSideEffects(BaseModel):
+    """A preview is read-only and cannot authorize runtime effects."""
+
+    model_config = ConfigDict(
+        strict=True, frozen=True, extra="forbid", populate_by_name=True
+    )
+    database_write: Literal[False] = Field(alias="databaseWrite")
+    configuration_write: Literal[False] = Field(alias="configurationWrite")
+    token_request: Literal[False] = Field(alias="tokenRequest")
+    business_processing: Literal[False] = Field(alias="businessProcessing")
+    external_effect: Literal[False] = Field(alias="externalEffect")
+
+
+class RouteWorkerConfigurationPreview(BaseModel):
+    """Read-only approval material for saving the protected configuration."""
+
+    model_config = ConfigDict(
+        strict=True,
+        frozen=True,
+        extra="forbid",
+        populate_by_name=True,
+        hide_input_in_errors=True,
+    )
+    schema_version: Literal["aos.route-worker-configuration-preview/v1"] = Field(
+        alias="schemaVersion"
+    )
+    status: Literal["reviewable", "needs_input"]
+    title: str = Field(min_length=1, max_length=80)
+    summary: str = Field(min_length=1, max_length=240)
+    approval_allowed: bool = Field(alias="approvalAllowed")
+    checks: tuple[RouteWorkerConfigurationCheck, ...] = Field(
+        min_length=4, max_length=4
+    )
+    next_actions: tuple[str, ...] = Field(
+        alias="nextActions", min_length=1, max_length=4
+    )
+    side_effects: RouteWorkerConfigurationSideEffects = Field(alias="sideEffects")
+    can_process_business_tasks: Literal[False] = Field(
+        alias="canProcessBusinessTasks"
+    )
+    evaluated_at: datetime = Field(alias="evaluatedAt")
+
+    @field_validator("evaluated_at")
+    @classmethod
+    def aware_evaluated_at(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("aware preview time required")
+        return value
+
+    @model_validator(mode="after")
+    def coherent_preview(self) -> RouteWorkerConfigurationPreview:
+        expected_keys = (
+            "current_customer_installation",
+            "background_identity",
+            "protected_storage",
+            "identity_credential",
+        )
+        if tuple(item.key for item in self.checks) != expected_keys:
+            raise ValueError("configuration preview checks are incoherent")
+        ready = all(item.passed for item in self.checks)
+        expected_title = (
+            "后台处理配置可以确认" if ready else "后台处理配置条件未齐"
+        )
+        if (
+            self.approval_allowed is not ready
+            or self.status != ("reviewable" if ready else "needs_input")
+            or self.title != expected_title
+        ):
+            raise ValueError("configuration preview state is incoherent")
+        return self
+
+
 class RouteWorkerCustomerStatus(BaseModel):
     """Current customer-facing state without installation coordinates."""
 
@@ -83,6 +176,14 @@ class RouteWorkerCustomerStatusEnvelope(BaseModel):
     )
     tenant: RouteWorkerCustomerTenant
     status: RouteWorkerCustomerStatus
+
+
+class RouteWorkerConfigurationPreviewEnvelope(BaseModel):
+    model_config = ConfigDict(
+        strict=True, frozen=True, extra="forbid", populate_by_name=True
+    )
+    tenant: RouteWorkerCustomerTenant
+    preview: RouteWorkerConfigurationPreview
 
 
 class RouteWorkerCustomerLifecycleBlocked(RuntimeError):

@@ -4,6 +4,9 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 
 from aos_api.aip_route_worker_customer_lifecycle import (
+    RouteWorkerConfigurationCheck,
+    RouteWorkerConfigurationPreview,
+    RouteWorkerConfigurationSideEffects,
     RouteWorkerCustomerReceipt,
     RouteWorkerCustomerStatus,
 )
@@ -78,6 +81,52 @@ class Factory:
         self.installation_ids.append(installation_id)
         return self.service
 
+    def preview_configuration(self, *, installation_id):
+        self.installation_ids.append(installation_id)
+        return RouteWorkerConfigurationPreview(
+            schemaVersion="aos.route-worker-configuration-preview/v1",
+            status="needs_input",
+            title="后台处理配置条件未齐",
+            summary="当前不会自动处理业务；请先补齐配置条件。",
+            approvalAllowed=False,
+            checks=(
+                RouteWorkerConfigurationCheck(
+                    key="current_customer_installation",
+                    label="当前客户安装",
+                    passed=True,
+                    detail="当前客户安装已确认。",
+                ),
+                RouteWorkerConfigurationCheck(
+                    key="background_identity",
+                    label="后台业务身份",
+                    passed=False,
+                    detail="后台业务身份待配置。",
+                ),
+                RouteWorkerConfigurationCheck(
+                    key="protected_storage",
+                    label="受保护保存位置",
+                    passed=False,
+                    detail="受保护保存位置待配置。",
+                ),
+                RouteWorkerConfigurationCheck(
+                    key="identity_credential",
+                    label="身份凭据",
+                    passed=False,
+                    detail="身份凭据待配置。",
+                ),
+            ),
+            nextActions=("补齐后台业务身份和受保护保存位置。",),
+            sideEffects=RouteWorkerConfigurationSideEffects(
+                databaseWrite=False,
+                configurationWrite=False,
+                tokenRequest=False,
+                businessProcessing=False,
+                externalEffect=False,
+            ),
+            canProcessBusinessTasks=False,
+            evaluatedAt=datetime(2026, 10, 30, 21, 29, tzinfo=UTC),
+        )
+
 
 def client(service: Service) -> TestClient:
     app = FastAPI()
@@ -149,6 +198,30 @@ def test_business_status_and_commands_have_no_installation_parameters():
         "disable-1",
         "restore-1",
     ]
+
+
+def test_configuration_preview_is_read_only_business_semantics():
+    service = Service()
+    with client(service) as api:
+        response = api.get(
+            "/v1/ecommerce-workshop/background-processing/configuration-preview"
+        )
+
+    assert response.status_code == 200
+    assert response.json()["preview"]["status"] == "needs_input"
+    assert response.json()["preview"]["approvalAllowed"] is False
+    assert response.json()["preview"]["canProcessBusinessTasks"] is False
+    rendered = str(response.json())
+    for forbidden in (
+        "installationId",
+        "revision",
+        "etag",
+        "lockHash",
+        "secretVersion",
+        "locator",
+    ):
+        assert forbidden not in rendered
+    assert service.calls == []
 
 
 def test_business_commands_reject_query_and_internal_body_parameters():
