@@ -97,3 +97,17 @@ GREEN：
 ## 验收与风险
 
 本波完成只代表配置批准对象可审阅，不代表当前用户已经批准、配置已经写入、预算已启用或自然业务首链已经开始。当前业务库仍只读，Host/worker/Provider 保持 OFF；真实阶段数字不变。
+
+## r2 运行接线补充：安装证据读取身份
+
+2026-10-31 当前运行只读核验发现，`CurrentRouteWorkerInstallationAuthority.from_runtime()` 把安装、锁和 Registry 签名证据读取接到了 Host 的目录身份。目录身份按既有三平面隔离方案只允许读取 Host assignment 安全函数，不拥有 `bundle_installation` 等控制面表权限，因此合法的当前安装也会稳定失败关闭。该失败不是安装缺失、签名漂移或需要扩权。
+
+最小修复规则：
+
+1. 不给目录身份增加任何表权限，不改角色、ACL、数据库或受保护凭据文件。
+2. 当前安装证据沿用该 reader 已有合同：使用 API 当前数据库登录建立原始空闲连接；reader 自己在首条业务 SQL 前设置 `REPEATABLE READ READ ONLY`，再应用精确 `org-org/dev-project` 租户范围。
+3. Host assignment 选择继续只使用目录身份；本修改不得改变 `runtime_directory_connection` 或三平面职责。
+4. 新增单元回归，证明生产工厂使用当前 API 数据库 DSN 与字典行读取器，不再把安装证据接到目录连接。
+5. 运行验收必须同时证明：当前安装 `active_revision=current_revision`、四个签名组件通过；所有配置预览副作用仍为 false；Host/worker/Provider 仍为 OFF。
+
+本补充只修正连接平面，不放宽安装、锁、签名、来源字节或租户校验，也不把配置条件通过计作真实业务验收。

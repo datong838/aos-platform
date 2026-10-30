@@ -11,6 +11,10 @@ from aos_api.aip_route_worker_installation import (
 from aos_api.aip_route_worker_installation_authority import (
     CurrentRouteWorkerInstallationAuthority,
     RouteWorkerSignedInstallationCoordinator,
+    _runtime_installation_evidence_connection,
+)
+from aos_api.aip_route_worker_installation_authority import (
+    psycopg as authority_psycopg,
 )
 from aos_api.extension_runtime.current_installation_release_evidence import (
     CurrentInstallationReleaseEvidence,
@@ -66,6 +70,23 @@ def test_exact_current_active_signed_installation_is_accepted():
         }
     ]
     assert reader.calls[0]["scope"].key == ("org-org", "dev-project")
+
+
+def test_runtime_installation_evidence_uses_api_control_plane_identity(monkeypatch):
+    from aos_api import db
+    from psycopg.rows import dict_row
+
+    sentinel = object()
+    calls = []
+    monkeypatch.setattr(db, "get_dsn", lambda: "postgresql://control-plane")
+    monkeypatch.setattr(
+        authority_psycopg,
+        "connect",
+        lambda dsn, *, row_factory: calls.append((dsn, row_factory)) or sentinel,
+    )
+
+    assert _runtime_installation_evidence_connection() is sentinel
+    assert calls == [("postgresql://control-plane", dict_row)]
 
 
 @pytest.mark.parametrize(

@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
+import psycopg
+from psycopg.rows import dict_row
+
 from aos_api.aip_route_worker_identity import RouteWorkerIdentityConfig
 from aos_api.aip_route_worker_installation import (
     RouteWorkerIdentityInstallation,
@@ -18,6 +21,14 @@ from aos_api.extension_runtime.current_installation_release_evidence import (
     read_current_installation_release_evidence,
 )
 from aos_api.tenant_scope import TenantScope
+
+
+def _runtime_installation_evidence_connection():
+    """Open the API control-plane identity; the evidence reader makes it read-only."""
+
+    from aos_api.db import get_dsn
+
+    return psycopg.connect(get_dsn(), row_factory=dict_row)
 
 
 class CurrentRouteWorkerInstallationAuthority:
@@ -37,10 +48,6 @@ class CurrentRouteWorkerInstallationAuthority:
         )
         from aos_api.asset_registry.manifest_loader import ManifestLoader
         from aos_api.asset_registry.release_policy import ReleasePolicy
-        from aos_api.extension_runtime.runtime_connections import (
-            runtime_directory_connection,
-        )
-
         roots = _configured_trust_roots()
         policy = ReleasePolicy(trust_roots=roots)
         loader = ManifestLoader(
@@ -49,7 +56,7 @@ class CurrentRouteWorkerInstallationAuthority:
 
         def reader(**kwargs):
             return read_current_installation_release_evidence(
-                connect_factory=runtime_directory_connection,
+                connect_factory=_runtime_installation_evidence_connection,
                 release_policy=policy,
                 loader=loader,
                 **kwargs,
