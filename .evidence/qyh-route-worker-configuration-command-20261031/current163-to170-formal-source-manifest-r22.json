@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "aos.qyh-current163-to170-formal-source-manifest/v1",
+  "createdAt": "2026-10-31T06:10:00+08:00",
+  "repositoryCommit": "563742553d549da5921c2c18ddf30fb7fa860037",
+  "migrations": [
+    {"revision": "a0v_164", "path": "services/aos-api/alembic/versions/a0v_164_budget_policy_window_runtime.py", "sha256": "7b7dcf700f51d012a303733140afd0d38bcf7a738553b68feb8a9effe9a5e140"},
+    {"revision": "a0v_165", "path": "services/aos-api/alembic/versions/a0v_165_evaluator_judge_risk_read.py", "sha256": "f90f622023cc0b18559bd4977c9bc2765a89a73a8d14e3d05629a1bc2c096f99"},
+    {"revision": "a0v_166", "path": "services/aos-api/alembic/versions/a0v_166_dispatch_refresh_activation_chain.py", "sha256": "28d65323629bf349a52f84737e56a5befeefbc1b7a396bb28aece44fa1dedd86"},
+    {"revision": "a0v_167", "path": "services/aos-api/alembic/versions/a0v_167_model_route_eval_publication_reader.py", "sha256": "4d4f0bae10677d0d6772dca4df40d8c2b686a598e71f998a9215da1593e9da6e"},
+    {"revision": "a0v_168", "path": "services/aos-api/alembic/versions/a0v_168_route_eval_execution_journal.py", "sha256": "8d706a258ceaa2aa4fed84f4bced5182d8ea3d8c273b8206547f2a27e76e1039"},
+    {"revision": "a0v_169", "path": "services/aos-api/alembic/versions/a0v_169_route_eval_finalization_proof.py", "sha256": "c92314d10f3d8bb09495a2a7d54aff026fa3b244ad00173303949aa00fc13b87"},
+    {"revision": "a0v_170", "path": "services/aos-api/alembic/versions/a0v_170_route_eval_release_material.py", "sha256": "5f65b0f53ea309c5c59fafed5969d35f0dde577e443ca64012e11244278314be"}
+  ],
+  "backup": {
+    "volume": "qyh-current163-to170-offline-backup-r1-20261031",
+    "file": "base.tar",
+    "bytes": 277904896,
+    "sha256": "7162687b4fe86413a2343f7da0eb7fbb5086daa5518929c1773850f5ec99f4a0"
+  }
+}
