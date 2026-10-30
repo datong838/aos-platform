@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "qyh-route-worker-current-business-preview/v1",
+  "observedAt": "2026-10-31T02:00:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "status": "needs_input",
+  "title": "后台处理配置条件未齐",
+  "approvalAllowed": false,
+  "checks": [
+    {
+      "label": "当前客户安装",
+      "passed": false,
+      "detail": "当前客户安装仍需完成正式校验。"
+    },
+    {
+      "label": "后台业务身份",
+      "passed": false,
+      "detail": "后台业务身份尚未准备。"
+    },
+    {
+      "label": "受保护保存位置",
+      "passed": false,
+      "detail": "受保护保存位置尚未准备。"
+    },
+    {
+      "label": "身份凭据",
+      "passed": false,
+      "detail": "当前身份凭据尚未安全就绪。"
+    }
+  ],
+  "nextActions": [
+    "等待当前客户安装通过正式校验。",
+    "配置当前客户的后台业务身份。",
+    "准备受保护的配置保存位置。",
+    "由安全管理员准备当前身份凭据。"
+  ],
+  "sideEffects": {
+    "databaseWrite": false,
+    "configurationWrite": false,
+    "tokenRequest": false,
+    "businessProcessing": false,
+    "externalEffect": false
+  },
+  "canProcessBusinessTasks": false,
+  "interpretation": "当前只允许展示待补条件，不显示配置确认按钮，不启动后台处理。",
+  "acceptanceBoundary": "只读业务预览不是配置批准、运行授权或自然经营首链验收。"
+}
