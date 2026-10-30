@@ -217,3 +217,52 @@ describe("Task Cockpit feedback GET", () => {
     await expect(client.getTaskCockpitFeedback()).rejects.toThrow("tenant");
   });
 });
+
+describe("后台处理业务入口", () => {
+  const status = {
+    tenant: envelope.tenant,
+    status: {
+      schemaVersion: "aos.route-worker-customer-status/v1",
+      state: "unconfigured",
+      title: "后台处理尚未配置",
+      summary: "完成配置后仍需单独满足运行条件。",
+      canProcessBusinessTasks: false,
+      checkedAt: "2026-10-30T01:00:00Z",
+    },
+  };
+  const receipt = {
+    tenant: envelope.tenant,
+    result: {
+      schemaVersion: "aos.route-worker-customer-receipt/v1",
+      receiptId: "receipt-business-1",
+      action: "enable",
+      state: "configuration_ready",
+      title: "后台处理配置已就绪",
+      summary: "配置已保存；当前不会自动处理业务。",
+      canProcessBusinessTasks: false,
+      completedAt: "2026-10-30T01:01:00Z",
+    },
+  };
+
+  it("按业务路径读取状态，并只在显式操作时携带幂等键", async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(ok(status)).mockResolvedValueOnce(ok(receipt));
+    const client = new EcommerceWorkshopClient({ fetch, getBaseUrl: () => "http://api.test", getAuthHeaders: () => ({ "X-Org-Id": "org-org", "X-Project-Id": "dev-project" }) });
+
+    await expect(client.getBackgroundProcessingStatus()).resolves.toMatchObject({ status: { state: "unconfigured", canProcessBusinessTasks: false } });
+    await expect(client.executeBackgroundProcessing("configure", "background-key-1")).resolves.toMatchObject({ result: { state: "configuration_ready", canProcessBusinessTasks: false } });
+
+    expect(fetch).toHaveBeenNthCalledWith(1, "http://api.test/v1/ecommerce-workshop/background-processing", expect.objectContaining({ method: "GET" }));
+    expect(fetch).toHaveBeenNthCalledWith(2, "http://api.test/v1/ecommerce-workshop/background-processing/configure", expect.objectContaining({ method: "POST", body: "{}", headers: expect.objectContaining({ "Idempotency-Key": "background-key-1" }) }));
+  });
+
+  it("拒绝租户、业务状态和内部字段漂移", async () => {
+    const tenantDrift = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(ok({ ...status, tenant: { orgId: "dev-org", projectId: "dev-project" } })), getBaseUrl: () => "", getAuthHeaders: () => ({ "X-Org-Id": "org-org", "X-Project-Id": "dev-project" }) });
+    await expect(tenantDrift.getBackgroundProcessingStatus()).rejects.toThrow("tenant");
+
+    const stateDrift = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(ok({ ...status, status: { ...status.status, state: "configuration_ready" } })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
+    await expect(stateDrift.getBackgroundProcessingStatus()).rejects.toThrow("业务语义漂移");
+
+    const internalField = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(ok({ ...status, status: { ...status.status, installationId: "internal-installation" } })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
+    await expect(internalField.getBackgroundProcessingStatus()).rejects.toBeInstanceOf(TypeError);
+  });
+});

@@ -75,7 +75,7 @@ describe("EcommerceWorkshopHost task cockpit", () => {
     expect(host.querySelector("#ecommerce-workshop-main .async-state-boundary")).toBeNull(); expect(host.querySelector<HTMLDetailsElement>(".ecommerce-workshop-technical-context")?.open).toBe(false); expect(host.textContent).toContain("模块能力待核对"); expect(host.textContent).toContain("数据源就绪度读取失败"); expect(host.textContent).toContain("当前只读范围"); expect(host.textContent).toContain("当前权威 Task 集合为空"); expect(host.querySelectorAll("h1")).toHaveLength(1);
   });
 
-  it("Operations authority 未验证时直接挂载正式内部处理工作区", async () => {
+  it("Operations authority 未验证时挂载正式运营视图，零候选不伪造处理工作流", async () => {
     const operationsModule = moduleWithReadiness("unknown"); Object.assign(operationsModule, { moduleId: "ecommerce.operations", displayName: "统一运营驾驶舱", menuLabel: "统一运营驾驶舱", route: "/workshop/operations" });
     const catalog = { listModules: vi.fn().mockResolvedValue(workshopCatalogFixture({ items: [operationsModule] })) };
     vi.spyOn(ecommerceWorkshopClient, "getSourceReadiness").mockRejectedValue(new Error("source readiness outside host assertion"));
@@ -92,7 +92,8 @@ describe("EcommerceWorkshopHost task cockpit", () => {
     expect(host.textContent).toContain("数据源就绪度读取失败");
     expect(host.textContent).toContain("统一待办 · 内部处理");
     expect(host.textContent).toContain("跨域运营分诊");
-    expect(host.querySelector('[aria-label="内部处理工作流"]')).not.toBeNull();
+    expect(host.querySelector('[aria-label="内部处理工作流"]')).toBeNull();
+    expect(host.textContent).toContain("请选择当前分类下的内部处理候选");
   });
 
   it("Content Campaign authority 未验证时直接挂载正式三栏，诊断默认收起", async () => {

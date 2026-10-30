@@ -8,6 +8,8 @@ import {
   LEARNING_SCENARIO_SCHEMA_VERSION,
   FULL_VIDEO_SCENARIO_SCHEMA_VERSION,
   OPERATIONS_SCHEMA_VERSION,
+  BACKGROUND_PROCESSING_STATUS_SCHEMA_VERSION,
+  BACKGROUND_PROCESSING_RECEIPT_SCHEMA_VERSION,
   OPERATION_COMMAND_READINESS_SCHEMA_VERSION,
   OPERATION_COMMAND_PREVIEW_SCHEMA_VERSION,
   OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION,
@@ -158,6 +160,9 @@ import {
   type OperationsSlice,
   type OperationsSliceId,
   type OperationsViewResponse,
+  type BackgroundProcessingAction,
+  type BackgroundProcessingReceiptResponse,
+  type BackgroundProcessingStatusResponse,
   type OperationCommandBlocker,
   type OperationCommandDescriptor,
   type OperationCommandId,
@@ -1231,6 +1236,35 @@ export function parseOperationsView(value: unknown, expectedTenant?: WorkshopTen
   const attached = slices.reduce((total, slice) => total + slice.countLedger.attached, 0);
   if (page.count !== attached) throw new TypeError("operations.page count 不一致");
   return { schemaVersion: OPERATIONS_SCHEMA_VERSION, tenant, evaluatedAt: timestamp(raw.evaluatedAt, "operations.evaluatedAt"), dataCutoff, readiness: "degraded", slices, page };
+}
+
+export function parseBackgroundProcessingStatus(value: unknown, expectedTenant?: WorkshopTenant): BackgroundProcessingStatusResponse {
+  const raw = record(value, "backgroundProcessing");
+  exact(raw, ["tenant", "status"], "backgroundProcessing");
+  const tenant = parseTenant(raw.tenant);
+  if (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) throw new TypeError("backgroundProcessing.tenant 漂移");
+  const status = record(raw.status, "backgroundProcessing.status");
+  exact(status, ["schemaVersion", "state", "title", "summary", "canProcessBusinessTasks", "checkedAt"], "backgroundProcessing.status");
+  if (status.schemaVersion !== BACKGROUND_PROCESSING_STATUS_SCHEMA_VERSION || status.canProcessBusinessTasks !== false) throw new TypeError("backgroundProcessing.status contract 漂移");
+  const state = enumValue(status.state, ["unconfigured", "configuration_ready", "disabled", "needs_review"] as const, "backgroundProcessing.status.state");
+  const title = boundedText(status.title, "backgroundProcessing.status.title", 80);
+  const expectedTitle = { unconfigured: "后台处理尚未配置", configuration_ready: "后台处理配置已就绪", disabled: "后台处理已停用", needs_review: "后台处理状态待核对" }[state];
+  if (title !== expectedTitle) throw new TypeError("backgroundProcessing.status 业务语义漂移");
+  return { tenant, status: { schemaVersion: BACKGROUND_PROCESSING_STATUS_SCHEMA_VERSION, state, title, summary: boundedText(status.summary, "backgroundProcessing.status.summary", 240), canProcessBusinessTasks: false, checkedAt: timestamp(status.checkedAt, "backgroundProcessing.status.checkedAt") } };
+}
+
+export function parseBackgroundProcessingReceipt(value: unknown, expectedAction: BackgroundProcessingAction, expectedTenant?: WorkshopTenant): BackgroundProcessingReceiptResponse {
+  const raw = record(value, "backgroundProcessingReceipt");
+  exact(raw, ["tenant", "result"], "backgroundProcessingReceipt");
+  const tenant = parseTenant(raw.tenant);
+  if (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) throw new TypeError("backgroundProcessingReceipt.tenant 漂移");
+  const result = record(raw.result, "backgroundProcessingReceipt.result");
+  exact(result, ["schemaVersion", "receiptId", "action", "state", "title", "summary", "canProcessBusinessTasks", "completedAt"], "backgroundProcessingReceipt.result");
+  const internal = { configure: "enable", disable: "disable", restore: "restore" }[expectedAction] as "enable" | "disable" | "restore";
+  const state = internal === "disable" ? "disabled" : "configuration_ready";
+  const title = { enable: "后台处理配置已就绪", disable: "后台处理已停用", restore: "后台处理配置已恢复" }[internal];
+  if (result.schemaVersion !== BACKGROUND_PROCESSING_RECEIPT_SCHEMA_VERSION || result.action !== internal || result.state !== state || result.title !== title || result.canProcessBusinessTasks !== false) throw new TypeError("backgroundProcessingReceipt contract 漂移");
+  return { tenant, result: { schemaVersion: BACKGROUND_PROCESSING_RECEIPT_SCHEMA_VERSION, receiptId: boundedText(result.receiptId, "backgroundProcessingReceipt.result.receiptId", 80), action: internal, state, title, summary: boundedText(result.summary, "backgroundProcessingReceipt.result.summary", 240), canProcessBusinessTasks: false, completedAt: timestamp(result.completedAt, "backgroundProcessingReceipt.result.completedAt") } };
 }
 
 const CONTENT_CAMPAIGN_SLICE_IDS = ["plan", "calendar", "content"] as const satisfies readonly ContentCampaignSliceId[];

@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 
 import { aipActionsSdk, type AipActionsSdk } from "../../api/aipActions/client";
 import type { ActionDraftBundle, ActionProposalTimeline } from "../../api/aipActions/contracts";
-import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type OperationCaseWorkspaceCandidate, type OperationCaseWorkspaceResponse, type OperationCommandObservationResponse, type OperationCommandReadinessResponse, type OperationsSlice, type OperationsSliceId, type OperationsViewResponse } from "../../api/ecommerceWorkshop";
+import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type BackgroundProcessingAction, type BackgroundProcessingStatusResponse, type OperationCaseWorkspaceCandidate, type OperationCaseWorkspaceResponse, type OperationCommandObservationResponse, type OperationCommandReadinessResponse, type OperationsSlice, type OperationsSliceId, type OperationsViewResponse } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { ContributionLineage } from "./production";
 import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 
-type OperationsClient = Pick<typeof ecommerceWorkshopClient, "getOperationsView" | "getOperationCommandReadiness" | "getOperationCommandObservation"> & Partial<Pick<typeof ecommerceWorkshopClient, "getOperationCaseWorkspace">>;
+type OperationsClient = Pick<typeof ecommerceWorkshopClient, "getOperationsView" | "getOperationCommandReadiness" | "getOperationCommandObservation"> & Partial<Pick<typeof ecommerceWorkshopClient, "getOperationCaseWorkspace" | "getBackgroundProcessingStatus" | "executeBackgroundProcessing">>;
 type OperationsActions = Pick<AipActionsSdk, "createProposal" | "createReplacementProposal" | "withdraw" | "timeline">;
 type Phase = AsyncState;
 type QueueFilter = "all" | "orders" | "inventory" | "alerts";
@@ -151,9 +151,20 @@ export function OperationsPage({ client = ecommerceWorkshopClient, actions = aip
   const [observation, setObservation] = useState<OperationCommandObservationResponse | null>(null);
   const [observationState, setObservationState] = useState<"idle" | "loading" | "ready" | "failed">("idle");
   const [observationError, setObservationError] = useState("");
+  const [backgroundProcessing, setBackgroundProcessing] = useState<BackgroundProcessingStatusResponse | null>(null);
+  const [backgroundState, setBackgroundState] = useState<"loading" | "ready" | "failed">("loading");
+  const [backgroundNotice, setBackgroundNotice] = useState("");
+  const [backgroundBusy, setBackgroundBusy] = useState(false);
+  const backgroundRequest = useRef(false);
   const request = useRef(0);
+  const loadBackgroundProcessing = () => {
+    setBackgroundState("loading"); setBackgroundNotice("");
+    if (!client.getBackgroundProcessingStatus) { setBackgroundProcessing(null); setBackgroundState("failed"); setBackgroundNotice("后台处理状态暂时无法读取，当前不会自动处理业务。"); return; }
+    void client.getBackgroundProcessingStatus().then((next) => { setBackgroundProcessing(next); setBackgroundState("ready"); }, () => { setBackgroundProcessing(null); setBackgroundState("failed"); setBackgroundNotice("后台处理状态暂时无法读取，当前不会自动处理业务。"); });
+  };
   const load = () => {
     const id = ++request.current; setPhase("loading"); setResponse(null); setCommandReadiness(null); setObservation(null); setObservationState("idle"); setObservationError(""); setDetailPanel(null);
+    loadBackgroundProcessing();
     void Promise.all([client.getOperationsView(), client.getOperationCommandReadiness(), client.getOperationCaseWorkspace ? client.getOperationCaseWorkspace() : Promise.resolve(null)]).then(([next, nextCommands, nextWorkspace]) => { if (id !== request.current) return; if (next.tenant.orgId !== nextCommands.tenant.orgId || next.tenant.projectId !== nextCommands.tenant.projectId || (nextWorkspace && (next.tenant.orgId !== nextWorkspace.tenant.orgId || next.tenant.projectId !== nextWorkspace.tenant.projectId))) throw new TypeError("operations dependency tenant 漂移"); const firstCandidate = nextWorkspace?.candidates[0]; setResponse(next); setCommandReadiness(nextCommands); setWorkspace(nextWorkspace); setSelectedCandidateId(firstCandidate?.candidateId ?? null); setSelected(sliceForCandidate(firstCandidate) ?? pickDefaultOperationsSlice(next.slices)?.sliceId ?? "orders"); setPhase(deriveWorkshopViewState(next.slices, next.page.count)); }, (error: unknown) => { if (id === request.current) setPhase(phaseFor(error)); });
   };
   useEffect(() => {
@@ -179,6 +190,16 @@ export function OperationsPage({ client = ecommerceWorkshopClient, actions = aip
       setObservationError(code); setObservationState("failed");
     });
   };
+  const changeBackgroundProcessing = (action: BackgroundProcessingAction) => {
+    if (backgroundRequest.current || !client.executeBackgroundProcessing) return;
+    backgroundRequest.current = true;
+    setBackgroundBusy(true); setBackgroundNotice("");
+    const key = crypto.randomUUID();
+    void client.executeBackgroundProcessing(action, key).then((next) => {
+      setBackgroundProcessing({ tenant: next.tenant, status: { schemaVersion: "aos.route-worker-customer-status/v1", state: next.result.state, title: next.result.title, summary: next.result.summary, canProcessBusinessTasks: false, checkedAt: next.result.completedAt } });
+      setBackgroundState("ready"); setBackgroundNotice("操作已记录；当前不会自动处理业务。");
+    }, () => { setBackgroundProcessing(null); setBackgroundState("failed"); setBackgroundNotice("操作结果需要核对，系统没有自动重试。请重新读取状态。"); }).finally(() => { backgroundRequest.current = false; setBackgroundBusy(false); });
+  };
   const slice = response?.slices.find((item) => item.sliceId === selected) ?? response?.slices[0];
   const content = response && commandReadiness && slice ? (() => {
     const ready = response.slices.filter((item) => item.status === "ready").length;
@@ -197,6 +218,7 @@ export function OperationsPage({ client = ecommerceWorkshopClient, actions = aip
     return <div className="operations-read-model">
       <section className="operations-metrics" aria-label="运营驾驶舱业务指标"><div><span>业务待办</span><strong>{response.slices.length}</strong><small>七类正式视图</small></div><div className="is-ready"><span>正式可读</span><strong>{ready}</strong><small>来源闭合</small></div><div className={review ? "is-warning" : "is-ready"}><span>需业务复核</span><strong>{review}</strong><small>不替代为已处理</small></div><div><span>来源总量</span><strong>{totals.source}</strong><small>七类业务合计</small></div><div><span>已挂接</span><strong>{totals.attached}</strong><small>当前页 {response.page.count}</small></div><div className={totals.unmatched || totals.conflicted ? "is-warning" : "is-ready"}><span>数据差异</span><strong>{totals.unmatched + totals.conflicted}</strong><small>未匹配 + 冲突</small></div><div className="operations-cutoff"><span>数据截止</span><strong>{formatTime(response.dataCutoff)}</strong><small>评估 {formatTime(response.evaluatedAt)}</small></div></section>
       <section className="operations-readonly"><span aria-hidden="true">AI</span><div><h2>跨域运营分诊</h2><p>按正式订单、库存、履约、支付、售后和运营工单核对待办，并形成可审计的内部处理提案。</p></div><strong>外部动作需独立审批</strong></section>
+      <section className={`operations-background-processing is-${backgroundProcessing?.status.state ?? backgroundState}`} aria-label="后台处理"><div><small>后台处理</small><h2>{backgroundProcessing?.status.title ?? (backgroundState === "loading" ? "正在读取后台处理状态" : "后台处理状态待核对")}</h2><p>{backgroundProcessing?.status.summary ?? backgroundNotice}</p><strong>当前不会自动处理业务</strong><span>运行仍需单独满足权限、审批和预算条件。</span></div><div className="operations-background-actions">{backgroundProcessing?.status.state === "unconfigured" ? <button type="button" disabled={backgroundBusy} onClick={() => changeBackgroundProcessing("configure")}>配置后台处理</button> : null}{backgroundProcessing?.status.state === "configuration_ready" ? <button type="button" disabled={backgroundBusy} onClick={() => changeBackgroundProcessing("disable")}>停用后台处理</button> : null}{backgroundProcessing?.status.state === "disabled" ? <button type="button" disabled={backgroundBusy} onClick={() => changeBackgroundProcessing("restore")}>恢复后台处理</button> : null}<button type="button" disabled={backgroundBusy || backgroundState === "loading"} onClick={loadBackgroundProcessing}>重新读取状态</button></div>{backgroundNotice ? <p role="status" className="operations-background-notice">{backgroundNotice}</p> : null}</section>
       <section className="operations-queue-toolbar"><label><span aria-hidden="true">⌕</span><input aria-label="搜索运营待办" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索业务类型、正式对象标识…" /></label><nav aria-label="统一待办分类">{QUEUE_FILTERS.map((item) => <button type="button" className={`operations-queue-filter${queueFilter === item.id ? " is-active" : ""}`} aria-pressed={queueFilter === item.id} key={item.id} onClick={() => { setQueueFilter(item.id); setDetailPanel(null); }}>{item.label}<span>{item.id === "all" ? response.slices.length : response.slices.filter((sliceItem) => item.slices.includes(sliceItem.sliceId)).length}</span></button>)}</nav></section>
       <div className="operations-board">
         <aside className="operations-inbox"><header><h2>统一待办 · 内部处理</h2><span>{workspace ? `${visibleCandidates.length} / ${workspace.candidates.length} 项建议处理` : "正在读取"}</span></header>{visibleCandidates.map((item, index) => <button type="button" className={`operations-slice-card is-${item.priority === "high" ? "blocked" : "ready"}${item.candidateId === selectedCandidateId ? " is-selected" : ""}`} aria-pressed={item.candidateId === selectedCandidateId} key={item.candidateId} onClick={() => { setSelectedCandidateId(item.candidateId); setSelected(sliceForCandidate(item) ?? selected); setDetailPanel(null); }}><span><strong>{item.title}</strong><small>{item.memberRefs[0]?.resourceType} · {item.memberRefs[0]?.resourceId}</small></span><b>{index + 1}</b><em>{item.priority === "high" ? "优先核对" : "普通"}</em></button>)}{workspace && !visibleCandidates.length ? <div className="operations-filter-empty">当前分类或搜索下没有匹配的内部处理候选。</div> : null}<details className="operations-slice-switcher"><summary>切换正式业务视图</summary>{visibleSlices.length ? visibleSlices.map((item) => <button type="button" className={`operations-slice-card is-${item.status}${item.sliceId === activeSlice.sliceId ? " is-selected" : ""}`} aria-pressed={item.sliceId === activeSlice.sliceId} key={item.sliceId} onClick={() => { setSelected(item.sliceId); setSelectedCandidateId(null); setDetailPanel(null); }}><span><strong>{LABELS[item.sliceId]}</strong><small>{queueLabel(item.sliceId)}</small></span><b>{item.countLedger.attached}</b></button>) : <div className="operations-filter-empty">当前筛选下没有匹配的正式业务视图</div>}</details></aside>

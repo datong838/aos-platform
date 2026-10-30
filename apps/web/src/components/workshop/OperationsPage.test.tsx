@@ -211,4 +211,48 @@ describe("OperationsPage", () => {
     expect(host.querySelector(".operations-detail-heading h2")?.textContent).toContain("订单 · 业务处理");
     expect(host.querySelector(".operations-internal-workflow")).toBeNull();
   });
+  it("后台处理只显示业务语义，且只在运营人员显式点击后提交一次", async () => {
+    const getBackgroundProcessingStatus = vi.fn().mockResolvedValue({ tenant: response.tenant, status: { schemaVersion: "aos.route-worker-customer-status/v1" as const, state: "unconfigured" as const, title: "后台处理尚未配置", summary: "完成配置后仍需单独满足运行条件。", canProcessBusinessTasks: false as const, checkedAt: "2026-10-30T01:00:00Z" } });
+    const executeBackgroundProcessing = vi.fn().mockResolvedValue({ tenant: response.tenant, result: { schemaVersion: "aos.route-worker-customer-receipt/v1" as const, receiptId: "receipt-business-1", action: "enable" as const, state: "configuration_ready" as const, title: "后台处理配置已就绪", summary: "配置已保存；当前不会自动处理业务。", canProcessBusinessTasks: false as const, completedAt: "2026-10-30T01:01:00Z" } });
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn(), getBackgroundProcessingStatus, executeBackgroundProcessing };
+
+    await act(async () => root.render(<OperationsPage client={client} />));
+    const card = host.querySelector<HTMLElement>('[aria-label="后台处理"]')!;
+    expect(card.textContent).toContain("后台处理尚未配置");
+    expect(card.textContent).toContain("当前不会自动处理业务");
+    expect(card.textContent).not.toContain("installationId");
+    expect(card.textContent).not.toContain("route_worker");
+    expect(executeBackgroundProcessing).not.toHaveBeenCalled();
+
+    const configure = [...card.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "配置后台处理")!;
+    await act(async () => { configure.click(); configure.click(); });
+    expect(executeBackgroundProcessing).toHaveBeenCalledTimes(1);
+    expect(executeBackgroundProcessing).toHaveBeenCalledWith("configure", expect.any(String));
+    expect(card.textContent).toContain("后台处理配置已就绪");
+    expect(card.textContent).toContain("操作已记录");
+  });
+  it("后台处理操作结果未知时不重发，并切换为业务化待核对状态", async () => {
+    const executeBackgroundProcessing = vi.fn().mockRejectedValue(new Error("unknown"));
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn(), getBackgroundProcessingStatus: vi.fn().mockResolvedValue({ tenant: response.tenant, status: { schemaVersion: "aos.route-worker-customer-status/v1" as const, state: "configuration_ready" as const, title: "后台处理配置已就绪", summary: "配置已经就绪，但运行开关仍保持关闭。", canProcessBusinessTasks: false as const, checkedAt: "2026-10-30T01:00:00Z" } }), executeBackgroundProcessing };
+
+    await act(async () => root.render(<OperationsPage client={client} />));
+    const card = host.querySelector<HTMLElement>('[aria-label="后台处理"]')!;
+    const disable = [...card.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "停用后台处理")!;
+    await act(async () => { disable.click(); disable.click(); });
+
+    expect(executeBackgroundProcessing).toHaveBeenCalledTimes(1);
+    expect(card.textContent).toContain("后台处理状态待核对");
+    expect(card.textContent).toContain("系统没有自动重试");
+    expect(card.textContent).not.toContain("后台处理配置已就绪");
+  });
+  it("后台处理状态读取失败不清空既有运营视图，也不自动提交操作", async () => {
+    const executeBackgroundProcessing = vi.fn();
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn(), getBackgroundProcessingStatus: vi.fn().mockRejectedValue(new Error("offline")), executeBackgroundProcessing };
+
+    await act(async () => root.render(<OperationsPage client={client} />));
+    expect(host.textContent).toContain("统一待办");
+    expect(host.querySelector('[aria-label="后台处理"]')?.textContent).toContain("后台处理状态待核对");
+    expect(host.querySelector('[aria-label="后台处理"]')?.textContent).toContain("当前不会自动处理业务");
+    expect(executeBackgroundProcessing).not.toHaveBeenCalled();
+  });
 });

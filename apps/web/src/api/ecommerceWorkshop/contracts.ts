@@ -274,6 +274,14 @@ export type OperationsCountLedger = { sourceTotal: number; attached: number; unm
 export type OperationsSlice = { sliceId: OperationsSliceId; status: OperationsSliceStatus; dataCutoff: string; authorityRefs: OperationsAuthorityRef[]; blockers: OperationsBlocker[]; countLedger: OperationsCountLedger };
 export type OperationsPage = { limit: number; count: number; hasMore: boolean; nextCursor: string | null };
 export type OperationsViewResponse = { schemaVersion: typeof OPERATIONS_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: OperationsSlice[]; page: OperationsPage };
+export const BACKGROUND_PROCESSING_STATUS_SCHEMA_VERSION = "aos.route-worker-customer-status/v1" as const;
+export const BACKGROUND_PROCESSING_RECEIPT_SCHEMA_VERSION = "aos.route-worker-customer-receipt/v1" as const;
+export type BackgroundProcessingState = "unconfigured" | "configuration_ready" | "disabled" | "needs_review";
+export type BackgroundProcessingStatus = { schemaVersion: typeof BACKGROUND_PROCESSING_STATUS_SCHEMA_VERSION; state: BackgroundProcessingState; title: string; summary: string; canProcessBusinessTasks: false; checkedAt: string };
+export type BackgroundProcessingStatusResponse = { tenant: WorkshopTenant; status: BackgroundProcessingStatus };
+export type BackgroundProcessingAction = "configure" | "disable" | "restore";
+export type BackgroundProcessingReceipt = { schemaVersion: typeof BACKGROUND_PROCESSING_RECEIPT_SCHEMA_VERSION; receiptId: string; action: "enable" | "disable" | "restore"; state: "configuration_ready" | "disabled"; title: string; summary: string; canProcessBusinessTasks: false; completedAt: string };
+export type BackgroundProcessingReceiptResponse = { tenant: WorkshopTenant; result: BackgroundProcessingReceipt };
 
 export const CONTENT_CAMPAIGN_SCHEMA_VERSION = "aos.ecommerce-workshop.content-campaign-view/v1" as const;
 export type ContentCampaignSliceId = "plan" | "calendar" | "content";
