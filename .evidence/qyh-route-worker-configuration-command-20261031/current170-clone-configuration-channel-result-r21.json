@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "aos.qyh-current170-clone-configuration-channel-result/v1",
+  "createdAt": "2026-10-31T06:05:16+08:00",
+  "status": "ISOLATED_CHANNEL_PASSED_AND_REVOKED",
+  "target": {
+    "container": "qyh-current163-to170-offline-restore-r1-20261031-pg",
+    "port": 18459,
+    "migrationHead": "a0v_170",
+    "table": "public.bundle_installation_command",
+    "tenant": "org-org/dev-project"
+  },
+  "temporaryAuthority": {
+    "role": "aos_route_worker_lifecycle_command",
+    "policy": "route_worker_lifecycle_command_scope",
+    "schemaPrivileges": ["USAGE"],
+    "tablePrivileges": ["SELECT", "INSERT"],
+    "roleFlags": {
+      "login": true,
+      "inherit": false,
+      "superuser": false,
+      "bypassRls": false,
+      "createRole": false,
+      "createDatabase": false,
+      "replication": false
+    }
+  },
+  "verification": {
+    "productProbeBefore": true,
+    "positiveInsertAndRead": true,
+    "idempotencyKey": "qyh-config-channel-r19-20261031",
+    "crossTenantRejectedByRls": true,
+    "updateRejectedByPrivilege": true,
+    "deleteRejectedByPrivilege": true,
+    "otherTableWriteRejectedByPrivilege": true,
+    "productProbeAfter": true,
+    "unknownWrites": 0
+  },
+  "cleanup": {
+    "identityFileRemoved": true,
+    "roleRemoved": true,
+    "policyRemoved": true,
+    "cloneReceiptCount": 1,
+    "sourceReceiptCount": 0
+  },
+  "boundary": {
+    "sourceDatabaseWrite": false,
+    "formalPostEnabled": false,
+    "host": false,
+    "worker": false,
+    "provider": false,
+    "externalEffect": false,
+    "businessAcceptanceIncrement": false
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "aos.qyh-current163-to170-migration-result/v1",
+  "createdAt": "2026-10-31T06:05:16+08:00",
+  "status": "ISOLATED_REHEARSAL_PASSED",
+  "source": {
+    "container": "qyh-restored-pg-20261011",
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "port": 18446,
+    "migrationHead": "a0v_163",
+    "roleCount": 60,
+    "membershipCount": 15,
+    "unchanged": true
+  },
+  "backup": {
+    "volume": "qyh-current163-to170-offline-backup-r1-20261031",
+    "tarBytes": 277904896,
+    "tarSha256": "7162687b4fe86413a2343f7da0eb7fbb5086daa5518929c1773850f5ec99f4a0",
+    "tarListValid": true
+  },
+  "clone": {
+    "container": "qyh-current163-to170-offline-restore-r1-20261031-pg",
+    "volume": "qyh-current163-to170-offline-restore-r1-20261031-data",
+    "port": 18459,
+    "beforeHead": "a0v_163",
+    "afterHead": "a0v_170",
+    "singleUpgradeAttempt": true,
+    "beforeMatchedSource": true,
+    "newRoleCount": 3,
+    "newTableCount": 5,
+    "newTableRows": 0,
+    "newTablesRlsEnabledAndForced": true,
+    "newTablesHaveTwoNonInternalTriggersEach": true
+  },
+  "preservation": {
+    "oldBusinessDataSha256Source": "1b6bc9d4a63bc0473998e7b4c232cc38381dd2c759848b351380e4f858917075",
+    "oldBusinessDataSha256Clone": "1b6bc9d4a63bc0473998e7b4c232cc38381dd2c759848b351380e4f858917075",
+    "oldRoleAttributesSha256Source": "adb1618a9af5629bf4b4f404612fadd08521692821d42ff308950dd2ba284e4c",
+    "oldRoleAttributesSha256Clone": "adb1618a9af5629bf4b4f404612fadd08521692821d42ff308950dd2ba284e4c",
+    "membershipSha256Source": "e2fddf024521442d285794f4845ec4b4684f6d74c8e77ca7dd5939b751547fe5",
+    "membershipSha256Clone": "e2fddf024521442d285794f4845ec4b4684f6d74c8e77ca7dd5939b751547fe5"
+  },
+  "tests": {
+    "standardPassed": 25,
+    "logicFailures": 0,
+    "environmentErrors": 7,
+    "environmentError": "specialized budget-window native lab variables were not provided"
+  },
+  "boundary": {
+    "currentDatabaseWrite": false,
+    "currentMigration": false,
+    "host": false,
+    "worker": false,
+    "provider": false,
+    "externalEffect": false,
+    "businessAcceptanceIncrement": false
+  }
+}
