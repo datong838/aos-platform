@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "aos.qyh-current163-to170-rehearsal-intent/v1",
+  "createdAt": "2026-10-31T05:17:00+08:00",
+  "owner": "codex-01a186b0-9b56-7293-b31b-52bc6d6a3276",
+  "source": {
+    "container": "qyh-restored-pg-20261011",
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "database": "aos_meta_head",
+    "systemIdentifier": "7695302940039200809",
+    "migrationHead": "a0v_163"
+  },
+  "target": {
+    "backupVolume": "qyh-current163-to170-backup-r1-20261031",
+    "restoreVolume": "qyh-current163-to170-restore-r1-20261031-data",
+    "restoreContainer": "qyh-current163-to170-restore-r1-20261031-pg",
+    "loopbackPort": 18457,
+    "migrationHead": "a0v_170"
+  },
+  "code": {
+    "commit": "1f81c4b2f",
+    "plan": "current163-to170-restore-rehearsal-plan-r8.md"
+  },
+  "authorizationBoundary": {
+    "currentDatabaseWrite": false,
+    "provider": false,
+    "host": false,
+    "worker": false,
+    "externalEffect": false,
+    "unknownReplay": false
+  },
+  "status": "PREPARED_NOT_STARTED"
+}
