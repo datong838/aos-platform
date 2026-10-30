@@ -188,16 +188,38 @@ def test_management_app_routes_explicit_installed_selection_to_readonly_catalog(
     routes = ModuleType('aos_api.routers.ecommerce_workshop')
     routes.get_ecommerce_workshop_read_catalog = object()
     installed = ModuleType('aos_api.ecommerce_installed_readonly_catalog')
-    selected_catalog = object()
+    selected_result = object()
+    selected_catalog = SimpleNamespace(
+        get_readiness=lambda **_scope: selected_result,
+    )
     installed.build_installed_readonly_catalog = lambda: selected_catalog
+    read_catalog = ModuleType('aos_api.ecommerce_workshop_read_catalog')
+
+    class ReadCatalog:
+        def __init__(self, *, legacy, installed):
+            self.legacy = legacy
+            self.installed = installed
+
+        def get_readiness(self, **scope):
+            return self.legacy.get_readiness(**scope)
+
+        def get_installed_readiness(self, **scope):
+            return self.installed.get_readiness(**scope)
+
+    read_catalog.EcommerceWorkshopReadCatalog = ReadCatalog
 
     monkeypatch.setitem(sys.modules, 'aos_api.main', main)
     monkeypatch.setitem(sys.modules, 'aos_api.routers.ecommerce_workshop', routes)
     monkeypatch.setitem(sys.modules, 'aos_api.ecommerce_installed_readonly_catalog', installed)
+    monkeypatch.setitem(sys.modules, 'aos_api.ecommerce_workshop_read_catalog', read_catalog)
 
     wrapped = entry.management_app()
     factory = app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog]
-    assert factory() is selected_catalog
+    routed = factory()
+    assert routed.get_readiness(module_id='ecommerce.task-cockpit') is selected_result
+    assert routed.get_installed_readiness(module_id='ecommerce.task-cockpit') is selected_result
+    assert routed.legacy is selected_catalog
+    assert routed.installed is selected_catalog
     assert wrapped.app is app
 
 

@@ -482,8 +482,18 @@ def management_app():
                             fromlist=['get_ecommerce_workshop_read_catalog'])
         installed = __import__('aos_api.ecommerce_installed_readonly_catalog',
                                fromlist=['build_installed_readonly_catalog'])
+        read_catalog = __import__('aos_api.ecommerce_workshop_read_catalog',
+                                  fromlist=['EcommerceWorkshopReadCatalog'])
+
+        def selected_read_catalog():
+            selected = installed.build_installed_readonly_catalog()
+            return read_catalog.EcommerceWorkshopReadCatalog(
+                legacy=selected,
+                installed=selected,
+            )
+
         app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = (
-            installed.build_installed_readonly_catalog)
+            selected_read_catalog)
     return ReadOnlyManagementApp(app, allow_password_login=bool(config))
 
 def main():
