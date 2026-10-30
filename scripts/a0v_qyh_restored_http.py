@@ -477,6 +477,13 @@ def management_app():
     api_file = Path(sys.modules['aos_api.main'].__file__).resolve()
     if api_file != Path.cwd() / 'services/aos-api/aos_api/main.py':
         raise RestorationBlocked('RESTORED_MANAGEMENT_SOURCE_IMPORT_DRIFT')
+    if config and os.environ.get('AOS_INSTALLED_READONLY_CATALOG'):
+        routes = __import__('aos_api.routers.ecommerce_workshop',
+                            fromlist=['get_ecommerce_workshop_read_catalog'])
+        installed = __import__('aos_api.ecommerce_installed_readonly_catalog',
+                               fromlist=['build_installed_readonly_catalog'])
+        app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = (
+            installed.build_installed_readonly_catalog)
     return ReadOnlyManagementApp(app, allow_password_login=bool(config))
 
 def main():

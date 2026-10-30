@@ -169,6 +169,57 @@ def test_management_start_uses_fresh_interpreter_and_frozen_factory(entry):
     assert command[command.index('--host')+1] == '127.0.0.1'
     assert command[command.index('--workers')+1] == '1'
 
+
+def test_management_app_routes_explicit_installed_selection_to_readonly_catalog(
+    entry, monkeypatch, tmp_path,
+):
+    import sys
+    from types import ModuleType
+
+    config = tmp_path / 'oidc.json'
+    monkeypatch.setenv('AOS_LOCAL_MANAGEMENT_OIDC_CONFIG', str(config))
+    monkeypatch.setenv('AOS_INSTALLED_READONLY_CATALOG', '{"installationId":"selected"}')
+    monkeypatch.setattr(entry, 'load_management_oidc_config', lambda path: {})
+
+    app = SimpleNamespace(dependency_overrides={})
+    main = ModuleType('aos_api.main')
+    main.app = app
+    main.__file__ = str(Path.cwd() / 'services/aos-api/aos_api/main.py')
+    routes = ModuleType('aos_api.routers.ecommerce_workshop')
+    routes.get_ecommerce_workshop_read_catalog = object()
+    installed = ModuleType('aos_api.ecommerce_installed_readonly_catalog')
+    selected_catalog = object()
+    installed.build_installed_readonly_catalog = lambda: selected_catalog
+
+    monkeypatch.setitem(sys.modules, 'aos_api.main', main)
+    monkeypatch.setitem(sys.modules, 'aos_api.routers.ecommerce_workshop', routes)
+    monkeypatch.setitem(sys.modules, 'aos_api.ecommerce_installed_readonly_catalog', installed)
+
+    wrapped = entry.management_app()
+    factory = app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog]
+    assert factory() is selected_catalog
+    assert wrapped.app is app
+
+
+def test_management_app_does_not_override_catalog_without_explicit_selection(
+    entry, monkeypatch,
+):
+    import sys
+    from types import ModuleType
+
+    monkeypatch.setenv('AOS_LOCAL_MANAGEMENT_OIDC_CONFIG', '/protected/oidc.json')
+    monkeypatch.delenv('AOS_INSTALLED_READONLY_CATALOG', raising=False)
+    monkeypatch.setattr(entry, 'load_management_oidc_config', lambda path: {})
+    app = SimpleNamespace(dependency_overrides={})
+    main = ModuleType('aos_api.main')
+    main.app = app
+    main.__file__ = str(Path.cwd() / 'services/aos-api/aos_api/main.py')
+    monkeypatch.setitem(sys.modules, 'aos_api.main', main)
+
+    wrapped = entry.management_app()
+    assert app.dependency_overrides == {}
+    assert wrapped.app is app
+
 @pytest.mark.parametrize('field,value', [
     ('database', 'aos_current_preview_20260927'), ('cluster', '7683855731447750695'),
     ('schema', 'a0v_092'), ('orgId', 'dev-org'), ('orgName', 'org-org'),
