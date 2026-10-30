@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "aos.route-worker-current-database-catalog/v1",
+  "recordedAt": "2026-10-31T05:03:11+08:00",
+  "connection": {
+    "database": "aos_meta_head",
+    "serverVersion": "16.14",
+    "sessionUser": "qyh_restored_api_login",
+    "defaultTransactionReadOnly": true,
+    "transactionReadOnly": true
+  },
+  "runtimeResource": {
+    "colimaProfile": "aos-extension",
+    "container": "qyh-restored-pg-20261011",
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "localTunnelPort": 18446,
+    "containerPort": 5432
+  },
+  "migrationHead": {
+    "status": "unavailable_to_current_readonly_identity",
+    "values": []
+  },
+  "targetTable": {
+    "qualifiedName": "public.bundle_installation_command",
+    "owner": "aos_app",
+    "rlsEnabled": true,
+    "rlsForced": true,
+    "columns": [
+      "org_id:text:not_null",
+      "project_id:text:not_null",
+      "operation:text:not_null",
+      "idempotency_key:text:not_null",
+      "subject:text:not_null",
+      "request_hash:text:not_null",
+      "status_code:smallint:not_null",
+      "response_json:jsonb:not_null",
+      "response_etag:text:nullable",
+      "created_at:timestamptz:not_null:default_now"
+    ],
+    "primaryKey": ["org_id", "project_id", "operation", "idempotency_key"],
+    "workspaceForeignKey": "meta_workspace(org_id,project_id) ON DELETE RESTRICT",
+    "immutableTriggers": [
+      "trg_bundle_installation_command_immutable",
+      "trg_bundle_installation_command_truncate_guard"
+    ]
+  },
+  "existingPolicies": [
+    {
+      "name": "tenant_scope_bundle_installation_command_ti6",
+      "role": "aos_runtime",
+      "command": "ALL",
+      "permissive": true,
+      "scope": "org_id/project_id from aos.org_id and aos.project_id session settings"
+    }
+  ],
+  "dedicatedChannel": {
+    "role": "aos_route_worker_lifecycle_command",
+    "roleExists": false,
+    "policy": "route_worker_lifecycle_command_scope",
+    "policyExists": false,
+    "credentialFileConfigured": false,
+    "configurationPostEnabled": false
+  },
+  "effectivePrivileges": {
+    "qyh_restored_api_login": {
+      "schemaUsage": true,
+      "schemaCreate": false,
+      "tableSelect": false,
+      "tableInsert": false,
+      "tableUpdate": false,
+      "tableDelete": false,
+      "tableTruncate": false
+    },
+    "aos_runtime": {
+      "schemaUsage": true,
+      "schemaCreate": false,
+      "tableSelect": true,
+      "tableInsert": true,
+      "tableUpdate": true,
+      "tableDelete": true,
+      "tableTruncate": false
+    },
+    "aos_app": {
+      "superuser": true,
+      "bypassRls": true,
+      "schemaCreate": true,
+      "tableAll": true
+    },
+    "PUBLIC": {
+      "schemaUsage": true,
+      "targetTablePrivileges": []
+    }
+  },
+  "conclusions": {
+    "tableLevelRlsChangeRequired": false,
+    "dedicatedRoleAndPolicyRequired": true,
+    "existingRuntimePolicyReusableForDedicatedChannel": false,
+    "migrationHeadMustBeVerifiedBySeparateTrustedReadOnlyEntry": true,
+    "currentDatabaseMutationAuthorized": false
+  },
+  "sideEffects": {
+    "databaseWrite": false,
+    "configurationWrite": false,
+    "credentialWrite": false,
+    "externalEffect": false
+  }
+}
