@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "aos.qyh-route-worker-configuration-business-review/v1",
+  "createdAt": "2026-10-31T06:32:03+08:00",
+  "status": "AWAITING_EXPLICIT_HUMAN_CONFIRMATION",
+  "approvalReference": "QYH-BG-CONFIG-F45816F1",
+  "idempotencyKey": "qyh-route-worker-config-f45816f1-20261031",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "businessName": "栖月汇商贸有限公司 / 默认工作区"
+  },
+  "purpose": "只保存栖月汇专属后台处理身份配置，不启动业务处理",
+  "targetDocumentSha256": "sha256:f45816f1b7fc7c2aff4cc11dd929e0afb9cb062fd4cac76e039e99018c31fe52",
+  "releaseSetSha256": "sha256:bedd365fd99956e70b37edbda180e4f2e64a12c38557419be4c95a72b9392b9d",
+  "installationCurrent": true,
+  "credentialExists": true,
+  "targetConfigurationFileExists": false,
+  "capabilities": [
+    {"businessName": "核心电商领域能力", "version": "1.4.3"},
+    {"businessName": "栖月汇微商城接入", "version": "1.23.2"},
+    {"businessName": "增长分析能力", "version": "1.13.0"},
+    {"businessName": "运营基础能力", "version": "1.2.2"}
+  ],
+  "effectsIfExplicitlyConfirmedAndExecutedLater": {
+    "protectedConfigurationFile": true,
+    "prepareReceipt": true,
+    "completionReceipt": true,
+    "tokenRequest": false,
+    "hostStart": false,
+    "workerStart": false,
+    "providerStart": false,
+    "businessProcessing": false,
+    "externalEffect": false
+  },
+  "currentGate": {
+    "configurationPostStatus": 405,
+    "prepareReceiptCount": 0,
+    "completionReceiptCount": 0,
+    "humanConfirmed": false
+  },
+  "invalidationRules": [
+    "target document hash changes",
+    "release set hash changes",
+    "current installation changes",
+    "credential existence changes"
+  ]
+}
