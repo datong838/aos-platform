@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "aos.qyh-formal-configuration-channel-preparation-result/v1",
+  "createdAt": "2026-10-31T06:28:54+08:00",
+  "status": "TRANSPORT_PREPARED_INGRESS_CLOSED",
+  "database": {
+    "migrationHead": "a0v_170",
+    "role": "aos_route_worker_lifecycle_command",
+    "roleExists": true,
+    "login": true,
+    "inherit": false,
+    "superuser": false,
+    "bypassRls": false,
+    "createRole": false,
+    "createDatabase": false,
+    "replication": false,
+    "memberships": 0,
+    "passwordMethod": "SCRAM-SHA-256",
+    "policy": "route_worker_lifecycle_command_scope",
+    "policyExactTenant": "org-org/dev-project",
+    "tablePrivileges": ["SELECT", "INSERT"],
+    "otherTableWrites": 0,
+    "sequenceAccess": 0
+  },
+  "protectedMaterials": {
+    "hbaSha256": "01a379102c1de8b59613765cd109b07ed89b96c20841bd4de29fb96684f22ab8",
+    "pgpassMode": "0600",
+    "pgpassEntries": 2,
+    "identityMode": "0600",
+    "identitySha256": "de897921c3e2e990dbec7faf0db2798b0dcb71b4cb6c9c00c40880eaaad33a08",
+    "secretPersistedInEvidence": false,
+    "secretPrinted": false
+  },
+  "verification": {
+    "productReadOnlyProbe": true,
+    "formalApiPid": 57552,
+    "formalApiOpenApi": 200,
+    "formalWeb": 200,
+    "formalConfigurePost": 405,
+    "configurationCompletionReceipts": 0,
+    "authenticatedUiAcceptanceClaimed": false
+  },
+  "businessMeaning": {
+    "transportPrepared": true,
+    "operatorCanSaveNow": false,
+    "fifthReadinessCheckPassed": false,
+    "reason": "configuration POST remains deliberately closed",
+    "configurationSaved": false,
+    "businessProcessing": false,
+    "externalEffect": false,
+    "businessAcceptanceIncrement": false
+  }
+}
