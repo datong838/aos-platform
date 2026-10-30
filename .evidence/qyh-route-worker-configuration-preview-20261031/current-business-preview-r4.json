@@ -1,0 +1,29 @@
+{
+  "observedAt": "2026-10-31 02:25 +08:00",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "http": 200,
+  "title": "后台处理配置可以确认",
+  "summary": "确认后只保存后台处理配置；当前不会自动处理业务。",
+  "status": "reviewable",
+  "approvalAllowed": true,
+  "canProcessBusinessTasks": false,
+  "checks": {
+    "currentCustomerInstallation": true,
+    "backgroundIdentity": true,
+    "protectedStorage": true,
+    "identityCredential": true
+  },
+  "sideEffects": {
+    "businessProcessing": false,
+    "configurationWrite": false,
+    "databaseWrite": false,
+    "externalEffect": false,
+    "tokenRequest": false
+  },
+  "targetConfigurationFileExists": false,
+  "hostWorkerProvider": "OFF",
+  "acceptanceBoundary": "仅证明可以请用户确认保存配置，不代表已配置、已运行或完成真实业务首链验收。"
+}
