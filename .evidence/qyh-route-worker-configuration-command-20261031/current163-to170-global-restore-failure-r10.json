@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "aos.qyh-current163-to170-global-restore-failure/v1",
+  "recordedAt": "2026-10-31T05:18:37+08:00",
+  "phase": "restore_globals",
+  "result": "KNOWN_FAILED",
+  "source": {
+    "database": "aos_meta_head",
+    "migrationHead": "a0v_163",
+    "roleCount": 60,
+    "membershipCount": 15,
+    "membershipGrantors": {"aos_app": 15},
+    "unchanged": true
+  },
+  "backup": {
+    "volume": "qyh-current163-to170-backup-r1-20261031",
+    "globalsBytes": 9210,
+    "globalsSha256": "1d91b612e5c202adff2eba335e8094259cd731cf40cef92d15d0da87cc3289fe",
+    "databaseBytes": 16545702,
+    "databaseSha256": "c346cfec55d23e78f77a88a19c4c9d905e2ad631323412a626cebe612c7429a4",
+    "containsRolePasswords": false,
+    "valid": true
+  },
+  "failedRestore": {
+    "container": "qyh-current163-to170-restore-r1-20261031-pg",
+    "volume": "qyh-current163-to170-restore-r1-20261031-data",
+    "rolesAfterFailure": 61,
+    "membershipsAfterFailure": 3,
+    "databaseRestored": false,
+    "migrationStarted": false,
+    "errorClass": "insufficient_admin_option_for_preserved_grantor",
+    "failedStatementShape": "GRANT role TO member ... GRANTED BY aos_app",
+    "failedStatementReplayed": false
+  },
+  "effects": {
+    "currentDatabaseWrite": false,
+    "currentConfigurationWrite": false,
+    "isolatedRestoreOnly": true,
+    "externalEffect": false
+  },
+  "next": "preserve r1, use a new r2 restore with temporary ADMIN OPTION bootstrap and exact membership reconciliation"
+}
