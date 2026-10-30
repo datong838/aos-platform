@@ -8,6 +8,7 @@ import pytest
 from aos_api.aip_route_worker_lifecycle_command_connection import (
     CREDENTIAL_FILE,
     connect_route_worker_lifecycle_command,
+    probe_route_worker_lifecycle_command,
 )
 
 
@@ -26,6 +27,7 @@ class _Connection:
         self.commits = 0
         self.rollbacks = 0
         self.parameters = None
+        self.closed = False
 
     def __enter__(self):
         return self
@@ -43,6 +45,9 @@ class _Connection:
 
     def rollback(self):
         self.rollbacks += 1
+
+    def close(self):
+        self.closed = True
 
 
 def _identity_file(tmp_path, *, dsn=None, role="route_worker_lifecycle_login"):
@@ -230,3 +235,19 @@ def test_permitted_identity_is_read_only_until_verification_completes(
         "public",
         "bundle_installation_command",
     )
+
+
+def test_readiness_probe_never_enables_write_transaction(tmp_path, monkeypatch):
+    monkeypatch.setenv(
+        "AOS_DATABASE_URL", "postgresql://web@127.0.0.1:18432/postgres"
+    )
+    target = _identity_file(tmp_path)
+    monkeypatch.setenv(CREDENTIAL_FILE, str(target))
+    connection = _Connection(_permitted_row())
+    monkeypatch.setattr(psycopg, "connect", lambda *_args, **_kwargs: connection)
+
+    assert probe_route_worker_lifecycle_command() is True
+    assert connection.read_only is True
+    assert connection.commits == 0
+    assert connection.rollbacks == 1
+    assert connection.closed is True

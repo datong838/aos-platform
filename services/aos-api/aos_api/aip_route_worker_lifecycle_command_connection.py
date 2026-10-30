@@ -209,6 +209,38 @@ def _verify_connection(conn, expected_role: str, protected_schema: str) -> None:
         ) from None
 
 
+def _connect_identity(identity: dict[str, str]):
+    try:
+        return psycopg.connect(
+            identity["dsn"], row_factory=dict_row, connect_timeout=10
+        )
+    except Exception:
+        raise RuntimeError(
+            "Route worker lifecycle command identity connection unavailable"
+        ) from None
+
+
+def probe_route_worker_lifecycle_command(*, _protected_schema: str = "public") -> bool:
+    """Verify command-channel readiness without enabling a write transaction."""
+
+    if re.fullmatch(r"[a-z_][a-z0-9_]{0,62}", _protected_schema) is None:
+        raise RuntimeError(
+            "Route worker lifecycle command protected schema is invalid"
+        )
+    identity = _identity()
+    conn = _connect_identity(identity)
+    try:
+        conn.read_only = True
+        _verify_connection(conn, identity["role"], _protected_schema)
+        conn.rollback()
+        return True
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
 @contextmanager
 def connect_route_worker_lifecycle_command(*, _protected_schema: str = "public"):
     """Verify the narrow login before yielding one lifecycle command transaction."""
@@ -218,14 +250,7 @@ def connect_route_worker_lifecycle_command(*, _protected_schema: str = "public")
             "Route worker lifecycle command protected schema is invalid"
         )
     identity = _identity()
-    try:
-        conn = psycopg.connect(
-            identity["dsn"], row_factory=dict_row, connect_timeout=10
-        )
-    except Exception:
-        raise RuntimeError(
-            "Route worker lifecycle command identity connection unavailable"
-        ) from None
+    conn = _connect_identity(identity)
     with conn:
         conn.read_only = True
         try:

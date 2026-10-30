@@ -114,6 +114,12 @@ class Factory:
                     passed=False,
                     detail="身份凭据待配置。",
                 ),
+                RouteWorkerConfigurationCheck(
+                    key="configuration_submission",
+                    label="配置保存通道",
+                    passed=False,
+                    detail="配置保存通道待开通。",
+                ),
             ),
             nextActions=("补齐后台业务身份和受保护保存位置。",),
             sideEffects=RouteWorkerConfigurationSideEffects(

@@ -45,6 +45,7 @@ class RouteWorkerConfigurationCheck(BaseModel):
         "background_identity",
         "protected_storage",
         "identity_credential",
+        "configuration_submission",
     ]
     label: str = Field(min_length=1, max_length=80)
     passed: bool
@@ -82,10 +83,10 @@ class RouteWorkerConfigurationPreview(BaseModel):
     summary: str = Field(min_length=1, max_length=240)
     approval_allowed: bool = Field(alias="approvalAllowed")
     checks: tuple[RouteWorkerConfigurationCheck, ...] = Field(
-        min_length=4, max_length=4
+        min_length=5, max_length=5
     )
     next_actions: tuple[str, ...] = Field(
-        alias="nextActions", min_length=1, max_length=4
+        alias="nextActions", min_length=1, max_length=5
     )
     side_effects: RouteWorkerConfigurationSideEffects = Field(alias="sideEffects")
     can_process_business_tasks: Literal[False] = Field(
@@ -107,6 +108,7 @@ class RouteWorkerConfigurationPreview(BaseModel):
             "background_identity",
             "protected_storage",
             "identity_credential",
+            "configuration_submission",
         )
         if tuple(item.key for item in self.checks) != expected_keys:
             raise ValueError("configuration preview checks are incoherent")

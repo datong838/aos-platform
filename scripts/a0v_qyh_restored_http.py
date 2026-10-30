@@ -87,9 +87,12 @@ def load_management_oidc_config(path):
 
 class ReadOnlyManagementApp:
     """Local inspection only; product authentication and tenant checks still run."""
-    def __init__(self, app, *, allow_password_login=False):
+    def __init__(self, app, *, allow_password_login=False,
+                 allow_route_worker_configuration=False):
         self.app = app
         self.allow_password_login = allow_password_login is True
+        self.allow_route_worker_configuration = (
+            allow_route_worker_configuration is True)
 
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'websocket':
@@ -97,7 +100,14 @@ class ReadOnlyManagementApp:
             return
         login = (self.allow_password_login and scope['type'] == 'http'
                  and scope['method'] == 'POST' and scope['path'] == '/v1/auth/token')
-        if scope['type'] == 'http' and scope['method'] not in {'GET', 'HEAD', 'OPTIONS'} and not login:
+        route_worker_configuration = (
+            self.allow_route_worker_configuration and scope['type'] == 'http'
+            and scope['method'] == 'POST'
+            and scope['path'] ==
+            '/v1/ecommerce-workshop/background-processing/configure')
+        if (scope['type'] == 'http'
+                and scope['method'] not in {'GET', 'HEAD', 'OPTIONS'}
+                and not login and not route_worker_configuration):
             body = b'{"code":"RESTORED_MANAGEMENT_READ_ONLY","message":"Management inspection is read only."}'
             await send({'type': 'http.response.start', 'status': 405,
                         'headers': [(b'content-type', b'application/json'), (b'cache-control', b'no-store')]})
@@ -469,6 +479,10 @@ def management_command():
             '--port', str(LIMITED_PORT), '--workers', '1', '--no-access-log', '--log-level', 'warning']
 
 
+def route_worker_configuration_post_enabled():
+    return os.environ.get('AOS_ROUTE_WORKER_CONFIGURATION_POST_ENABLED') == '1'
+
+
 def management_app():
     config = os.environ.get('AOS_LOCAL_MANAGEMENT_OIDC_CONFIG')
     if config:
@@ -494,7 +508,11 @@ def management_app():
 
         app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog] = (
             selected_read_catalog)
-    return ReadOnlyManagementApp(app, allow_password_login=bool(config))
+    return ReadOnlyManagementApp(
+        app,
+        allow_password_login=bool(config),
+        allow_route_worker_configuration=route_worker_configuration_post_enabled(),
+    )
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

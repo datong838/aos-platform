@@ -79,6 +79,52 @@ def test_explicit_password_login_delegates_only_original_auth_endpoint(entry):
     assert observed == [('POST', '/v1/auth/token')]
 
 
+def test_explicit_configuration_gate_delegates_only_exact_configure(entry):
+    from starlette.testclient import TestClient
+    observed = []
+
+    async def product(scope, receive, send):
+        observed.append((scope['method'], scope['path']))
+        await send({'type':'http.response.start','status':401,'headers':[]})
+        await send({'type':'http.response.body','body':b''})
+
+    client = TestClient(entry.ReadOnlyManagementApp(
+        product, allow_route_worker_configuration=True))
+    exact = '/v1/ecommerce-workshop/background-processing/configure'
+    assert client.post(exact, json={}).status_code == 401
+    for path in [exact + '/', exact + '/other',
+                 '/v1/ecommerce-workshop/background-processing/disable',
+                 '/v1/ecommerce-workshop/background-processing/restore']:
+        assert client.post(path, json={}).status_code == 405
+    assert client.put(exact, json={}).status_code == 405
+    assert observed == [('POST', exact)]
+
+
+def test_configuration_gate_rejects_truthy_nonboolean(entry):
+    from starlette.testclient import TestClient
+
+    async def product(*_args):
+        pytest.fail('truthy configuration flag enabled a write')
+
+    client = TestClient(entry.ReadOnlyManagementApp(
+        product, allow_route_worker_configuration='1'))
+    response = client.post(
+        '/v1/ecommerce-workshop/background-processing/configure', json={})
+    assert response.status_code == 405
+
+
+@pytest.mark.parametrize(('value', 'expected'), [
+    (None, False), ('', False), ('true', False), ('01', False), ('1', True),
+])
+def test_configuration_post_environment_gate_is_exact(entry, monkeypatch, value, expected):
+    key = 'AOS_ROUTE_WORKER_CONFIGURATION_POST_ENABLED'
+    if value is None:
+        monkeypatch.delenv(key, raising=False)
+    else:
+        monkeypatch.setenv(key, value)
+    assert entry.route_worker_configuration_post_enabled() is expected
+
+
 def test_owned_exact_local_oidc_config(entry, tmp_path):
     import json
     tmp_path.chmod(0o700)
@@ -179,6 +225,7 @@ def test_management_app_routes_explicit_installed_selection_to_readonly_catalog(
     config = tmp_path / 'oidc.json'
     monkeypatch.setenv('AOS_LOCAL_MANAGEMENT_OIDC_CONFIG', str(config))
     monkeypatch.setenv('AOS_INSTALLED_READONLY_CATALOG', '{"installationId":"selected"}')
+    monkeypatch.setenv('AOS_ROUTE_WORKER_CONFIGURATION_POST_ENABLED', '1')
     monkeypatch.setattr(entry, 'load_management_oidc_config', lambda path: {})
 
     app = SimpleNamespace(dependency_overrides={})
@@ -214,6 +261,7 @@ def test_management_app_routes_explicit_installed_selection_to_readonly_catalog(
     monkeypatch.setitem(sys.modules, 'aos_api.ecommerce_workshop_read_catalog', read_catalog)
 
     wrapped = entry.management_app()
+    assert wrapped.allow_route_worker_configuration is True
     factory = app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog]
     routed = factory()
     assert routed.get_readiness(module_id='ecommerce.task-cockpit') is selected_result

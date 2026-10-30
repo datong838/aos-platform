@@ -17,6 +17,7 @@ from aos_api.aip_route_worker_customer_lifecycle import (
 from aos_api.aip_route_worker_identity import RouteWorkerIdentityConfig
 from aos_api.aip_route_worker_lifecycle_command_connection import (
     connect_route_worker_lifecycle_command,
+    probe_route_worker_lifecycle_command,
 )
 from aos_api.aip_route_worker_installation import (
     RouteWorkerIdentityInstallationStore,
@@ -32,6 +33,11 @@ from aos_api.db import connect_read_only
 
 _SCOPE = ("org-org", "dev-project")
 _COMPLETE_OPERATION = "route_worker_identity.customer_lifecycle.complete"
+_CONFIGURATION_POST_ENABLED = "AOS_ROUTE_WORKER_CONFIGURATION_POST_ENABLED"
+
+
+def route_worker_configuration_post_enabled() -> bool:
+    return os.environ.get(_CONFIGURATION_POST_ENABLED, "") == "1"
 
 
 class RouteWorkerBusinessEntryFactory:
@@ -50,6 +56,12 @@ class RouteWorkerBusinessEntryFactory:
             [], RouteWorkerIdentityConfig
         ] = RouteWorkerIdentityConfig.from_control_env,
         path_factory: Callable[[], Path] | None = None,
+        command_readiness_probe: Callable[[], bool] = (
+            probe_route_worker_lifecycle_command
+        ),
+        configuration_post_enabled: Callable[[], bool] = (
+            route_worker_configuration_post_enabled
+        ),
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         if not all(
@@ -59,6 +71,8 @@ class RouteWorkerBusinessEntryFactory:
                 read_connect_factory,
                 authority_factory,
                 config_factory,
+                command_readiness_probe,
+                configuration_post_enabled,
                 clock,
             )
         ):
@@ -71,6 +85,8 @@ class RouteWorkerBusinessEntryFactory:
         self._authority_factory = authority_factory
         self._config_factory = config_factory
         self._path_factory = path_factory or self._configured_path
+        self._command_readiness_probe = command_readiness_probe
+        self._configuration_post_enabled = configuration_post_enabled
         self._clock = clock
 
     @staticmethod
@@ -140,11 +156,21 @@ class RouteWorkerBusinessEntryFactory:
             except Exception:
                 credential_ready = False
 
+        submission_ready = False
+        try:
+            submission_ready = (
+                self._configuration_post_enabled() is True
+                and self._command_readiness_probe() is True
+            )
+        except Exception:
+            submission_ready = False
+
         states = (
             installation_ready,
             identity_ready,
             storage_ready,
             credential_ready,
+            submission_ready,
         )
         checks = (
             RouteWorkerConfigurationCheck(
@@ -187,6 +213,16 @@ class RouteWorkerBusinessEntryFactory:
                     else "当前身份凭据尚未安全就绪。"
                 ),
             ),
+            RouteWorkerConfigurationCheck(
+                key="configuration_submission",
+                label="配置保存通道",
+                passed=submission_ready,
+                detail=(
+                    "配置保存通道已安全开通。"
+                    if submission_ready
+                    else "配置保存通道尚未安全开通。"
+                ),
+            ),
         )
         ready = all(states)
         missing_actions = tuple(
@@ -198,6 +234,7 @@ class RouteWorkerBusinessEntryFactory:
                     "配置当前客户的后台业务身份。",
                     "准备受保护的配置保存位置。",
                     "由安全管理员准备当前身份凭据。",
+                    "安全开通当前客户的配置保存通道。",
                 ),
                 strict=True,
             )

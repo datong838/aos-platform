@@ -73,7 +73,16 @@ def forbidden_connection(*_args, **_kwargs):
     raise AssertionError("configuration preview must not access command receipts")
 
 
-def factory(tmp_path, *, secrets=None, authority=None, config_factory=config, path=None):
+def factory(
+    tmp_path,
+    *,
+    secrets=None,
+    authority=None,
+    config_factory=config,
+    path=None,
+    command_ready=lambda: True,
+    post_enabled=lambda: True,
+):
     return RouteWorkerBusinessEntryFactory(
         connect_factory=forbidden_connection,
         read_connect_factory=forbidden_connection,
@@ -81,6 +90,8 @@ def factory(tmp_path, *, secrets=None, authority=None, config_factory=config, pa
         authority_factory=lambda: authority or Authority(),
         config_factory=config_factory,
         path_factory=lambda: path or (tmp_path / "route-worker.json"),
+        command_readiness_probe=command_ready,
+        configuration_post_enabled=post_enabled,
         clock=lambda: NOW,
     )
 
@@ -95,7 +106,7 @@ def test_configuration_preview_is_business_only_and_has_no_side_effects(tmp_path
 
     assert preview.status == "reviewable"
     assert preview.approval_allowed is True
-    assert [item.passed for item in preview.checks] == [True, True, True, True]
+    assert [item.passed for item in preview.checks] == [True, True, True, True, True]
     assert preview.can_process_business_tasks is False
     assert preview.side_effects.model_dump(mode="json", by_alias=True) == {
         "databaseWrite": False,
@@ -120,7 +131,9 @@ def test_configuration_preview_is_business_only_and_has_no_side_effects(tmp_path
         assert forbidden not in rendered
 
 
-@pytest.mark.parametrize("missing", ["installation", "identity", "path", "secret"])
+@pytest.mark.parametrize(
+    "missing", ["installation", "identity", "path", "secret", "submission"]
+)
 def test_configuration_preview_reports_missing_business_condition_without_raising(
     tmp_path, missing
 ):
@@ -144,6 +157,8 @@ def test_configuration_preview_reports_missing_business_condition_without_raisin
         authority_factory=lambda: authority,
         config_factory=config_factory,
         path_factory=path_factory,
+        command_readiness_probe=lambda: missing != "submission",
+        configuration_post_enabled=lambda: True,
         clock=lambda: NOW,
     ).preview_configuration(installation_id=INSTALLATION_ID)
 
@@ -154,6 +169,22 @@ def test_configuration_preview_reports_missing_business_condition_without_raisin
     assert preview.next_actions
     assert secrets.reads == 0
     assert "internal" not in str(preview.model_dump(mode="json", by_alias=True))
+
+
+def test_configuration_preview_requires_explicit_post_gate(tmp_path):
+    probes = []
+
+    preview = factory(
+        tmp_path,
+        command_ready=lambda: probes.append("database") or True,
+        post_enabled=lambda: False,
+    ).preview_configuration(installation_id=INSTALLATION_ID)
+
+    assert preview.status == "needs_input"
+    assert preview.approval_allowed is False
+    assert preview.checks[-1].label == "配置保存通道"
+    assert preview.checks[-1].passed is False
+    assert probes == []
 
 
 def test_configuration_preview_rejects_unsafe_configuration_parent(tmp_path):
