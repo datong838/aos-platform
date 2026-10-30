@@ -1,6 +1,9 @@
 from aos_api.aip_route_worker_customer_lifecycle_wiring import (
     RouteWorkerBusinessEntryFactory,
 )
+from aos_api.aip_route_worker_lifecycle_command_connection import (
+    connect_route_worker_lifecycle_command,
+)
 from aos_api.aip_secret_backend import DeferredMountedSecretFileClient
 
 
@@ -27,6 +30,16 @@ def test_default_customer_lifecycle_backend_uses_platform_factory(monkeypatch):
     )
 
     assert factory._secret_client is secrets
+
+
+def test_default_command_receipt_connection_is_dedicated():
+    factory = RouteWorkerBusinessEntryFactory(
+        read_connect_factory=lambda: None,
+        authority_factory=lambda: None,
+        config_factory=lambda: None,
+    )
+
+    assert factory._connect_factory is connect_route_worker_lifecycle_command
 
 
 def test_linux_status_factory_constructs_before_secret_is_mounted(monkeypatch):

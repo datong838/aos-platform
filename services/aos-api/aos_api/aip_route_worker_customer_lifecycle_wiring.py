@@ -15,6 +15,9 @@ from aos_api.aip_route_worker_customer_lifecycle import (
     RouteWorkerCustomerLifecycleService,
 )
 from aos_api.aip_route_worker_identity import RouteWorkerIdentityConfig
+from aos_api.aip_route_worker_lifecycle_command_connection import (
+    connect_route_worker_lifecycle_command,
+)
 from aos_api.aip_route_worker_installation import (
     RouteWorkerIdentityInstallationStore,
 )
@@ -25,7 +28,7 @@ from aos_api.aip_route_worker_installation_authority import (
 from aos_api.aip_secret_backend import SecretClient, default_secret_client
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
-from aos_api.db import connect, connect_read_only
+from aos_api.db import connect_read_only
 
 _SCOPE = ("org-org", "dev-project")
 _COMPLETE_OPERATION = "route_worker_identity.customer_lifecycle.complete"
@@ -37,7 +40,7 @@ class RouteWorkerBusinessEntryFactory:
     def __init__(
         self,
         *,
-        connect_factory: Callable[..., Any] = connect,
+        connect_factory: Callable[..., Any] = connect_route_worker_lifecycle_command,
         read_connect_factory: Callable[..., Any] = connect_read_only,
         secret_client: SecretClient | None = None,
         authority_factory: Callable[
