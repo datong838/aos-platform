@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "aos.qyh-current163-to170-formal-migration-result/v1",
+  "createdAt": "2026-10-31T06:15:00+08:00",
+  "status": "FORMAL_MIGRATION_PASSED",
+  "source": {
+    "container": "qyh-restored-pg-20261011",
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "systemIdentifier": "7695302940039200809",
+    "databaseOid": 16431,
+    "beforeHead": "a0v_163",
+    "afterHead": "a0v_170"
+  },
+  "firstConnectionAttempt": {
+    "status": "REJECTED_BEFORE_CONNECTION",
+    "reason": "formal HBA rejected aos_app from 172.17.0.1",
+    "migrationLogicStarted": false,
+    "databaseEffect": false,
+    "headAfterAttempt": "a0v_163",
+    "newTableCountAfterAttempt": 0
+  },
+  "connectionCorrection": {
+    "temporaryRule": "host aos_meta_head aos_app 172.17.0.1/32 trust",
+    "formalApiStopped": true,
+    "originalHbaSha256": "8e0973b6e2d72f62d6c78a0febd817436231730a7d9044c97140e8abda4d8e2f",
+    "temporaryHbaSha256": "cf8d652a8772872c7a20a23a43262bdad87e6a3baba46a4a755b2cac9d9398e3",
+    "originalHbaRestored": true,
+    "hostMaintenanceConnectionRejectedAfterRestore": true
+  },
+  "migration": {
+    "singleConnectedAttempt": true,
+    "revisions": ["a0v_164", "a0v_165", "a0v_166", "a0v_167", "a0v_168", "a0v_169", "a0v_170"],
+    "uniqueHead": "a0v_170",
+    "newRoles": ["aos_model_route_eval_publication_reader", "aos_route_eval_finalizer", "aos_route_eval_journal"],
+    "newTableCount": 5,
+    "newTableRows": 0,
+    "newTablesRlsEnabledAndForced": true,
+    "newTablesHaveTwoNonInternalTriggersEach": true
+  },
+  "preservationComparedWithIsolatedClone": {
+    "dataExceptNewTablesAndConfigurationReceiptSha256": "b5ec11d2c9b61a8748c201bf99affcdab2f3956d2833fe288f729e560450d2c2",
+    "configurationReceiptRowsExceptIsolatedTestSha256": "c02e576411a9bead30e77d41c1faf93e5a94551eedb93dd3e313f38f2939823e",
+    "oldRoleAttributesSha256": "7b51d5a8caa976a01adbebd7f2b7540db7bc2029c51a6222bdd836a0bdf45a51",
+    "membershipsSha256": "e03289fc1bdcd73d0a48e002409efef2be201f33d9cdbcd3b27468b188f59c2a",
+    "allMatch": true
+  },
+  "configurationChannel": {
+    "specialRoleCount": 0,
+    "specialPolicyCount": 0,
+    "isolatedTestReceiptCount": 0,
+    "formalConfigurePostStatus": 405
+  },
+  "runtime": {
+    "formalApiPid": 54631,
+    "formalApiOpenApi": 200,
+    "formalWeb": 200,
+    "allExecution": "OFF"
+  },
+  "boundary": {
+    "configurationSaved": false,
+    "host": false,
+    "worker": false,
+    "provider": false,
+    "externalEffect": false,
+    "businessAcceptanceIncrement": false
+  }
+}
