@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "aos.qyh-current163-to170-migration-attempt/v1",
+  "createdAt": "2026-10-31T05:43:00+08:00",
+  "status": "PREPARED_NOT_STARTED",
+  "source": {
+    "container": "qyh-restored-pg-20261011",
+    "volume": "aos-qyh-history159-prepared-data-20261011",
+    "port": 18446,
+    "systemIdentifier": "7695302940039200809",
+    "databaseOid": 16431,
+    "migrationHead": "a0v_163",
+    "formalApiPid": 46960,
+    "formalApiHealth": 200,
+    "configurationPost": 405
+  },
+  "backup": {
+    "volume": "qyh-current163-to170-offline-backup-r1-20261031",
+    "tarBytes": 277904896,
+    "tarSha256": "7162687b4fe86413a2343f7da0eb7fbb5086daa5518929c1773850f5ec99f4a0",
+    "tarListValid": true
+  },
+  "clone": {
+    "container": "qyh-current163-to170-offline-restore-r1-20261031-pg",
+    "volume": "qyh-current163-to170-offline-restore-r1-20261031-data",
+    "port": 18459,
+    "systemIdentifier": "7695302940039200809",
+    "databaseOid": 16431,
+    "migrationHead": "a0v_163",
+    "roleCount": 60,
+    "membershipCount": 15,
+    "membershipGrantors": {"aos_app": 15},
+    "normalizedGlobalsSha256": "08ba32c1918c59617465d64a747593774365a066cf06ed142ce11dfe15ad4c9a",
+    "normalizedSchemaSha256": "9e03047f41afe077018a8ac23b7cbb498c9dfc10eda288c5acf311caec0607b1",
+    "normalizedDataSha256": "b23ec7f7ae3c1586e93ebfa93dc2090d30c4f7ea9e783ec4170d9160504085fe",
+    "matchesSource": true
+  },
+  "migration": {
+    "codeCommit": "6bb266200",
+    "currentHeadChangesSinceCodeCommit": "evidence_only",
+    "from": "a0v_163",
+    "to": "a0v_170",
+    "singleAttempt": true,
+    "databaseUrl": "postgresql+psycopg://aos_app@127.0.0.1:18459/aos_meta_head"
+  },
+  "tests": {
+    "standardPassed": 25,
+    "logicFailures": 0,
+    "environmentErrors": 7,
+    "environmentError": "budget window native lab variables not provided",
+    "disposableTestContainerRemoved": true
+  },
+  "boundary": {
+    "currentDatabaseWrite": false,
+    "currentMigration": false,
+    "host": false,
+    "worker": false,
+    "provider": false,
+    "externalEffect": false
+  }
+}
