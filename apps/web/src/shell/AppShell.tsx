@@ -20,6 +20,7 @@ import {
 import { getTheme, toggleTheme, type Theme } from "../theme";
 import { ApiStatusBar } from "../components/ApiStatusBar";
 import { OfflineBanner } from "../components/OfflineBanner";
+import { DevOidcSessionBanner } from "../components/auth/DevOidcSessionBanner";
 import { WorkspaceSwitcher } from "../components/WorkspaceSwitcher";
 import { OrgSwitcher } from "../components/OrgSwitcher";
 import { PlatformBaseSwitcher } from "../components/PlatformBaseSwitcher";
@@ -685,6 +686,7 @@ export function AppShell() {
           </aside>
           <main className="main">
             <OfflineBanner />
+            <DevOidcSessionBanner />
             <ApiStatusBar />
             <div className="content" ref={contentRef}>
               <Outlet key={workspaceKey} />

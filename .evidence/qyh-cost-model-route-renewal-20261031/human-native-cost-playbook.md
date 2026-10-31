@@ -8,7 +8,9 @@
 
 **易错：** [http://127.0.0.1:18434/aip/model-runtime](http://127.0.0.1:18434/aip/model-runtime)（运行就绪）只有 **「成本与预算权威」** 只读汇总，**没有**费用提议办理 UI。
 
-**租户：** org-org / dev-project（须已登录）
+**租户：** org-org / dev-project
+
+**开发登录：** Vite 开发模式默认跳过登录页；OIDC 仍用于 API。若无会话，页顶黄条会提示；或临时 `VITE_AOS_SKIP_LOGIN_GATE=0` 登录一次后改回。
 
 ## 顺序
 
