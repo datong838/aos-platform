@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-31T17:26:00+08:00",
+  "gateway": {
+    "host": "127.0.0.1",
+    "port": 18468,
+    "writerEnabled": false,
+    "listening": true,
+    "pid": 11724,
+    "unauthenticatedPostProposeHttpCode": 403
+  },
+  "startup": {
+    "blockedFromM1RootScript": true,
+    "reason": "POLICY_WINDOW_GATEWAY_STARTUP_BLOCKED when config/manifest verified against m1 tree",
+    "workingEntry": {
+      "cwd": ".evidence/qyh-successor-readonly-deployment-20261031/private/source-r3",
+      "command": "PYTHONPATH=services/aos-api python -B scripts/a0v_qyh_budget_policy_window.py --serve --config ../window-http-readonly-config-r1.json"
+    }
+  },
+  "managementApi": {
+    "baseUrl": "http://127.0.0.1:18080",
+    "pid": 4618
+  },
+  "effects": {
+    "databaseWrite": false,
+    "nativeWindowPost": false
+  }
+}
