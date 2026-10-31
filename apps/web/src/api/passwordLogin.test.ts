@@ -5,9 +5,10 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { LocalLoginGate } from "../components/auth/LocalLoginGate";
 
-afterEach(() => { vi.unstubAllGlobals(); clearAccessToken(); });
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); clearAccessToken(); sessionStorage.clear(); });
 describe("human password login", () => {
   it("uses original grant and canonical me before publishing memory session", async () => {
+    vi.stubEnv("VITE_AOS_SKIP_LOGIN_GATE", "0");
     const fetch = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "signed", refreshToken: "discard" })))
       .mockResolvedValueOnce(new Response(JSON.stringify({ subject: "human", orgId: "org-org", projectId: "dev-project", workspaceName: "真实工作区", roles: ["admin"], markings: [], tokenKind: "oidc" })));
     vi.stubGlobal("fetch", fetch);
@@ -21,6 +22,7 @@ describe("human password login", () => {
     expect(sessionStorage.getItem("refresh_token")).toBeNull();
   });
   it("does not retry rejected credentials or publish a session", async () => {
+    vi.stubEnv("VITE_AOS_SKIP_LOGIN_GATE", "0");
     const fetch = vi.fn().mockResolvedValue(new Response("private provider detail", { status: 401 }));
     vi.stubGlobal("fetch", fetch);
     await expect(loginPassword("user", "private")).rejects.toThrow("登录失败");
@@ -28,11 +30,13 @@ describe("human password login", () => {
     expect(getAccessToken()).toBeNull();
   });
   it("rejects incomplete token responses before fetching identity", async () => {
+    vi.stubEnv("VITE_AOS_SKIP_LOGIN_GATE", "0");
     const fetch = vi.fn().mockResolvedValue(new Response("{}")); vi.stubGlobal("fetch", fetch);
     await expect(loginPassword("user", "private")).rejects.toThrow("登录失败");
     expect(fetch).toHaveBeenCalledTimes(1); expect(getAccessToken()).toBeNull();
   });
   it("does not expose an unverified session when canonical me fails", async () => {
+    vi.stubEnv("VITE_AOS_SKIP_LOGIN_GATE", "0");
     const fetch = vi.fn().mockResolvedValueOnce(new Response('{"accessToken":"signed"}'))
       .mockResolvedValueOnce(new Response("{}", { status: 403 })); vi.stubGlobal("fetch", fetch);
     await expect(loginPassword("user", "private")).rejects.toThrow("登录失败");
@@ -42,6 +46,7 @@ describe("human password login", () => {
 
 describe("server login policy gate", () => {
   async function renderPolicy(body: unknown, status = 200) {
+    vi.stubEnv("VITE_AOS_SKIP_LOGIN_GATE", "0");
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status })));
     const container = document.createElement("div");
@@ -63,5 +68,16 @@ describe("server login policy gate", () => {
       const text = await renderPolicy(body, status);
       expect(text).toContain("登录服务暂不可用"); expect(text).not.toContain("business catalog");
     }
+  });
+  it("skips the login UI when dev bypass is enabled", async () => {
+    vi.stubEnv("VITE_AOS_SKIP_LOGIN_GATE", "1");
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => { root.render(createElement(LocalLoginGate, { children: "business catalog" })); });
+    expect(container.textContent).toContain("business catalog");
+    expect(fetch).not.toHaveBeenCalled();
+    await act(async () => root.unmount());
   });
 });

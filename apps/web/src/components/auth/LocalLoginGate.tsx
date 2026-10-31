@@ -3,9 +3,11 @@ import { getApiBase } from "../../api/apiBase";
 import { getAccessToken } from "../../api/tenant";
 import { loginPassword } from "../../api/passwordLogin";
 import { bootstrapTenantFromMe } from "../../api/client";
+import { isLoginGateSkipped } from "../../config/devAuthBypass";
 
 /** Read the server's login policy before mounting business catalog consumers. */
 export function LocalLoginGate({ children }: { children: ReactNode }) {
+  const skipGate = isLoginGateSkipped();
   const [policy, setPolicy] = useState<"loading" | "legacy" | "password" | "error">("loading");
   const [retry, setRetry] = useState(0);
   const [authenticated, setAuthenticated] = useState(Boolean(getAccessToken()));
@@ -14,6 +16,7 @@ export function LocalLoginGate({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
+    if (skipGate) return;
     const controller = new AbortController();
     setPolicy("loading");
     fetch(`${getApiBase()}/v1/auth/oidc`, { cache: "no-store", signal: controller.signal })
@@ -25,7 +28,7 @@ export function LocalLoginGate({ children }: { children: ReactNode }) {
         else throw new Error();
       }).catch(() => { if (!controller.signal.aborted) setPolicy("error"); });
     return () => controller.abort();
-  }, [retry]);
+  }, [retry, skipGate]);
   useEffect(() => {
     const update = () => setAuthenticated(Boolean(getAccessToken()));
     window.addEventListener("aos-auth-updated", update);
@@ -44,7 +47,7 @@ export function LocalLoginGate({ children }: { children: ReactNode }) {
     catch (cause) { setError(cause instanceof Error ? cause.message : "登录失败，请重试。"); }
     finally { setBusy(false); }
   }
-  if (policy === "legacy" || (policy === "password" && authenticated)) return <>{children}</>;
+  if (skipGate || policy === "legacy" || (policy === "password" && authenticated)) return <>{children}</>;
   return <main style={{ maxWidth: 420, margin: "12vh auto", padding: 24 }}>
     <h1>AOS 登录</h1>
     {policy === "loading" ? <p role="status">正在读取登录配置…</p> : policy === "error" ? <>

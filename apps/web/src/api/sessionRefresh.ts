@@ -1,5 +1,6 @@
 import { getApiBase } from "./apiBase";
 import { applyMeToTenant, getAccessToken, getTenant, setAccessToken, type MeResponse } from "./tenant";
+import { clearWebDevSession, persistWebDevSession } from "./webDevSession";
 
 type Tokens = { accessToken: string; refreshToken: string; expiresIn: number };
 type Session = Tokens & { subject: string; orgId: string; projectId: string; timer: ReturnType<typeof setTimeout> | null; detach: () => void };
@@ -26,6 +27,7 @@ export function stopSessionRefresh(): void {
   if (!session) return;
   if (session.timer !== null) clearTimeout(session.timer);
   session.detach();
+  clearWebDevSession();
 }
 
 function schedule(session: Session): void {
@@ -54,6 +56,7 @@ async function renew(session: Session): Promise<void> {
     if (!current(session)) return;
     Object.assign(session, next);
     setAccessToken(next.accessToken);
+    persistWebDevSession(next);
     if (!current(session)) return;
     applyMeToTenant(me);
     if (current(session)) schedule(session);
@@ -78,5 +81,6 @@ export function startSessionRefresh(value: unknown, me: MeResponse): void {
     window.removeEventListener("aos-auth-updated", changed);
     window.removeEventListener("aos-tenant-updated", changed);
   };
+  persistWebDevSession(initial);
   schedule(session);
 }

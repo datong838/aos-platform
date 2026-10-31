@@ -1,10 +1,12 @@
 import { getApiBase } from "./apiBase";
 import { applyMeToTenant, clearAccessToken, getTenant, setAccessToken, type MeResponse } from "./tenant";
 import { startSessionRefresh, stopSessionRefresh } from "./sessionRefresh";
+import { clearWebDevSession, persistWebDevSession } from "./webDevSession";
 
 /** Original server authentication; credentials and refresh tokens never persist. */
 export async function loginPassword(username: string, password: string): Promise<void> {
   stopSessionRefresh();
+  clearWebDevSession();
   clearAccessToken();
   try {
     const response = await fetch(`${getApiBase()}/v1/auth/token`, {
@@ -26,7 +28,9 @@ export async function loginPassword(username: string, password: string): Promise
     applyMeToTenant(me);
     setAccessToken(tokens.accessToken);
     startSessionRefresh(tokens, me);
+    persistWebDevSession(tokens);
   } catch {
+    clearWebDevSession();
     clearAccessToken();
     throw new Error("登录失败，请核对账号、密码及工作区访问权限后重试。");
   }
