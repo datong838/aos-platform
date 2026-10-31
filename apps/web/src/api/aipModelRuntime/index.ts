@@ -3,6 +3,7 @@ import type { EvalRunAuthority } from "../aipEvidence";
 import { parseModelEvalCandidate, parseModelEvalPreflight, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";
 import type { ExactRuntimeRef, ModelEvalCandidate, ModelRouteRevision, RegisteredModelRevision, RuntimePolicyRevision } from "./contracts";
 import { parseRouteEvalContextSnapshot } from "./routeEvalContextSnapshot";
+import { parseRouteEvalRunOptions, routeEvalRunOptionsPath } from "./routeEvalRunOptions";
 
 const sameRef = (left: ExactRuntimeRef, right: ExactRuntimeRef) => left.assetType === right.assetType
   && left.assetId === right.assetId && left.revision === right.revision && left.contentHash === right.contentHash;
@@ -28,6 +29,9 @@ export const aipModelRuntime = {
     }, {});
     return parseRouteEvalContextSnapshot(value, candidate, run);
   },
+  async routeEvalRunOptions(candidate: ModelEvalCandidate) {
+    return parseRouteEvalRunOptions(await apiGet<unknown>(routeEvalRunOptionsPath(candidate)), candidate);
+  },
   async overview() { return parseModelRuntimeOverview(await apiGet<unknown>("/v1/aip/model-runtime/overview")); },
   async chainOverview() { return parseModelRuntimeChainOverview(await apiGet<unknown>("/v1/aip/model-runtime/chain-overview")); },
   async costOverview() { return parseModelRuntimeCostOverview(await apiGet<unknown>("/v1/aip/model-runtime/cost-overview")); },
@@ -43,4 +47,5 @@ export const aipModelRuntime = {
 };
 export * from "./contracts";
 export * from "./routeEvalContextSnapshot";
+export * from "./routeEvalRunOptions";
 export { parseModelEvalPreflight, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";

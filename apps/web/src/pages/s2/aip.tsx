@@ -3747,6 +3747,10 @@ export function EvalsPage() {
   const modelEvalPreflightRequest = useRef(0);
   const [routeEvalRunHandoff, setRouteEvalRunHandoff] = useState<MatchedRouteEvalRunHandoff | null>(null);
   const [routeEvalRunMessage, setRouteEvalRunMessage] = useState("");
+  const [routeEvalRunOptions, setRouteEvalRunOptions] = useState<EvalRunAuthority[]>([]);
+  const [routeEvalRunOptionsState, setRouteEvalRunOptionsState] = useState<"idle" | "loading" | "loaded" | "blocked">("idle");
+  const [routeEvalRunOptionsMessage, setRouteEvalRunOptionsMessage] = useState("");
+  const routeEvalRunOptionsRequest = useRef(0);
   const authorityRunRequest = useRef(0);
   const [routeEvalContextSnapshot, setRouteEvalContextSnapshot] = useState<RouteEvalContextSnapshot | null>(null);
   const [routeEvalContextState, setRouteEvalContextState] = useState<"idle" | "loading" | "ready" | "blocked">("idle");
@@ -3771,6 +3775,7 @@ export function EvalsPage() {
   useEffect(() => {
     let current = true;
     modelEvalPreflightRequest.current += 1;
+    routeEvalRunOptionsRequest.current += 1;
     authorityRunRequest.current += 1;
     routeEvalContextRequest.current += 1;
     setModelEvalPreflight(null);
@@ -3779,6 +3784,9 @@ export function EvalsPage() {
     setRuntimeHandoff(null);
     setRouteEvalRunHandoff(null);
     setRouteEvalRunMessage("");
+    setRouteEvalRunOptions([]);
+    setRouteEvalRunOptionsState("idle");
+    setRouteEvalRunOptionsMessage("");
     setRouteEvalContextSnapshot(null);
     setRouteEvalContextState("idle");
     setRouteEvalContextMessage("");
@@ -3848,6 +3856,42 @@ export function EvalsPage() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function discoverRouteEvalRunOptions() {
+    if (runtimeHandoffState !== "ready" || !runtimeHandoff || routeEvalRunOptionsState === "loading") return;
+    const request = ++routeEvalRunOptionsRequest.current;
+    setRouteEvalRunOptions([]);
+    setRouteEvalRunOptionsState("loading");
+    setRouteEvalRunOptionsMessage("正在只读查找与当前路由精确匹配的办理中 EvalRun…");
+    try {
+      const options = await aipModelRuntime.routeEvalRunOptions(runtimeHandoff.route);
+      if (request !== routeEvalRunOptionsRequest.current) return;
+      setRouteEvalRunOptions(options);
+      setRouteEvalRunOptionsState("loaded");
+      setRouteEvalRunOptionsMessage(options.length
+        ? `找到 ${options.length} 条真实办理中 EvalRun；请选择后再读取权威记录。`
+        : "当前没有可选择的真实办理中 EvalRun；系统不会创建演示或替代记录。");
+    } catch (error) {
+      if (request !== routeEvalRunOptionsRequest.current) return;
+      setRouteEvalRunOptionsState("blocked");
+      setRouteEvalRunOptionsMessage(`办理中 EvalRun 查找已阻断：${String((error as Error).message || error)}`);
+    }
+  }
+
+  function selectRouteEvalRunOption(runId: string) {
+    authorityRunRequest.current += 1;
+    routeEvalContextRequest.current += 1;
+    setAuthorityRunId(runId);
+    setAuthorityRun(null);
+    setAuthorityState("idle");
+    setAuthorityError("");
+    setRouteEvalRunHandoff(null);
+    setRouteEvalRunMessage("");
+    setRouteEvalRunOptionsMessage("已选择 Run ID；请点击“读取权威评测运行”完成单条权威核对。");
+    setRouteEvalContextSnapshot(null);
+    setRouteEvalContextState("idle");
+    setRouteEvalContextMessage("");
   }
 
   async function runSuite() {
@@ -4196,6 +4240,24 @@ export function EvalsPage() {
                     ["预算", `${modelEvalPreflight.budgetPolicyRef.assetId}@${modelEvalPreflight.budgetPolicyRef.revision}`],
                     ["待补条件", modelEvalPreflight.blockerCodes.join("、")],
                   ]}
+                />
+              ) : null}
+              <button type="button" disabled={routeEvalRunOptionsState === "loading"} onClick={() => void discoverRouteEvalRunOptions()}>
+                {routeEvalRunOptionsState === "loading" ? "正在只读查找…" : "只读查找办理中路由 EvalRun"}
+              </button>
+              {routeEvalRunOptionsMessage ? (
+                <p className={routeEvalRunOptionsState === "blocked" ? "error" : "aos-text"} role="status">{routeEvalRunOptionsMessage}</p>
+              ) : null}
+              {routeEvalRunOptions.length ? (
+                <BpTable
+                  columns={["可选 Run", "状态", "版本", "EvalContract", "选择"]}
+                  rows={routeEvalRunOptions.map((run) => [
+                    run.runId,
+                    run.status,
+                    String(run.version),
+                    `${run.evalContractRef!.resourceId}@${run.evalContractRef!.revision}`,
+                    <button type="button" onClick={() => selectRouteEvalRunOption(run.runId)}>选中此 Run</button>,
+                  ])}
                 />
               ) : null}
               {routeEvalRunMessage ? (

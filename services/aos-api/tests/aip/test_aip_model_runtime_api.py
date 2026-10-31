@@ -9,10 +9,11 @@ from aos_api.aip_provider_plugin_authority import ProviderPluginAuthorityError
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_budget_contracts import BudgetLifecycle
 from aos_api.aip_contracts import ResourceRef, TenantContext
-from aos_api.aip_eval_contracts import UsageAdjustment, UsageAttribution, UsageReceipt
+from aos_api.aip_eval_contracts import EvalRunAuthorityRecord, UsageAdjustment, UsageAttribution, UsageReceipt
 from aos_api.aip_model_eval_authorization import ModelEvalPreflight
 from aos_api.aip_model_governance_policy_contracts import ModelGovernancePolicyLifecycle
 from aos_api.aip_model_runtime_contracts import (
+    ModelEvalCandidate,
     ModelRouteRevision,
     ModelPriceSnapshotRevision,
     ModelRuntimeAssetSummary,
@@ -160,6 +161,40 @@ class CapturingRouteEvalContextReader:
         }
 
 
+class CurrentEvalCandidateStore:
+    def __init__(self, candidate=None):
+        self.candidate = ModelEvalCandidate.model_validate(
+            candidate or ROUTE_EVAL_CANDIDATE
+        )
+        self.scope = None
+
+    def list_eval_candidates(self, scope):
+        self.scope = scope
+        return [self.candidate]
+
+
+class CapturingRouteEvalRunOptionsReader:
+    def __init__(self, *, reject=False):
+        self.call = None
+        self.reject = reject
+
+    def __call__(self, scope, candidate):
+        self.call = (scope.key, candidate)
+        if self.reject:
+            raise ValueError("run option drifted")
+        return [EvalRunAuthorityRecord.model_validate({
+            "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+            "runId": "route-run-1",
+            "suiteRef": {"assetType": "eval_suite", "assetId": "suite-1", "revision": "1", "contentHash": "c" * 64},
+            "evalContractRef": {"resourceType": "EvalContractRevision", "resourceId": "contract-1", "revision": 3, "contentHash": "3" * 64},
+            "target": {"assetType": "model_route", "assetId": "qyh-route", "revision": "9", "contentHash": "b" * 64},
+            "dataset": {"datasetId": "dataset-1", "revision": 1, "contentHash": "d" * 64, "sourceHash": "e" * 64, "redactionPolicy": {"assetType": "policy", "assetId": "redact-1", "revision": "1", "contentHash": "f" * 64}},
+            "judge": {"judgeId": "judge-1", "revision": 1, "contentHash": "1" * 64, "modelRoute": {"assetType": "registered_model", "assetId": "judge-model", "revision": "2", "contentHash": "2" * 64}},
+            "status": "queued", "idempotencyKey": "once", "createdBy": "human",
+            "createdAt": datetime.now(UTC).isoformat(), "startedAt": None, "finishedAt": None, "version": 1,
+        })]
+
+
 MODEL_EVAL_CANDIDATE = {
     "sourceRef": {"assetType": "RegisteredModelRevision", "assetId": "qyh-model", "revision": 7, "contentHash": "a" * 64},
     "targetRef": {"assetType": "RegisteredModelRevision", "assetId": "qyh-model", "revision": 8, "contentHash": "b" * 64},
@@ -174,6 +209,65 @@ ROUTE_EVAL_CANDIDATE = {
     "targetRef": {"assetType": "ModelRouteRevision", "assetId": "qyh-route", "revision": 9, "contentHash": "b" * 64},
     "expectedHeadVersion": 8,
 }
+
+
+ROUTE_EVAL_RUN_OPTIONS_QUERY = {
+    "routeId": "qyh-route",
+    "sourceRevision": 8,
+    "sourceHash": "a" * 64,
+    "targetRevision": 9,
+    "targetHash": "b" * 64,
+    "expectedHeadVersion": 8,
+}
+
+
+def test_route_eval_run_options_are_explicit_current_tenant_scoped_and_readonly(client) -> None:
+    store = CurrentEvalCandidateStore()
+    reader = CapturingRouteEvalRunOptionsReader()
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
+    client.app.dependency_overrides[aip_model_runtime.get_route_eval_run_options_reader] = lambda: reader
+    try:
+        response = client.get(
+            "/v1/aip/model-runtime/route-eval-run-options",
+            headers=headers(), params=ROUTE_EVAL_RUN_OPTIONS_QUERY,
+        )
+        assert response.status_code == 200, response.text
+        assert [item["runId"] for item in response.json()] == ["route-run-1"]
+        assert store.scope.key == ("org-org", "dev-project")
+        assert reader.call[0] == ("org-org", "dev-project")
+        assert reader.call[1].model_dump(mode="json", by_alias=True) == ROUTE_EVAL_CANDIDATE
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+        client.app.dependency_overrides.pop(aip_model_runtime.get_route_eval_run_options_reader, None)
+
+
+def test_route_eval_run_options_require_login_and_exact_current_candidate(client) -> None:
+    assert client.get(
+        "/v1/aip/model-runtime/route-eval-run-options", params=ROUTE_EVAL_RUN_OPTIONS_QUERY,
+    ).status_code == 401
+    store = CurrentEvalCandidateStore(candidate=MODEL_EVAL_CANDIDATE)
+    reader = CapturingRouteEvalRunOptionsReader()
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
+    client.app.dependency_overrides[aip_model_runtime.get_route_eval_run_options_reader] = lambda: reader
+    try:
+        response = client.get(
+            "/v1/aip/model-runtime/route-eval-run-options",
+            headers=headers(), params=ROUTE_EVAL_RUN_OPTIONS_QUERY,
+        )
+        assert response.status_code == 409
+        assert response.json()["code"] == "AIP_ROUTE_EVAL_RUN_OPTIONS_BLOCKED"
+        assert reader.call is None
+        assert client.get(
+            "/v1/aip/model-runtime/route-eval-run-options", headers=headers(),
+            params={**ROUTE_EVAL_RUN_OPTIONS_QUERY, "targetRevision": 10},
+        ).status_code == 409
+        assert client.get(
+            "/v1/aip/model-runtime/route-eval-run-options", headers=headers(),
+            params={**ROUTE_EVAL_RUN_OPTIONS_QUERY, "targetHash": "short"},
+        ).status_code == 400
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+        client.app.dependency_overrides.pop(aip_model_runtime.get_route_eval_run_options_reader, None)
 
 
 def test_route_eval_context_snapshot_is_explicit_tenant_scoped_and_nonexecuting(client) -> None:

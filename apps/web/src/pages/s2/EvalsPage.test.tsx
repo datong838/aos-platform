@@ -274,6 +274,39 @@ const graph = {
     expect(apiMocks.apiPostUnqueued).not.toHaveBeenCalled();
   });
 
+  it("只有本人点击才只读查找当前路由可选 Run，选中后仍须单条权威读取", async () => {
+    const href = buildModelRuntimeEvalHandoffHref(qyhModelCandidate.sourceRef, routeCandidate.sourceRef);
+    apiMocks.apiGet.mockImplementation((path: string) => {
+      if (path === "/v1/evals/suites") return Promise.resolve({ items: [] });
+      if (path === "/v1/aip/logic/graphs") return Promise.resolve(graphList);
+      if (path === "/v1/aip/model-runtime/eval-candidates") return Promise.resolve([qyhModelCandidate, routeCandidate]);
+      if (path.startsWith("/v1/aip/model-runtime/route-eval-run-options?")) return Promise.resolve([routeEvalRun]);
+      return Promise.reject(new Error(`unexpected path ${path}`));
+    });
+    await act(async () => root.render(createElement(MemoryRouter, { initialEntries: [href] }, createElement(EvalsPage))));
+    await flush();
+
+    const find = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "只读查找办理中路由 EvalRun")!;
+    expect(find).toBeDefined();
+    expect(apiMocks.apiGet.mock.calls.some(([path]) => String(path).includes("route-eval-run-options"))).toBe(false);
+    await act(async () => find.click());
+    await flush();
+
+    const call = apiMocks.apiGet.mock.calls.find(([path]) => String(path).startsWith("/v1/aip/model-runtime/route-eval-run-options?"));
+    expect(call?.[0]).toContain(`routeId=${encodeURIComponent(QYH_RUNTIME_SUCCESSOR.routeId)}`);
+    expect(call?.[0]).toContain("targetRevision=9");
+    expect(host.textContent).toContain("找到 1 条真实办理中 EvalRun");
+    expect(host.textContent).toContain("route-contract-1@5");
+    const select = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "选中此 Run")!;
+    await act(async () => select.click());
+    await flush();
+    expect(host.querySelector<HTMLInputElement>("[aria-label='eval-authority-run-id']")?.value).toBe(routeEvalRun.runId);
+    expect(host.textContent).toContain("请点击“读取权威评测运行”");
+    expect(evidenceMocks.evalRun).not.toHaveBeenCalled();
+    expect(apiMocks.apiPostUnqueued).not.toHaveBeenCalled();
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
+  });
+
   it("只有本人点击后才读取一次路由 Eval 上下文快照，且不授予执行权", async () => {
     const href = buildModelRuntimeEvalHandoffHref(qyhModelCandidate.sourceRef, routeCandidate.sourceRef);
     apiMocks.apiGet.mockImplementation((path: string) => {

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "aos.qyh.route-eval-run-options-checkpoint/v1",
+  "observedAt": "2026-10-31T22:12:00+08:00",
+  "branch": "m1",
+  "baseHead": "e372959466dfe0e8ffd2fd3014bc39df66b65abb",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "change": {
+    "purpose": "登录后只读发现与当前路由候选精确匹配的办理中 EvalRun",
+    "automaticRequest": false,
+    "databaseWrite": false,
+    "providerOrModelCall": false,
+    "executionAllowed": false,
+    "deployed": false
+  },
+  "verification": {
+    "readerDirectContract": "5/5 GREEN",
+    "httpContract": "200/401/409/400 GREEN",
+    "webFocusedTests": "32/32 GREEN",
+    "pythonCompile": "GREEN",
+    "pytestCollection": "32 collected",
+    "typescript": "GREEN",
+    "webProductionBuild": "GREEN",
+    "databasePytest": "BLOCKED_BEFORE_TESTS: dedicated PostgreSQL 127.0.0.1:5433 connection refused; business database not used",
+    "fullWebSuite": "3326 passed, 5 unrelated existing/environment failures; tracked by TD-014/TD-015",
+    "browserReadonly": "18434/workshop/cockpit shows eight ecommerce workbenches without login; formal-login control collapsed; no credentials entered"
+  },
+  "sourceSha256": {
+    "services/aos-api/aos_api/aip_model_route_eval_run_options.py": "1e219df4b2e347454f7acb2bc8269a449ff4e531c365bd8999c56d6fe3eb7723",
+    "services/aos-api/aos_api/routers/aip_model_runtime.py": "281cde25e241b939e4e48d409a964bf97fa9e646dd682d0f14e88cd6b3b2142c",
+    "apps/web/src/api/aipModelRuntime/routeEvalRunOptions.ts": "b595d48ddd98d2f46bde184bc6564dd87ecef3015fb98b7eb451ed7c0dce9440",
+    "apps/web/src/pages/s2/aip.tsx": "2fb47a999e3a950727f39d90adedf82810db314d9a85675dcf4c95aa0042f992",
+    "plan": "3aa160a61c65586a76bc219fd8e35af90fab58987afead259749c2e3d2d5b798"
+  },
+  "progress": {
+    "engineeringAccepted": "2/8",
+    "realBusinessAccepted": "0/8"
+  },
+  "nextHardGap": "按现有正式只读冻结源流程部署新增 GET；之后只能由本人登录并明确点击选择真实办理中 Run"
+}

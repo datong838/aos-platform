@@ -29,8 +29,16 @@ from aos_api.aip_eval_authority_store import (
     AipEvalAuthorityPersistenceError,
     AipEvalAuthorityStore,
 )
-from aos_api.aip_eval_contracts import AttributionSubjectType, EvalRunStatus, EvidenceQuality, UsageKind
+from aos_api.aip_eval_contracts import (
+    AssetType,
+    AttributionSubjectType,
+    EvalRunStatus,
+    EvidenceQuality,
+    UsageKind,
+)
+from aos_api.aip_eval_contracts import EvalRunAuthorityRecord
 from aos_api.aip_model_route_eval_context_reader import read_eval_subject_context_bytes
+from aos_api.aip_model_route_eval_run_options import list_route_eval_run_options
 from aos_api.aip_model_governance_policy_contracts import (
     ModelGovernancePolicyLifecycle,
 )
@@ -134,6 +142,28 @@ def _read_route_eval_context(scope: TenantScope, request: RouteEvalContextSnapsh
 
 def get_route_eval_context_reader():
     return _read_route_eval_context
+
+
+def _read_route_eval_run_options(scope: TenantScope, candidate: ModelEvalCandidate):
+    try:
+        with connect_read_only(scope) as conn:
+            return list_route_eval_run_options(
+                conn,
+                expected_database=conn.info.dbname,
+                scope=scope,
+                candidate=candidate,
+                limit=20,
+            )
+    except (TypeError, ValueError):
+        raise
+    except Exception as exc:
+        raise AipEvalAuthorityPersistenceError(
+            "route EvalRun option discovery failed"
+        ) from exc
+
+
+def get_route_eval_run_options_reader():
+    return _read_route_eval_run_options
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -545,6 +575,71 @@ def read_route_eval_context_snapshot(
         raise ApiError(
             code="AIP_ROUTE_EVAL_CONTEXT_BLOCKED",
             message="当前路由评测上下文无法形成完整只读快照",
+            status_code=409,
+        ) from None
+
+
+@router.get(
+    "/route-eval-run-options",
+    response_model=list[EvalRunAuthorityRecord],
+)
+def list_route_eval_run_options_for_current_candidate(
+    route_id: str = Query(alias="routeId", min_length=1, max_length=200),
+    source_revision: int = Query(alias="sourceRevision", ge=1),
+    source_hash: str = Query(alias="sourceHash", pattern=r"^[0-9a-f]{64}$"),
+    target_revision: int = Query(alias="targetRevision", ge=1),
+    target_hash: str = Query(alias="targetHash", pattern=r"^[0-9a-f]{64}$"),
+    expected_head_version: int = Query(alias="expectedHeadVersion", ge=1),
+    principal: Principal = Depends(require_principal),
+    store: AipModelRuntimeStore = Depends(get_store),
+    reader=Depends(get_route_eval_run_options_reader),
+):
+    try:
+        candidate = ModelEvalCandidate(
+            sourceRef={
+                "assetType": "ModelRouteRevision",
+                "assetId": route_id,
+                "revision": source_revision,
+                "contentHash": source_hash,
+            },
+            targetRef={
+                "assetType": "ModelRouteRevision",
+                "assetId": route_id,
+                "revision": target_revision,
+                "contentHash": target_hash,
+            },
+            expectedHeadVersion=expected_head_version,
+            sourceLifecycle="draft",
+            executionAllowed=False,
+        )
+        scope = _scope(principal)
+        matches = [item for item in store.list_eval_candidates(scope) if item == candidate]
+        if len(matches) != 1:
+            raise ValueError("exact current Route candidate unavailable")
+        options = reader(scope, candidate)
+        if (
+            type(options) is not list
+            or len(options) > 20
+            or len({item.run_id for item in options}) != len(options)
+            or any(
+                (item.tenant.org_id, item.tenant.project_id) != scope.key
+                or item.target.asset_type is not AssetType.MODEL_ROUTE
+                or item.target.asset_id != candidate.target_ref.asset_id
+                or item.target.revision != str(candidate.target_ref.revision)
+                or item.target.content_hash != candidate.target_ref.content_hash
+                or item.status not in {EvalRunStatus.QUEUED, EvalRunStatus.RUNNING}
+                or item.eval_contract_ref is None
+                for item in options
+            )
+        ):
+            raise ValueError("route EvalRun options drifted")
+        return options
+    except ModelRuntimeStoreError as exc:
+        raise _map(exc) from None
+    except (AipEvalAuthorityPersistenceError, TypeError, ValueError):
+        raise ApiError(
+            code="AIP_ROUTE_EVAL_RUN_OPTIONS_BLOCKED",
+            message="当前路由没有可安全选择的权威办理中评测运行",
             status_code=409,
         ) from None
 
