@@ -5,6 +5,7 @@ import type {PolicyWindowSource, WindowCommand, WindowDecisionReceipt, WindowGat
  WindowRequestIndex, WindowRevocationReceipt, WindowConsumeReceipt} from '../../api/aipBudgetPolicyWindow';
 import {useBudgetRequestGuard} from './useBudgetRequestGuard';
 import {QyhRuntimeSuccessorPreflightPanel} from './QyhRuntimeSuccessorPreflightPanel';
+import {getAccessToken} from '../../api/tenant';
 
 const field:CSSProperties={display:'flex',flexDirection:'column',gap:6,flex:'1 1 240px',minWidth:0};
 const flow:CSSProperties={display:'flex',flexWrap:'wrap',gap:12,marginTop:12};
@@ -13,6 +14,7 @@ const sameProposal=(a:{proposalId:string;proposalHash:string},b:{proposalId:stri
 
 /** Native records remain authority. This panel never starts a model or retries a write. */
 export function BudgetPolicyWindowReviewPanel(){
+ const [authenticated,setAuthenticated]=useState(()=>Boolean(getAccessToken()));
  const initial=useRef(windowApi.restoreWindowReference(typeof window==='undefined'?'':window.location.search));
  const [operation,setOperation]=useState<WindowOperation>(initial.current?.ref.operation??'propose');
  const [key,setKey]=useState(initial.current?.ref.key??''),[parentId,setParentId]=useState('');
@@ -32,10 +34,16 @@ export function BudgetPolicyWindowReviewPanel(){
  }
  const guard=useBudgetRequestGuard(clearIdentity);
  async function read(task:(current:()=>boolean)=>Promise<void>){
+  if(!authenticated||!getAccessToken())return;
   const current=guard.begin();if(!current)return;
   try{await task(current);}catch{if(current())setMessage('当前读取未确认，请核对入口或查询原操作；不会自动重发。');}
   finally{guard.finish(current);}
  }
+ useEffect(()=>{
+  const changed=()=>setAuthenticated(Boolean(getAccessToken()));
+  changed();window.addEventListener('aos-auth-updated',changed);
+  return()=>window.removeEventListener('aos-auth-updated',changed);
+ },[]);
  function links():WindowReceiptLinks{return prepared?{prepared,...(decision&&sameProposal(prepared,decision)?{decision}:{})}:{};}
  function accept(value:WindowObservation){
   setObservation(value);
@@ -79,9 +87,9 @@ export function BudgetPolicyWindowReviewPanel(){
    return matchedDecision?windowApi.windowConsumeCommand(prepared,matchedDecision,key,confirmation==='consume'):null;
   }catch{return null;}
  }
- const canSubmit=!!gateway?.writerEnabled&&!guard.busy&&!frozen&&!guard.attempted({operation,key})&&command()!==null;
+ const canSubmit=authenticated&&!!gateway?.writerEnabled&&!guard.busy&&!frozen&&!guard.attempted({operation,key})&&command()!==null;
  async function submit(){
-  if(!gateway?.writerEnabled||frozen||guard.attempted({operation,key}))return;
+  if(!authenticated||!getAccessToken()||!gateway?.writerEnabled||frozen||guard.attempted({operation,key}))return;
   const payload=command();if(!payload)return;
   const current=guard.begin();if(!current)return;
   const ref:WindowRef={operation,key};
@@ -94,14 +102,14 @@ export function BudgetPolicyWindowReviewPanel(){
   }catch{if(current())setMessage('原策略结果尚未确认，只能查询原操作，禁止重复提交。');}
   finally{guard.finish(current);}
  }
- const locked=guard.busy||!!frozen;
+ const locked=!authenticated||guard.busy||!!frozen;
  const p=prepared?.proposal;
  return <><section aria-label="预算策略子窗口审核" style={{marginTop:24,padding:20,border:'1px solid #dce4ee',borderRadius:12,background:'#fff',overflowWrap:'anywhere'}}>
   <h3 style={{marginTop:0,color:'#1557b0'}}>预算策略与价格窗口</h3>
   <p>共享原预算，不增加预算。提议、审核、生成配置与撤销分别确认；不会自动批准或启动模型、业务。</p>
   <div style={flow}>
-   <button type="button" className="btn" disabled={guard.busy} onClick={()=>void read(async current=>{setGateway(null);const value=await windowApi.readWindowGatewayStatus();if(current()){setGateway(value);setMessage(value.writerEnabled?'入口配置可接收操作，仍须原生授权核验。':'入口未开启写入，可继续查询原记录。');}})}>核对审核入口</button>
-   <button type="button" className="btn" disabled={guard.busy} onClick={()=>void read(async current=>{const rows=await windowApi.listWindowRequests();if(current())setHistory(rows);})}>读取原操作列表</button>
+   <button type="button" className="btn" disabled={!authenticated||guard.busy} onClick={()=>void read(async current=>{setGateway(null);const value=await windowApi.readWindowGatewayStatus();if(current()){setGateway(value);setMessage(value.writerEnabled?'入口配置可接收操作，仍须原生授权核验。':'入口未开启写入，可继续查询原记录。');}})}>核对审核入口</button>
+   <button type="button" className="btn" disabled={!authenticated||guard.busy} onClick={()=>void read(async current=>{const rows=await windowApi.listWindowRequests();if(current())setHistory(rows);})}>读取原操作列表</button>
   </div>
   <p>审核入口：{gateway?(gateway.writerEnabled?'配置已开启（不代表获准写入）':'写入关闭'):'未核对'}</p>
   <div style={flow}>
@@ -143,10 +151,10 @@ export function BudgetPolicyWindowReviewPanel(){
   {operation==='revoke'&&<label style={{...field,marginTop:12}}>策略撤销原因<input aria-label="策略撤销原因" value={reason} maxLength={500} disabled={locked} onChange={e=>setReason(e.target.value)}/></label>}
   <div style={flow}>
    <button type="button" className="btn" disabled={!canSubmit} onClick={()=>void submit()}>{operation==='propose'?'提交策略提议':operation==='decide'?'提交策略决定':operation==='consume'?'生成成对策略与价格':'撤销策略批准'}</button>
-   <button type="button" className="btn" disabled={guard.busy||!reference} onClick={()=>{if(reference)void query(reference);}}>查询原策略操作</button>
+   <button type="button" className="btn" disabled={!authenticated||guard.busy||!reference} onClick={()=>{if(reference)void query(reference);}}>查询原策略操作</button>
   </div>
   <p role="status">{message}</p>
   {reference&&<p>原操作：{reference.operation} / {reference.key}；{observation?.status??'尚未确认'}</p>}
-  {history.length>0&&<details open><summary>原操作列表（仅查询，不代表批准）</summary><ul>{history.map(item=><li key={item.operation+':'+item.idempotencyKey}><button type="button" className="btn" disabled={guard.busy||!!frozen} onClick={()=>void query({operation:item.operation,key:item.idempotencyKey})}>{item.operation} / {item.idempotencyKey}</button></li>)}</ul></details>}
+  {history.length>0&&<details open><summary>原操作列表（仅查询，不代表批准）</summary><ul>{history.map(item=><li key={item.operation+':'+item.idempotencyKey}><button type="button" className="btn" disabled={!authenticated||guard.busy||!!frozen} onClick={()=>void query({operation:item.operation,key:item.idempotencyKey})}>{item.operation} / {item.idempotencyKey}</button></li>)}</ul></details>}
  </section>{consumed&&<QyhRuntimeSuccessorPreflightPanel pairedPolicyRef={consumed.policyRef} pairedPriceRef={consumed.priceRef}/>}</>;
 }

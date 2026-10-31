@@ -511,6 +511,18 @@ it('starts blank with no default dates, consent or requests',async()=>{
  expect(read).not.toHaveBeenCalled();expect(source).not.toHaveBeenCalled();expect(post).not.toHaveBeenCalled();expect(button('提交策略提议').disabled).toBe(true);
  expect(host.querySelector<HTMLInputElement>('[aria-label="策略开始时间"]')!.value).toBe('');expect(host.textContent).toContain('不增加预算');
 });
+it('keeps every paired-window request disabled until a current OIDC session exists',async()=>{
+ const status=vi.spyOn(api,'readWindowGatewayStatus'),history=vi.spyOn(api,'listWindowRequests'),source=vi.spyOn(api,'readPolicyWindowSource'),post=vi.spyOn(api,'submitWindowOperation');
+ setAccessToken(null);await render();
+ expect(button('核对审核入口').disabled).toBe(true);expect(button('读取原操作列表').disabled).toBe(true);expect(button('读取父预算来源').disabled).toBe(true);expect(button('提交策略提议').disabled).toBe(true);
+ expect(status).not.toHaveBeenCalled();expect(history).not.toHaveBeenCalled();expect(source).not.toHaveBeenCalled();expect(post).not.toHaveBeenCalled();
+ await act(async()=>setAccessToken('restored-human-session'));
+ expect(button('核对审核入口').disabled).toBe(false);expect(button('读取原操作列表').disabled).toBe(false);
+ expect(status).not.toHaveBeenCalled();expect(history).not.toHaveBeenCalled();
+ await act(async()=>setAccessToken(null));
+ expect(button('核对审核入口').disabled).toBe(true);expect(button('读取原操作列表').disabled).toBe(true);
+ expect(status).not.toHaveBeenCalled();expect(history).not.toHaveBeenCalled();expect(post).not.toHaveBeenCalled();
+});
 it('makes four explicit operations with no automatic approval or consumption',async()=>{
  readMocks();const post=postMocks();await render();await propose();expect(post).toHaveBeenCalledTimes(1);expect(host.textContent).toContain('未知价格不代表免费');
  await select('策略操作','decide');await input('策略操作编号','unit-window-decide');expect(button('提交策略决定').disabled).toBe(true);await select('策略审核意见','approved');
