@@ -26,6 +26,13 @@ export function BudgetCostReviewPanel(){
  }
  useEffect(()=>{const restored=initial.current;if(!restored)return;if(restored.attempted)guard.markAttempted(restored.ref);
   void run(async()=>({ref:restored.ref,result:await inquireCost(restored.ref)}));},[]);
+ useEffect(()=>{
+  function onCreated(event: Event){const detail=(event as CustomEvent<{proposalId?:string}>).detail;
+   if(typeof detail?.proposalId!=='string'||!detail.proposalId.trim())return;
+   invalidate();setOperation('decide');setId(detail.proposalId);setMessage('已填入新提议 ID；请先读取费用提议，再由审核人提交复核。');}
+  window.addEventListener('aos-cost-proposal-created',onCreated);
+  return ()=>window.removeEventListener('aos-cost-proposal-created',onCreated);
+ },[]);
  async function load(){if(guard.busyRef.current)return;setSource(null);setResult(null);setConsumption(null);
   await run(async current=>{const value=await readCostReview(id.trim());if(!current())throw new Error('身份已变化');
    const next={id:value.proposal.proposalId,operation};saveCostReference(next,guard.attempted(next));

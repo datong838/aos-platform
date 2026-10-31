@@ -2,6 +2,58 @@ import { apiGetAuthoritative, apiPostUnqueued } from './client';
 import { getTenant } from './tenant';
 import { parseBudgetTarget, type BudgetTarget } from './aipBudgetActivation';
 
+export type CostProposalCreateBody = {
+  schemaVersion: 1;
+  tenant: { orgId: string; projectId: string };
+  target: BudgetTarget;
+  draftRevision: number;
+  expectedHeadVersion: number;
+  makerSubject: string;
+  checkerSubject: string;
+  basis: {
+    kind: 'development_risk_proposal';
+    provider: { assetType: 'ProviderInstanceRevision'; assetId: string; revision: number; contentHash: string };
+    providerModelId: string;
+    perRequestRiskMinor: number;
+    totalRiskMinor: number;
+    maxRequests: number;
+  };
+};
+
+export type CostProposalCreated = {
+  proposalId: string;
+  proposalHash: string;
+  proposal: CostProposalCreateBody & { accounts: { daily: string; pilot: string }; currency: 'CNY'; period: { start: string; end: string } };
+  status: 'proposed';
+  sourceVerification: 'pending';
+  activationEligible: false;
+  createdAt: string;
+  expiresAt: string;
+};
+
+export async function readCostActivationCandidate(budgetId: string): Promise<{ headVersion: number; draftRevision: number; target: BudgetTarget }> {
+  const row = await apiGetAuthoritative<unknown>(`/v1/aip/budgets/activation-candidates/${encodeURIComponent(budgetId)}`);
+  if (!row || typeof row !== 'object') throw new Error('预算候选来源不完整');
+  const v = row as Record<string, unknown>;
+  const target = parseBudgetTarget(v.target);
+  if (v.activationEligible !== false || !Number.isSafeInteger(v.headVersion) || !Number.isSafeInteger(v.draftRevision)
+    || target.budgetId !== budgetId || target.revision !== Number(v.draftRevision) + 1) throw new Error('当前预算候选与权威不一致');
+  return { headVersion: Number(v.headVersion), draftRevision: Number(v.draftRevision), target };
+}
+
+function parseCostProposalCreated(value: unknown): CostProposalCreated {
+  if (!value || typeof value !== 'object') throw new Error('费用提议响应不完整');
+  const v = value as Record<string, unknown>;
+  if (typeof v.proposalId !== 'string' || typeof v.proposalHash !== 'string' || v.status !== 'proposed'
+    || v.sourceVerification !== 'pending' || v.activationEligible !== false) throw new Error('费用提议未进入待审核状态');
+  parseCostReview({ proposal: value, decision: null, revocation: null }, v.proposalId as string);
+  return value as CostProposalCreated;
+}
+
+export async function createCostProposal(body: CostProposalCreateBody, idempotencyKey: string): Promise<CostProposalCreated> {
+  return parseCostProposalCreated(await apiPostUnqueued('/v1/aip/budgets/cost-proposals', body, { 'Idempotency-Key': idempotencyKey }));
+}
+
 export type CostRef={id:string;operation:'decide'|'revoke'|'consume'|'configure'};
 type ProviderRef={assetType:'ProviderInstanceRevision';assetId:string;revision:number;contentHash:string};
 type Proposal={schemaVersion:1;tenant:{orgId:string;projectId:string};target:BudgetTarget;draftRevision:number;expectedHeadVersion:number;

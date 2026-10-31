@@ -6,6 +6,7 @@ import { PageChrome } from "../../components/PageChrome";
 import { BudgetRevisionSetupPanel } from "./BudgetRevisionSetupPanel";
 import { BudgetActivationReviewPanel } from "./BudgetActivationReviewPanel";
 import { BudgetCostReviewPanel } from "./BudgetCostReviewPanel";
+import { BudgetCostProposalSetupPanel } from "./BudgetCostProposalSetupPanel";
 import { BudgetPolicyRenewalReviewPanel } from "./BudgetPolicyRenewalReviewPanel";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -434,6 +435,7 @@ export function CapacityPage() {
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         <BudgetRevisionSetupPanel />
         <BudgetActivationReviewPanel />
+        <BudgetCostProposalSetupPanel />
         <BudgetCostReviewPanel />
         <BudgetPolicyRenewalReviewPanel />
         {sourceMode === "error" && (
