@@ -1,9 +1,18 @@
 import { apiGet, apiPostUnqueued } from "../client";
-import { parseModelEvalCandidate, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";
-import type { ModelRouteRevision, RegisteredModelRevision, RuntimePolicyRevision } from "./contracts";
+import { parseModelEvalCandidate, parseModelEvalPreflight, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";
+import type { ExactRuntimeRef, ModelEvalCandidate, ModelRouteRevision, RegisteredModelRevision, RuntimePolicyRevision } from "./contracts";
+
+const sameRef = (left: ExactRuntimeRef, right: ExactRuntimeRef) => left.assetType === right.assetType
+  && left.assetId === right.assetId && left.revision === right.revision && left.contentHash === right.contentHash;
 
 export const aipModelRuntime = {
   async evalCandidates() { const value = await apiGet<unknown>("/v1/aip/model-runtime/eval-candidates"); if (!Array.isArray(value)) throw new Error("评测候选必须是数组"); return value.map(parseModelEvalCandidate); },
+  async modelEvalPreflight(candidate: ModelEvalCandidate) {
+    const result = parseModelEvalPreflight(await apiPostUnqueued<unknown>("/v1/aip/model-runtime/model-eval-preflight", candidate, {}));
+    if (!sameRef(result.sourceRef, candidate.sourceRef) || !sameRef(result.targetRef, candidate.targetRef)
+      || result.expectedHeadVersion !== candidate.expectedHeadVersion) throw new Error("模型 Eval 预检回包与当前精确候选不一致");
+    return result;
+  },
   async overview() { return parseModelRuntimeOverview(await apiGet<unknown>("/v1/aip/model-runtime/overview")); },
   async chainOverview() { return parseModelRuntimeChainOverview(await apiGet<unknown>("/v1/aip/model-runtime/chain-overview")); },
   async costOverview() { return parseModelRuntimeCostOverview(await apiGet<unknown>("/v1/aip/model-runtime/cost-overview")); },
@@ -18,4 +27,4 @@ export const aipModelRuntime = {
   async routeRevisions(routeId: string) { const value = await apiGet<unknown>(`/v1/aip/model-runtime/routes/${encodeURIComponent(routeId)}/revisions`); if (!Array.isArray(value)) throw new Error("路由历史必须是数组"); return value.map(parseModelRouteRevision); },
 };
 export * from "./contracts";
-export { parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";
+export { parseModelEvalPreflight, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";

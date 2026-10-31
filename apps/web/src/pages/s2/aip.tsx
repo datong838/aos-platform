@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost, apiPut, apiDelete, S2Chrome, useJsonGet } from "./shared";
 import {
@@ -16,6 +16,7 @@ import { AipOperationalProjectionStrip } from "../../components/aip/AipOperation
 import {
   aipModelRuntime,
   type ModelEvalCandidate,
+  type ModelEvalPreflight,
   parseModelRouteRevision,
   type ModelRouteRevision,
   type ModelRuntimeOverview,
@@ -3735,6 +3736,10 @@ export function EvalsPage() {
   const [runtimeHandoff, setRuntimeHandoff] = useState<MatchedModelRuntimeEvalHandoff | null>(null);
   const [runtimeHandoffState, setRuntimeHandoffState] = useState<"idle" | "loading" | "ready" | "blocked">("idle");
   const [runtimeHandoffMessage, setRuntimeHandoffMessage] = useState("");
+  const [modelEvalPreflight, setModelEvalPreflight] = useState<ModelEvalPreflight | null>(null);
+  const [modelEvalPreflightState, setModelEvalPreflightState] = useState<"idle" | "loading" | "ready" | "blocked">("idle");
+  const [modelEvalPreflightMessage, setModelEvalPreflightMessage] = useState("");
+  const modelEvalPreflightRequest = useRef(0);
 
   const suites = suitesApi.data?.items || [];
   const graphs = graphsApi.data?.items || [];
@@ -3753,6 +3758,10 @@ export function EvalsPage() {
   }, [graphs, targetId]);
   useEffect(() => {
     let current = true;
+    modelEvalPreflightRequest.current += 1;
+    setModelEvalPreflight(null);
+    setModelEvalPreflightState("idle");
+    setModelEvalPreflightMessage("");
     setRuntimeHandoff(null);
     if (!runtimeHandoffInput.present) {
       setRuntimeHandoffState("idle");
@@ -3779,6 +3788,25 @@ export function EvalsPage() {
     });
     return () => { current = false; };
   }, [runtimeHandoffInput]);
+
+  async function inspectModelEvalPreflight() {
+    if (runtimeHandoffState !== "ready" || !runtimeHandoff || modelEvalPreflightState === "loading") return;
+    const request = ++modelEvalPreflightRequest.current;
+    setModelEvalPreflight(null);
+    setModelEvalPreflightState("loading");
+    setModelEvalPreflightMessage("正在只读核对当前模型 Eval 办理条件…");
+    try {
+      const result = await aipModelRuntime.modelEvalPreflight(runtimeHandoff.model);
+      if (request !== modelEvalPreflightRequest.current) return;
+      setModelEvalPreflight(result);
+      setModelEvalPreflightState("ready");
+      setModelEvalPreflightMessage("只读核对完成；以下均为待补条件，当前仍不可执行。");
+    } catch (error) {
+      if (request !== modelEvalPreflightRequest.current) return;
+      setModelEvalPreflightState("blocked");
+      setModelEvalPreflightMessage(`只读核对已阻断：${String((error as Error).message || error)}`);
+    }
+  }
 
   async function createQuickStartSuite() {
     setBusy(true);
@@ -4087,16 +4115,34 @@ export function EvalsPage() {
           <h3 style={{ marginTop: 0 }}>栖月汇模型链 Eval 精确交接</h3>
           <p className={runtimeHandoffState === "blocked" ? "error" : "aos-text"} role="status">{runtimeHandoffMessage}</p>
           {runtimeHandoffState === "ready" && runtimeHandoff ? (
-            <BpTable
-              columns={["候选", "当前草稿", "下一目标", "当前头版本", "状态"]}
-              rows={([ ["模型", runtimeHandoff.model], ["路由", runtimeHandoff.route] ] as const).map(([label, item]) => [
-                label,
-                `${item.sourceRef.assetId}@${item.sourceRef.revision}`,
-                `${item.targetRef.assetId}@${item.targetRef.revision}`,
-                String(item.expectedHeadVersion),
-                "待正式执行（不可自动运行）",
-              ])}
-            />
+            <>
+              <BpTable
+                columns={["候选", "当前草稿", "下一目标", "当前头版本", "状态"]}
+                rows={([ ["模型", runtimeHandoff.model], ["路由", runtimeHandoff.route] ] as const).map(([label, item]) => [
+                  label,
+                  `${item.sourceRef.assetId}@${item.sourceRef.revision}`,
+                  `${item.targetRef.assetId}@${item.targetRef.revision}`,
+                  String(item.expectedHeadVersion),
+                  "待正式执行（不可自动运行）",
+                ])}
+              />
+              <button type="button" disabled={modelEvalPreflightState === "loading"} onClick={() => void inspectModelEvalPreflight()}>
+                {modelEvalPreflightState === "loading" ? "正在只读核对…" : "只读核对模型 Eval 办理条件"}
+              </button>
+              {modelEvalPreflightMessage ? <p className={modelEvalPreflightState === "blocked" ? "error" : "aos-text"} role="status">{modelEvalPreflightMessage}</p> : null}
+              {modelEvalPreflightState === "ready" && modelEvalPreflight ? (
+                <BpTable
+                  columns={["依赖", "精确引用"]}
+                  rows={[
+                    ["Provider", `${modelEvalPreflight.providerRef.assetId}@${modelEvalPreflight.providerRef.revision}`],
+                    ["价格", `${modelEvalPreflight.priceRef.assetId}@${modelEvalPreflight.priceRef.revision}`],
+                    ["配额", `${modelEvalPreflight.quotaPolicyRef.assetId}@${modelEvalPreflight.quotaPolicyRef.revision}`],
+                    ["预算", `${modelEvalPreflight.budgetPolicyRef.assetId}@${modelEvalPreflight.budgetPolicyRef.revision}`],
+                    ["待补条件", modelEvalPreflight.blockerCodes.join("、")],
+                  ]}
+                />
+              ) : null}
+            </>
           ) : null}
           <p className="aos-text">本交接只读当前候选；不会创建 EvalRun、Gate 或批准，也不会调用 Provider 或模型。</p>
         </section>

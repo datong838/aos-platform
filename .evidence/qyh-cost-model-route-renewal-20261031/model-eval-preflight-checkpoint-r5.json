@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "aos.qyh-model-eval-preflight-checkpoint/v1",
+  "recordedAt": "2026-10-31T21:12:00+08:00",
+  "tenant": { "orgId": "org-org", "projectId": "dev-project" },
+  "sourceHead": "3f83b4642",
+  "result": "MODEL_EVAL_READONLY_PREFLIGHT_EXPOSED_NOT_EXECUTED",
+  "businessAcceptance": false,
+  "engineeringClosed": 2,
+  "realBusinessAccepted": 0,
+  "developmentLoginSkipPreserved": true,
+  "preflight": {
+    "endpoint": "POST /v1/aip/model-runtime/model-eval-preflight",
+    "canonicalResolver": "AipModelRuntimeResolver.preflight_model_evaluation",
+    "explicitUserActionRequired": true,
+    "offlineReplayAllowed": false,
+    "purpose": "quality-eval",
+    "executionAllowed": false
+  },
+  "writes": {
+    "databaseWritten": false,
+    "evalRequestCreated": false,
+    "evalRunCreated": false,
+    "gateCreated": false,
+    "providerCalled": false,
+    "modelCalled": false
+  },
+  "tests": {
+    "webFocused": "51/51 passed",
+    "webAdjacent": "61/61 passed",
+    "typescript": "passed",
+    "webBuild": "passed",
+    "pythonCompile": "passed",
+    "isolatedApiContract": "direct resolver and HTTP serialization passed",
+    "fullApiPytest": "deferred: disposable PostgreSQL 127.0.0.1:5433 unavailable; current business database was not substituted"
+  },
+  "sha256": {
+    "aip_model_runtime.py": "f2310c363a9cf837da45ce7547a3a8f315793f20aedd93076bf42279c2dfc224",
+    "test_aip_model_runtime_api.py": "e5ac1cc0f753f701bb5a494c40b957e4c03edf7dfb8eb33f1974400cfdbc3224",
+    "contracts.ts": "6db1e3371f074196c90b2a8069292e1c2adb0c8f6e5798fc4d7e66f95d8c1552",
+    "index.ts": "eb0931b76c5c1d0b8c927e723de1473a923ddbb4a53fdbe93f60274fffdebee2",
+    "parser.ts": "16554ec9b02cd8fbeeb0bbb9a2778995995a606467b155fe6ee0219ca80c4fb6",
+    "parser.test.ts": "85968c295b710904199c59c543f0eb65da9be98485904155c3845c4f2f7ab710",
+    "aip.tsx": "8617e30923e383b2a63026e0997aa9dec01b55e59237ca04cee78a68a1306848",
+    "EvalsPage.test.tsx": "7c0ea4abf804c6c1b5867c1f1cc8b9e75b3b5eda6d24a5e275cc452cc2fb8495"
+  },
+  "next": "本人完成原生批准前，只能读取这些办理条件；下一最短硬缺口是 route 正式 Eval 上下文和既有批准/预算容量/Provider 传输门的合法接线，不得由本预检代替。"
+}

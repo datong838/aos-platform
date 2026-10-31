@@ -10,6 +10,7 @@ from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_budget_contracts import BudgetLifecycle
 from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.aip_eval_contracts import UsageAdjustment, UsageAttribution, UsageReceipt
+from aos_api.aip_model_eval_authorization import ModelEvalPreflight
 from aos_api.aip_model_governance_policy_contracts import ModelGovernancePolicyLifecycle
 from aos_api.aip_model_runtime_contracts import (
     ModelRouteRevision,
@@ -90,6 +91,86 @@ class RollbackDraftStore:
             expected_revision,
         )
         raise ModelRuntimeNotFound("test capture")
+
+
+class CapturingModelEvalResolver:
+    def __init__(self, *, reject: bool = False) -> None:
+        self.call = None
+        self.reject = reject
+
+    def preflight_model_evaluation(
+        self, scope, source_ref, target_ref, *, expected_head_version
+    ):
+        self.call = (scope.key, source_ref, target_ref, expected_head_version)
+        if self.reject:
+            raise ValueError("current exact Model evaluation candidate unavailable")
+        return ModelEvalPreflight(
+            tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+            sourceRef=source_ref,
+            targetRef=target_ref,
+            expectedHeadVersion=expected_head_version,
+            providerRef={"assetType": "ProviderInstanceRevision", "assetId": "provider-1", "revision": 3, "contentHash": "c" * 64},
+            priceRef={"assetType": "ModelPriceSnapshotRevision", "assetId": "price-1", "revision": 4, "contentHash": "d" * 64},
+            quotaPolicyRef={"assetType": "QuotaPolicyRevision", "assetId": "quota-1", "revision": 5, "contentHash": "e" * 64},
+            budgetPolicyRef={"assetType": "BudgetPolicyRevision", "assetId": "budget-1", "revision": 6, "contentHash": "f" * 64},
+            checkedAt=datetime.now(UTC),
+            blockerCodes=["eval_approval_missing", "budget_capacity_unverified", "provider_transport_unverified"],
+        )
+
+
+MODEL_EVAL_CANDIDATE = {
+    "sourceRef": {"assetType": "RegisteredModelRevision", "assetId": "qyh-model", "revision": 7, "contentHash": "a" * 64},
+    "targetRef": {"assetType": "RegisteredModelRevision", "assetId": "qyh-model", "revision": 8, "contentHash": "b" * 64},
+    "expectedHeadVersion": 7,
+    "sourceLifecycle": "draft",
+    "executionAllowed": False,
+}
+
+
+def test_model_eval_preflight_is_tenant_scoped_exact_and_never_authorizes_execution(client) -> None:
+    resolver = CapturingModelEvalResolver()
+    client.app.dependency_overrides[aip_model_runtime.get_runtime_resolver] = lambda: resolver
+    try:
+        response = client.post(
+            "/v1/aip/model-runtime/model-eval-preflight",
+            headers=headers(),
+            json=MODEL_EVAL_CANDIDATE,
+        )
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
+        assert body["purpose"] == "quality-eval"
+        assert body["executionAllowed"] is False
+        assert body["blockerCodes"] == [
+            "eval_approval_missing",
+            "budget_capacity_unverified",
+            "provider_transport_unverified",
+        ]
+        assert resolver.call[0] == ("org-org", "dev-project")
+        assert resolver.call[1].model_dump(mode="json", by_alias=True) == MODEL_EVAL_CANDIDATE["sourceRef"]
+        assert resolver.call[2].model_dump(mode="json", by_alias=True) == MODEL_EVAL_CANDIDATE["targetRef"]
+        assert resolver.call[3] == 7
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_runtime_resolver, None)
+
+
+def test_model_eval_preflight_requires_login_and_fails_closed_on_candidate_drift(client) -> None:
+    assert client.post(
+        "/v1/aip/model-runtime/model-eval-preflight", json=MODEL_EVAL_CANDIDATE
+    ).status_code == 401
+    resolver = CapturingModelEvalResolver(reject=True)
+    client.app.dependency_overrides[aip_model_runtime.get_runtime_resolver] = lambda: resolver
+    try:
+        response = client.post(
+            "/v1/aip/model-runtime/model-eval-preflight",
+            headers=headers(),
+            json=MODEL_EVAL_CANDIDATE,
+        )
+        assert response.status_code == 409
+        assert response.json()["code"] == "AIP_MODEL_EVAL_PREFLIGHT_BLOCKED"
+        assert "current exact" not in response.json()["message"]
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_runtime_resolver, None)
 
 
 def test_canonical_route_read_uses_principal_scope_and_never_cross_tenant(client) -> None:

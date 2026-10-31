@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseModelEvalCandidate, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";
+import { parseModelEvalCandidate, parseModelEvalPreflight, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";
 
 const H = "a".repeat(64);
 const ref = (assetType: string, assetId: string) => ({ assetType, assetId, revision: 1, contentHash: H });
@@ -160,5 +160,39 @@ describe("只读模型评测候选", () => {
     { targetRef: { ...candidate.targetRef, contentHash: "bad" } },
   ])("拒绝伪执行权、错误版本与漂移引用 %j", (drift) => {
     expect(() => parseModelEvalCandidate({ ...candidate, ...drift })).toThrow();
+  });
+});
+
+describe("模型首次 Eval 只读办理条件", () => {
+  const preflight = {
+    tenant: empty.tenant,
+    sourceRef: ref("RegisteredModelRevision", "qyh-model"),
+    targetRef: { ...ref("RegisteredModelRevision", "qyh-model"), revision: 2 },
+    expectedHeadVersion: 1,
+    providerRef: ref("ProviderInstanceRevision", "provider-1"),
+    priceRef: ref("ModelPriceSnapshotRevision", "price-1"),
+    quotaPolicyRef: ref("QuotaPolicyRevision", "quota-1"),
+    budgetPolicyRef: ref("BudgetPolicyRevision", "budget-1"),
+    checkedAt: empty.generatedAt,
+    blockerCodes: ["eval_approval_missing", "budget_capacity_unverified"],
+    purpose: "quality-eval",
+    executionAllowed: false,
+  };
+  it("保留精确依赖与阻断项且永不授执行权", () => {
+    expect(parseModelEvalPreflight(preflight)).toMatchObject({
+      purpose: "quality-eval",
+      executionAllowed: false,
+      blockerCodes: preflight.blockerCodes,
+    });
+  });
+  it.each([
+    { executionAllowed: true },
+    { purpose: "runtime-admission" },
+    { blockerCodes: [] },
+    { blockerCodes: ["same", "same"] },
+    { providerRef: ref("RegisteredModelRevision", "provider-1") },
+    { targetRef: { ...preflight.targetRef, revision: 3 } },
+  ])("拒绝放权、空阻断、重复阻断和依赖漂移 %j", (drift) => {
+    expect(() => parseModelEvalPreflight({ ...preflight, ...drift })).toThrow();
   });
 });

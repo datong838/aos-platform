@@ -119,6 +119,21 @@ export type ModelEvalCandidate = {
   executionAllowed: false;
 };
 
+export type ModelEvalPreflight = {
+  tenant: { orgId: string; projectId: string };
+  sourceRef: ExactRuntimeRef;
+  targetRef: ExactRuntimeRef;
+  expectedHeadVersion: number;
+  providerRef: ExactRuntimeRef;
+  priceRef: ExactRuntimeRef;
+  quotaPolicyRef: ExactRuntimeRef;
+  budgetPolicyRef: ExactRuntimeRef;
+  checkedAt: string;
+  blockerCodes: string[];
+  purpose: "quality-eval";
+  executionAllowed: false;
+};
+
 export type ModelRouteRevision = {
   tenant: { orgId: string; projectId: string };
   routeId: string;

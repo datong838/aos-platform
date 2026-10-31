@@ -15,6 +15,7 @@ import {
 const apiMocks = vi.hoisted(() => ({
   apiGet: vi.fn(),
   apiPost: vi.fn(),
+  apiPostUnqueued: vi.fn(),
   apiPut: vi.fn(),
   apiDelete: vi.fn(),
 }));
@@ -105,6 +106,7 @@ const graph = {
     root = createRoot(host);
     apiMocks.apiGet.mockReset();
     apiMocks.apiPost.mockReset();
+    apiMocks.apiPostUnqueued.mockReset();
     apiMocks.apiPut.mockReset();
     apiMocks.apiDelete.mockReset();
     evidenceMocks.evalRun.mockReset();
@@ -179,6 +181,50 @@ const graph = {
     expect(host.textContent).toContain(`${QYH_RUNTIME_SUCCESSOR.routeId}@9`);
     expect(host.textContent).toContain("待正式执行（不可自动运行）");
     expect(apiMocks.apiGet).toHaveBeenCalledWith("/v1/aip/model-runtime/eval-candidates");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
+    expect(apiMocks.apiPostUnqueued).not.toHaveBeenCalled();
+  });
+
+  it("明确点击后只做一次模型 Eval 办理条件核对并展示真实阻断", async () => {
+    const href = buildModelRuntimeEvalHandoffHref(qyhModelCandidate.sourceRef, routeCandidate.sourceRef);
+    apiMocks.apiGet.mockImplementation((path: string) => {
+      if (path === "/v1/evals/suites") return Promise.resolve({ items: [] });
+      if (path === "/v1/aip/logic/graphs") return Promise.resolve(graphList);
+      if (path === "/v1/aip/model-runtime/eval-candidates") return Promise.resolve([qyhModelCandidate, routeCandidate]);
+      return Promise.reject(new Error(`unexpected path ${path}`));
+    });
+    apiMocks.apiPostUnqueued.mockResolvedValue({
+      tenant: { orgId: "org-org", projectId: "dev-project" },
+      sourceRef: qyhModelCandidate.sourceRef,
+      targetRef: qyhModelCandidate.targetRef,
+      expectedHeadVersion: qyhModelCandidate.expectedHeadVersion,
+      providerRef: { assetType: "ProviderInstanceRevision", assetId: "provider-1", revision: 1, contentHash: "1".repeat(64) },
+      priceRef: { assetType: "ModelPriceSnapshotRevision", assetId: "price-1", revision: 1, contentHash: "2".repeat(64) },
+      quotaPolicyRef: { assetType: "QuotaPolicyRevision", assetId: "quota-1", revision: 1, contentHash: "3".repeat(64) },
+      budgetPolicyRef: { assetType: "BudgetPolicyRevision", assetId: "budget-1", revision: 1, contentHash: "4".repeat(64) },
+      checkedAt: "2026-10-31T13:05:00Z",
+      blockerCodes: ["eval_approval_missing", "budget_capacity_unverified", "provider_transport_unverified"],
+      purpose: "quality-eval",
+      executionAllowed: false,
+    });
+
+    await act(async () => root.render(createElement(MemoryRouter, { initialEntries: [href] }, createElement(EvalsPage))));
+    await flush();
+    const button = Array.from(host.querySelectorAll("button")).find((node) => node.textContent?.includes("只读核对模型 Eval 办理条件"));
+    expect(button).toBeDefined();
+    expect(apiMocks.apiPostUnqueued).not.toHaveBeenCalled();
+    await act(async () => button!.click());
+    await flush();
+
+    expect(apiMocks.apiPostUnqueued).toHaveBeenCalledTimes(1);
+    expect(apiMocks.apiPostUnqueued).toHaveBeenCalledWith(
+      "/v1/aip/model-runtime/model-eval-preflight",
+      qyhModelCandidate,
+      {},
+    );
+    expect(host.textContent).toContain("eval_approval_missing");
+    expect(host.textContent).toContain("budget_capacity_unverified");
+    expect(host.textContent).toContain("仍不可执行");
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });
 

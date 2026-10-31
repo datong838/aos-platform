@@ -1,4 +1,4 @@
-import type { ModelEvalCandidate, ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeChainOverview, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeChainNode, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeModelImpactTrace, RuntimePolicyRevision, RuntimeQuotaAuthoritySummary, RuntimeReadiness, RuntimeResolution, RuntimeRouteChain, RuntimeTaskModelTrace, RuntimeTraceRef, RuntimeUsageAttributionDimension, RuntimeUsageAuthoritySummary } from "./contracts";
+import type { ModelEvalCandidate, ModelEvalPreflight, ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeChainOverview, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeChainNode, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeModelImpactTrace, RuntimePolicyRevision, RuntimeQuotaAuthoritySummary, RuntimeReadiness, RuntimeResolution, RuntimeRouteChain, RuntimeTaskModelTrace, RuntimeTraceRef, RuntimeUsageAttributionDimension, RuntimeUsageAuthoritySummary } from "./contracts";
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
 function array(value: unknown, label: string): unknown[] { if (!Array.isArray(value)) throw new Error(`${label} 必须是数组`); return value; }
@@ -367,4 +367,32 @@ export function parseModelEvalCandidate(value: unknown): ModelEvalCandidate {
   if (raw.executionAllowed !== false) throw new Error("评测候选不授予执行权");
   return { sourceRef, targetRef, expectedHeadVersion: integer(raw.expectedHeadVersion, "expectedHeadVersion", 1),
     sourceLifecycle: enumeration(raw.sourceLifecycle, "sourceLifecycle", ["draft", "validated"] as const), executionAllowed: false };
+}
+
+export function parseModelEvalPreflight(value: unknown): ModelEvalPreflight {
+  const raw = object(value, "ModelEvalPreflight");
+  const sourceRef = ref(raw.sourceRef, "sourceRef");
+  const targetRef = ref(raw.targetRef, "targetRef");
+  const exact = (key: string, kind: string) => {
+    const value = ref(raw[key], key);
+    if (value.assetType !== kind) throw new Error(`${key} 类型必须为 ${kind}`);
+    return value;
+  };
+  const blockerCodes = strings(raw.blockerCodes, "blockerCodes");
+  if (sourceRef.assetType !== "RegisteredModelRevision"
+    || targetRef.assetType !== sourceRef.assetType
+    || targetRef.assetId !== sourceRef.assetId
+    || targetRef.revision !== sourceRef.revision + 1) throw new Error("模型 Eval 预检必须绑定同一模型的下一版本");
+  if (!blockerCodes.length || new Set(blockerCodes).size !== blockerCodes.length) throw new Error("模型 Eval 预检必须保留非空且不重复的阻断项");
+  if (raw.purpose !== "quality-eval" || raw.executionAllowed !== false) throw new Error("模型 Eval 预检只用于质量评测且不授予执行权");
+  return {
+    tenant: tenant(raw.tenant, "tenant"), sourceRef, targetRef,
+    expectedHeadVersion: integer(raw.expectedHeadVersion, "expectedHeadVersion", 1),
+    providerRef: exact("providerRef", "ProviderInstanceRevision"),
+    priceRef: exact("priceRef", "ModelPriceSnapshotRevision"),
+    quotaPolicyRef: exact("quotaPolicyRef", "QuotaPolicyRevision"),
+    budgetPolicyRef: exact("budgetPolicyRef", "BudgetPolicyRevision"),
+    checkedAt: iso(raw.checkedAt, "checkedAt"), blockerCodes,
+    purpose: "quality-eval", executionAllowed: false,
+  };
 }

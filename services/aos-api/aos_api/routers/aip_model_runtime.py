@@ -41,6 +41,7 @@ from aos_api.aip_provider_plugin_authority import (
     ProviderPluginRevision,
 )
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
+from aos_api.aip_model_eval_authorization import ModelEvalPreflight
 from aos_api.aip_model_runtime_store import (
     AipModelRuntimeStore, ModelRuntimeConflict, ModelRuntimeDependencyBlocked,
     ModelRuntimeIdempotencyConflict, ModelRuntimeNotFound, ModelRuntimeStoreError,
@@ -84,6 +85,10 @@ def get_budget_authority_store() -> AipBudgetAuthorityStore:
 
 def get_governance_policy_store() -> AipModelGovernancePolicyStore:
     return _POLICY_AUTHORITY_STORE
+
+
+def get_runtime_resolver() -> AipModelRuntimeResolver:
+    return AipModelRuntimeResolver()
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -451,6 +456,27 @@ def get_eval_candidates(
 ):
     try:
         return store.list_eval_candidates(_scope(principal))
+    except ModelRuntimeStoreError as exc:
+        raise _map(exc) from None
+
+
+@router.post("/model-eval-preflight", response_model=ModelEvalPreflight)
+def preflight_model_evaluation(
+    body: ModelEvalCandidate,
+    principal: Principal = Depends(require_principal),
+    resolver: AipModelRuntimeResolver = Depends(get_runtime_resolver),
+):
+    try:
+        return resolver.preflight_model_evaluation(
+            _scope(principal), body.source_ref, body.target_ref,
+            expected_head_version=body.expected_head_version,
+        )
+    except ValueError:
+        raise ApiError(
+            code="AIP_MODEL_EVAL_PREFLIGHT_BLOCKED",
+            message="当前精确模型评测候选不可用于只读办理条件核对",
+            status_code=409,
+        ) from None
     except ModelRuntimeStoreError as exc:
         raise _map(exc) from None
 
