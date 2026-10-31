@@ -1,6 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { buildBudgetDraft, exactBudgetDraftReadback, type BudgetDraftInput } from "./BudgetRevisionSetupPanel";
+import { clearAccessToken, setAccessToken } from "../../api/tenant";
+import { BudgetRevisionSetupPanel, buildBudgetDraft, exactBudgetDraftReadback, type BudgetDraftInput } from "./BudgetRevisionSetupPanel";
+
+const apiGetAuthoritative = vi.hoisted(() => vi.fn());
+const apiPostUnqueued = vi.hoisted(() => vi.fn());
+vi.mock("../../api/client", () => ({ apiGetAuthoritative, apiPostUnqueued }));
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+afterEach(() => {
+  clearAccessToken();
+  vi.clearAllMocks();
+});
 
 const INPUT: BudgetDraftInput = {
   budgetId: "qyh-content-first-chain", dailyYuan: "12.34", monthlyYuan: "100.00",
@@ -43,5 +57,33 @@ describe("budget draft configuration boundary", () => {
     expect(exactBudgetDraftReadback({ ...row, alertThresholdPct: 79 }, body, tenant)).toBe(false);
     expect(exactBudgetDraftReadback({ ...row, tenant: { ...tenant, orgId: "dev-org" } }, body, tenant)).toBe(false);
     expect(exactBudgetDraftReadback({ ...row, contentHash: "not-a-hash" }, body, tenant)).toBe(false);
+  });
+
+  it("keeps every formal budget action disabled until a current OIDC session exists", async () => {
+    clearAccessToken();
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    await act(async () => root.render(<BudgetRevisionSetupPanel />));
+
+    const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>("button"));
+    const action = (label: string) => buttons.find(button => button.textContent === label)!;
+    expect(action("按 ID 只读查询").disabled).toBe(true);
+    expect(action("确认写入 draft（推荐默认）").disabled).toBe(true);
+    expect(action("只读核对原命令").disabled).toBe(true);
+    expect(apiGetAuthoritative).not.toHaveBeenCalled();
+    expect(apiPostUnqueued).not.toHaveBeenCalled();
+
+    await act(async () => setAccessToken("current-oidc"));
+    expect(action("按 ID 只读查询").disabled).toBe(false);
+    expect(action("确认写入 draft（推荐默认）").disabled).toBe(false);
+    expect(apiGetAuthoritative).not.toHaveBeenCalled();
+    expect(apiPostUnqueued).not.toHaveBeenCalled();
+
+    await act(async () => clearAccessToken());
+    expect(action("按 ID 只读查询").disabled).toBe(true);
+    expect(action("确认写入 draft（推荐默认）").disabled).toBe(true);
+    expect(apiGetAuthoritative).not.toHaveBeenCalled();
+    expect(apiPostUnqueued).not.toHaveBeenCalled();
+    await act(async () => root.unmount());
   });
 });

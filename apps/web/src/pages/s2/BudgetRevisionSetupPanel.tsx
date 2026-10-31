@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { apiGetAuthoritative, apiPostUnqueued } from "../../api/client";
-import { getAuthRevision, getTenant } from "../../api/tenant";
+import { getAccessToken, getAuthRevision, getTenant } from "../../api/tenant";
 
 export type BudgetDraftInput = {
   budgetId: string;
@@ -80,6 +80,7 @@ export function exactBudgetDraftReadback(value: unknown, expected: BudgetDraftBo
 import { defaultBudgetDraftInput } from "../../config/qyhCostRenewalDefaults";
 
 export function BudgetRevisionSetupPanel() {
+  const [authenticated, setAuthenticated] = useState(() => Boolean(getAccessToken()));
   const [input, setInput] = useState<BudgetDraftInput>(() => defaultBudgetDraftInput());
   const [attempted, setAttempted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -87,11 +88,22 @@ export function BudgetRevisionSetupPanel() {
   const [attemptedBody, setAttemptedBody] = useState<BudgetDraftBody | null>(null);
   const [attemptedTenant, setAttemptedTenant] = useState<{ orgId: string; projectId: string; identity: string } | null>(null);
 
+  useEffect(() => {
+    const update = () => setAuthenticated(Boolean(getAccessToken()));
+    update();
+    window.addEventListener("aos-auth-updated", update);
+    return () => window.removeEventListener("aos-auth-updated", update);
+  }, []);
+
   function setField<K extends keyof BudgetDraftInput>(field: K, value: BudgetDraftInput[K]) {
     setInput(previous => ({ ...previous, [field]: value }));
   }
 
   async function submit() {
+    if (!authenticated || !getAccessToken()) {
+      setMessage("正式写入预算草稿前需由本人登录；开发预览不会发送命令。");
+      return;
+    }
     if (busy || attempted) return;
     let body: BudgetDraftBody;
     try { body = buildBudgetDraft(input); } catch (error) { setMessage((error as Error).message); return; }
@@ -126,6 +138,10 @@ export function BudgetRevisionSetupPanel() {
   }
 
   async function reconcile() {
+    if (!authenticated || !getAccessToken()) {
+      setMessage("只读对账也需回到原本人会话；当前未发送请求。");
+      return;
+    }
     if (!attemptedBody || !attemptedTenant || busy) return;
     const tenant = getTenant();
     if (attemptedTenant.identity !== JSON.stringify([tenant.orgId, tenant.projectId, tenant.subject, getAuthRevision()])) {
@@ -148,6 +164,10 @@ export function BudgetRevisionSetupPanel() {
   }
 
   async function lookupExisting() {
+    if (!authenticated || !getAccessToken()) {
+      setMessage("权威预算查询需本人登录；开发预览不会发送请求。");
+      return;
+    }
     const budgetId = input.budgetId.trim();
     if (!budgetId || budgetId.length > 160 || busy) {
       setMessage("先填写有效预算 ID，再只读查询当前版本。");
@@ -189,9 +209,9 @@ export function BudgetRevisionSetupPanel() {
     </div>
     </details>
     <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-      <button type="button" className="btn" disabled={busy} onClick={() => void lookupExisting()}>按 ID 只读查询</button>
-      <button type="button" className="btn btn-primary" disabled={busy || attempted} onClick={() => void submit()}>确认写入 draft（推荐默认）</button>
-      <button type="button" className="btn" disabled={busy || !attempted} onClick={() => void reconcile()}>只读核对原命令</button>
+      <button type="button" className="btn" disabled={!authenticated || busy} onClick={() => void lookupExisting()}>按 ID 只读查询</button>
+      <button type="button" className="btn btn-primary" disabled={!authenticated || busy || attempted} onClick={() => void submit()}>确认写入 draft（推荐默认）</button>
+      <button type="button" className="btn" disabled={!authenticated || busy || !attempted} onClick={() => void reconcile()}>只读核对原命令</button>
     </div>
     <p role="status">{message}</p>
   </section>;
