@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "state": "NON_SIGNING_NOT_SUBMITTED",
+  "observedAt": "2026-10-31T17:30:00+08:00",
+  "tenant": { "orgId": "org-org", "projectId": "dev-project" },
+  "prerequisiteChains": [
+    "authenticated_current_refs",
+    "cost_parent_native_propose_decide_consume",
+    "paired_window_native_propose_decide_consume"
+  ],
+  "prerequisiteStatus": {
+    "authenticatedCurrentRefs": "COMPLETE",
+    "costParentNative": "NOT_STARTED",
+    "pairedWindowNative": "BLOCKED"
+  },
+  "successorSteps": [
+    {
+      "order": 1,
+      "asset": "RegisteredModel",
+      "assetId": "a0v-agnes-2-5-flash-readonly-dev",
+      "route": "POST /v1/aip/model-runtime/models",
+      "mustReference": ["newBudgetPolicyRef", "newPriceSnapshotRef"],
+      "forbidden": ["reuseExpiredPolicy13OrPrice12"]
+    },
+    {
+      "order": 2,
+      "asset": "RuntimePolicy",
+      "assetId": "a0v-ecommerce-runtime-policy-v1",
+      "route": "POST /v1/aip/model-runtime/policies",
+      "mustReference": ["newBudgetPolicyRef"],
+      "preserve": ["killSwitch", "unknownUsageBlock", "unknownPriceBlock"]
+    },
+    {
+      "order": 3,
+      "asset": "ModelRoute",
+      "assetId": "a0v-ecommerce-text-readonly-v1",
+      "route": "POST /v1/aip/model-runtime/routes",
+      "mustReference": ["newRegisteredModelRef", "newRuntimePolicyRef"],
+      "gate": "exactEvalAndResolutionReady"
+    }
+  ],
+  "verificationEndpoints": [
+    "GET /v1/aip/model-runtime/routes/{route_id}/resolution",
+    "GET /v1/aip/model-runtime/chain-overview"
+  ],
+  "effects": {
+    "modelInvoked": false,
+    "databaseWrite": false,
+    "httpSuccessorPost": false
+  }
+}

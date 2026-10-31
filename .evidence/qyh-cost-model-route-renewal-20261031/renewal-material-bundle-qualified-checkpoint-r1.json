@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-31T17:30:00+08:00",
+  "result": "NON_SIGNING_RENEWAL_MATERIAL_BUNDLE_READY",
+  "bundle": {
+    "costParent": [
+      "cost-parent-review-material.md",
+      "cost-parent-review-material.json"
+    ],
+    "pairedWindow": [
+      "paired-window-review-material.md",
+      "paired-window-review-material.json"
+    ],
+    "successorChain": ["successor-chain-review-material.json"],
+    "delegation": ["agent-loop-delegation-r1.json"]
+  },
+  "nativePostRequiredForProgress": true,
+  "stageCounters": { "engineeringClosed": "2/8", "realBusinessAccepted": "0/8" },
+  "nextGate": "HUMAN_NATIVE_COST_PARENT_ON_PRODUCT_UI"
+}

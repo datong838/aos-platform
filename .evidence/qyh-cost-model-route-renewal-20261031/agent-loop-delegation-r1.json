@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-31T17:30:00+08:00",
+  "scope": "aos-platform m1 only",
+  "userInstruction": "全权授予开发；Loop 起来；中间不要请示不要等审批",
+  "agentInterpretation": {
+    "allowed": [
+      "non_signing_review_materials",
+      "readonly_authenticated_get_via_embedded_browser",
+      "evidence_verification_dashboard",
+      "readonly_gateway_maintenance",
+      "minimal_web_ux_fix_without_bypassing_native_gates"
+    ],
+    "stillForbidden": [
+      "credential_read",
+      "human_signature_impersonation",
+      "cost_proposal_decide_consume_post",
+      "paired_window_post_without_native_parent",
+      "model_provider_host_worker_start"
+    ]
+  },
+  "note": "User delegation accelerates prep and engineering loop; native cost/window POST remains human-session actions on product UI or approved native tools."
+}

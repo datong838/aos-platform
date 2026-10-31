@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "verifiedAt": "2026-10-31T17:26:00+08:00",
-  "result": "COST_PARENT_NON_SIGNING_REVIEW_MATERIAL_GREEN",
+  "verifiedAt": "2026-10-31T17:30:00+08:00",
+  "result": "NON_SIGNING_RENEWAL_MATERIAL_BUNDLE_GREEN",
   "checks": {
     "jsonParse": "PASS",
     "schemaSubsetValidation": "PASS",
@@ -54,7 +54,7 @@
     "pairedWindowGateway18468Listening": true,
     "candidateSourceIsRuntimeAuthority": false,
     "credentialReadOrBypassAttempted": false,
-    "nextRequiredAction": "Human review cost-parent-review-material.md/json; native cost chain only after explicit approval; then paired-window non-signing draft.",
+    "nextRequiredAction": "Human native cost parent on Web 费用风险审核 panel or approved tool; agent continues readonly prep only until parent ids exist.",
     "pairedWindowGateway18468UnauthenticatedHttpCode": 403
   },
   "files": {
@@ -69,7 +69,12 @@
     "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/current-readonly-inventory.json": "a8a59d2e97af3fdd2bb6636d1dc061a114e42691aeceafe18edbc443c08deee0",
     "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/material-draft.json": "844618c2b9a74f6b556cfb52acac1cc005be0a4908c5addbc83304fada425b8f",
     "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/formal-entry-map.json": "532e56802dc2d12cb70a8dc92abac401ad969f5f83c5d1712e7786f668f60123",
-    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/formal-entry-readback.json": "8b22624cc21fa98c6f149049e591bc5ed7e2056035980576442ac2a3d43642ae"
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/formal-entry-readback.json": "8b22624cc21fa98c6f149049e591bc5ed7e2056035980576442ac2a3d43642ae",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/paired-window-review-material.json": "31468b1f584ae63be759232a2fd2a56c1aa8e988e14c037e724f8f0b9a990f64",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/paired-window-review-material.md": "282fb17a1352677a9ed069410832381118eb1889103c894660529a0291aeb134",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/successor-chain-review-material.json": "5bc59bf11880e587224adeb7c81268f9edf99d41a3269386e4f965b561bfcd9e",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/renewal-material-bundle-qualified-checkpoint-r1.json": "96b1412a57e11225a39064f979e578bcfc577fd80f81218f9b87222f046a3795",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/agent-loop-delegation-r1.json": "6e53f3ddb45fd04cdbc1345fd416a50b14aafa6016b03fef5f3345c445840fa8"
   },
   "stageCounters": {
     "engineeringClosed": "2/8",

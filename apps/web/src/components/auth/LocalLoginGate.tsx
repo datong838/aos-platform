@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode, type FormEvent } from "react";
 import { getApiBase } from "../../api/apiBase";
 import { getAccessToken } from "../../api/tenant";
 import { loginPassword } from "../../api/passwordLogin";
+import { bootstrapTenantFromMe } from "../../api/client";
 
 /** Read the server's login policy before mounting business catalog consumers. */
 export function LocalLoginGate({ children }: { children: ReactNode }) {
@@ -30,6 +31,10 @@ export function LocalLoginGate({ children }: { children: ReactNode }) {
     window.addEventListener("aos-auth-updated", update);
     return () => window.removeEventListener("aos-auth-updated", update);
   }, []);
+  useEffect(() => {
+    if (!authenticated) return;
+    void bootstrapTenantFromMe();
+  }, [authenticated]);
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (busy) return;
