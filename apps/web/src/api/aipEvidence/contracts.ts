@@ -132,12 +132,21 @@ export type JudgeRevisionRef = {
   modelRoute: AssetRevisionRef | null;
 };
 
+export type EvalContractRevisionRef = {
+  resourceType: "EvalContractRevision";
+  resourceId: string;
+  revision: number;
+  contentHash: string;
+};
+
 export type EvalRunAuthority = {
+  tenant: { orgId: string; projectId: string };
   runId: string;
   suiteRef: AssetRevisionRef;
   target: AssetRevisionRef;
   dataset: DatasetRevisionRef;
   judge: JudgeRevisionRef;
+  evalContractRef: EvalContractRevisionRef | null;
   status: "queued" | "running" | "succeeded" | "failed" | "cancelled" | "unknown";
   idempotencyKey: string;
   createdBy: string;
@@ -216,6 +225,19 @@ function judgeRevisionRef(value: unknown, label: string): JudgeRevisionRef {
     revision: positiveInt(item.revision, `${label}.revision`),
     contentHash: hash(item.contentHash, `${label}.contentHash`),
     modelRoute: item.modelRoute === null || item.modelRoute === undefined ? null : assetRevisionRef(item.modelRoute, `${label}.modelRoute`),
+  };
+}
+
+function evalContractRevisionRef(value: unknown, label: string): EvalContractRevisionRef {
+  const item = record(value, label);
+  if (stringValue(item.resourceType, `${label}.resourceType`) !== "EvalContractRevision") {
+    throw new TypeError(`${label} 不是 EvalContractRevision`);
+  }
+  return {
+    resourceType: "EvalContractRevision",
+    resourceId: stringValue(item.resourceId, `${label}.resourceId`),
+    revision: positiveInt(item.revision, `${label}.revision`),
+    contentHash: hash(item.contentHash, `${label}.contentHash`),
   };
 }
 
@@ -386,6 +408,7 @@ export function parseUsageReceipts(value: unknown, expectedLineageId?: string): 
 
 export function parseEvalRunAuthority(value: unknown, expectedRunId?: string): EvalRunAuthority {
   const item = record(value, "EvalRunAuthority");
+  const tenant = record(item.tenant, "EvalRunAuthority.tenant");
   const runId = stringValue(item.runId, "EvalRunAuthority.runId");
   if (expectedRunId && runId !== expectedRunId) throw new TypeError("EvalRunAuthority.runId 与请求不匹配");
   const suiteRef = assetRevisionRef(item.suiteRef, "EvalRunAuthority.suiteRef");
@@ -395,11 +418,18 @@ export function parseEvalRunAuthority(value: unknown, expectedRunId?: string): E
   const status = enumValue(item.status, ["queued", "running", "succeeded", "failed", "cancelled", "unknown"] as const, "EvalRunAuthority.status");
   if (["succeeded", "failed", "cancelled"].includes(status) && !finishedAt) throw new TypeError("EvalRunAuthority 终态缺少 finishedAt");
   return {
+    tenant: {
+      orgId: stringValue(tenant.orgId, "EvalRunAuthority.tenant.orgId"),
+      projectId: stringValue(tenant.projectId, "EvalRunAuthority.tenant.projectId"),
+    },
     runId,
     suiteRef,
     target: assetRevisionRef(item.target, "EvalRunAuthority.target"),
     dataset: datasetRevisionRef(item.dataset, "EvalRunAuthority.dataset"),
     judge: judgeRevisionRef(item.judge, "EvalRunAuthority.judge"),
+    evalContractRef: item.evalContractRef === null || item.evalContractRef === undefined
+      ? null
+      : evalContractRevisionRef(item.evalContractRef, "EvalRunAuthority.evalContractRef"),
     status,
     idempotencyKey: stringValue(item.idempotencyKey, "EvalRunAuthority.idempotencyKey"),
     createdBy: stringValue(item.createdBy, "EvalRunAuthority.createdBy"),

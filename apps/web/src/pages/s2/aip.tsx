@@ -26,6 +26,10 @@ import {
   parseModelRuntimeEvalHandoff,
   type MatchedModelRuntimeEvalHandoff,
 } from "../../api/aipModelRuntime/evalHandoff";
+import {
+  inspectRouteEvalRunHandoff,
+  type MatchedRouteEvalRunHandoff,
+} from "../../api/aipModelRuntime/routeEvalRunHandoff";
 import { MODEL_CONFIG_NO_VAULT } from "../../lib/productCopy";
 import {
   aipEvidenceSdk,
@@ -3740,6 +3744,9 @@ export function EvalsPage() {
   const [modelEvalPreflightState, setModelEvalPreflightState] = useState<"idle" | "loading" | "ready" | "blocked">("idle");
   const [modelEvalPreflightMessage, setModelEvalPreflightMessage] = useState("");
   const modelEvalPreflightRequest = useRef(0);
+  const [routeEvalRunHandoff, setRouteEvalRunHandoff] = useState<MatchedRouteEvalRunHandoff | null>(null);
+  const [routeEvalRunMessage, setRouteEvalRunMessage] = useState("");
+  const authorityRunRequest = useRef(0);
 
   const suites = suitesApi.data?.items || [];
   const graphs = graphsApi.data?.items || [];
@@ -3759,10 +3766,13 @@ export function EvalsPage() {
   useEffect(() => {
     let current = true;
     modelEvalPreflightRequest.current += 1;
+    authorityRunRequest.current += 1;
     setModelEvalPreflight(null);
     setModelEvalPreflightState("idle");
     setModelEvalPreflightMessage("");
     setRuntimeHandoff(null);
+    setRouteEvalRunHandoff(null);
+    setRouteEvalRunMessage("");
     if (!runtimeHandoffInput.present) {
       setRuntimeHandoffState("idle");
       setRuntimeHandoffMessage("");
@@ -3916,12 +3926,26 @@ export function EvalsPage() {
       return;
     }
     setAuthorityRun(null);
+    setRouteEvalRunHandoff(null);
+    setRouteEvalRunMessage("");
     setAuthorityError("");
     setAuthorityState("loading");
+    const request = ++authorityRunRequest.current;
     try {
-      setAuthorityRun(await aipEvidenceSdk.evalRun(runId));
+      const run = await aipEvidenceSdk.evalRun(runId);
+      if (request !== authorityRunRequest.current) return;
+      setAuthorityRun(run);
+      if (runtimeHandoffState === "ready" && runtimeHandoff) {
+        try {
+          setRouteEvalRunHandoff(inspectRouteEvalRunHandoff(runtimeHandoff.route, run));
+          setRouteEvalRunMessage("当前路由候选已与权威 EvalRun 精确绑定；可继续只读核对正式上下文，当前仍不可执行。");
+        } catch (error) {
+          setRouteEvalRunMessage(`路由 EvalRun 绑定已阻断：${String((error as Error).message || error)}`);
+        }
+      }
       setAuthorityState("loaded");
     } catch (error) {
+      if (request !== authorityRunRequest.current) return;
       setAuthorityError(String((error as Error).message || error));
       setAuthorityState("error");
     }
@@ -4140,6 +4164,24 @@ export function EvalsPage() {
                     ["预算", `${modelEvalPreflight.budgetPolicyRef.assetId}@${modelEvalPreflight.budgetPolicyRef.revision}`],
                     ["待补条件", modelEvalPreflight.blockerCodes.join("、")],
                   ]}
+                />
+              ) : null}
+              {routeEvalRunMessage ? (
+                <p className={routeEvalRunHandoff ? "aos-text" : "error"} role="status">{routeEvalRunMessage}</p>
+              ) : null}
+              {routeEvalRunHandoff ? (
+                <BpTable
+                  columns={["权威运行", "状态", "精确路由目标", "套件", "数据集", "裁判", "EvalContract", "执行权"]}
+                  rows={[ [
+                    `${routeEvalRunHandoff.runId}@v${routeEvalRunHandoff.version}`,
+                    routeEvalRunHandoff.status,
+                    `${routeEvalRunHandoff.target.assetId}@${routeEvalRunHandoff.target.revision} · ${routeEvalRunHandoff.target.contentHash.slice(0, 12)}…`,
+                    `${routeEvalRunHandoff.suiteRef.assetId}@${routeEvalRunHandoff.suiteRef.revision}`,
+                    `${routeEvalRunHandoff.dataset.datasetId}@${routeEvalRunHandoff.dataset.revision}`,
+                    `${routeEvalRunHandoff.judge.judgeId}@${routeEvalRunHandoff.judge.revision}`,
+                    `${routeEvalRunHandoff.evalContractRef.resourceId}@${routeEvalRunHandoff.evalContractRef.revision} · ${routeEvalRunHandoff.evalContractRef.contentHash.slice(0, 12)}…`,
+                    "不可执行",
+                  ] ]}
                 />
               ) : null}
             </>

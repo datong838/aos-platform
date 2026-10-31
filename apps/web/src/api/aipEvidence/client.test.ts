@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { AipClient } from "../aip/client";
 import { AipEvidenceSdk } from "./client";
-import { parseEvidenceDisclosureDecision, parseLineageEvents, parseTelemetrySpans, parseUsageReceipts } from "./contracts";
+import { parseEvalRunAuthority, parseEvidenceDisclosureDecision, parseLineageEvents, parseTelemetrySpans, parseUsageReceipts } from "./contracts";
 
 const event = {
   eventId: "evt-1",
@@ -37,6 +37,7 @@ const usage = {
 };
 
 const evalRun = {
+  tenant: { orgId: "org-org", projectId: "dev-project" },
   runId: "eval-run-1",
   suiteRef: { assetType: "eval_suite", assetId: "suite-1", revision: "2", contentHash: "1".repeat(64) },
   target: { assetType: "logic_graph", assetId: "logic-1", revision: "3", contentHash: "2".repeat(64) },
@@ -45,6 +46,7 @@ const evalRun = {
     redactionPolicy: { assetType: "policy", assetId: "redact-1", revision: "1", contentHash: "5".repeat(64) },
   },
   judge: { judgeId: "judge-1", revision: 2, contentHash: "6".repeat(64), modelRoute: null },
+  evalContractRef: { resourceType: "EvalContractRevision", resourceId: "contract-1", revision: 1, contentHash: "7".repeat(64) },
   status: "succeeded", idempotencyKey: "eval-once", createdBy: "user-1", createdAt: "2026-08-12T01:00:00Z",
   startedAt: "2026-08-12T01:00:01Z", finishedAt: "2026-08-12T01:00:02Z", version: 3,
 };
@@ -136,8 +138,22 @@ describe("AipEvidenceSdk", () => {
       runId: "eval-run-1",
       status: "succeeded",
       target: { revision: "3", contentHash: "2".repeat(64) },
+      tenant: { orgId: "org-org", projectId: "dev-project" },
+      evalContractRef: { resourceId: "contract-1", revision: 1 },
     });
     expect(request).toHaveBeenCalledWith("getEvalAuthorityRun", { params: { run_id: "eval-run-1" } });
+  });
+
+  it("EvalRun 保留租户与冻结 Contract，格式漂移失败关闭", () => {
+    expect(parseEvalRunAuthority(evalRun)).toMatchObject({
+      tenant: { orgId: "org-org", projectId: "dev-project" },
+      evalContractRef: { resourceType: "EvalContractRevision", resourceId: "contract-1" },
+    });
+    expect(() => parseEvalRunAuthority({ ...evalRun, tenant: null })).toThrow("tenant");
+    expect(() => parseEvalRunAuthority({
+      ...evalRun,
+      evalContractRef: { ...evalRun.evalContractRef, resourceType: "EvalContract" },
+    })).toThrow("EvalContractRevision");
   });
 
   it("EvalRun 错配、非 eval_suite 与终态缺失 finishedAt 失败关闭", async () => {

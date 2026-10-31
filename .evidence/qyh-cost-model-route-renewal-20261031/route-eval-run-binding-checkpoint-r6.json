@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "aos.qyh-route-eval-run-binding-checkpoint/v1",
+  "recordedAt": "2026-10-31T21:18:00+08:00",
+  "tenant": { "orgId": "org-org", "projectId": "dev-project" },
+  "sourceHead": "149bb11b4",
+  "result": "ROUTE_CANDIDATE_EXACTLY_BOUND_TO_READONLY_EVAL_RUN_CONTRACT_NOT_DEPLOYED",
+  "businessAcceptance": false,
+  "engineeringClosed": 2,
+  "realBusinessAccepted": 0,
+  "developmentLoginSkipPreserved": true,
+  "binding": {
+    "manualRunIdRequired": true,
+    "requiredRunStatuses": ["queued", "running"],
+    "requiredTargetType": "model_route",
+    "requiresExactTenant": true,
+    "requiresExactTargetRevisionAndHash": true,
+    "requiresFrozenEvalContractRevision": true,
+    "requiresJudgeRegisteredModelRoute": true,
+    "executionAllowed": false
+  },
+  "writes": {
+    "databaseWritten": false,
+    "evalRunCreated": false,
+    "contextSnapshotCreated": false,
+    "manifestCreated": false,
+    "approvalCreated": false,
+    "providerCalled": false,
+    "modelCalled": false
+  },
+  "deployment": {
+    "currentApiSource": "frozen readonly source-r3",
+    "currentM1FeatureDeployed": false,
+    "realPageClaimed": false
+  },
+  "tests": {
+    "webFocusedAndAdjacent": "45/45 passed",
+    "typescript": "passed",
+    "webBuild": "passed",
+    "diffCheck": "passed",
+    "warnings": "existing React act, React Router future and large chunk warnings remain deferred under TD-015"
+  },
+  "sha256": {
+    "aipEvidence/contracts.ts": "f567b09d881bada7a667297ff5d6fcfc8db0c785c8e825759eee221a4498c9e3",
+    "aipEvidence/client.test.ts": "6a4e80445be2fb7044e4d2df3ee325a126a1081c355261ac383a5ec3fb51376c",
+    "routeEvalRunHandoff.ts": "d6013408009f937e5a6acbe2a44c3eb2b9d77fbc8b8517f6362c5de17d686463",
+    "routeEvalRunHandoff.test.ts": "5e10e0e2e5386251f7ca3280be3c6ccfacdb8990c93517cbca0ca8b7c26d836f",
+    "aip.tsx": "011de6e32d622f6a349414ddcaa7fef26f1376f6e79c0139c0d998a026715946",
+    "EvalsPage.test.tsx": "ef51e3abca6f18de83614976359f875c51b94ca23016689f17f17efcfc14a6ee",
+    "plan.md": "cb3ab74a1238b749f4b8b97ba25dfb28a375ca2a13804e958cb7ed7dacfcb547",
+    "debt-ledger.md": "0f88b876a8b595b1f24c79dd22546a46f6a0db2c27c491d1e40fef69ee3721ef"
+  },
+  "next": "沿既有只读部署流程部署当前 m1 后，由本人输入真实办理中 EvalRun；精确绑定成功后才可调用既有 route context reader 做只读 snapshot，仍不得推导批准或执行权。"
+}

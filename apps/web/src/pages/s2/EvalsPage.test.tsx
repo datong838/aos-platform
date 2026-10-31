@@ -53,6 +53,16 @@ describe("EvalsPage · 真实运行与门控", () => {
     targetRef: { ...modelCandidate.targetRef, assetId: QYH_RUNTIME_SUCCESSOR.modelId },
     sourceLifecycle: "draft" as const,
   };
+  const routeEvalRun = {
+    tenant: { orgId: "org-org", projectId: "dev-project" },
+    runId: "route-eval-run-1",
+    suiteRef: { assetType: "eval_suite", assetId: "route-suite-1", revision: "2", contentHash: "1".repeat(64) },
+    target: { assetType: "model_route", assetId: routeCandidate.targetRef.assetId, revision: String(routeCandidate.targetRef.revision), contentHash: routeCandidate.targetRef.contentHash },
+    dataset: { datasetId: "route-dataset-1", revision: 3, contentHash: "2".repeat(64), sourceHash: "3".repeat(64), redactionPolicy: { assetType: "redaction_policy", assetId: "redact-1", revision: "1", contentHash: "4".repeat(64) } },
+    judge: { judgeId: "route-judge-1", revision: 4, contentHash: "5".repeat(64), modelRoute: { assetType: "registered_model", assetId: "judge-model-1", revision: "1", contentHash: "6".repeat(64) } },
+    evalContractRef: { resourceType: "EvalContractRevision", resourceId: "route-contract-1", revision: 5, contentHash: "7".repeat(64) },
+    status: "queued" as const, idempotencyKey: "route-once", createdBy: "user", createdAt: "2026-10-31T08:00:00Z", startedAt: null, finishedAt: null, version: 1,
+  };
 
 const graph = {
     id: "logic-1",
@@ -225,6 +235,56 @@ const graph = {
     expect(host.textContent).toContain("eval_approval_missing");
     expect(host.textContent).toContain("budget_capacity_unverified");
     expect(host.textContent).toContain("仍不可执行");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
+  });
+
+  it("手工读取后把当前路由候选精确绑定到栖月汇权威 EvalRun，且仍不可执行", async () => {
+    const href = buildModelRuntimeEvalHandoffHref(qyhModelCandidate.sourceRef, routeCandidate.sourceRef);
+    apiMocks.apiGet.mockImplementation((path: string) => {
+      if (path === "/v1/evals/suites") return Promise.resolve({ items: [] });
+      if (path === "/v1/aip/logic/graphs") return Promise.resolve(graphList);
+      if (path === "/v1/aip/model-runtime/eval-candidates") return Promise.resolve([qyhModelCandidate, routeCandidate]);
+      return Promise.reject(new Error(`unexpected path ${path}`));
+    });
+    evidenceMocks.evalRun.mockResolvedValue(routeEvalRun);
+    await act(async () => root.render(createElement(MemoryRouter, { initialEntries: [href] }, createElement(EvalsPage))));
+    await flush();
+
+    const input = host.querySelector<HTMLInputElement>("[aria-label='eval-authority-run-id']")!;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, routeEvalRun.runId);
+    await act(async () => input.dispatchEvent(new Event("input", { bubbles: true })));
+    const read = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "读取权威评测运行")!;
+    await act(async () => read.click());
+    await flush();
+
+    expect(host.textContent).toContain("当前路由候选已与权威 EvalRun 精确绑定");
+    expect(host.textContent).toContain("route-contract-1@5");
+    expect(host.textContent).toContain("不可执行");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
+    expect(apiMocks.apiPostUnqueued).not.toHaveBeenCalled();
+  });
+
+  it("EvalRun 目标漂移时只阻断路由绑定，仍保留通用权威运行查看", async () => {
+    const href = buildModelRuntimeEvalHandoffHref(qyhModelCandidate.sourceRef, routeCandidate.sourceRef);
+    apiMocks.apiGet.mockImplementation((path: string) => {
+      if (path === "/v1/evals/suites") return Promise.resolve({ items: [] });
+      if (path === "/v1/aip/logic/graphs") return Promise.resolve(graphList);
+      if (path === "/v1/aip/model-runtime/eval-candidates") return Promise.resolve([qyhModelCandidate, routeCandidate]);
+      return Promise.reject(new Error(`unexpected path ${path}`));
+    });
+    evidenceMocks.evalRun.mockResolvedValue({ ...routeEvalRun, target: { ...routeEvalRun.target, contentHash: "9".repeat(64) } });
+    await act(async () => root.render(createElement(MemoryRouter, { initialEntries: [href] }, createElement(EvalsPage))));
+    await flush();
+    const input = host.querySelector<HTMLInputElement>("[aria-label='eval-authority-run-id']")!;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, routeEvalRun.runId);
+    await act(async () => input.dispatchEvent(new Event("input", { bubbles: true })));
+    const read = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "读取权威评测运行")!;
+    await act(async () => read.click());
+    await flush();
+
+    expect(host.textContent).toContain("路由 EvalRun 绑定已阻断");
+    expect(host.textContent).toContain("route-eval-run-1");
+    expect(host.textContent).not.toContain("route-contract-1@5");
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });
 
@@ -464,11 +524,13 @@ const graph = {
       path === "/v1/aip/logic/graphs" ? graphList : { items: [] },
     ));
     evidenceMocks.evalRun.mockResolvedValue({
+      tenant: { orgId: "org-org", projectId: "dev-project" },
       runId: "eval-run-1",
       suiteRef: { assetType: "eval_suite", assetId: "suite-1", revision: "2", contentHash: "1".repeat(64) },
       target: { assetType: "logic_graph", assetId: "logic-1", revision: "3", contentHash: "2".repeat(64) },
       dataset: { datasetId: "dataset-1", revision: 4, contentHash: "3".repeat(64), sourceHash: "4".repeat(64), redactionPolicy: { assetType: "policy", assetId: "p1", revision: "1", contentHash: "5".repeat(64) } },
       judge: { judgeId: "judge-1", revision: 2, contentHash: "6".repeat(64), modelRoute: null },
+      evalContractRef: null,
       status: "succeeded", idempotencyKey: "key", createdBy: "user", createdAt: "2026-08-12T01:00:00Z", startedAt: "2026-08-12T01:00:01Z", finishedAt: "2026-08-12T01:00:02Z", version: 3,
     });
 
