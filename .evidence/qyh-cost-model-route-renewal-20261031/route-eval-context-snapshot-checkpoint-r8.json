@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "aos.qyh.route-eval-context-snapshot-checkpoint/v1",
+  "recordedAt": "2026-10-31T21:38:43+08:00",
+  "branch": "m1",
+  "baseHead": "56f8eb3f3",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "delivery": {
+    "endpoint": "POST /v1/aip/model-runtime/route-eval-context-snapshot",
+    "transaction": "repeatable-read read-only tenant transaction",
+    "reader": "aip_model_route_eval_context_reader.read_eval_subject_context_bytes",
+    "explicitHumanAction": "read authoritative Run, then click readonly context snapshot",
+    "executionAllowed": false,
+    "databaseWrites": 0,
+    "providerCalls": 0,
+    "modelCalls": 0
+  },
+  "verification": {
+    "webTests": "4 files, 39 tests passed",
+    "typeScript": "pnpm exec tsc --noEmit passed",
+    "webBuild": "pnpm build passed; existing large-chunk warning remains TD-015",
+    "pythonCompile": "router, original reader and API tests compiled",
+    "requestContract": "route candidate + queued/running status accepted; terminal status rejected",
+    "httpContract": "dependency-isolated FastAPI POST returned 200; terminal status returned 422",
+    "databasePytest": "49 setup errors before test execution because disposable PostgreSQL 127.0.0.1:5433 refused connections; retained as TD-016 and current business database was not used"
+  },
+  "acceptanceBoundary": {
+    "deployedToFrozenApi": false,
+    "realEvalRunRead": false,
+    "approvalCreated": false,
+    "evalCreatedOrExecuted": false,
+    "engineeringStages": "2/8 unchanged",
+    "realBusinessStages": "0/8 unchanged"
+  },
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/routers/aip_model_runtime.py",
+      "sha256": "1111709a3f757f11682c51a08f42625e55f12ca8d8a7f236518f916c7c5b97a1"
+    },
+    {
+      "path": "apps/web/src/api/aipModelRuntime/routeEvalContextSnapshot.ts",
+      "sha256": "ee12cb4af627d8c2c26006c873e8490b0c5d45b93ac9252ea66e6419564958d3"
+    },
+    {
+      "path": "apps/web/src/pages/s2/aip.tsx",
+      "sha256": "ac8f05101a78f18a55de7dbee561ef27f4d798702e88c1a3444af041bf1d1426"
+    }
+  ],
+  "plan": {
+    "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-31-QYH价格模型策略路由接续方案.md",
+    "section": "15. 当前路由 Eval 上下文只读 Snapshot",
+    "sha256": "78532511090215c2e1f430fae10916b4fe4aec858707c1cd34d5fac72e802172"
+  },
+  "next": "Deploy current m1 through the existing authoritative readonly source process, then have the human read a real queued/running EvalRun snapshot; do not infer approval or execution authority."
+}

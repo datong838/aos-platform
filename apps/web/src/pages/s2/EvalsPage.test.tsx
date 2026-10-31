@@ -23,9 +23,9 @@ const apiMocks = vi.hoisted(() => ({
 const evidenceMocks = vi.hoisted(() => ({ evalRun: vi.fn() }));
 
 vi.mock("../../api/client", () => apiMocks);
-vi.mock("../../api/aipEvidence", () => ({
+vi.mock("../../api/aipEvidence", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../api/aipEvidence")>()),
   aipEvidenceSdk: evidenceMocks,
-  LINEAGE_ROOT_TYPES: ["task_run", "action", "eval_run", "publication", "research_job", "legacy_decision_lineage"],
 }));
 vi.mock("../../components/aip/AipOperationalProjectionStrip", () => ({
   AipOperationalProjectionStrip: () => createElement("div", { "data-testid": "aip-operational-projection-test-double" }),
@@ -62,6 +62,16 @@ describe("EvalsPage · 真实运行与门控", () => {
     judge: { judgeId: "route-judge-1", revision: 4, contentHash: "5".repeat(64), modelRoute: { assetType: "registered_model", assetId: "judge-model-1", revision: "1", contentHash: "6".repeat(64) } },
     evalContractRef: { resourceType: "EvalContractRevision", resourceId: "route-contract-1", revision: 5, contentHash: "7".repeat(64) },
     status: "queued" as const, idempotencyKey: "route-once", createdBy: "user", createdAt: "2026-10-31T08:00:00Z", startedAt: null, finishedAt: null, version: 1,
+  };
+  const routeEvalContextSnapshot = {
+    schemaVersion: "aos.model-route-eval-context/v1",
+    subject: { schemaVersion: "aos.model-route-eval-subject-binding/v1", tenant: routeEvalRun.tenant, candidate: routeCandidate, source: {}, models: [], runtimePolicy: {}, executionAllowed: false },
+    run: routeEvalRun,
+    suite: { suiteId: routeEvalRun.suiteRef.assetId, revision: Number(routeEvalRun.suiteRef.revision), contentHash: routeEvalRun.suiteRef.contentHash, target: routeEvalRun.target, dataset: routeEvalRun.dataset, judge: routeEvalRun.judge },
+    dataset: routeEvalRun.dataset,
+    contract: { tenant: routeEvalRun.tenant, contractId: routeEvalRun.evalContractRef.resourceId, revision: routeEvalRun.evalContractRef.revision, version: 1, contentHash: routeEvalRun.evalContractRef.contentHash, lifecycle: "frozen", readiness: "ready", blockers: [], suiteRef: { resourceType: "EvalSuiteRevision", resourceId: routeEvalRun.suiteRef.assetId, revision: Number(routeEvalRun.suiteRef.revision), contentHash: routeEvalRun.suiteRef.contentHash } },
+    snapshotReadAt: "2026-10-31T08:02:00+00:00",
+    executionAllowed: false,
   };
 
 const graph = {
@@ -262,6 +272,48 @@ const graph = {
     expect(host.textContent).toContain("不可执行");
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
     expect(apiMocks.apiPostUnqueued).not.toHaveBeenCalled();
+  });
+
+  it("只有本人点击后才读取一次路由 Eval 上下文快照，且不授予执行权", async () => {
+    const href = buildModelRuntimeEvalHandoffHref(qyhModelCandidate.sourceRef, routeCandidate.sourceRef);
+    apiMocks.apiGet.mockImplementation((path: string) => {
+      if (path === "/v1/evals/suites") return Promise.resolve({ items: [] });
+      if (path === "/v1/aip/logic/graphs") return Promise.resolve(graphList);
+      if (path === "/v1/aip/model-runtime/eval-candidates") return Promise.resolve([qyhModelCandidate, routeCandidate]);
+      return Promise.reject(new Error(`unexpected path ${path}`));
+    });
+    evidenceMocks.evalRun.mockResolvedValue(routeEvalRun);
+    apiMocks.apiPostUnqueued.mockResolvedValue(routeEvalContextSnapshot);
+    await act(async () => root.render(createElement(MemoryRouter, { initialEntries: [href] }, createElement(EvalsPage))));
+    await flush();
+    expect(apiMocks.apiPostUnqueued).not.toHaveBeenCalled();
+
+    const input = host.querySelector<HTMLInputElement>("[aria-label='eval-authority-run-id']")!;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, routeEvalRun.runId);
+    await act(async () => input.dispatchEvent(new Event("input", { bubbles: true })));
+    const readRun = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "读取权威评测运行")!;
+    await act(async () => readRun.click());
+    await flush();
+    expect(apiMocks.apiPostUnqueued).not.toHaveBeenCalled();
+
+    const readContext = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "只读读取路由 Eval 上下文")!;
+    await act(async () => readContext.click());
+    await flush();
+    expect(apiMocks.apiPostUnqueued).toHaveBeenCalledTimes(1);
+    expect(apiMocks.apiPostUnqueued).toHaveBeenCalledWith(
+      "/v1/aip/model-runtime/route-eval-context-snapshot",
+      {
+        candidate: routeCandidate,
+        runId: routeEvalRun.runId,
+        expectedRunVersion: routeEvalRun.version,
+        expectedRunStatus: routeEvalRun.status,
+      },
+      {},
+    );
+    expect(host.textContent).toContain("路由 Eval 上下文只读快照已精确对齐");
+    expect(host.textContent).toContain("route-contract-1@5");
+    expect(host.textContent).toContain("不可执行");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });
 
   it("EvalRun 目标漂移时只阻断路由绑定，仍保留通用权威运行查看", async () => {

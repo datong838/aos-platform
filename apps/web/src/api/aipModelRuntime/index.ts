@@ -1,6 +1,8 @@
 import { apiGet, apiPostUnqueued } from "../client";
+import type { EvalRunAuthority } from "../aipEvidence";
 import { parseModelEvalCandidate, parseModelEvalPreflight, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";
 import type { ExactRuntimeRef, ModelEvalCandidate, ModelRouteRevision, RegisteredModelRevision, RuntimePolicyRevision } from "./contracts";
+import { parseRouteEvalContextSnapshot } from "./routeEvalContextSnapshot";
 
 const sameRef = (left: ExactRuntimeRef, right: ExactRuntimeRef) => left.assetType === right.assetType
   && left.assetId === right.assetId && left.revision === right.revision && left.contentHash === right.contentHash;
@@ -12,6 +14,19 @@ export const aipModelRuntime = {
     if (!sameRef(result.sourceRef, candidate.sourceRef) || !sameRef(result.targetRef, candidate.targetRef)
       || result.expectedHeadVersion !== candidate.expectedHeadVersion) throw new Error("模型 Eval 预检回包与当前精确候选不一致");
     return result;
+  },
+  async routeEvalContextSnapshot(candidate: ModelEvalCandidate, run: EvalRunAuthority) {
+    if (candidate.sourceRef.assetType !== "ModelRouteRevision"
+      || (run.status !== "queued" && run.status !== "running")) {
+      throw new Error("路由 Eval 上下文只接受当前路由候选和办理中 Run");
+    }
+    const value = await apiPostUnqueued<unknown>("/v1/aip/model-runtime/route-eval-context-snapshot", {
+      candidate,
+      runId: run.runId,
+      expectedRunVersion: run.version,
+      expectedRunStatus: run.status,
+    }, {});
+    return parseRouteEvalContextSnapshot(value, candidate, run);
   },
   async overview() { return parseModelRuntimeOverview(await apiGet<unknown>("/v1/aip/model-runtime/overview")); },
   async chainOverview() { return parseModelRuntimeChainOverview(await apiGet<unknown>("/v1/aip/model-runtime/chain-overview")); },
@@ -27,4 +42,5 @@ export const aipModelRuntime = {
   async routeRevisions(routeId: string) { const value = await apiGet<unknown>(`/v1/aip/model-runtime/routes/${encodeURIComponent(routeId)}/revisions`); if (!Array.isArray(value)) throw new Error("路由历史必须是数组"); return value.map(parseModelRouteRevision); },
 };
 export * from "./contracts";
+export * from "./routeEvalContextSnapshot";
 export { parseModelEvalPreflight, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";

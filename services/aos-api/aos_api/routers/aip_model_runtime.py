@@ -1,12 +1,14 @@
 """AIP-7 canonical exact model runtime API."""
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Header, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from aos_api.aip_model_runtime_contracts import (
     ModelEvalCandidate,
@@ -27,7 +29,8 @@ from aos_api.aip_eval_authority_store import (
     AipEvalAuthorityPersistenceError,
     AipEvalAuthorityStore,
 )
-from aos_api.aip_eval_contracts import AttributionSubjectType, EvidenceQuality, UsageKind
+from aos_api.aip_eval_contracts import AttributionSubjectType, EvalRunStatus, EvidenceQuality, UsageKind
+from aos_api.aip_model_route_eval_context_reader import read_eval_subject_context_bytes
 from aos_api.aip_model_governance_policy_contracts import (
     ModelGovernancePolicyLifecycle,
 )
@@ -47,6 +50,7 @@ from aos_api.aip_model_runtime_store import (
     ModelRuntimeIdempotencyConflict, ModelRuntimeNotFound, ModelRuntimeStoreError,
 )
 from aos_api.auth import Principal, require_principal
+from aos_api.db import connect_read_only
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
 
@@ -65,6 +69,21 @@ _POLICY_AUTHORITY_STORE = AipModelGovernancePolicyStore(
 class RouteRollbackDraftRequest(BaseModel):
     source_revision: int = Field(alias="sourceRevision", ge=1)
     expected_revision: int = Field(alias="expectedRevision", ge=1)
+
+
+class RouteEvalContextSnapshotRequest(BaseModel):
+    candidate: ModelEvalCandidate
+    run_id: str = Field(alias="runId", min_length=1, max_length=200)
+    expected_run_version: int = Field(alias="expectedRunVersion", ge=1)
+    expected_run_status: EvalRunStatus = Field(alias="expectedRunStatus")
+
+    @model_validator(mode="after")
+    def _route_live_run_only(self):
+        if self.candidate.source_ref.asset_type != "ModelRouteRevision":
+            raise ValueError("route candidate required")
+        if self.expected_run_status not in {EvalRunStatus.QUEUED, EvalRunStatus.RUNNING}:
+            raise ValueError("queued or running EvalRun required")
+        return self
 
 
 def get_store() -> AipModelRuntimeStore:
@@ -89,6 +108,32 @@ def get_governance_policy_store() -> AipModelGovernancePolicyStore:
 
 def get_runtime_resolver() -> AipModelRuntimeResolver:
     return AipModelRuntimeResolver()
+
+
+def _read_route_eval_context(scope: TenantScope, request: RouteEvalContextSnapshotRequest) -> dict[str, Any]:
+    with connect_read_only(scope) as conn:
+        raw = read_eval_subject_context_bytes(
+            conn,
+            expected_database=conn.info.dbname,
+            scope=scope,
+            candidate=request.candidate,
+            run_id=request.run_id,
+            expected_run_version=request.expected_run_version,
+            expected_run_status=request.expected_run_status,
+        )
+    domain, separator, payload_bytes = raw.partition(b"\n")
+    if domain != b"AOS-MODEL-ROUTE-EVAL-CONTEXT-v1" or separator != b"\n":
+        raise ValueError("route Eval context domain invalid")
+    payload = json.loads(payload_bytes)
+    if (not isinstance(payload, dict)
+            or payload.get("schemaVersion") != "aos.model-route-eval-context/v1"
+            or payload.get("executionAllowed") is not False):
+        raise ValueError("route Eval context payload invalid")
+    return payload
+
+
+def get_route_eval_context_reader():
+    return _read_route_eval_context
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -479,6 +524,29 @@ def preflight_model_evaluation(
         ) from None
     except ModelRuntimeStoreError as exc:
         raise _map(exc) from None
+
+
+@router.post("/route-eval-context-snapshot", response_model=dict[str, Any])
+def read_route_eval_context_snapshot(
+    body: RouteEvalContextSnapshotRequest,
+    principal: Principal = Depends(require_principal),
+    reader=Depends(get_route_eval_context_reader),
+):
+    try:
+        payload = reader(_scope(principal), body)
+        if (payload.get("schemaVersion") != "aos.model-route-eval-context/v1"
+                or payload.get("executionAllowed") is not False
+                or payload.get("subject", {}).get("tenant") != {
+                    "orgId": principal.org_id, "projectId": principal.project_id,
+                }):
+            raise ValueError("route Eval context response drifted")
+        return payload
+    except (TypeError, ValueError, json.JSONDecodeError):
+        raise ApiError(
+            code="AIP_ROUTE_EVAL_CONTEXT_BLOCKED",
+            message="当前路由评测上下文无法形成完整只读快照",
+            status_code=409,
+        ) from None
 
 
 @router.get("/provider-plugins/{plugin_id}", response_model=ProviderPluginRevision)

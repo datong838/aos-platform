@@ -17,6 +17,7 @@ import {
   aipModelRuntime,
   type ModelEvalCandidate,
   type ModelEvalPreflight,
+  type RouteEvalContextSnapshot,
   parseModelRouteRevision,
   type ModelRouteRevision,
   type ModelRuntimeOverview,
@@ -3747,6 +3748,10 @@ export function EvalsPage() {
   const [routeEvalRunHandoff, setRouteEvalRunHandoff] = useState<MatchedRouteEvalRunHandoff | null>(null);
   const [routeEvalRunMessage, setRouteEvalRunMessage] = useState("");
   const authorityRunRequest = useRef(0);
+  const [routeEvalContextSnapshot, setRouteEvalContextSnapshot] = useState<RouteEvalContextSnapshot | null>(null);
+  const [routeEvalContextState, setRouteEvalContextState] = useState<"idle" | "loading" | "ready" | "blocked">("idle");
+  const [routeEvalContextMessage, setRouteEvalContextMessage] = useState("");
+  const routeEvalContextRequest = useRef(0);
 
   const suites = suitesApi.data?.items || [];
   const graphs = graphsApi.data?.items || [];
@@ -3767,12 +3772,16 @@ export function EvalsPage() {
     let current = true;
     modelEvalPreflightRequest.current += 1;
     authorityRunRequest.current += 1;
+    routeEvalContextRequest.current += 1;
     setModelEvalPreflight(null);
     setModelEvalPreflightState("idle");
     setModelEvalPreflightMessage("");
     setRuntimeHandoff(null);
     setRouteEvalRunHandoff(null);
     setRouteEvalRunMessage("");
+    setRouteEvalContextSnapshot(null);
+    setRouteEvalContextState("idle");
+    setRouteEvalContextMessage("");
     if (!runtimeHandoffInput.present) {
       setRuntimeHandoffState("idle");
       setRuntimeHandoffMessage("");
@@ -3928,6 +3937,10 @@ export function EvalsPage() {
     setAuthorityRun(null);
     setRouteEvalRunHandoff(null);
     setRouteEvalRunMessage("");
+    routeEvalContextRequest.current += 1;
+    setRouteEvalContextSnapshot(null);
+    setRouteEvalContextState("idle");
+    setRouteEvalContextMessage("");
     setAuthorityError("");
     setAuthorityState("loading");
     const request = ++authorityRunRequest.current;
@@ -3948,6 +3961,25 @@ export function EvalsPage() {
       if (request !== authorityRunRequest.current) return;
       setAuthorityError(String((error as Error).message || error));
       setAuthorityState("error");
+    }
+  }
+
+  async function readRouteEvalContextSnapshot() {
+    if (!runtimeHandoff || !routeEvalRunHandoff || !authorityRun || routeEvalContextState === "loading") return;
+    const request = ++routeEvalContextRequest.current;
+    setRouteEvalContextSnapshot(null);
+    setRouteEvalContextState("loading");
+    setRouteEvalContextMessage("正在同一只读快照内核对路由、Run、Suite、Dataset 与 EvalContract…");
+    try {
+      const result = await aipModelRuntime.routeEvalContextSnapshot(runtimeHandoff.route, authorityRun);
+      if (request !== routeEvalContextRequest.current) return;
+      setRouteEvalContextSnapshot(result);
+      setRouteEvalContextState("ready");
+      setRouteEvalContextMessage("路由 Eval 上下文只读快照已精确对齐；它不包含批准、签名证明或执行权。");
+    } catch (error) {
+      if (request !== routeEvalContextRequest.current) return;
+      setRouteEvalContextState("blocked");
+      setRouteEvalContextMessage(`路由 Eval 上下文读取已阻断：${String((error as Error).message || error)}`);
     }
   }
 
@@ -4170,19 +4202,39 @@ export function EvalsPage() {
                 <p className={routeEvalRunHandoff ? "aos-text" : "error"} role="status">{routeEvalRunMessage}</p>
               ) : null}
               {routeEvalRunHandoff ? (
-                <BpTable
-                  columns={["权威运行", "状态", "精确路由目标", "套件", "数据集", "裁判", "EvalContract", "执行权"]}
-                  rows={[ [
-                    `${routeEvalRunHandoff.runId}@v${routeEvalRunHandoff.version}`,
-                    routeEvalRunHandoff.status,
-                    `${routeEvalRunHandoff.target.assetId}@${routeEvalRunHandoff.target.revision} · ${routeEvalRunHandoff.target.contentHash.slice(0, 12)}…`,
-                    `${routeEvalRunHandoff.suiteRef.assetId}@${routeEvalRunHandoff.suiteRef.revision}`,
-                    `${routeEvalRunHandoff.dataset.datasetId}@${routeEvalRunHandoff.dataset.revision}`,
-                    `${routeEvalRunHandoff.judge.judgeId}@${routeEvalRunHandoff.judge.revision}`,
-                    `${routeEvalRunHandoff.evalContractRef.resourceId}@${routeEvalRunHandoff.evalContractRef.revision} · ${routeEvalRunHandoff.evalContractRef.contentHash.slice(0, 12)}…`,
-                    "不可执行",
-                  ] ]}
-                />
+                <>
+                  <BpTable
+                    columns={["权威运行", "状态", "精确路由目标", "套件", "数据集", "裁判", "EvalContract", "执行权"]}
+                    rows={[ [
+                      `${routeEvalRunHandoff.runId}@v${routeEvalRunHandoff.version}`,
+                      routeEvalRunHandoff.status,
+                      `${routeEvalRunHandoff.target.assetId}@${routeEvalRunHandoff.target.revision} · ${routeEvalRunHandoff.target.contentHash.slice(0, 12)}…`,
+                      `${routeEvalRunHandoff.suiteRef.assetId}@${routeEvalRunHandoff.suiteRef.revision}`,
+                      `${routeEvalRunHandoff.dataset.datasetId}@${routeEvalRunHandoff.dataset.revision}`,
+                      `${routeEvalRunHandoff.judge.judgeId}@${routeEvalRunHandoff.judge.revision}`,
+                      `${routeEvalRunHandoff.evalContractRef.resourceId}@${routeEvalRunHandoff.evalContractRef.revision} · ${routeEvalRunHandoff.evalContractRef.contentHash.slice(0, 12)}…`,
+                      "不可执行",
+                    ] ]}
+                  />
+                  <button type="button" disabled={routeEvalContextState === "loading"} onClick={() => void readRouteEvalContextSnapshot()}>
+                    {routeEvalContextState === "loading" ? "正在只读读取…" : "只读读取路由 Eval 上下文"}
+                  </button>
+                  {routeEvalContextMessage ? <p className={routeEvalContextState === "blocked" ? "error" : "aos-text"} role="status">{routeEvalContextMessage}</p> : null}
+                  {routeEvalContextSnapshot ? (
+                    <BpTable
+                      columns={["快照时间", "Run", "Suite", "Dataset", "Judge", "EvalContract", "执行权"]}
+                      rows={[ [
+                        routeEvalContextSnapshot.snapshotReadAt,
+                        `${routeEvalContextSnapshot.runId}@v${routeEvalContextSnapshot.runVersion} · ${routeEvalContextSnapshot.runStatus}`,
+                        `${routeEvalContextSnapshot.suiteId}@${routeEvalContextSnapshot.suiteRevision}`,
+                        `${routeEvalContextSnapshot.datasetId}@${routeEvalContextSnapshot.datasetRevision}`,
+                        `${routeEvalContextSnapshot.judgeId}@${routeEvalContextSnapshot.judgeRevision}`,
+                        `${routeEvalContextSnapshot.contractId}@${routeEvalContextSnapshot.contractRevision}`,
+                        "不可执行",
+                      ] ]}
+                    />
+                  ) : null}
+                </>
               ) : null}
             </>
           ) : null}

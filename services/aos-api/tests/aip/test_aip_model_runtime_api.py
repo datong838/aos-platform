@@ -118,6 +118,48 @@ class CapturingModelEvalResolver:
         )
 
 
+class CapturingRouteEvalContextReader:
+    def __init__(self, *, reject: bool = False) -> None:
+        self.call = None
+        self.reject = reject
+
+    def __call__(self, scope, request):
+        self.call = (scope.key, request)
+        if self.reject:
+            raise ValueError("original context drifted")
+        candidate = request.candidate.model_dump(mode="json", by_alias=True)
+        target = {
+            "assetType": "model_route",
+            "assetId": candidate["targetRef"]["assetId"],
+            "revision": str(candidate["targetRef"]["revision"]),
+            "contentHash": candidate["targetRef"]["contentHash"],
+        }
+        return {
+            "schemaVersion": "aos.model-route-eval-context/v1",
+            "subject": {
+                "schemaVersion": "aos.model-route-eval-subject-binding/v1",
+                "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+                "candidate": candidate,
+                "source": {"routeId": candidate["sourceRef"]["assetId"]},
+                "models": [],
+                "runtimePolicy": {},
+                "executionAllowed": False,
+            },
+            "run": {
+                "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+                "runId": request.run_id,
+                "version": request.expected_run_version,
+                "status": request.expected_run_status.value,
+                "target": target,
+            },
+            "suite": {"suiteId": "suite-1"},
+            "dataset": {"datasetId": "dataset-1"},
+            "contract": {"contractId": "contract-1"},
+            "snapshotReadAt": datetime.now(UTC).isoformat(),
+            "executionAllowed": False,
+        }
+
+
 MODEL_EVAL_CANDIDATE = {
     "sourceRef": {"assetType": "RegisteredModelRevision", "assetId": "qyh-model", "revision": 7, "contentHash": "a" * 64},
     "targetRef": {"assetType": "RegisteredModelRevision", "assetId": "qyh-model", "revision": 8, "contentHash": "b" * 64},
@@ -125,6 +167,82 @@ MODEL_EVAL_CANDIDATE = {
     "sourceLifecycle": "draft",
     "executionAllowed": False,
 }
+
+ROUTE_EVAL_CANDIDATE = {
+    **MODEL_EVAL_CANDIDATE,
+    "sourceRef": {"assetType": "ModelRouteRevision", "assetId": "qyh-route", "revision": 8, "contentHash": "a" * 64},
+    "targetRef": {"assetType": "ModelRouteRevision", "assetId": "qyh-route", "revision": 9, "contentHash": "b" * 64},
+    "expectedHeadVersion": 8,
+}
+
+
+def test_route_eval_context_snapshot_is_explicit_tenant_scoped_and_nonexecuting(client) -> None:
+    reader = CapturingRouteEvalContextReader()
+    client.app.dependency_overrides[aip_model_runtime.get_route_eval_context_reader] = lambda: reader
+    request = {
+        "candidate": ROUTE_EVAL_CANDIDATE,
+        "runId": "route-run-1",
+        "expectedRunVersion": 3,
+        "expectedRunStatus": "running",
+    }
+    try:
+        response = client.post(
+            "/v1/aip/model-runtime/route-eval-context-snapshot",
+            headers=headers(),
+            json=request,
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["executionAllowed"] is False
+        assert response.json()["subject"]["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
+        assert reader.call[0] == ("org-org", "dev-project")
+        assert reader.call[1].run_id == "route-run-1"
+        assert reader.call[1].expected_run_version == 3
+        assert reader.call[1].expected_run_status.value == "running"
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_route_eval_context_reader, None)
+
+
+def test_route_eval_context_snapshot_requires_login_route_candidate_and_live_status(client) -> None:
+    request = {
+        "candidate": ROUTE_EVAL_CANDIDATE,
+        "runId": "route-run-1",
+        "expectedRunVersion": 3,
+        "expectedRunStatus": "queued",
+    }
+    assert client.post(
+        "/v1/aip/model-runtime/route-eval-context-snapshot", json=request
+    ).status_code == 401
+    assert client.post(
+        "/v1/aip/model-runtime/route-eval-context-snapshot",
+        headers=headers(),
+        json={**request, "candidate": MODEL_EVAL_CANDIDATE},
+    ).status_code == 422
+    assert client.post(
+        "/v1/aip/model-runtime/route-eval-context-snapshot",
+        headers=headers(),
+        json={**request, "expectedRunStatus": "succeeded"},
+    ).status_code == 422
+
+
+def test_route_eval_context_snapshot_fails_closed_without_partial_payload(client) -> None:
+    reader = CapturingRouteEvalContextReader(reject=True)
+    client.app.dependency_overrides[aip_model_runtime.get_route_eval_context_reader] = lambda: reader
+    try:
+        response = client.post(
+            "/v1/aip/model-runtime/route-eval-context-snapshot",
+            headers=headers(),
+            json={
+                "candidate": ROUTE_EVAL_CANDIDATE,
+                "runId": "route-run-1",
+                "expectedRunVersion": 3,
+                "expectedRunStatus": "running",
+            },
+        )
+        assert response.status_code == 409
+        assert response.json()["code"] == "AIP_ROUTE_EVAL_CONTEXT_BLOCKED"
+        assert "drifted" not in response.json()["message"]
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_route_eval_context_reader, None)
 
 
 def test_model_eval_preflight_is_tenant_scoped_exact_and_never_authorizes_execution(client) -> None:
