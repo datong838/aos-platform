@@ -8,6 +8,7 @@ import { formatBlockers, statusDisplayName } from "../../lib/aipChineseLabels";
 import { RuntimeDataClassificationPanel } from "./RuntimeDataClassificationPanel";
 import { RuntimeEgressPolicyPanel } from "./RuntimeEgressPolicyPanel";
 import { RuntimeNetworkPolicyPreviewPanel } from "./RuntimeNetworkPolicyPreviewPanel";
+import { GuardPolicyApprovalPanel } from "./GuardPolicyApprovalPanel";
 
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 14 } as const;
 const names: Record<string, string> = {
@@ -84,6 +85,7 @@ export function ModelRuntimePage() {
     <RuntimeDataClassificationPanel />
     <RuntimeEgressPolicyPanel />
     <RuntimeNetworkPolicyPreviewPanel />
+    <GuardPolicyApprovalPanel />
     {error ? <div role="alert" className="notice bad">模型运行权威读取失败：{error}</div> : null}
     {loading ? <div role="status" className="card">正在读取当前组织的精确模型运行权威…</div> : null}
     {!loading && data ? <>

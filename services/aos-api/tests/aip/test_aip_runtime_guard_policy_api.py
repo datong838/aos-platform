@@ -83,6 +83,38 @@ def test_guard_policy_api_uses_principal_scope_and_exact_read(client) -> None:
         client.app.dependency_overrides.pop(aip_runtime_guard_policies.get_store, None)
 
 
+def test_guard_policy_proposal_and_human_decision_entry_are_separate(client, monkeypatch) -> None:
+    captured = []
+    candidate = {**egress_body(), "revision": 2, "lifecycle": "active"}
+    monkeypatch.setattr(aip_runtime_guard_policies, "propose_guard_activation",
+        lambda principal, item, **kwargs: captured.append((principal.org_id, type(item).__name__, kwargs)) or {
+            "proposal": {"tenantScope": {"orgId": "org-org", "projectId": "dev-project"},
+                         "proposalId": "proposal-guard", "version": 1, "actionTypeId": "aip_activate_egress_policy",
+                         "actionTypeRevisionHash": "a" * 64, "riskLevel": "R2", "riskReasons": [],
+                         "approvalPolicy": {"makerChecker": True}, "purpose": "test", "payload": {},
+                         "status": "awaiting_approval", "createdBy": "machine-maker", "createdAt": NOW.isoformat(),
+                         "expiresAt": (NOW + timedelta(minutes=10)).isoformat()},
+            "draft": {"tenantScope": {"orgId": "org-org", "projectId": "dev-project"},
+                      "proposalId": "proposal-guard", "proposalVersion": 1, "proposalHash": "b" * 64,
+                      "snapshot": {}, "status": "awaiting_approval", "createdAt": NOW.isoformat()}})
+    proposal = client.post("/v1/aip/runtime-guard-policies/activation-proposals",
+        headers=headers(**{"Idempotency-Key": "proposal-1", "If-Match": "2"}),
+        json={"candidate": candidate, "expiresAt": (NOW + timedelta(minutes=10)).isoformat()})
+    assert proposal.status_code == 201, proposal.text
+    assert captured[0][0:2] == ("org-org", "EgressPolicyRevisionCreate")
+
+    monkeypatch.setattr(aip_runtime_guard_policies, "execute_guard_issuer",
+        lambda config, proposal_id, key, body, principal, authorization, inquiry: {
+            "status": "observed", "proposalId": proposal_id, "approvalEventId": "event-1",
+            "decision": body.decision.value, "activationAuthorized": False})
+    decision = {"decision": "approved", "expectedProposalVersion": 1,
+                "expectedProposalHash": "b" * 64}
+    approved = client.post("/v1/aip/runtime-guard-policies/activation-proposals/proposal-guard/decision-intent",
+        headers=headers(**{"Idempotency-Key": "decision-1"}), json=decision)
+    assert approved.status_code == 200
+    assert approved.json()["activationAuthorized"] is False
+
+
 def test_guard_policy_api_rejects_tenant_injection_and_missing_cas_headers(client) -> None:
     body = egress_body()
     body["tenant"] = {"orgId": "dev-org", "projectId": "dev-project"}

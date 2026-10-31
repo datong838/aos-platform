@@ -1,6 +1,8 @@
 """Canonical tenant-scoped runtime egress and data-classification policies."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 
 from aos_api.aip_network_consumer_contracts import NetworkConsumerReferences
@@ -9,6 +11,12 @@ from aos_api.aip_network_issuer_application import execute_issuer, IssuerApplica
 from aos_api.aip_network_proposal_reconcile import inquire_network_proposal, ProposalInquiryBlocked
 from aos_api.aip_network_issuer_product import decide_product, inquire_product_decision
 from aos_api.aip_network_proposal_product import submit_product_proposal, inquire_product_proposal
+from aos_api.aip_guard_policy_activation import GuardActivationBlocked, propose_guard_activation
+from aos_api.aip_guard_policy_issuer_application import (
+    GuardIssuerApplicationBlocked, execute_guard_issuer,
+)
+from aos_api.aip_model_governance_policy_contracts import QuotaPolicyRevisionCreate
+from aos_api.aip_contracts import AipContractModel
 
 from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevision,
@@ -79,6 +87,63 @@ def get_consumer_application_config(request: Request):
 
 def get_issuer_application_config(request: Request):
     return getattr(request.app.state, 'network_issuer_config', None)
+
+
+def get_guard_issuer_application_config(request: Request):
+    return getattr(request.app.state, 'guard_policy_issuer_config', None)
+
+
+class GuardActivationProposalRequest(AipContractModel):
+    candidate: EgressPolicyRevisionCreate | DataClassificationPolicyRevisionCreate | QuotaPolicyRevisionCreate
+    expires_at: datetime
+
+
+@router.post('/activation-proposals', response_model=ActionDraftBundle, status_code=status.HTTP_201_CREATED)
+def propose_guard_policy(body: GuardActivationProposalRequest,
+        idempotency_key: str = Header(alias='Idempotency-Key'),
+        if_match: str = Header(alias='If-Match'),
+        principal: Principal = Depends(require_principal)):
+    try:
+        return propose_guard_activation(principal, body.candidate,
+            expected_version=_version(if_match), idempotency_key=_key(idempotency_key),
+            expires_at=body.expires_at)
+    except GuardActivationBlocked as exc:
+        raise ApiError(code=str(exc), message='守护策略提案来源、身份或精确草稿不满足要求', status_code=422) from None
+    except (AipActionIdempotencyConflict, AipActionConflict) as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=409) from None
+    except AipActionStoreError as exc:
+        raise ApiError(code=exc.code, message='guard policy action proposal persistence failed', status_code=503) from None
+
+
+def _guard_issuer_response(proposal_id, body, key, principal, authorization, config, response, *, inquiry):
+    try:
+        result = execute_guard_issuer(config, proposal_id, key, body, principal,
+                                      authorization, inquiry=inquiry)
+    except GuardIssuerApplicationBlocked as exc:
+        raise ApiError(code=exc.code, message='守护策略审批未确认，请只读查询原请求',
+                       status_code=exc.status_code) from None
+    response.status_code = {'unresolved': 202, 'observed': 200}.get(result['status'], 409)
+    return result
+
+
+@router.post('/activation-proposals/{proposal_id}/decision-intent')
+def submit_guard_policy_decision(proposal_id: str, body: DecideActionProposalRequest,
+        response: Response, idempotency_key: str = Header(alias='Idempotency-Key'),
+        authorization: str | None = Header(default=None),
+        principal: Principal = Depends(require_principal),
+        config=Depends(get_guard_issuer_application_config)):
+    return _guard_issuer_response(proposal_id, body, _key(idempotency_key), principal,
+                                  authorization, config, response, inquiry=False)
+
+
+@router.post('/activation-proposals/{proposal_id}/decision-intent/inquiry')
+def inquire_guard_policy_decision(proposal_id: str, body: DecideActionProposalRequest,
+        response: Response, idempotency_key: str = Header(alias='Idempotency-Key'),
+        authorization: str | None = Header(default=None),
+        principal: Principal = Depends(require_principal),
+        config=Depends(get_guard_issuer_application_config)):
+    return _guard_issuer_response(proposal_id, body, _key(idempotency_key), principal,
+                                  authorization, config, response, inquiry=True)
 
 
 def _issuer_response(proposal_id, body, key, principal, authorization, config, response, *, inquiry):
