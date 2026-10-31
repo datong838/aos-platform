@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "aos.qyh-successor-draft-preparation-checkpoint/v1",
+  "recordedAt": "2026-10-31T20:46:00+08:00",
+  "tenant": { "orgId": "org-org", "projectId": "dev-project" },
+  "sourceHead": "91aac7b3f0d4af642c4d8c7ba26f9fd8cba79fd8",
+  "result": "DRAFT_PREPARATION_ENTRY_IMPLEMENTED_NOT_EXECUTED",
+  "businessAcceptance": false,
+  "engineeringClosed": 2,
+  "realBusinessAccepted": 0,
+  "developmentLoginSkipPreserved": true,
+  "writes": {
+    "modelRuntimePostCodeAdded": true,
+    "browserConfirmationClicked": false,
+    "databaseWritten": false,
+    "evalCreated": false,
+    "assetActivated": false,
+    "providerCalled": false,
+    "modelCalled": false
+  },
+  "safety": {
+    "order": ["RegisteredModel draft", "RuntimePolicy draft", "ModelRoute draft"],
+    "fullPreflightRepeatedBeforePost": true,
+    "unqueuedWrites": true,
+    "stableIdempotencyKeys": true,
+    "ifMatchRequired": true,
+    "authorityReadbackRequired": true,
+    "unknownAutomaticallyRetried": false
+  },
+  "tests": {
+    "focusedAndAdjacent": "153/153 passed",
+    "typescript": "passed",
+    "webBuild": "passed",
+    "diffCheck": "passed"
+  },
+  "sha256": {
+    "successorDrafts.ts": "15a97e4e2d6532c4035b708b65798ab26efdf4f814b36875d3016a4c03389ca5",
+    "successorDrafts.test.ts": "06d06177e1b55ae9b669eb851448dcbb8529a1cdc3edab50f41ddd02c5d00b0e",
+    "aipModelRuntime/index.ts": "02b4c43b569c86f0f254401b22df4c62352015dd468cbd887c8552b26d768537",
+    "QyhRuntimeSuccessorPreflightPanel.tsx": "ca1b162426ea5778e6ccb7c2d0aea09e92642129a6057ef764081024d6ebee02",
+    "plan.md": "d904793023e52b3fff8a41fd6c0e04524a24a142b8442ee71a717ee3667bc06b"
+  },
+  "next": "本人以真实 OIDC 会话完成 native cost 与 paired-window consume；仅在页面完整预检通过后，由本人明确点击准备三个草稿，随后再独立办理 Eval 与激活。"
+}
