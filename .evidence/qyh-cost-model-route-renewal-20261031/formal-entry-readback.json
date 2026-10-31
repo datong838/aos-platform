@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "observedAt": "2026-10-31T17:08:00+08:00",
+  "observedAt": "2026-10-31T17:14:27+08:00",
   "tenant": {
     "orgId": "org-org",
     "projectId": "dev-project"
@@ -44,8 +44,21 @@
     "isolatedPostgres": "postgres:16-alpine@127.0.0.1:5433 removed after run",
     "warningsDeferredToDebt": "TD-012"
   },
-  "result": "FORMAL_PAIRED_WINDOW_READONLY_ENTRIES_LOADED_NOT_BUSINESS_AUTHORIZED",
-  "safeNextStep": "Reuse normal Chrome OIDC login for authenticated current-ref readback on org-org/dev-project; then prepare non-signing cost parent review materials. Do not POST propose/decide/consume or enable writer/Host/worker/Provider/model.",
+  "authenticatedCurrentReadback": {
+    "status": "COMPLETE",
+    "receipt": ".evidence/qyh-cost-model-route-renewal-20261031/authenticated-current-readback-r1.json",
+    "tenantVerified": "org-org/dev-project",
+    "driftVsPriorMaterialDraft": "EXACT_HASH_MATCH",
+    "renewalBlockers": [
+      "BUDGET_POLICY_OUT_OF_WINDOW",
+      "PRICE_SNAPSHOT_OUT_OF_WINDOW",
+      "route_eval_gate_not_passed",
+      "model_eval_gate_not_passed",
+      "provider_health_unavailable_or_stale"
+    ]
+  },
+  "result": "AUTHENTICATED_CURRENT_REFS_CAPTURED_FORMAL_READONLY_ENTRIES_LOADED_NOT_BUSINESS_AUTHORIZED",
+  "safeNextStep": "Prepare and review non-signing cost parent materials from captured refs; native human approval still required before any POST propose/decide/consume or paired-window writes. Do not enable writer/Host/worker/Provider/model.",
   "effects": {
     "databaseRead": false,
     "databaseWrite": false,

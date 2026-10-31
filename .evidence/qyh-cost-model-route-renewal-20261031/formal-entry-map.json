@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "state": "NON_EXECUTABLE_ROUTE_MAP",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "observedAt": "2026-10-31T16:31:57+08:00",
+  "authorizationBoundary": {
+    "effectiveUntil": "2027-03-31T04:00:00Z",
+    "providerModelId": "agnes-2.5-flash",
+    "dailyLimitMinor": 10000,
+    "monthlyLimitMinor": 100000,
+    "modelInvocationAllowed": false
+  },
+  "steps": [
+    {
+      "order": 1,
+      "name": "authenticated-current-readback",
+      "authority": "management-api-current-oidc",
+      "baseUrl": "http://127.0.0.1:18080",
+      "routes": [
+        "GET /v1/aip/model-runtime/overview",
+        "GET /v1/aip/model-runtime/cost-overview",
+        "GET /v1/aip/model-runtime/models/{model_id}",
+        "GET /v1/aip/model-runtime/policies/{policy_id}",
+        "GET /v1/aip/model-runtime/price-snapshots/{price_snapshot_id}",
+        "GET /v1/aip/model-runtime/routes/{route_id}"
+      ],
+      "currentStatus": "AUTHENTICATED_CURRENT_REFS_READBACK_COMPLETE",
+      "writeAllowed": false,
+      "stopRule": "Any missing, stale, cross-tenant or mismatched exact reference stops all following steps."
+    },
+    {
+      "order": 2,
+      "name": "cost-parent",
+      "authority": "existing-budget-cost-product",
+      "baseUrl": "http://127.0.0.1:18080",
+      "routes": [
+        "POST /v1/aip/budgets/cost-proposals",
+        "POST /v1/aip/budgets/cost-proposals/{proposal_id}/review-requests/decide",
+        "GET /v1/aip/budgets/cost-proposals/{proposal_id}/review-requests/decide",
+        "POST /v1/aip/budgets/cost-proposals/{proposal_id}/consumption-request",
+        "GET /v1/aip/budgets/cost-proposals/{proposal_id}/consumption-request",
+        "GET /v1/aip/budgets/cost-proposals/{proposal_id}/policy-window-source"
+      ],
+      "currentStatus": "READONLY_ROUTES_LOADED_AWAITING_NATIVE_COST_PARENT",
+      "writeAllowed": false,
+      "stopRule": "A POST result of unknown or unresolved is reconciled only through the corresponding GET with the original key; it is never resent. The paired-window source handoff cannot proceed until its missing GET route is formally integrated and loaded."
+    },
+    {
+      "order": 3,
+      "name": "paired-policy-price-window",
+      "authority": "protected-policy-window-gateway",
+      "baseUrl": "http://127.0.0.1:18468",
+      "routes": [
+        "POST /v1/aip/budget-policy-window/propose",
+        "POST /v1/aip/budget-policy-window/decide",
+        "POST /v1/aip/budget-policy-window/consume",
+        "GET /v1/aip/budget-policy-window/requests/{operation}/{idempotency_key}"
+      ],
+      "currentStatus": "GATEWAY_LISTENING_WRITER_DISABLED_AWAITING_NATIVE_CHAIN",
+      "writeAllowed": false,
+      "stopRule": "The protected gateway must be restored from its existing sealed configuration. Direct database calls and substitute approval services are forbidden."
+    },
+    {
+      "order": 4,
+      "name": "registered-model-successor",
+      "authority": "model-runtime-management-api",
+      "baseUrl": "http://127.0.0.1:18080",
+      "routes": [
+        "POST /v1/aip/model-runtime/models",
+        "GET /v1/aip/model-runtime/models/{model_id}"
+      ],
+      "currentStatus": "WAITING_FOR_PAIRED_POLICY_AND_PRICE",
+      "writeAllowed": false,
+      "stopRule": "Publish only a successor that preserves the existing provider, model identity, modalities, capabilities and quota semantics while replacing both expired cost references."
+    },
+    {
+      "order": 5,
+      "name": "runtime-policy-successor",
+      "authority": "model-runtime-management-api",
+      "baseUrl": "http://127.0.0.1:18080",
+      "routes": [
+        "POST /v1/aip/model-runtime/policies",
+        "GET /v1/aip/model-runtime/policies/{policy_id}"
+      ],
+      "currentStatus": "WAITING_FOR_CURRENT_SUCCESSOR_REFS",
+      "writeAllowed": false,
+      "stopRule": "Unknown usage and unknown price remain blocking; kill switch and all existing safety semantics are preserved."
+    },
+    {
+      "order": 6,
+      "name": "model-route-successor",
+      "authority": "model-runtime-management-api",
+      "baseUrl": "http://127.0.0.1:18080",
+      "routes": [
+        "POST /v1/aip/model-runtime/routes",
+        "GET /v1/aip/model-runtime/routes/{route_id}",
+        "GET /v1/aip/model-runtime/routes/{route_id}/resolution",
+        "GET /v1/aip/model-runtime/chain-overview"
+      ],
+      "currentStatus": "WAITING_FOR_MODEL_POLICY_AND_EXACT_EVAL",
+      "writeAllowed": false,
+      "stopRule": "HTTP publication is not runtime admission. Existing exact evaluation and currentness blockers must be cleared by their original authorities before any later activation."
+    }
+  ],
+  "globalStopRules": [
+    "login_failure_captcha_slider_or_account_risk",
+    "credential_or_secret_exposure",
+    "cross_tenant_or_reference_drift",
+    "unknown_effect_read_only_reconciliation_only",
+    "human_decision_missing",
+    "provider_model_host_or_worker_would_start",
+    "marketplace_source_or_historical_run_replay_required"
+  ],
+  "externalEffects": 0
+}

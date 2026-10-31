@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-10-31T17:14:27+08:00",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "liveApi": {
+    "baseUrl": "http://127.0.0.1:18080",
+    "openApiReadable": true,
+    "requiredReadEndpointsPresent": true,
+    "anonymousReadResults": {
+      "/v1/aip/model-runtime/overview": 401,
+      "/v1/aip/model-runtime/cost-overview": 401,
+      "/v1/aip/model-runtime/models": 405,
+      "/v1/aip/model-runtime/policies": 405,
+      "/v1/aip/model-runtime/routes": 405
+    },
+    "credentialReadOrBypassAttempted": false,
+    "authenticatedCurrentRefsAvailable": true,
+    "authenticatedReadbackReceipt": ".evidence/qyh-cost-model-route-renewal-20261031/authenticated-current-readback-r1.json"
+  },
+  "nativeEntry": {
+    "renewalGateway18462Listening": true,
+    "renewalGatewayWriterEnabled": false,
+    "pairedWindowGateway18468Listening": true,
+    "pairedWindowUnauthenticatedHttpCode": 403,
+    "proposalSubmitted": false,
+    "decisionSubmitted": false,
+    "consumptionSubmitted": false
+  },
+  "latestVerifiedPriorRead": {
+    "observedAt": "2026-10-31T15:42:00+08:00",
+    "source": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-post-renewal-binding-readonly-20261031",
+    "costProposals": 0,
+    "costDecisions": 0,
+    "costConsumptions": 0,
+    "pairedWindowProposal": 0,
+    "pairedWindowDecision": 0,
+    "pairedWindowReceipt": 0,
+    "pairedWindowBinding": 0,
+    "budget": {
+      "assetType": "BudgetRevision",
+      "assetId": "a0v-ecommerce-hard-stop-budget-v1",
+      "revision": 1,
+      "dailyLimitMinor": 10000,
+      "monthlyLimitMinor": 100000,
+      "effectiveUntil": "2027-09-10T00:00:00Z"
+    }
+  },
+  "runtimeState": {
+    "hostEnabled": false,
+    "workerEnabled": false,
+    "providerEnabled": false,
+    "modelInvocationEnabled": false
+  },
+  "writes": 0,
+  "modelCalls": 0,
+  "nextGate": "NON_SIGNING_COST_PARENT_REVIEW_MATERIAL_FROM_CAPTURED_REFS"
+}

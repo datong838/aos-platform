@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "taskId": "qyh-cost-model-route-renewal-20261031",
+  "observedAt": "2026-10-31T17:14:27+08:00",
+  "session": {
+    "channel": "cursor-embedded-browser",
+    "loginReuse": true,
+    "loginResetRequested": false,
+    "credentialExported": false,
+    "webOrigin": "http://127.0.0.1:18434",
+    "apiProxyBase": "/api",
+    "managementBaseUrl": "http://127.0.0.1:18080"
+  },
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "tokenKind": "oidc",
+    "subjectPresent": true
+  },
+  "httpReadback": {
+    "GET /v1/me": { "status": 200 },
+    "GET /v1/aip/model-runtime/overview": { "status": 200 },
+    "GET /v1/aip/model-runtime/cost-overview": { "status": 200 },
+    "GET /v1/aip/model-runtime/models/a0v-agnes-2-5-flash-readonly-dev": { "status": 200 },
+    "GET /v1/aip/model-runtime/providers/a0v-agnes-text-readonly-dev": { "status": 200 },
+    "GET /v1/aip/model-runtime/routes/a0v-ecommerce-text-readonly-v1/resolution": { "status": 200 }
+  },
+  "currentRefs": {
+    "budget": {
+      "assetType": "BudgetRevision",
+      "assetId": "a0v-ecommerce-hard-stop-budget-v1",
+      "revision": 1,
+      "contentHash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+    },
+    "budgetPolicy": {
+      "assetType": "BudgetPolicyRevision",
+      "assetId": "a0v-ecommerce-budget-policy-v1",
+      "revision": 13,
+      "contentHash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696"
+    },
+    "price": {
+      "assetType": "ModelPriceSnapshotRevision",
+      "assetId": "a0v-agnes-2-5-flash-development-deferred-v1",
+      "revision": 12,
+      "contentHash": "ac76df7da928c0468a69f18c3d559c3139fbb951154e89c21bb88e3c2c20c06c"
+    },
+    "model": {
+      "assetType": "RegisteredModelRevision",
+      "assetId": "a0v-agnes-2-5-flash-readonly-dev",
+      "revision": 12,
+      "contentHash": "f3bb08836758f194023bde3eecde8890f00192704e08897ed368a40928dd0a73"
+    },
+    "runtimePolicy": {
+      "assetType": "RuntimePolicyRevision",
+      "assetId": "a0v-ecommerce-runtime-policy-v1",
+      "revision": 13,
+      "contentHash": "bc8b9b0bace9c57c21cbd93d188b3ed8292dffe2271611abaf60cfe380abd019"
+    },
+    "route": {
+      "assetType": "ModelRouteRevision",
+      "assetId": "a0v-ecommerce-text-readonly-v1",
+      "revision": 12,
+      "contentHash": "f9628f91d6a161eef844e2e933322adcbcdca3abcaa72f5c18e1f8c1ec82ddfd"
+    },
+    "provider": {
+      "assetType": "ProviderInstanceRevision",
+      "assetId": "a0v-agnes-text-readonly-dev",
+      "revision": 1,
+      "contentHash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+    }
+  },
+  "driftVsMaterialDraftPreviousRefs": "EXACT_HASH_MATCH_ALL_KNOWN_FIELDS",
+  "costWindowFacts": {
+    "budgetPolicyStatus": "out_of_window",
+    "budgetPolicyBlockerCodes": ["BUDGET_POLICY_OUT_OF_WINDOW"],
+    "budgetPolicyEffectiveUntil": "2026-09-25T02:52:33.666717Z",
+    "priceSnapshotStatus": "out_of_window",
+    "priceSnapshotBlockerCodes": ["PRICE_SNAPSHOT_OUT_OF_WINDOW"],
+    "priceSnapshotEffectiveUntil": "2026-09-25T02:52:33.666717Z"
+  },
+  "routeResolution": {
+    "readiness": "blocked",
+    "blockerCodes": [
+      "route_eval_gate_not_passed",
+      "model_eval_gate_not_passed",
+      "model_price_snapshot_not_effective",
+      "provider_health_unavailable_or_stale"
+    ]
+  },
+  "result": "AUTHENTICATED_CURRENT_REFS_CAPTURED_NOT_BUSINESS_AUTHORIZED",
+  "effects": {
+    "databaseRead": false,
+    "databaseWrite": false,
+    "credentialsRead": false,
+    "proposalSubmitted": false,
+    "decisionSubmitted": false,
+    "consumptionSubmitted": false,
+    "modelInvoked": false,
+    "runtimeMutated": false
+  },
+  "safeNextStep": "Finalize non-signing cost parent review material from captured refs; still require native human approval before any POST propose/decide/consume or paired-window writes."
+}
