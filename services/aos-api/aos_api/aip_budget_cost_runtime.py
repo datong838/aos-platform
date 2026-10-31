@@ -30,7 +30,18 @@ def shared_risk_totals(conn, scope, budget_id: str) -> tuple[int, int]:
            AND budget_revision_ref->>'resourceType'='BudgetRevision'
            AND budget_revision_ref->>'resourceId'=%s
     ) shared_exposure""",(*scope.key,budget_id,*scope.key,budget_id)).fetchone()
-    return int(row['n']), int(row['risk'])
+    count, risk = int(row['n']), int(row['risk'])
+    # Existing pre-159 databases have no Judge ledger. Judge admission itself
+    # requires that installation; its exposure shares this original fence.
+    if conn.execute("SELECT to_regclass('public.aip_model_judge_budget_reservation') AS relation").fetchone()['relation'] is not None:
+        judge = conn.execute("""SELECT count(*) AS n,coalesce(sum(upper_bound_minor),0) AS risk
+            FROM public.aip_model_judge_budget_reservation
+            WHERE org_id=%s AND project_id=%s
+              AND budget_revision_ref->>'resourceType'='BudgetRevision'
+              AND budget_revision_ref->>'resourceId'=%s""", (*scope.key,budget_id)).fetchone()
+        count += int(judge['n'])
+        risk += int(judge['risk'])
+    return count, risk
 
 
 def require_cost_risk(conn, scope, policy_ref, pricing_ref, upper_bound_minor, *, provider_ref=None, new_hold=True) -> ModelPriceSnapshotRevision | None:
@@ -43,6 +54,9 @@ def require_cost_risk(conn, scope, policy_ref, pricing_ref, upper_bound_minor, *
             "AND operation='budget_revision.activate_cost' AND result_ref->>'resourceId'=%s",
             (*scope.key,policy_ref.resource_id)).fetchall()
         if not receipts:
+            identity = getattr(pricing_ref, 'resource_id', '')
+            if type(identity) is str and identity.startswith('window-price-'):
+                raise ValueError('child price requires its consumed parent activation')
             return  # Existing non-cost budgets keep their established authority path.
         if len(receipts)!=1:raise ValueError('ambiguous activation')
         receipt=receipts[0];result=receipt['result_ref']
@@ -118,8 +132,29 @@ def _verify_cost_risk_contents(conn, scope, policy_ref, pricing_ref, upper_bound
         or price.effective_until is None or now>=price.effective_until or price.development_cost_authorization is None):
         raise ValueError('exact bounded development price required')
     auth=price.development_cost_authorization
+    approval_ref=fence['decision_id']
+    window_price=price.price_snapshot_id.startswith('window-price-')
+    window_approval=auth.approval_ref.startswith('window-approval-')
+    if window_price or window_approval:
+        if not (window_price and window_approval):
+            raise ValueError('incomplete window price family')
+        from aos_api.aip_budget_policy_window_risk_authority import read_window_risk_fact
+        child=read_window_risk_fact(conn,scope=scope,budget_ref=policy_ref,price_ref=pricing_ref)
+        target=view['proposal']['target'];basis=view['proposal']['basis']
+        expected_parent=dict(costProposalId=row['proposal_id'],costProposalHash=p.proposal_hash,
+            costDecisionId=fence['decision_id'],consumptionReceiptId=receipt['receipt_id'],
+            budgetRef=dict(assetType='BudgetRevision',assetId=policy_ref.resource_id,
+                revision=policy_ref.revision,contentHash=policy_ref.content_hash.removeprefix('sha256:')),
+            budgetHeadVersion=head['version'],providerRef=basis['provider'],
+            providerModelId=p.basis.provider_model_id,owner=p.target.owner,
+            budgetWindow={key:target[key] for key in ('effectiveFrom','effectiveUntil')},
+            risk={key:value for key,value in basis.items() if key not in {'kind','provider','providerModelId'}},
+            makerSubject=p.maker_subject,checkerSubject=p.checker_subject)
+        if canonical_hash(child.to_payload()['parent'])!=canonical_hash(expected_parent):
+            raise ValueError('window parent authority drift')
+        approval_ref=child.decision_id
     auth.require_scope(scope=scope,provider=p.basis.provider,provider_model_id=p.basis.provider_model_id,
-        approval_ref=fence['decision_id'],now=now)
+        approval_ref=approval_ref,now=now)
     if auth.effective_from<p.target.effective_from or auth.effective_until>p.target.effective_until:
         raise ValueError('authorization window drift')
     if provider_ref is not None and (provider_ref.resource_type,provider_ref.resource_id,provider_ref.revision,
@@ -156,6 +191,7 @@ class FormalBudgetFact:
     used_risk_minor: int
     checked_at: datetime
     valid_until: datetime
+    policy_window_fact: dict | None = None
 
 
 def _prepare_formal_budget_approval(conn, scope, budget_ref):
@@ -198,7 +234,7 @@ def _prepare_formal_budget_approval(conn, scope, budget_ref):
     return receipt, row, p
 
 
-def read_formal_budget_fact(*, conn, scope, budget_ref, price_ref, provider_ref):
+def read_formal_budget_fact(*, conn, scope, budget_ref, price_ref, provider_ref, budget_policy_ref=None):
     """Read original bounded cost authority under native caller-owned locks.
 
     No hold, fence increment, commit, or retry. Serialization failures propagate.
@@ -221,6 +257,14 @@ def read_formal_budget_fact(*, conn, scope, budget_ref, price_ref, provider_ref)
         refs.append(BudgetExactRef(resourceType=kind, resourceId=exact.asset_id,
             revision=exact.revision, contentHash='sha256:' + exact.content_hash))
     budget, pricing, provider = refs
+    selected_policy = None
+    if pricing.resource_id.startswith('window-price-'):
+        try:
+            selected_policy = FormalExactRef.model_validate(budget_policy_ref)
+        except (ValueError, TypeError) as exc:
+            raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_CHILD_POLICY_BINDING_REQUIRED') from exc
+        if selected_policy.asset_type != 'BudgetPolicyRevision':
+            raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_CHILD_POLICY_BINDING_REQUIRED')
     receipt, row, p = _prepare_formal_budget_approval(conn, scope, exact_refs[0])
     proposal_id = row['proposal_id']
     for subject in sorted({p.maker_subject, p.checker_subject}):
@@ -257,12 +301,23 @@ def read_formal_budget_fact(*, conn, scope, budget_ref, price_ref, provider_ref)
     if len(issuer) != 1 or issuer[0]['request_hash'] != expected_hash or issuer[0]['result'] != expected_result:
         raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_ISSUER_RECEIPT_REQUIRED')
     now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
-    until = min(row['expires_at'], decision['expires_at'], p.target.effective_until,
-        price.effective_until, price.development_cost_authorization.effective_until)
+    child_payload = None
+    if price.price_snapshot_id.startswith('window-price-'):
+        from aos_api.aip_budget_policy_window_risk_authority import read_window_risk_fact
+        child = read_window_risk_fact(conn, scope=scope, budget_ref=budget, price_ref=pricing)
+        if (canonical_hash(selected_policy.model_dump(mode='json', by_alias=True))
+                != canonical_hash(child.to_payload()['policyRef'])):
+            raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_CHILD_POLICY_BINDING_REQUIRED')
+        child_payload = child.to_payload()
+        until = min(p.target.effective_until, price.effective_until,
+            price.development_cost_authorization.effective_until, child.effective_until)
+    else:
+        until = min(row['expires_at'], decision['expires_at'], p.target.effective_until,
+            price.effective_until, price.development_cost_authorization.effective_until)
     if now >= until:
         raise BudgetCostRuntimeBlocked('FORMAL_BUDGET_AUTHORIZATION_EXPIRED')
     count, risk = shared_risk_totals(conn, scope, budget.resource_id)
     return FormalBudgetFact(exact_refs[0].model_dump(mode='json', by_alias=True),
         exact_refs[1].model_dump(mode='json', by_alias=True), exact_refs[2].model_dump(mode='json', by_alias=True),
         receipt['receipt_id'], issuer[0]['request_hash'], proposal_id, fence['decision_id'],
-        fence['version'], p.basis.per_request_risk_minor, count, risk, now, until)
+        fence['version'], p.basis.per_request_risk_minor, count, risk, now, until, child_payload)

@@ -129,6 +129,28 @@ def test_resolver_returns_exact_ready_selection_only_when_all_gates_pass(monkeyp
     assert result.blocker_codes == []
 
 
+def test_route_release_evidence_is_rechecked_by_route_gate_only(monkeypatch) -> None:
+    calls = []
+    evidence = object()
+
+    class EvalAuthority:
+        def require_exact_passed(self, scope, gate, *, expected_target, now, route_evidence=None):
+            calls.append((scope, gate, expected_target, now, route_evidence))
+
+    monkeypatch.setattr(AipModelRuntimeResolver, "_health_is_fresh", staticmethod(lambda *_: True))
+    resolver = AipModelRuntimeResolver(store=ReadyRuntimeStore())
+    resolver._eval_authority_store = EvalAuthority()
+
+    result = resolver.resolve(SCOPE, "route-copy", now=NOW, route_evidence=evidence)
+
+    assert result.readiness is ModelRuntimeReadiness.READY
+    assert len(calls) == 2
+    assert calls[0][2].asset_type == "ModelRouteRevision"
+    assert calls[0][4] is evidence
+    assert calls[1][2].asset_type == "RegisteredModelRevision"
+    assert calls[1][4] is None
+
+
 def test_resolver_checks_gates_against_candidate_hash_not_final_revision(monkeypatch) -> None:
     targets = []
 

@@ -10,6 +10,7 @@ from psycopg.types.json import Jsonb
 from test_aip_budget_reservation_pg import database, seed, runtime_connection, ROOT, content_generate_command
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore
 from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+from aos_api.aip_model_route_eval_proof_authority import RouteEvalReleaseEvidence
 from aos_api.ecommerce_content_execution_worker import ContentExecutionWorker, PreparedContentInvocation, ContentExecutionFailure
 from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal, _payload
 from aos_api.ecommerce_growth_runtime_adapters import ContentGenerateHostService
@@ -36,14 +37,16 @@ def setup(database, command_factory=None, request_transform=None):
         route=ref('ModelRouteRevision','route'),policy=ref('RuntimePolicyRevision','policy'),readiness='ready',
         selectedModel=ref('RegisteredModelRevision','model'),selectedProvider=ref('ProviderInstanceRevision',refs['provider'].resource_id,refs['provider'].content_hash.removeprefix('sha256:')),
         selectedPriceSnapshot=ref('ModelPriceSnapshotRevision',request.pricing_ref.resource_id,request.pricing_ref.content_hash.removeprefix('sha256:')),resolvedAt=datetime.now(UTC))
-    prepare=lambda *_:PreparedContentInvocation(resolution,'approved public facts','public_catalog')
+    route_evidence=RouteEvalReleaseEvidence(manifest_bytes=b'test',source_commands=())
+    prepare=lambda *_,**__:PreparedContentInvocation(resolution,'approved public facts','public_catalog',
+        route_evidence=route_evidence)
     return scope,factory,store,rid,prepare
 
 
 def test_concurrent_worker_commits_before_send_and_restart_replays(database):
     scope,factory,store,rid,prepare=setup(database)
     started=Event(); finish=Event();calls=[]
-    def invoke(*_):
+    def invoke(*_,**__):
         # Another connection can acquire the reservation lock: send is outside transaction.
         with factory(scope) as conn:
             conn.execute("SET LOCAL lock_timeout='500ms'")
@@ -58,27 +61,27 @@ def test_concurrent_worker_commits_before_send_and_restart_replays(database):
         assert started.wait(5)
         assert worker.run_one(scope,rid)['status']=='RECONCILE_ONLY'
         finish.set();result=first.result(timeout=5)
-    restarted=ContentExecutionWorker(factory,prepare=prepare,invoke=lambda *_:pytest.fail('duplicate send'),storage_schema=database.schema)
+    restarted=ContentExecutionWorker(factory,prepare=prepare,invoke=lambda *_,**__:pytest.fail('duplicate send'),storage_schema=database.schema)
     assert restarted.run_one(scope,rid)==result
     assert calls==[1]
 
 
 def test_unknown_outcome_never_resubmits_after_restart(database):
     scope,factory,store,rid,prepare=setup(database)
-    def fail(*_): raise TimeoutError('sensitive provider detail')
+    def fail(*_,**__): raise TimeoutError('sensitive provider detail')
     worker=ContentExecutionWorker(factory,prepare=prepare,invoke=fail,storage_schema=database.schema)
     with pytest.raises(ContentExecutionFailure,match='reconciliation required') as exc:
         worker.run_one(scope,rid)
     assert 'sensitive' not in str(exc.value)
     assert store.get(scope,rid).state.value=='unknown'
-    worker.invoke=lambda *_:pytest.fail('duplicate send')
+    worker.invoke=lambda *_,**__:pytest.fail('duplicate send')
     assert worker.run_one(scope,rid)['status']=='RECONCILE_ONLY'
 
 
 def test_preparation_failure_keeps_unsubmitted_reservation(database):
     scope,factory,store,rid,_=setup(database)
     def reject(*_): raise PermissionError('current authority unavailable')
-    worker=ContentExecutionWorker(factory,prepare=reject,invoke=lambda *_:pytest.fail('must not send'),storage_schema=database.schema)
+    worker=ContentExecutionWorker(factory,prepare=reject,invoke=lambda *_,**__:pytest.fail('must not send'),storage_schema=database.schema)
     with pytest.raises(PermissionError): worker.run_one(scope,rid)
     reservation=store.get(scope,rid)
     assert reservation.state.value=='held'
@@ -96,7 +99,7 @@ def test_preparation_precedes_reservation_lock_to_preserve_host_lock_order(datab
             assert row['state']=='held'
         return base_prepare(conn,prepared_scope,command)
     worker=ContentExecutionWorker(factory,prepare=prepare,
-        invoke=lambda *_:{'answer':'public result'},storage_schema=database.schema)
+        invoke=lambda *_,**__:{'answer':'public result'},storage_schema=database.schema)
     assert worker.run_one(scope,rid)['status']=='RESULT_RECORDED'
 
 
@@ -106,7 +109,8 @@ def test_worker_passes_prepared_output_cap_after_provider_intent_commit(database
     def prepare(conn, prepared_scope, command):
         original=base_prepare(conn,prepared_scope,command)
         return PreparedContentInvocation(original.resolution,original.prompt,
-            original.data_classification,max_output_tokens=23)
+            original.data_classification,max_output_tokens=23,
+            route_evidence=original.route_evidence)
     def invoke(*args,**kwargs):
         with factory(scope) as second:
             assert second.execute('SELECT state FROM aip_budget_reservation WHERE reservation_id=%s',(rid,)).fetchone()['state']=='submitted'
@@ -114,13 +118,14 @@ def test_worker_passes_prepared_output_cap_after_provider_intent_commit(database
         return {'answer':'public result'}
     worker=ContentExecutionWorker(factory,prepare=prepare,invoke=invoke,storage_schema=database.schema)
     assert worker.run_one(scope,rid)['status']=='RESULT_RECORDED'
-    assert calls==[{'max_output_tokens':23}]
+    assert calls==[{'route_evidence':base_prepare(None,None,None).route_evidence,
+        'max_output_tokens':23}]
 
 
 def test_result_persistence_failure_is_not_a_resubmission_license(database):
     scope,factory,store,rid,prepare=setup(database)
     calls=[]
-    def invoke(*_): calls.append(1); return {'answer':'public result'}
+    def invoke(*_,**__): calls.append(1); return {'answer':'public result'}
     worker=ContentExecutionWorker(factory,prepare=prepare,invoke=invoke,storage_schema=database.schema)
     def fail(*_a,**_k): raise RuntimeError('database error details')
     worker.journal.record_result=fail
@@ -137,9 +142,9 @@ def test_real_invoker_result_shape_is_persisted_and_replayed(database):
     invoker,resolution,_,_,transport=assembly()
     response=invoker(resolution,'approved facts','approved_internal_knowledge')
     assert isinstance(response['usageReceipts'][0]['observedAt'],datetime)
-    worker=ContentExecutionWorker(factory,prepare=prepare,invoke=lambda *_:response,storage_schema=database.schema)
+    worker=ContentExecutionWorker(factory,prepare=prepare,invoke=lambda *_,**__:response,storage_schema=database.schema)
     saved=worker.run_one(scope,rid)
-    worker.invoke=lambda *_:pytest.fail('duplicate send')
+    worker.invoke=lambda *_,**__:pytest.fail('duplicate send')
     assert worker.run_one(scope,rid)==saved
     assert isinstance(saved['result']['usageReceipts'][0]['observedAt'],str)
     assert saved['result']['tokens']==12 and len(transport.calls)==1
@@ -184,9 +189,11 @@ def test_runner_uses_pending_selector_and_returns_only_status(database):
     database.owner.execute('''INSERT INTO ecommerce_growth_runtime_command_receipt
         VALUES(%s,%s,'ecommerce_growth_content_generate',%s,%s,%s)''',
         (*scope.key,command['idempotencyKey'],'sha256:'+_payload(command)[1],Jsonb(receipt)))
-    runner=CurrentContentRunner(connect_factory=factory,storage_schema=database.schema)
+    identity=SimpleNamespace(acquire=lambda scope: object())
+    runner=CurrentContentRunner(connect_factory=factory,storage_schema=database.schema,
+        identity_provider=identity)
     runner.worker=ContentExecutionWorker(factory,prepare=prepare,
-        invoke=lambda *_:{'answer':'sensitive text'},storage_schema=database.schema)
+        invoke=lambda *_,**__:{'answer':'sensitive text'},storage_schema=database.schema)
     assert runner.run_pending(scope)==[{'reservationId':rid,'status':'RESULT_RECORDED'}]
     assert runner.run_pending(scope)==[]
 
@@ -198,7 +205,7 @@ def test_recorded_result_selector_recovers_without_provider_resend(database):
         assert journal.list_recorded(conn,scope)==[]
     calls=[]
     ContentExecutionWorker(factory,prepare=prepare,
-        invoke=lambda *_:calls.append(1) or {'answer':'public result'},
+        invoke=lambda *_,**__:calls.append(1) or {'answer':'public result'},
         storage_schema=database.schema).run_one(scope,rid)
     with factory(scope) as conn:
         assert journal.list_recorded(conn,scope)==[rid]
@@ -209,10 +216,11 @@ def test_recorded_result_selector_recovers_without_provider_resend(database):
 def test_runner_drains_recorded_results_without_invoking_provider(database):
     scope,factory,store,rid,prepare=setup(database,command_factory=content_generate_command)
     ContentExecutionWorker(factory,prepare=prepare,
-        invoke=lambda *_:{'answer':'public result'},storage_schema=database.schema).run_one(scope,rid)
-    runner=CurrentContentRunner(connect_factory=factory,storage_schema=database.schema)
+        invoke=lambda *_,**__:{'answer':'public result'},storage_schema=database.schema).run_one(scope,rid)
+    runner=CurrentContentRunner(connect_factory=factory,storage_schema=database.schema,
+        identity_provider=SimpleNamespace(acquire=lambda scope: object()))
     calls=[]
-    runner.worker.invoke=lambda *_:pytest.fail('result drain must not send')
+    runner.worker.invoke=lambda *_,**__:pytest.fail('result drain must not send')
     runner.consumer=SimpleNamespace(consume=lambda conn,read_scope,read_id:calls.append(read_id))
     assert runner.run_recorded(scope)==[{'reservationId':rid,'status':'RESULT_RECORDED_UNSETTLED'}]
     assert calls==[rid]

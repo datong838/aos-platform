@@ -91,6 +91,23 @@ def _persist_signed_skill_eval_report_with_connection(
                  receipt.actual_hash, receipt.expected_hash, receipt.passed,
                  receipt.detail_code, receipt.occurred_at,
                  receipt.signature_base64, evaluated_at))
+    _persist_eval_report_revision_with_connection(conn,report)
+    for result, pair in zip(report.results, proof.cases, strict=True):
+        conn.execute("""INSERT INTO aip_eval_case_execution_proof
+            (org_id,project_id,run_id,case_id,report_id,report_revision,
+             target_receipt_id,target_claim_hash,judge_receipt_id,
+             judge_claim_hash,verified_at,created_at)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            (*scope, report.run_id, result.case_id, report.report_id,
+             report.revision, pair.target_receipt_id,
+             pair.target_claim_hash, pair.judge_receipt_id,
+             pair.judge_claim_hash, evaluated_at, evaluated_at))
+    return proof
+
+
+def _persist_eval_report_revision_with_connection(conn,report: EvalReportRevision) -> None:
+    """Insert one prevalidated generic Report in the caller-owned transaction."""
+    scope=(report.tenant.org_id,report.tenant.project_id)
     conn.execute("""INSERT INTO aip_eval_report_revision
         (org_id,project_id,report_id,revision,content_hash,run_id,
          suite_ref,target_ref,dataset_ref,judge_ref,results,passed,
@@ -113,14 +130,3 @@ def _persist_signed_skill_eval_report_with_connection(
            for ref in (report.eval_contract_ref, report.subject_artifact_ref,
                        report.stage_attempt_ref, report.gate_policy_ref)),
          report.evidence_cutoff_at))
-    for result, pair in zip(report.results, proof.cases, strict=True):
-        conn.execute("""INSERT INTO aip_eval_case_execution_proof
-            (org_id,project_id,run_id,case_id,report_id,report_revision,
-             target_receipt_id,target_claim_hash,judge_receipt_id,
-             judge_claim_hash,verified_at,created_at)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-            (*scope, report.run_id, result.case_id, report.report_id,
-             report.revision, pair.target_receipt_id,
-             pair.target_claim_hash, pair.judge_receipt_id,
-             pair.judge_claim_hash, evaluated_at, evaluated_at))
-    return proof

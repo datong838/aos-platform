@@ -16,6 +16,14 @@ from aos_api.aip_model_governance_policy_store import AipModelGovernancePolicySt
 from aos_api.aip_network_policy_store import AipNetworkPolicyStore
 from aos_api.aip_runtime_guard_policy_store import AipRuntimeGuardPolicyStore
 from aos_api.aip_exact_provider_invoker import ExactProviderInvoker
+from aos_api.aip_model_route_eval_release_material import (
+    RouteEvalReleaseAssemblyRejected,
+    RouteEvalReleaseEvidenceAssembler,
+)
+from aos_api.aip_route_worker_identity import (
+    RouteWorkerIdentityBlocked,
+    RouteWorkerIdentityProvider,
+)
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef,GrowthPlanLifecycle
 from aos_api.ecommerce_analyst_authority_store import EcommerceAnalystAuthorityStore
 from aos_api.ecommerce_content_execution_journal import ContentExecutionConflict,ContentExecutionJournal
@@ -58,10 +66,10 @@ class CurrentContentPreparation:
         return LockedEcommerceGrowthHostPort._lock_and_revalidate(conn,scope,ref)
 
     @staticmethod
-    def _resolve_route(transaction, scope, route_id, checked_at):
+    def _resolve_route(transaction, scope, route_id, checked_at, route_evidence):
         bound=TransactionBoundConnectFactory(transaction,scope)
         return AipModelRuntimeResolver(AipModelRuntimeStore(bound)).resolve(
-            scope,route_id,now=checked_at)
+            scope,route_id,now=checked_at,route_evidence=route_evidence)
 
     @staticmethod
     def _statement(text, source_numbers):
@@ -105,7 +113,7 @@ class CurrentContentPreparation:
             raise ContentExecutionConflict('content prompt exceeds approved input token cap')
         return prompt
 
-    def __call__(self, conn, scope, command):
+    def __call__(self, conn, scope, command, *, route_request_context=None):
         parsed=_strict_content_generate_command(command)
         row=self._runtime_row(conn,scope,command)
         if (row is None or row['request_hash']!=_request_hash(command)
@@ -127,7 +135,19 @@ class CurrentContentPreparation:
         if plan.sales_weapon_method is None:
             raise ContentExecutionConflict('approved sales weapon method unavailable')
         route_ref=parsed['authorities']['model_route']
-        resolution=self._resolve_route(transaction,scope,route_ref.resource_id,snapshot.checked_at)
+        if route_request_context is None:
+            raise ContentExecutionConflict('current worker identity required')
+        bound=TransactionBoundConnectFactory(transaction,scope)
+        try:
+            route=AipModelRuntimeStore(bound).get_route(
+                scope,route_ref.resource_id,route_ref.revision)
+            route_evidence=RouteEvalReleaseEvidenceAssembler().build_for_route(
+                conn,scope=scope,route=route,request_context=route_request_context)
+        except RouteEvalReleaseAssemblyRejected:
+            raise ContentExecutionConflict(
+                'current business source review required') from None
+        resolution=self._resolve_route(transaction,scope,route_ref.resource_id,
+            snapshot.checked_at,route_evidence)
         price_ref=parsed['authorities']['pricing']
         if (resolution.readiness is not ModelRuntimeReadiness.READY
             or (resolution.route.asset_id,resolution.route.revision,resolution.route.content_hash)
@@ -139,13 +159,14 @@ class CurrentContentPreparation:
             raise ContentExecutionConflict('content exact model route or price unavailable')
         prompt=self._prompt(plan.sales_weapon_method,max_input_tokens=command['maxInputTokens'])
         return PreparedContentInvocation(resolution,prompt,self.data_classification,
-            max_output_tokens=command['maxOutputTokens'])
+            max_output_tokens=command['maxOutputTokens'],route_evidence=route_evidence)
 
 
 class CurrentContentRunner:
     """One bounded pass over committed PENDING commands, never an implicit timer."""
 
-    def __init__(self, *, connect_factory=connect_serializable, storage_schema='public'):
+    def __init__(self, *, connect_factory=connect_serializable, storage_schema='public',
+            identity_provider=None):
         self.connect=connect_factory
         self.journal=ContentExecutionJournal(storage_schema=storage_schema)
         guard=AipRuntimeGuardPolicyStore(connect_factory)
@@ -158,9 +179,14 @@ class CurrentContentRunner:
         self.worker=ContentExecutionWorker(connect_factory,
             prepare=CurrentContentPreparation(),invoke=invoker,
             storage_schema=storage_schema)
+        self.identity_provider=identity_provider or RouteWorkerIdentityProvider()
         self.consumer=ContentResultConsumer(
             context_reader=CurrentContentContextReader(),storage_schema=storage_schema)
         self.status_reader=CurrentContentStatusReader(storage_schema=storage_schema)
+
+    def assert_configuration_ready(self):
+        self.identity_provider.assert_configured(
+            TenantScope('org-org','dev-project'))
 
     def run_pending(self, scope, *, limit=32):
         if type(scope) is not TenantScope:
@@ -170,7 +196,12 @@ class CurrentContentRunner:
         statuses=[]
         for reservation_id in reservation_ids:
             try:
-                result=self.worker.run_one(scope,reservation_id)
+                route_request_context=self.identity_provider.acquire(scope)
+                result=self.worker.run_one(scope,reservation_id,
+                    route_request_context=route_request_context)
+            except RouteWorkerIdentityBlocked:
+                statuses.append({'reservationId':reservation_id,'status':'BLOCKED_CURRENT_AUTHORITY'})
+                continue
             except ContentExecutionConflict:
                 # A pre-submit authority conflict blocks this item, not the queue.
                 statuses.append({'reservationId':reservation_id,'status':'BLOCKED_CURRENT_AUTHORITY'})

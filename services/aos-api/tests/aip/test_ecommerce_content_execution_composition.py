@@ -11,6 +11,9 @@ from aos_api.aip_budget_reservation_store import canonical_hash
 from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal,_payload
 import hashlib
 from aos_api.aip_model_runtime_contracts import ModelRouteResolution
+from aos_api.aip_model_route_eval_proof_authority import RouteEvalReleaseEvidence
+from aos_api.aip_model_route_eval_release_material import RouteEvalReleaseEvidenceAssembler
+from aos_api.aip_model_runtime_store import AipModelRuntimeStore
 from aos_api.tenant_scope import TenantScope
 from aos_api.ecommerce_analyst_authority_store import EcommerceAnalystAuthorityStore
 from test_aip_budget_reservation_pg import content_generate_command
@@ -84,10 +87,19 @@ def test_current_prepare_revalidates_before_creating_bounded_invocation(monkeypa
         resolvedAt=datetime.now(UTC))
     monkeypatch.setattr(CurrentContentPreparation,'_resolve_route',
         staticmethod(lambda *_:calls.append('route') or resolution))
-    prepared=CurrentContentPreparation()(Conn(),scope,item)
-    assert calls==['runtime-row','dispatch','receipt','host','plan','route']
+    evidence=RouteEvalReleaseEvidence(manifest_bytes=b'current',source_commands=())
+    route_revision=SimpleNamespace()
+    monkeypatch.setattr(AipModelRuntimeStore,'get_route',
+        lambda *_:calls.append('route-revision') or route_revision)
+    monkeypatch.setattr(RouteEvalReleaseEvidenceAssembler,'build_for_route',
+        lambda self,*args,**kwargs:calls.append('source-review') or evidence)
+    prepared=CurrentContentPreparation()(Conn(),scope,item,
+        route_request_context=object())
+    assert calls==['runtime-row','dispatch','receipt','host','plan',
+        'route-revision','source-review','route']
     assert prepared.max_output_tokens==item['maxOutputTokens']
     assert prepared.data_classification=='approved_internal_knowledge'
+    assert prepared.route_evidence is evidence
     assert '玫瑰面霜' in prepared.prompt
 
 

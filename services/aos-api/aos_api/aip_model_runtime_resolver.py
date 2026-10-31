@@ -5,6 +5,7 @@ Resolution never calls a provider and never changes AgentRun state.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_eval_authority_store import (
@@ -25,6 +26,9 @@ from aos_api.aip_model_runtime_store import (
 )
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
+
+if TYPE_CHECKING:
+    from aos_api.aip_model_route_eval_proof_authority import RouteEvalReleaseEvidence
 
 
 class AipModelRuntimeResolver:
@@ -126,12 +130,16 @@ class AipModelRuntimeResolver:
             checkedAt=checked_at, blockerCodes=list(dict.fromkeys(blockers)),
         )
 
-    def resolve(self, scope: TenantScope, route_id: str, *, now: datetime | None = None) -> ModelRouteResolution:
-        return self._resolve(scope, route_id, now=now)
+    def resolve(
+        self, scope: TenantScope, route_id: str, *, now: datetime | None = None,
+        route_evidence: RouteEvalReleaseEvidence | None = None,
+    ) -> ModelRouteResolution:
+        return self._resolve(scope, route_id, now=now, route_evidence=route_evidence)
 
     def revalidate_selection(
         self, scope: TenantScope, selection: ModelRouteResolution, *,
         now: datetime | None = None,
+        route_evidence: RouteEvalReleaseEvidence | None = None,
     ) -> ModelRouteResolution:
         """Recheck a saved identity, never choose an alternative or grant admission.
 
@@ -161,12 +169,13 @@ class AipModelRuntimeResolver:
         )
         return self._resolve(
             scope, snapshot.route.asset_id, now=checked_at,
-            expected_selection=snapshot,
+            expected_selection=snapshot, route_evidence=route_evidence,
         )
 
     def _resolve(
         self, scope: TenantScope, route_id: str, *, now: datetime | None = None,
         expected_selection: ModelRouteResolution | None = None,
+        route_evidence: RouteEvalReleaseEvidence | None = None,
     ) -> ModelRouteResolution:
         resolved_at = now or datetime.now(UTC)
         route = self._store.get_route(scope, route_id)
@@ -198,9 +207,18 @@ class AipModelRuntimeResolver:
         except ModelRuntimeStoreError:
             blockers.append("runtime_policy_unavailable")
 
-        if not self._gate_passed(
-            scope, route.eval_gate_ref, evaluation_candidate_ref(route), resolved_at
-        ):
+        route_target = evaluation_candidate_ref(route)
+        route_gate_passed = (
+            self._gate_passed(
+                scope, route.eval_gate_ref, route_target, resolved_at,
+                route_evidence=route_evidence,
+            )
+            if route_evidence is not None
+            else self._gate_passed(
+                scope, route.eval_gate_ref, route_target, resolved_at,
+            )
+        )
+        if not route_gate_passed:
             blockers.append("route_eval_gate_not_passed")
 
         selected_model = None
@@ -306,11 +324,15 @@ class AipModelRuntimeResolver:
         ref: VersionedAssetRef,
         expected_target: VersionedAssetRef,
         now: datetime,
+        *,
+        route_evidence: RouteEvalReleaseEvidence | None = None,
     ) -> bool:
         try:
-            self._eval_authority_store.require_exact_passed(
-                scope, ref, expected_target=expected_target, now=now
-            )
+            kwargs = {"expected_target": expected_target, "now": now}
+            if (route_evidence is not None
+                and expected_target.asset_type == "ModelRouteRevision"):
+                kwargs["route_evidence"] = route_evidence
+            self._eval_authority_store.require_exact_passed(scope, ref, **kwargs)
         except AipEvalGateDependencyBlocked:
             return False
         return True

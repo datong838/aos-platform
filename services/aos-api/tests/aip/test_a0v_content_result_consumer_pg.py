@@ -58,10 +58,11 @@ def test_exact_owner_envelope_runs_once_to_measured_readable_artifact(database):
         (*scope.key,command['idempotencyKey'],'sha256:'+_payload(command)[1],json.dumps(receipt)))
     invoker,resolution,_,_,transport=assembly()
     response=invoker(resolution,'公开业务事实','approved_internal_knowledge')
-    runner=CurrentContentRunner(connect_factory=factory,storage_schema=database.schema)
+    runner=CurrentContentRunner(connect_factory=factory,storage_schema=database.schema,
+        identity_provider=SimpleNamespace(acquire=lambda scope: object()))
     calls=[]
     runner.worker=ContentExecutionWorker(factory,prepare=prepare,
-        invoke=lambda *_: calls.append(1) or response,storage_schema=database.schema)
+        invoke=lambda *_,**__: calls.append(1) or response,storage_schema=database.schema)
     runner.consumer=ContentResultConsumer(
         context_reader=lambda *_:dict(runId='run',productNames=['玫瑰面霜'],
             channels=['微信小店'],constraintChecks=['库存待核']),storage_schema=database.schema)

@@ -5,9 +5,11 @@ import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
-import { spawn } from 'node:child_process';
+import { spawn, execFile as execFileCb } from 'node:child_process';
+import { promisify } from 'node:util';
 import {randomUUID} from 'node:crypto';
 import {withProfileLock, atomicState, processIdentity, assertProcess, assertListener, guardConnection, handoffConfig, publicUrl} from './session_guard.mjs';
+const execFile=promisify(execFileCb);
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const DEFAULT_ROOT = path.join(os.homedir(), 'Library/Application Support/AOS Background Chrome');
@@ -66,6 +68,36 @@ async function readState(p) { try{return JSON.parse(await fsp.readFile(p.state,'
 function pidAlive(pid) { if(!Number.isInteger(pid)||pid<=1)return false;try{process.kill(pid,0);return true;}catch{return false;} }
 async function writeState(p,value) {await fsp.mkdir(p.meta,{recursive:true,mode:0o700});await atomicState(p,value);}
 
+async function hasProfileProcess(profile) {
+  const {stdout}=await execFile('/bin/ps',['-Ao','command='],{maxBuffer:2*1024*1024});
+  const binding=`--user-data-dir=${profile}`;
+  return stdout.split('\n').some(command=>command.includes(binding));
+}
+
+export async function clearStoppedProfileLock(p,state,{
+  host=os.hostname(),isAlive=pidAlive,profileProcess=hasProfileProcess,portFree=portAvailable,fsApi=fsp,nextPort=null
+}={}) {
+  const lock=path.join(p.profile,'SingletonLock');let stat;
+  try{stat=await fsApi.lstat(lock);}catch(error){if(error.code==='ENOENT')return false;throw error;}
+  // Stale-lock cleanup is allowed only for recorded stopped instances (headless/visible
+  // legacy path) or handoff instances whose process exited without a formal `stop` —
+  // e.g. visible-handoff sessions closed by the user while the OS kept the lock file.
+  const recordedPort=state?.mode==='headless'?state.port
+    :state?.mode==='visible'?nextPort
+    :state?.mode==='visible-handoff'?(Number.isInteger(state.port)?state.port:null)
+    :null;
+  const cleanlyStopped=state?.status==='stopped';
+  const handoffExited=state?.mode==='visible-handoff'&&!cleanlyStopped&&
+    typeof state.phase==='string'&&['WINDOW_RELEASED','TAKEOVER_VERIFIED','USER_CONFIRMED'].includes(state.phase);
+  if(!stat.isSymbolicLink()||!state||!(cleanlyStopped||handoffExited)||
+      state.profile!==p.name||state.profilePath!==p.profile||!Number.isInteger(state.pid)||
+      !Number.isInteger(recordedPort)||await isAlive(state.pid)||
+      await profileProcess(p.profile)||!(await portFree(recordedPort)))throw Error('profile-lock-present');
+  let target;try{target=await fsApi.readlink(lock);}catch{throw Error('profile-lock-present');}
+  if(target!==`${host}-${state.pid}`)throw Error('profile-lock-present');
+  await fsApi.unlink(lock);return true;
+}
+
 async function init(options) {
   const p=pathsFor(options);await fsp.mkdir(p.meta,{recursive:true,mode:0o700});
   return {ok:true,command:'init',profile:p.name,profilePath:p.profile};
@@ -81,7 +113,7 @@ async function launchUnlocked(options,mode) {
   if(!['visible','visible-handoff','headless'].includes(mode))throw Error('invalid-mode');
   const config=mode==='visible-handoff'?handoffConfig(options):null;
   // Chrome's own profile lock also catches an unrecorded live instance.
-  try{await fsp.lstat(path.join(p.profile,'SingletonLock'));throw Error('profile-lock-present');}catch(e){if(e.code!=='ENOENT')throw e;}
+  await clearStoppedProfileLock(p,old,{nextPort:mode==='headless'?validPort(options.port || '9230'):null});
   const url=config?.url || options.url || 'about:blank';
   const args=[`--user-data-dir=${p.profile}`,'--no-first-run','--no-default-browser-check',...optionalLaunchArgs(options)];
   let port=null;

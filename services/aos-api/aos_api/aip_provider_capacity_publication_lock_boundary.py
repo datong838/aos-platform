@@ -48,11 +48,17 @@ def require_publication_lock_boundary(conn):
         raise CapacityPublicationLockBlocked('CAPACITY_PUBLICATION_ORIGINAL_LOCK_BOUNDARY_DRIFTED')
     try:
         require_original_fact_boundary(conn)
+        from aos_api.aip_provider_capacity_occupation_epoch_profile import occupation_epoch_profile_is_installed
+        occupation_profile = occupation_epoch_profile_is_installed(conn)
     except ValueError as error:
         raise CapacityPublicationLockBlocked('CAPACITY_PUBLICATION_LOCK_OWNER_DRIFTED') from error
     role_oid = conn.execute('SELECT oid FROM pg_roles WHERE rolname=%s', (OWNER,)).fetchone()['oid']
     ids = []
-    for signature, (neutral_owner, digest) in EPOCH_FUNCTIONS.items():
+    expected_functions = dict(EPOCH_FUNCTIONS)
+    if occupation_profile:
+        expected_functions['public.aos_capacity_evidence_epoch_lock(text,text,text)'] = (
+            'aos_capacity_evidence_epoch_owner', FUNCTIONS['lock'])
+    for signature, (neutral_owner, digest) in expected_functions.items():
         row = conn.execute('SELECT p.oid,r.rolname,l.lanname,p.prosecdef,p.proconfig,p.prorettype,'
             'p.proargtypes::text AS args,p.prosrc FROM pg_proc p JOIN pg_roles r ON r.oid=p.proowner '
             'JOIN pg_language l ON l.oid=p.prolang WHERE p.oid=to_regprocedure(%s)', (signature,)).fetchone()
@@ -63,6 +69,8 @@ def require_publication_lock_boundary(conn):
             deny()
         ids.append(row['oid'])
         allowed={neutral_owner,OWNER,'aos_provider_capacity_issuer'}
+        if signature=='public.aos_capacity_evidence_epoch_lock(text,text,text)':
+            allowed={neutral_owner,OWNER,'aos_runtime'}
         if neutral_owner=='aos_capacity_withdrawal_epoch_owner':
             allowed.add('aos_runtime')
         acl=conn.execute("SELECT coalesce(r.rolname,'PUBLIC') AS role,a.privilege_type,a.is_grantable "
@@ -75,7 +83,7 @@ def require_publication_lock_boundary(conn):
     grants = conn.execute('SELECT p.oid,a.privilege_type,a.is_grantable FROM pg_proc p,'
         'LATERAL aclexplode(p.proacl) a WHERE p.pronamespace=\'public\'::regnamespace '
         'AND p.proowner<>%s AND a.grantee=%s', (role_oid,role_oid)).fetchall()
-    if (len(grants)!=2 or {r['oid'] for r in grants}!=set(ids)
+    if (len(grants)!=len(expected_functions) or {r['oid'] for r in grants}!=set(ids)
         or any(r['privilege_type']!='EXECUTE' or r['is_grantable'] for r in grants)):
         deny()
     # PUBLIC remains effective for NOINHERIT. Future Source must independently audit Owner-owned entrypoints;

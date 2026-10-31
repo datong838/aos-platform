@@ -65,6 +65,21 @@
 
 完整检测、恢复和禁止动作见 [运行与故障手册](operations-runbook.md)。
 
+## 2026-09-28 受控停止后的陈旧 SingletonLock 恢复方案
+
+### 现场根因
+
+- 服务商专用 Chrome `taobao-agent-service:9231` 的 CDP 请求超时，原生产工作流在采集前停止，没有进入审计后的微信阶段，机器回执证明发送次数为 0、游标和历史未写入。
+- 通过本技能 `stop` 已精准停止元数据绑定的 PID 5129，但原有 `start` 随后拒绝 `profile-lock-present`。只读检查显示 `SingletonLock` 是目标 profile 内指向当前主机和旧 PID 的符号链接，旧 PID 与同 profile Chrome 进程均已退出，9231 已空闲。
+- 当前硬拒绝保护未知残留锁是正确的；缺少的只是“由本技能成功 stop 后、可证明属于刚停止实例”的窄恢复路径。不得因此泛化为删除任意锁。
+
+### 最小实现与验证
+
+1. 只允许自动清理本技能最近一次成功 `stop` 写入 `status=stopped`、profile 路径和旧 PID 完整匹配的 `SingletonLock`。
+2. 清理前必须同时验证锁是符号链接、目标逐字等于 `<当前主机名>-<旧 PID>`、旧 PID 不存在、系统进程列表中没有任何带相同 `--user-data-dir` 的 Chrome 子进程，且旧状态记录的 CDP 端口空闲。任一条件不满足或状态来源不完整时，维持原 `profile-lock-present` 拒绝，不触碰锁。
+3. 清理动作封装在 `background_chrome.mjs` 的代码入口内；测试用临时 profile 注入进程、端口和主机观察器，覆盖唯一合法恢复、主机/PID 不匹配、旧进程/子进程仍在、端口仍占用、状态未标记 stopped、非符号链接及无锁路径。生产 profile 只由既有 `start` 通过完整门禁后启动。
+4. 更新运行手册以记录这条受限恢复；仍禁止 `killall`、手工删锁、连接其他 Chrome 或绕过端口与 profile 绑定。
+
 ## 本轮写入边界
 
 只在 `plugins/browser/control-background-dedicated-chrome/` 新增或修改文件。测试 profile 与收据使用 `/tmp`，不修改仓库其他目录。

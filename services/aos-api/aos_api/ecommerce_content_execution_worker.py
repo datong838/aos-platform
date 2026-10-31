@@ -6,6 +6,7 @@ from psycopg import sql
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, canonical_hash
 from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
+from aos_api.aip_model_route_eval_proof_authority import RouteEvalReleaseEvidence
 from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal, ContentExecutionConflict
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
@@ -17,6 +18,7 @@ class PreparedContentInvocation:
     prompt: str = field(repr=False)
     data_classification: str
     max_output_tokens: int | None = None
+    route_evidence: RouteEvalReleaseEvidence | None = field(default=None, repr=False)
 
 
 class ContentExecutionFailure(RuntimeError):
@@ -37,7 +39,7 @@ class ContentExecutionWorker:
             authority_schema=self.schema,
         )
 
-    def run_one(self, scope, reservation_id):
+    def run_one(self, scope, reservation_id, *, route_request_context=None):
         with self.connect(scope) as conn:
             evidence = self.journal.read(conn, scope, reservation_id)
             if evidence is None:
@@ -54,7 +56,11 @@ class ContentExecutionWorker:
                 return {'status': 'RECONCILE_ONLY', 'result': None}
             if observed['state'] != 'held':
                 raise ContentExecutionConflict('content reservation cannot be submitted')
-            prepared = self.prepare(conn, scope, evidence['command'])
+            if route_request_context is None:
+                prepared = self.prepare(conn, scope, evidence['command'])
+            else:
+                prepared = self.prepare(conn, scope, evidence['command'],
+                    route_request_context=route_request_context)
             if not isinstance(prepared, PreparedContentInvocation):
                 raise ContentExecutionConflict('trusted preparation required')
             reservation = self.journal._reservation(conn, scope, reservation_id)
@@ -70,6 +76,8 @@ class ContentExecutionWorker:
             resolution = prepared.resolution
             if resolution.readiness is not ModelRuntimeReadiness.READY or not prepared.prompt.strip() or not prepared.data_classification.strip():
                 raise ContentExecutionConflict('prepared content is not ready')
+            if type(prepared.route_evidence) is not RouteEvalReleaseEvidence:
+                raise ContentExecutionConflict('current business source review required')
             if prepared.max_output_tokens is not None and (
                 type(prepared.max_output_tokens) is not int
                 or not 1 <= prepared.max_output_tokens <= 1_000_000
@@ -97,13 +105,11 @@ class ContentExecutionWorker:
             conn.commit()
         # No caller-owned transaction remains open across the remote request.
         try:
-            if prepared.max_output_tokens is None:
-                result = self.invoke(resolution, prepared.prompt, prepared.data_classification)
-            else:
-                result = self.invoke(
-                    resolution, prepared.prompt, prepared.data_classification,
-                    max_output_tokens=prepared.max_output_tokens,
-                )
+            invoke_kwargs = {'route_evidence': prepared.route_evidence}
+            if prepared.max_output_tokens is not None:
+                invoke_kwargs['max_output_tokens'] = prepared.max_output_tokens
+            result = self.invoke(resolution, prepared.prompt,
+                prepared.data_classification, **invoke_kwargs)
         except Exception:
             try:
                 with self.connect(scope) as conn:

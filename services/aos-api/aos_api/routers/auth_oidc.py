@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 
 from aos_api.errors import ApiError
 from aos_api.auth import Principal, require_principal
@@ -13,6 +13,7 @@ from aos_api.oidc import (
     external_only,
     issue_dev_token,
     issue_password_token,
+    issue_refresh_token,
     local_jwks,
     public_config,
     token_url,
@@ -47,6 +48,7 @@ class TokenIn(BaseModel):
     alg: str = "HS256"
     username: str = ""
     password: str = ""
+    refreshToken: SecretStr | None = None
 
 
 @router.get("/v1/auth/oidc")
@@ -63,6 +65,15 @@ def oidc_jwks() -> dict[str, Any]:
 @router.post("/v1/auth/token")
 def issue_token(body: TokenIn) -> dict[str, Any]:
     gt = (body.grantType or "dev").lower()
+    if gt == "refresh_token":
+        if not token_url():
+            raise ApiError(code="UNSUPPORTED_GRANT", message="会话续期服务未配置。", status_code=400)
+        if body.refreshToken is None or not body.refreshToken.get_secret_value():
+            raise ApiError(code="VALIDATION", message="缺少会话续期凭据。", status_code=400)
+        try:
+            return issue_refresh_token(refresh_token=body.refreshToken.get_secret_value())
+        except ValueError as exc:
+            raise ApiError(code="OIDC_TOKEN_FAILED", message="会话续期失败，请重新登录。", status_code=401) from exc
     if gt == "password":
         if not token_url():
             raise ApiError(
@@ -88,7 +99,7 @@ def issue_token(body: TokenIn) -> dict[str, Any]:
     if gt != "dev":
         raise ApiError(
             code="UNSUPPORTED_GRANT",
-            message="supported grantType: dev | password (when TOKEN_URL set)",
+            message="supported grantType: dev | password | refresh_token (when TOKEN_URL set)",
             status_code=400,
         )
     if not allow_dev():

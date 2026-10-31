@@ -473,6 +473,7 @@ async def _start_content_execution_worker(_app: FastAPI, stop: asyncio.Event) ->
     try:
         runtime_worker_dsn()  # Validate a distinct host-only identity; never log the DSN.
         runner = _build_content_execution_runner()
+        runner.assert_configuration_ready()
     except Exception:
         _app.state.content_execution_worker_status = 'FAILED_CLOSED'
         raise

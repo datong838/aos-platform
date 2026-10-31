@@ -229,6 +229,12 @@ class AipModelEvalBudgetReservationStore:
             daily_limit_minor=int(budget["daily_limit_minor"]),
             pilot_limit_minor=int(budget["monthly_limit_minor"]),
         )
+        # Same shared order as ordinary and Judge holds; do not hold a bucket
+        # while waiting for the original writable fee-risk fence.
+        self._ordinary._cost_risk_authority(
+            conn, scope, budget_ref, price_ref, request.upper_bound_minor,
+            provider_ref=self._ref(request.provider_ref, "ProviderInstanceRevision"),
+        )
         self._ordinary._prepare_and_lock_buckets(conn, scope, buckets)
         for bucket in buckets:
             row = self._ordinary._bucket_row(conn, scope, bucket)

@@ -3,6 +3,7 @@ import { getTenant } from '../../api/tenant';
 import { inquireCost, readCostReview, restoreCostReference, saveCostReference, submitCost,
  type CostRef, type CostReview, type CostResult } from '../../api/aipBudgetCost';
 import { budgetIdentity, useBudgetRequestGuard } from './useBudgetRequestGuard';
+import {BudgetPolicyWindowReviewPanel} from './BudgetPolicyWindowReviewPanel';
 
 export function BudgetCostReviewPanel(){
  const initial=useRef(restoreCostReference(typeof window==='undefined'?'':window.location.search));
@@ -47,7 +48,7 @@ export function BudgetCostReviewPanel(){
   await run(async()=>{saveCostReference(original,true);return {ref:original,result:await submitCost(original,source,choice,reason,operation==='configure'?consumption??undefined:undefined)};});
  }
  const p=source?.proposal.proposal,t=p?.target,b=p?.basis;
- return <section className="card" aria-label="费用风险审核与恢复" style={{padding:18,marginTop:16}}>
+ return <><section className="card" aria-label="费用风险审核与恢复" style={{padding:18,marginTop:16}}>
   <h2>费用风险审核与恢复</h2>
   <p>开发风险额度是待审核的费用承担范围，不是实际账单或 Provider 计费上限。批准仅记录审核意见；发起人可另行启用已批准预算。启用预算不会启动模型或业务，执行时仍须核验当前授权与额度。</p>
   <div style={{display:'flex',flexWrap:'wrap',gap:12}}>
@@ -77,5 +78,5 @@ export function BudgetCostReviewPanel(){
   <div style={{marginTop:12}}><button type="button" className="btn btn-primary" disabled={guard.busy||!eligible()} onClick={()=>void submit()}>{operation==='configure'?'生成费用配置':operation==='consume'?'启用已批准预算':operation==='decide'?'提交费用复核':'撤销费用批准'}</button></div>
   <p role="status">{message}</p>{result?.status==='observed'&&<p>原记录：{result.id}</p>}
   {result?.status==='observed'&&result.priceRef&&result.policyRef&&<div aria-label="费用配置历史引用"><p>价格配置：{result.priceRef.assetId} · 第 {result.priceRef.revision} 版</p><p>预算策略：{result.policyRef.assetId} · 第 {result.policyRef.revision} 版</p><p>这些引用证明原配置已生成，不代表当前仍有效或业务已运行。</p></div>}
- </section>;
+ </section><BudgetPolicyWindowReviewPanel/></>;
 }

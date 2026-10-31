@@ -97,6 +97,17 @@ class PluginAuthority:
         return self.assets.plugin
 
 
+class EvalAuthority:
+    def __init__(self):
+        self.calls = []
+        self.error = None
+
+    def require_exact_passed(self, scope, gate, *, expected_target, route_evidence=None):
+        self.calls.append((scope, gate, expected_target, route_evidence))
+        if self.error is not None:
+            raise self.error
+
+
 class SecretResolver:
     def __init__(self, value="top-secret"):
         self.value = value
@@ -146,7 +157,16 @@ def assembly(*, org_id="org-org", model_hash=HASH, region="cn-shanghai"):
             content_hash=HASH,
             lifecycle=ModelRuntimeLifecycle.ACTIVE,
             runtime_policy_ref=policy_ref,
+            eval_gate_ref=ref("EvalGateDecision", "route-gate"),
             candidates=[SimpleNamespace(model=model_ref)],
+            model_dump=lambda **_: {
+                "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+                "routeId": "route-1", "revision": 1, "contentHash": HASH,
+                "runtimePolicyRef": policy_ref.model_dump(mode="json", by_alias=True),
+                "evalGateRef": ref("EvalGateDecision", "route-gate").model_dump(
+                    mode="json", by_alias=True),
+                "candidates": [{"model": model_ref.model_dump(mode="json", by_alias=True)}],
+            },
         ),
         policy=SimpleNamespace(
             policy_id="policy-1",
@@ -234,12 +254,14 @@ def assembly(*, org_id="org-org", model_hash=HASH, region="cn-shanghai"):
     )
     secret = SecretResolver()
     transport = Transport()
+    eval_authority = EvalAuthority()
     invoker = ExactProviderInvoker(
         model_store=Store(assets),
         guard_store=GuardStore(assets),
         network_store=NetworkStore(assets),
         governance_store=GovernanceStore(),
         plugin_authority=PluginAuthority(assets),
+        eval_authority_store=eval_authority,
         secret_resolver=secret,
         transport=transport,
     )
@@ -282,6 +304,48 @@ def test_exact_invoker_composes_approved_request_and_returns_minimal_usage() -> 
     }
     assert timeout_ms == 30_000
     assert "top-secret" not in repr(result)
+
+
+def test_current_route_publication_is_rechecked_before_secret_and_transport() -> None:
+    from aos_api.aip_eval_authority_store import AipEvalGateDependencyBlocked
+
+    invoker, resolution, _, secret, transport = assembly()
+    evidence = object()
+    result = invoker(
+        resolution,
+        "只处理批准的非敏感事实",
+        "approved_internal_knowledge",
+        route_evidence=evidence,
+    )
+    calls = invoker._eval_authority_store.calls
+    assert result["answer"] == "真实回答"
+    assert len(calls) == 1
+    assert calls[0][1].asset_type == "EvalGateDecision"
+    assert calls[0][2].asset_type == "ModelRouteRevision"
+    assert calls[0][3] is evidence
+
+    blocked, resolution, _, blocked_secret, blocked_transport = assembly()
+    blocked._eval_authority_store.error = AipEvalGateDependencyBlocked("revoked")
+    with pytest.raises(ExactProviderInvocationError, match="route_release_authority_blocked"):
+        blocked(
+            resolution,
+            "prompt-must-not-leak",
+            "approved_internal_knowledge",
+            route_evidence=evidence,
+        )
+    assert blocked_secret.calls == 0
+    assert blocked_transport.calls == []
+
+    missing, resolution, _, missing_secret, missing_transport = assembly()
+    missing._eval_authority_store.error = AipEvalGateDependencyBlocked("evidence missing")
+    with pytest.raises(ExactProviderInvocationError, match="route_release_authority_blocked"):
+        missing(
+            resolution,
+            "prompt-must-not-leak",
+            "approved_internal_knowledge",
+        )
+    assert missing_secret.calls == 0
+    assert missing_transport.calls == []
 
 
 def test_text_invoker_enforces_command_output_token_cap() -> None:

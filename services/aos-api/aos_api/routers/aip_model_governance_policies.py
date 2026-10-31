@@ -1,5 +1,14 @@
 """Tenant-scoped quota and budget-policy authority API."""
-from fastapi import APIRouter, Depends, Header, Query, status
+from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
+from starlette.concurrency import run_in_threadpool
+
+from aos_api.aip_budget_policy_renewal_contracts import PolicyIdentifier
+from aos_api.aip_budget_policy_renewal_review import (
+    BudgetPolicyRenewalReviewReader, BudgetPolicyRenewalReviewSource,
+    BudgetPolicyRenewalReviewUnavailable, BudgetPolicyRenewalCheckerDenied,
+    BudgetPolicyRenewalCheckerView,
+)
+from aos_api.aip_budget_policy_renewal_identity import _HUMAN
 
 from aos_api.aip_model_governance_policy_contracts import (
     BudgetPolicyRevision, BudgetPolicyRevisionCreate,
@@ -23,6 +32,10 @@ _STORE = AipModelGovernancePolicyStore()
 
 def get_store() -> AipModelGovernancePolicyStore:
     return _STORE
+
+
+def get_budget_renewal_review_reader() -> BudgetPolicyRenewalReviewReader:
+    return BudgetPolicyRenewalReviewReader()
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -95,3 +108,57 @@ def publish_budget(body: BudgetPolicyRevisionCreate, idempotency_key: str = Head
 def get_budget(policy_id: str, revision: int | None = Query(default=None, ge=1),
                principal: Principal = Depends(require_principal), store: AipModelGovernancePolicyStore = Depends(get_store)):
     return _get("get_budget", policy_id, revision, principal, store)
+
+
+@router.get("/budgets/{policy_id}/renewal-source", response_model=BudgetPolicyRenewalReviewSource)
+async def get_budget_renewal_source(
+    policy_id: PolicyIdentifier, request: Request, response: Response,
+    principal: Principal = Depends(require_principal),
+    reader: BudgetPolicyRenewalReviewReader = Depends(get_budget_renewal_review_reader),
+):
+    scope = _scope(principal)
+    if scope.key != ("org-org", "dev-project"):
+        raise ApiError(code="AIP_BUDGET_RENEWAL_SCOPE_DENIED",
+                       message="当前组织与工作区不支持此预算续期审阅。", status_code=403)
+    if request.query_params:
+        raise ApiError(code="AIP_INVALID_ARGUMENT",
+                       message="预算续期源接口不接受查询参数。", status_code=400)
+    async for chunk in request.stream():
+        if chunk:
+            raise ApiError(code="AIP_INVALID_ARGUMENT",
+                           message="预算续期源接口不接受请求内容。", status_code=400)
+    try:
+        result = await run_in_threadpool(reader.read, scope, policy_id)
+        response.headers["Cache-Control"] = "no-store"
+        return result
+    except ModelGovernancePolicyNotFound as exc:
+        raise _map(exc) from exc
+    except BudgetPolicyRenewalReviewUnavailable as exc:
+        raise ApiError(code="AIP_BUDGET_RENEWAL_SOURCE_UNAVAILABLE",
+                       message="预算续期来源暂不可核对，请稍后重新读取。", status_code=503) from exc
+
+
+@router.get("/renewal-checker", response_model=BudgetPolicyRenewalCheckerView)
+async def get_budget_renewal_checker(
+    request: Request, response: Response, principal: Principal = Depends(require_principal),
+    reader: BudgetPolicyRenewalReviewReader = Depends(get_budget_renewal_review_reader),
+):
+    scope = _scope(principal)
+    if principal.token_kind != "oidc" or principal.subject != _HUMAN or scope.key != ("org-org", "dev-project"):
+        raise ApiError(code="AIP_BUDGET_RENEWAL_CHECKER_DENIED",
+                       message="当前管理员身份不可核对。", status_code=403)
+    if request.query_params:
+        raise ApiError(code="AIP_INVALID_ARGUMENT", message="身份核验不接受查询参数。", status_code=400)
+    async for chunk in request.stream():
+        if chunk:
+            raise ApiError(code="AIP_INVALID_ARGUMENT", message="身份核验不接受请求内容。", status_code=400)
+    try:
+        result = await run_in_threadpool(reader.read_checker, scope, principal.subject)
+        response.headers["Cache-Control"] = "no-store"
+        return result
+    except BudgetPolicyRenewalCheckerDenied as exc:
+        raise ApiError(code="AIP_BUDGET_RENEWAL_CHECKER_DENIED",
+                       message="当前管理员成员资格不可核对。", status_code=403) from exc
+    except BudgetPolicyRenewalReviewUnavailable as exc:
+        raise ApiError(code="AIP_BUDGET_RENEWAL_SOURCE_UNAVAILABLE",
+                       message="管理员身份来源暂不可核对。", status_code=503) from exc

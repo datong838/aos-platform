@@ -73,8 +73,9 @@ def native_roles(caller, tmp_path):
         finally:
             for role, path in paths.items():
                 admin.execute(sql.SQL('ALTER ROLE {} NOLOGIN PASSWORD NULL').format(sql.Identifier(role)))
-                path.write_text('# removed\n')
             admin.commit()
+            for path in paths.values():
+                path.write_text('# removed\n')
 
 
 def invoke(conn, operation, command, actor=None):
@@ -1060,6 +1061,56 @@ def test_deferred_commit_rejects_expired_returned_dto(native_roles, committed_ca
     persist_signed_case(case,state)
 
 
+def clean_parent_case_location(name):
+    """Explicit new synthetic case location; this marker grants no DB authority."""
+    import hashlib
+    import re
+    import stat
+    assert name in {'window-clean-parent-revocation-r1','window-clean-legacy-renewal-r1','window-clean-drift-member-r1',
+                    'window-clean-drift-budget_head-r1','window-clean-drift-provider_head-r1','window-clean-drift-wire_source-r1'}
+    namespace = os.environ.get('AOS_POLICY_WINDOW_CASE_NAMESPACE')
+    expected_hash = os.environ.get('AOS_POLICY_WINDOW_CASE_CONTEXT_SHA256')
+    if namespace is None and expected_hash is None:
+        return Path('/tmp') / name, None
+    assert type(namespace) is str and re.fullmatch(r'[a-z][a-z0-9-]{0,47}', namespace)
+    assert type(expected_hash) is str and re.fullmatch(r'[0-9a-f]{64}', expected_hash)
+    assert os.environ.get('AOS_POLICY_WINDOW_CLEAN_PARENT_TESTS') == '1'
+    assert os.environ.get('AOS_POLICY_WINDOW_TEST_DATABASE') == 'aos_test_window_http_native_r1_20261018_ti4_test'
+    assert os.environ.get('AOS_POLICY_WINDOW_TEST_CLUSTER') == '7695302940039200809'
+    root = Path('/tmp') / ('qyh-native-cases-' + namespace)
+    root_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        info = os.fstat(root_fd)
+        assert (stat.S_ISDIR(info.st_mode) and stat.S_IMODE(info.st_mode) == 0o700
+                and info.st_uid == os.geteuid() and info.st_gid == os.getegid())
+        fd = os.open('namespace.json', os.O_RDONLY | os.O_NOFOLLOW, dir_fd=root_fd)
+        with os.fdopen(fd, 'rb') as stream:
+            info = os.fstat(stream.fileno())
+            assert (stat.S_ISREG(info.st_mode) and stat.S_IMODE(info.st_mode) == 0o600
+                    and info.st_uid == os.geteuid() and info.st_gid == os.getegid()
+                    and info.st_nlink == 1 and 0 < info.st_size <= 4096)
+            raw = stream.read(4097)
+            assert len(raw) == info.st_size and hashlib.sha256(raw).hexdigest() == expected_hash
+    finally:
+        os.close(root_fd)
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            assert key not in result, 'duplicate namespace marker key'
+            result[key] = value
+        return result
+    context = json.loads(raw, object_pairs_hook=unique)
+    assert type(context) is dict and all(type(v) is str for v in context.values())
+    assert context == dict(schema='aos-native-case-namespace/v1', namespace=namespace,
+        task='qyh-window-http-native-isolation-20261018', thread='01a13484-f019-7d82-94ce-812396db9124',
+        owner='codex-01a13484-f019-7d82-94ce-812396db9124', authorityRevision='AOS-002054',
+        database=os.environ['AOS_POLICY_WINDOW_TEST_DATABASE'], cluster=os.environ['AOS_POLICY_WINDOW_TEST_CLUSTER'],
+        expiresAt=context.get('expiresAt'))
+    expiry = datetime.fromisoformat(context['expiresAt'].replace('Z', '+00:00'))
+    assert expiry.tzinfo is not None and expiry.utcoffset() is not None and expiry > datetime.now(UTC)
+    return root / name, context
+
+
 def prepare_clean_parent(native_roles, issuer_factory, https_signer, monkeypatch, name):
     """Dedicated new parent in the separately installed clean cluster."""
     if os.environ.get('AOS_POLICY_WINDOW_CLEAN_PARENT_TESTS') != '1':
@@ -1068,21 +1119,31 @@ def prepare_clean_parent(native_roles, issuer_factory, https_signer, monkeypatch
     assert name in {'window-clean-parent-revocation-r1','window-clean-legacy-renewal-r1','window-clean-drift-member-r1',
                     'window-clean-drift-budget_head-r1','window-clean-drift-provider_head-r1','window-clean-drift-wire_source-r1'}
     schema = 'aos.synthetic-parent-revocation/v1' if name=='window-clean-parent-revocation-r1' else 'aos.synthetic-parent-authority-drift/v1'
-    directory = Path('/tmp')/name
+    directory, namespace_context = clean_parent_case_location(name)
     directory.mkdir(mode=0o700, exist_ok=True)
     assert not directory.is_symlink() and directory.stat().st_uid == os.geteuid()
     case = directory/'case.json'
     marker = directory/'parent.json'
     state = json.loads(case.read_text()) if case.exists() else None
+    if namespace_context is not None and state is not None:
+        assert (state.get('caseNamespace') == namespace_context['namespace']
+                and state.get('task') == namespace_context['task']
+                and state.get('thread') == namespace_context['thread']
+                and state.get('sourceFixtureTask') == 'qyh-policy-window-native-authority-20261017'
+                and state.get('caseContextSha256') == os.environ['AOS_POLICY_WINDOW_CASE_CONTEXT_SHA256']), 'case namespace provenance mismatch'
     if state and state.get('verified'):
         pytest.skip('completed dedicated parent revocation retained; never recreate it')
     if state and state.get('semanticStarted'):
         pytest.fail('original semantic effect needs readonly reconciliation; never rerun automatically')
     if state is None:
         state = dict(schema=schema,
-            task='qyh-policy-window-native-authority-20261017',thread='01a13484-f019-7d82-94ce-812396db9124',
+            task=namespace_context['task'] if namespace_context is not None else 'qyh-policy-window-native-authority-20261017',thread='01a13484-f019-7d82-94ce-812396db9124',
             database=os.environ['AOS_POLICY_WINDOW_TEST_DATABASE'],cluster=os.environ['AOS_POLICY_WINDOW_TEST_CLUSTER'],
             creatingParent=True,commands={},results={})
+        if namespace_context is not None:
+            state.update(caseNamespace=namespace_context['namespace'],
+                sourceFixtureTask='qyh-policy-window-native-authority-20261017',
+                caseContextSha256=os.environ['AOS_POLICY_WINDOW_CASE_CONTEXT_SHA256'])
         persist_signed_case(case,state)
     elif not marker.exists():
         pytest.fail('parent creation outcome unknown; reconcile this DB, never create a substitute')

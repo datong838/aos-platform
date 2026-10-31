@@ -23,6 +23,20 @@ def test_exact_adapter_returns_authority_refs_without_secret_or_mock():
     assert result["routeRef"]["assetId"]=="route-1" and result["providerRef"]["assetId"]=="provider-1"
     assert "secret" not in str(result).lower()
 
+def test_exact_adapter_hands_same_release_evidence_to_resolution_and_invocation():
+    evidence=object();calls=[]
+    class EvidenceResolver:
+        def resolve(self,scope,route_id,*,route_evidence=None):
+            calls.append(("resolve",scope,route_id,route_evidence));return resolution()
+    def invoke(resolved,prompt,classification,*,route_evidence=None):
+        calls.append(("invoke",resolved.route.asset_id,prompt,classification,route_evidence))
+        return {"answer":"真实回答","provider":"provider-1","model":"model-1",
+            "tokens":12,"route":"exact"}
+    adapter=LLMAdapter(resolver=EvidenceResolver(),provider_invoker=invoke,usage_bridge=Usage())
+    adapter.chat_exact(SCOPE,"route-1","问题",lineage_id="lineage-1",
+        data_classification="approved_internal_knowledge",route_evidence=evidence)
+    assert calls[0][-1] is evidence and calls[1][-1] is evidence
+
 def test_legacy_and_blocked_calls_fail_closed():
     adapter=LLMAdapter(resolver=Resolver(resolution(ModelRuntimeReadiness.BLOCKED)))
     with pytest.raises(LLMRuntimeBlocked,match="exact_scope_and_model_route_required"):adapter.chat("问题")

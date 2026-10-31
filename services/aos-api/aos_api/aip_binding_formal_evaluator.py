@@ -304,7 +304,8 @@ def evaluate_binding_in_transaction(conn, scope, binding_id, request, principal,
         installation_etag=request.installation_etag, loader=loader, release_policy=release_policy)
     _prepare_formal_capacity_head(conn, scope, request.capacity_ref)
     budget = read_formal_budget_fact(conn=conn, scope=scope, budget_ref=budget_ref,
-        price_ref=request.price_ref, provider_ref=request.provider_ref)
+        price_ref=request.price_ref, provider_ref=request.provider_ref,
+        budget_policy_ref=request.budget_policy_ref)
     now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
     store = AipModelRuntimeStore(bound)
     graph, policies, health, deadlines = _protect_runtime_graph(conn, scope, request, store, bound, now)
@@ -369,6 +370,8 @@ def evaluate_binding_in_transaction(conn, scope, binding_id, request, principal,
     legacy_hash = AipBindingReadinessService.snapshot_hash(_versioned(capability_ref), deps)
     budget_fact = asdict(budget)
     budget_fact.pop('checked_at')
+    if budget_fact.get('policy_window_fact') is None:
+        budget_fact.pop('policy_window_fact', None)
     health_fact = asdict(health)
     health_fact.pop('checked_at')
     facts = _json_fact({

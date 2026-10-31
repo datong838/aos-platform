@@ -5,6 +5,7 @@ import { assetControlClient } from "../../../api/assetControl/client";
 import type { RegistrationStatus } from "../../../api/assetControl/registrationStatus";
 import { createWithdrawalIntent, type WithdrawalIntent } from "../../../api/assetControl/registrationWithdrawal";
 import { createIdempotentCommand, idempotencyKeyFor } from "../../../api/assetControl/idempotency";
+import { SuccessorRegistrationPanel } from "./SuccessorRegistrationPanel";
 const identity=()=>{const t=getTenant();return JSON.stringify([t.orgId,t.projectId,t.subject,t.roles]);};
 const subscribe=(f:()=>void)=>{window.addEventListener("aos-tenant-updated",f);return()=>window.removeEventListener("aos-tenant-updated",f);};
 export function RegistrationPanel({installationId,offline}:{installationId:string|null;offline:boolean}) {
@@ -55,5 +56,9 @@ function RegistrationDetails({installationId,scope,offline}:{installationId:stri
     {intent&&<button disabled={busy||loading||offline} onClick={()=>void execute(true)}>回读撤回结果</button>}
     {data?.allowedActions.includes("withdraw")&&!intent&&<button disabled={busy||loading||offline} onClick={()=>setConfirm(true)}>撤回未启用登记</button>}
     {confirm&&<div role="group" aria-label="确认撤回登记"><p>仅释放尚未使用的准备占位，保留历史记录与业务数据。</p><button disabled={busy||loading||offline} onClick={()=>void execute(false)}>确认撤回登记</button><button onClick={()=>setConfirm(false)}>取消</button></div>}
+    <SuccessorRegistrationPanel installationId={installationId}
+      allowedPrepare={data?.state==="unregistered"||data?.state==="withdrawn"}
+      disabled={loading||busy||offline||intent!==null}
+      onRegistered={()=>{setMessage("接续登记已确认，尚未启动业务。");void load();}}/>
   </section>;
 }

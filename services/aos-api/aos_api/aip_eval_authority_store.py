@@ -6,7 +6,7 @@ import json
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_contracts import ArtifactRef, ResourceRef, TenantContext
@@ -33,8 +33,11 @@ from aos_api.aip_eval_contracts import (
     UsageAttribution,
     UsageReceipt,
 )
-from aos_api.db import connect as db_connect
+from aos_api.db import connect as db_connect, connect_serializable
 from aos_api.tenant_scope import TenantScope
+
+if TYPE_CHECKING:
+    from aos_api.aip_model_route_eval_proof_authority import RouteEvalReleaseEvidence
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
 
@@ -494,8 +497,15 @@ class AipEvalAuthorityStore:
         *,
         expected_target: VersionedAssetRef | None = None,
         now: datetime | None = None,
+        route_evidence: RouteEvalReleaseEvidence | None = None,
     ) -> ReleaseGateDecision:
         """Require one exact, unexpired PASSED gate for an optional exact target."""
+        from aos_api.aip_model_route_eval_proof_authority import (
+            RouteEvalReleaseEvidence,
+            RouteEvalReleaseEvidenceRejected,
+            verify_route_eval_release_evidence,
+        )
+
         self._require_scope(scope)
         if ref is None:
             raise AipEvalGateDependencyBlocked("eval gate is unavailable")
@@ -503,56 +513,117 @@ class AipEvalAuthorityStore:
             raise AipEvalGateDependencyBlocked("eval gate ref must be exact revision 1")
         checked_at = now or datetime.now(UTC)
         try:
-            with self._connect(scope) as conn:
+            with self._connect(
+                scope, serializable=route_evidence is not None
+            ) as conn:
                 row = conn.execute(
                     """SELECT * FROM aip_release_gate_decision
                        WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
                     (*scope.key, ref.asset_id),
                 ).fetchone()
+                if row is None:
+                    raise AipEvalGateDependencyBlocked("eval gate is unavailable")
+                gate = ReleaseGateDecision(
+                    tenant=self._tenant(scope),
+                    decision_id=row["decision_id"],
+                    target=row["target_ref"],
+                    suite_ref=row["suite_ref"],
+                    eval_run_id=row["eval_run_id"],
+                    eval_report=row["eval_report_ref"],
+                    status=row["status"],
+                    decision_hash=row["decision_hash"],
+                    invalidated_by=row["invalidated_by"],
+                    decided_by=row["decided_by"],
+                    decided_at=row["decided_at"],
+                    expires_at=row["expires_at"],
+                )
+                if gate.decision_hash != ref.content_hash:
+                    raise AipEvalGateDependencyBlocked("eval gate hash drifted")
+                if gate.status.value != "passed":
+                    raise AipEvalGateDependencyBlocked("eval gate is not passed")
+                if not gate.decided_at <= checked_at < gate.expires_at:
+                    raise AipEvalGateDependencyBlocked(
+                        "eval gate is not currently effective"
+                    )
+                if expected_target is not None:
+                    target_types = {
+                        "RegisteredModelRevision": AssetType.REGISTERED_MODEL,
+                        "ModelRouteRevision": AssetType.MODEL_ROUTE,
+                    }
+                    expected_type = target_types.get(expected_target.asset_type)
+                    if expected_type is None or (
+                        gate.target.asset_type is not expected_type
+                        or gate.target.asset_id != expected_target.asset_id
+                        or gate.target.revision != str(expected_target.revision)
+                        or gate.target.content_hash != expected_target.content_hash
+                    ):
+                        raise AipEvalGateDependencyBlocked("eval gate target drifted")
+                if gate.target.asset_type is AssetType.MODEL_ROUTE:
+                    if type(route_evidence) is not RouteEvalReleaseEvidence:
+                        raise AipEvalGateDependencyBlocked(
+                            "Model/Route signed execution evidence is not supported"
+                        )
+                    publications = conn.execute(
+                        """SELECT p.publication_id
+                           FROM aip_publication_event p
+                           WHERE p.org_id=%s AND p.project_id=%s
+                             AND p.release_gate_decision_id=%s
+                             AND p.event_type='published'
+                             AND NOT EXISTS(
+                               SELECT 1 FROM aip_publication_event r
+                               WHERE r.org_id=p.org_id
+                                 AND r.project_id=p.project_id
+                                 AND r.publication_id=p.publication_id
+                                 AND r.event_type='revoked'
+                             )
+                           ORDER BY p.publication_id
+                           FOR SHARE OF p""",
+                        (*scope.key, gate.decision_id),
+                    ).fetchall()
+                    if len(publications) != 1 or type(publications[0]) is not dict:
+                        raise AipEvalGateDependencyBlocked(
+                            "current Route publication evidence is unavailable"
+                        )
+                    report_row = conn.execute(
+                        """SELECT * FROM aip_eval_report_revision
+                           WHERE org_id=%s AND project_id=%s
+                             AND report_id=%s AND revision=%s""",
+                        (
+                            *scope.key,
+                            gate.eval_report.artifact_id,
+                            int(gate.eval_report.revision),
+                        ),
+                    ).fetchone()
+                    if report_row is None:
+                        raise AipEvalGateDependencyBlocked(
+                            "current Route report is unavailable"
+                        )
+                    from aos_api.aip_release_publication_service import (
+                        AipReleasePublicationService,
+                    )
+
+                    try:
+                        verify_route_eval_release_evidence(
+                            conn,
+                            scope=scope,
+                            report=AipReleasePublicationService._report_from_row(
+                                scope, report_row
+                            ),
+                            evidence=route_evidence,
+                            publication_id=publications[0]["publication_id"],
+                        )
+                    except RouteEvalReleaseEvidenceRejected as exc:
+                        raise AipEvalGateDependencyBlocked(
+                            "current Route release evidence is unavailable"
+                        ) from exc
+                elif gate.target.asset_type is AssetType.REGISTERED_MODEL:
+                    raise AipEvalGateDependencyBlocked(
+                        "Model/Route signed execution evidence is not supported")
+                return gate
         except AipEvalAuthorityError:
             raise
         except Exception as exc:
             raise AipEvalAuthorityPersistenceError("release gate read failed") from exc
-        if row is None:
-            raise AipEvalGateDependencyBlocked("eval gate is unavailable")
-        gate = ReleaseGateDecision(
-            tenant=self._tenant(scope),
-            decision_id=row["decision_id"],
-            target=row["target_ref"],
-            suite_ref=row["suite_ref"],
-            eval_run_id=row["eval_run_id"],
-            eval_report=row["eval_report_ref"],
-            status=row["status"],
-            decision_hash=row["decision_hash"],
-            invalidated_by=row["invalidated_by"],
-            decided_by=row["decided_by"],
-            decided_at=row["decided_at"],
-            expires_at=row["expires_at"],
-        )
-        if gate.decision_hash != ref.content_hash:
-            raise AipEvalGateDependencyBlocked("eval gate hash drifted")
-        if gate.status.value != "passed":
-            raise AipEvalGateDependencyBlocked("eval gate is not passed")
-        if not gate.decided_at <= checked_at < gate.expires_at:
-            raise AipEvalGateDependencyBlocked("eval gate is not currently effective")
-        if expected_target is not None:
-            target_types = {
-                "RegisteredModelRevision": AssetType.REGISTERED_MODEL,
-                "ModelRouteRevision": AssetType.MODEL_ROUTE,
-            }
-            expected_type = target_types.get(expected_target.asset_type)
-            if expected_type is None or (
-                gate.target.asset_type is not expected_type
-                or gate.target.asset_id != expected_target.asset_id
-                or gate.target.revision != str(expected_target.revision)
-                or gate.target.content_hash != expected_target.content_hash
-            ):
-                raise AipEvalGateDependencyBlocked("eval gate target drifted")
-        if gate.target.asset_type in {AssetType.REGISTERED_MODEL, AssetType.MODEL_ROUTE}:
-            raise AipEvalGateDependencyBlocked(
-                "Model/Route signed execution evidence is not supported"
-            )
-        return gate
 
     def append_publication_event(
         self, scope: TenantScope, event: PublicationEvent
@@ -1554,7 +1625,9 @@ class AipEvalAuthorityStore:
         if tenant.org_id != scope.org_id or tenant.project_id != scope.project_id:
             raise ValueError("contract tenant must match authenticated scope")
 
-    def _connect(self, scope: TenantScope):
+    def _connect(self, scope: TenantScope, *, serializable: bool = False):
+        if self._connect_factory is db_connect:
+            return connect_serializable(scope) if serializable else db_connect(scope)
         try:
             return self._connect_factory(scope)
         except TypeError:

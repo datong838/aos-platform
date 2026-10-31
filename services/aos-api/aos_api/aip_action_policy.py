@@ -12,6 +12,12 @@ from aos_api.aip_policy_activation_action import POLICY_ACTIVATION_ACTION_RISK
 
 from aos_api.aip_license_source_action import SOURCE_LICENSE_ISSUANCE_ACTION
 
+# Reserved dedicated producer: generic approval never permits Judge dispatch.
+MODEL_JUDGE_CALL_ACTION_ID = 'aip_request_model_judge_call'
+ROUTE_EVAL_MATERIAL_ACTION_ID = 'aip_prepare_route_eval_application'
+ROUTE_EVAL_CALL_ACTION_IDS = frozenset({'aip_route_eval_target_call', 'aip_route_eval_judge_call'})
+ROUTE_EVAL_ACTION_IDS = ROUTE_EVAL_CALL_ACTION_IDS | {ROUTE_EVAL_MATERIAL_ACTION_ID}
+
 ACTION_APPROVAL_ROLES = frozenset({'admin', 'approver', 'aip_approver'})
 
 _ORDER = {level: index for index, level in enumerate(ActionRiskLevel)}
@@ -23,6 +29,16 @@ class RiskDecision:
     floor: ActionRiskLevel
     reasons: tuple[str, ...]
     approval_policy: dict[str, Any]
+
+
+def _route_eval_reserved_ids(action_type_id, action_snapshot):
+    return frozenset(value for value in (action_type_id, action_snapshot.get('id'))
+                     if type(value) is str and value in ROUTE_EVAL_ACTION_IDS)
+
+
+def is_route_eval_action(action_type_id, action_snapshot) -> bool:
+    """Either exact ID reserves the dedicated protocol, including mismatches."""
+    return bool(_route_eval_reserved_ids(action_type_id, action_snapshot))
 
 
 def classify_action_risk(
@@ -41,7 +57,13 @@ def classify_action_risk(
     ).lower()
     reasons: list[str] = []
     floor = ActionRiskLevel.R1
-    if action_type_id == SOURCE_LICENSE_ISSUANCE_ACTION:
+    route_ids = _route_eval_reserved_ids(action_type_id, action_snapshot)
+    if route_ids & ROUTE_EVAL_CALL_ACTION_IDS:
+        floor = ActionRiskLevel.R2
+        reasons.append('formal_route_eval_call_application')
+    elif ROUTE_EVAL_MATERIAL_ACTION_ID in route_ids:
+        reasons.append('route_eval_material_draft_only')
+    elif action_type_id == SOURCE_LICENSE_ISSUANCE_ACTION:
         floor = ActionRiskLevel.R2
         reasons.append("formal_source_license_issuance")
     elif action_type_id in POLICY_ACTIVATION_ACTION_RISK:
@@ -53,6 +75,9 @@ def classify_action_risk(
     elif action_type_id == 'aip_request_provider_capacity':
         floor = ActionRiskLevel.R2
         reasons.append('formal_provider_allocation_application')
+    elif action_type_id == MODEL_JUDGE_CALL_ACTION_ID:
+        floor = ActionRiskLevel.R2
+        reasons.append('formal_model_judge_call_application')
     elif action_type_id == "aip_request_model_eval":
         floor = ActionRiskLevel.R2
         reasons.append("formal_model_eval_application")
@@ -104,8 +129,12 @@ def classify_action_risk(
     }
     if action_type_id == 'ecommerce_analysis_bootstrap' and level is ActionRiskLevel.R1:
         approval_policy.update(makerChecker=True, draftOnly=False, controlledSourceInitialization=True)
-    if action_type_id in {"aip_request_model_eval", "aip_request_provider_capacity", "aip_review_provider_capacity_source"}:
+    if action_type_id in {MODEL_JUDGE_CALL_ACTION_ID, "aip_request_model_eval", "aip_request_provider_capacity", "aip_review_provider_capacity_source"}:
         approval_policy["executionAllowed"] = False
     if action_type_id == SOURCE_LICENSE_ISSUANCE_ACTION:
         approval_policy.update(executionAllowed=False, sourceLicenseIssuanceOnly=True)
+    if route_ids:
+        approval_policy['executionAllowed'] = False
+    if ROUTE_EVAL_MATERIAL_ACTION_ID in route_ids:
+        approval_policy['draftOnly'] = True
     return RiskDecision(level, floor, tuple(reasons), approval_policy)

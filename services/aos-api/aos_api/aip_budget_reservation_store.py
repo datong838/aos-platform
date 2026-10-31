@@ -158,28 +158,11 @@ class AipBudgetReservationStore:
             daily_limit_minor=int(budget["daily_limit_minor"]),
             pilot_limit_minor=int(budget["monthly_limit_minor"]),
         )
+        # All ordinary/Eval/Judge callers take the shared fee fence before
+        # shared buckets. Retain the original post-wait verification below.
+        self._cost_risk_authority(conn, scope, request.policy_ref, request.pricing_ref, request.upper_bound_minor)
         self._prepare_and_lock_buckets(conn, scope, buckets)
-        for bucket in sorted(
-            buckets, key=lambda item: (item.kind, item.account_id, item.period_start)
-        ):
-            row = self._bucket_row(conn, scope, bucket)
-            if (
-                row is None
-                or row["period_end"] != bucket.period_end
-                or int(row["limit_minor"]) != bucket.limit_minor
-            ):
-                raise BudgetReservationConflict("budget bucket authority drifted")
-            exposure = sum(
-                int(row[name])
-                for name in (
-                    "held_minor",
-                    "submitted_minor",
-                    "settled_minor",
-                    "unknown_minor",
-                )
-            )
-            if exposure + request.upper_bound_minor > bucket.limit_minor:
-                raise BudgetReservationBlocked(f"{bucket.kind} budget limit exceeded")
+        self._require_bucket_room(conn, scope, buckets, request.upper_bound_minor)
 
         # Recheck cost authority after any bucket-lock wait, immediately before the new hold.
         self._cost_risk_authority(conn, scope, request.policy_ref, request.pricing_ref, request.upper_bound_minor)
@@ -653,6 +636,31 @@ class AipBudgetReservationStore:
             self._update_invocation_state(conn, scope, row["invocation_id"], "completed", now)
             updated = self._reservation_by_id(conn, scope, row["reservation_id"], lock=False)
             return self._view(conn, scope, updated, replayed=False)
+
+    def _require_bucket_room(self, conn, scope, buckets, upper_bound_minor):
+        """Original shared three-bucket exposure check; caller already owns locks."""
+        for bucket in sorted(
+            buckets, key=lambda item: (item.kind, item.account_id, item.period_start)
+        ):
+            row = self._bucket_row(conn, scope, bucket)
+            if (
+                row is None
+                or row["period_end"] != bucket.period_end
+                or int(row["limit_minor"]) != bucket.limit_minor
+            ):
+                raise BudgetReservationConflict("budget bucket authority drifted")
+            exposure = sum(
+                int(row[name])
+                for name in (
+                    "held_minor",
+                    "submitted_minor",
+                    "settled_minor",
+                    "unknown_minor",
+                )
+            )
+            if exposure + upper_bound_minor > bucket.limit_minor:
+                raise BudgetReservationBlocked(f"{bucket.kind} budget limit exceeded")
+
 
     def _prepare_and_lock_buckets(
         self,

@@ -157,6 +157,12 @@ class HostTransaction:
             raise TypeError("host transaction query is required")
         return self.__connection.execute(query, params)
 
+    def read_window_risk_fact(self, *, scope, budget_ref, price_ref):
+        """Fixed same-transaction provenance read without exporting the connection."""
+        from aos_api.aip_budget_policy_window_risk_authority import read_native_window_risk_fact
+        return read_native_window_risk_fact(self.__connection, scope=scope,
+                                          budget_ref=budget_ref, price_ref=price_ref)
+
     def run_current_source_snapshot(self, owner, *, scope, ref, actor, execute):
         """Trusted source Owner uses this same connection without exposing it."""
         from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner

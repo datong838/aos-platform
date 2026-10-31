@@ -67,6 +67,7 @@ from aos_api.ecommerce_content_pre_review_eval import (
 from aos_api.ecommerce_content_pre_review_pack import build_content_pre_review_eval_packs
 from aos_api.ecommerce_content_pre_review_authority import require_current_content_pre_review_gate
 from aos_api.ecommerce_content_execution_worker import ContentExecutionWorker, PreparedContentInvocation
+from aos_api.aip_model_route_eval_proof_authority import RouteEvalReleaseEvidence
 from aos_api.ecommerce_content_result_consumer import ContentResultConsumer
 from aos_api.ecommerce_content_step_owner import (
     ContentGenerationStepOwner, ContentGenerationStepSource, ContentStepConflict,
@@ -521,8 +522,9 @@ def _run_controlled_result_and_consume(connect, proof, command, *, consume=True)
     calls = []
     def controlled_prepare(_conn, scope, saved_command):
         assert scope == SCOPE and saved_command == command
-        return PreparedContentInvocation(resolution, "受控测试事实", "approved_internal_knowledge")
-    def controlled_response(_resolution, _prompt, _classification):
+        return PreparedContentInvocation(resolution, "受控测试事实", "approved_internal_knowledge",
+            route_evidence=RouteEvalReleaseEvidence(manifest_bytes=b"test",source_commands=()))
+    def controlled_response(_resolution, _prompt, _classification, **_kwargs):
         calls.append(1)
         observed = datetime.now(UTC).isoformat()
         def measured(kind, quantity):

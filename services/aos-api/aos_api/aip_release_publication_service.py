@@ -10,7 +10,7 @@ import json
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aos_api.aip_contracts import ArtifactRef, TenantContext
 from aos_api.aip_eval_contracts import (
@@ -34,6 +34,10 @@ from aos_api.aip_release_publication_models import (
 )
 from aos_api.db import connect as db_connect, connect_serializable
 from aos_api.tenant_scope import TenantScope
+
+if TYPE_CHECKING:
+    from aos_api.aip_model_route_eval_proof_authority import RouteEvalReleaseEvidence
+    from aos_api.aip_route_release_request_context import RouteReleaseRequestContext
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
 
@@ -102,6 +106,8 @@ class AipReleasePublicationService:
         *,
         actor: str,
         request: DeriveReleaseGateRequest,
+        route_evidence: RouteEvalReleaseEvidence | None = None,
+        route_request_context: RouteReleaseRequestContext | None = None,
     ) -> ReleaseGateDecision:
         actor = self._actor(actor)
         decision_id = self._stable_id("gate", scope, request.idempotency_key)
@@ -111,6 +117,15 @@ class AipReleasePublicationService:
                 if existing is not None:
                     gate = self._gate_from_row(scope, existing)
                     self._require_gate_replay(gate, actor=actor, request=request)
+                    if gate.target.asset_type is AssetType.MODEL_ROUTE:
+                        report = self._verify_gate_evidence(
+                            conn, scope, gate, route_evidence=route_evidence,
+                            route_request_context=route_request_context,
+                        )
+                        self._verify_route_release(
+                            conn, scope, report, route_evidence,
+                            request_context=route_request_context,
+                        )
                     return gate
 
                 report_row = conn.execute(
@@ -129,7 +144,8 @@ class AipReleasePublicationService:
                     raise AipReleasePublicationIntegrityError(
                         "eval report revision/hash verification failed"
                     )
-                self._require_supported_release_target(report.target)
+                self._require_supported_release_target(
+                    report.target, route_evidence, route_request_context)
 
                 run_row = conn.execute(
                     """SELECT * FROM aip_eval_run
@@ -164,6 +180,11 @@ class AipReleasePublicationService:
                     )
                 if report.target.asset_type is AssetType.SKILL_TEMPLATE:
                     self._verify_signed_skill_report(conn, report)
+                elif report.target.asset_type is AssetType.MODEL_ROUTE:
+                    self._verify_route_release(
+                        conn, scope, report, route_evidence,
+                        request_context=route_request_context,
+                    )
 
                 status = (
                     ReleaseGateStatus.PASSED
@@ -219,6 +240,8 @@ class AipReleasePublicationService:
         actor: str,
         request: PublishReleaseRequest,
         expected_target_type: AssetType | None = None,
+        route_evidence: RouteEvalReleaseEvidence | None = None,
+        route_request_context: RouteReleaseRequestContext | None = None,
     ) -> PublicationEvent:
         actor = self._actor(actor)
         publication_id = self._stable_id("publication", scope, request.idempotency_key)
@@ -228,8 +251,13 @@ class AipReleasePublicationService:
                 existing = self._event_row(conn, scope, event_id)
                 if existing is not None:
                     event = self._event_from_row(scope, existing)
-                    if expected_target_type is not None and event.target.asset_type is not expected_target_type:
-                        raise AipReleaseAssetUnsupported("publication target type does not match route")
+                    if (
+                        expected_target_type is not None
+                        and event.target.asset_type is not expected_target_type
+                    ):
+                        raise AipReleaseAssetUnsupported(
+                            "publication target type does not match route"
+                        )
                     if (
                         event.publication_id != publication_id
                         or event.release_gate_decision_id
@@ -241,6 +269,35 @@ class AipReleasePublicationService:
                         raise AipReleasePublicationConflict(
                             "idempotency key was reused with a different publication"
                         )
+                    if event.target.asset_type is AssetType.MODEL_ROUTE:
+                        revoked = conn.execute(
+                            """SELECT 1 FROM aip_publication_event
+                               WHERE org_id=%s AND project_id=%s
+                                 AND publication_id=%s
+                                 AND event_type='revoked'
+                               LIMIT 1""",
+                            (*scope.key, event.publication_id),
+                        ).fetchone()
+                        gate_row = self._gate_row(
+                            conn, scope, event.release_gate_decision_id
+                        )
+                        if revoked is not None or gate_row is None:
+                            raise AipReleaseGateRejected(
+                                "current Route publication evidence is unavailable"
+                            )
+                        gate = self._gate_from_row(scope, gate_row)
+                        report = self._verify_gate_evidence(
+                            conn, scope, gate, route_evidence=route_evidence,
+                            route_request_context=route_request_context,
+                        )
+                        self._verify_route_release(
+                            conn,
+                            scope,
+                            report,
+                            route_evidence,
+                            publication_id=event.publication_id,
+                            request_context=route_request_context,
+                        )
                     return event
 
                 gate_row = self._gate_row(
@@ -251,16 +308,31 @@ class AipReleasePublicationService:
                         "release gate decision not found"
                     )
                 gate = self._gate_from_row(scope, gate_row)
-                if expected_target_type is not None and gate.target.asset_type is not expected_target_type:
-                    raise AipReleaseAssetUnsupported("release gate target type does not match route")
-                self._require_supported_release_target(gate.target)
+                if (
+                    expected_target_type is not None
+                    and gate.target.asset_type is not expected_target_type
+                ):
+                    raise AipReleaseAssetUnsupported(
+                        "release gate target type does not match route"
+                    )
+                self._require_supported_release_target(
+                    gate.target, route_evidence, route_request_context)
                 if gate.status is not ReleaseGateStatus.PASSED:
                     raise AipReleaseGateRejected("release gate is not passed")
                 checked_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
                 if not gate.decided_at <= checked_at < gate.expires_at:
                     raise AipReleaseGateRejected("release gate is expired or not effective")
-                self._verify_gate_evidence(conn, scope, gate)
-                self._verify_publishable_target(conn, scope, gate.target)
+                report = self._verify_gate_evidence(
+                    conn, scope, gate, route_evidence=route_evidence,
+                    route_request_context=route_request_context,
+                )
+                if gate.target.asset_type is AssetType.MODEL_ROUTE:
+                    self._verify_route_release(
+                        conn, scope, report, route_evidence,
+                        request_context=route_request_context,
+                    )
+                else:
+                    self._verify_publishable_target(conn, scope, gate.target)
                 event = PublicationEvent(
                     tenant=self._tenant(scope),
                     event_id=event_id,
@@ -273,6 +345,11 @@ class AipReleasePublicationService:
                     occurred_at=conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"],
                 )
                 self._insert_event(conn, scope, event)
+                if gate.target.asset_type is AssetType.MODEL_ROUTE:
+                    from aos_api.aip_model_route_eval_publication_epoch import (
+                        lock_eval_publication_epoch,
+                    )
+                    lock_eval_publication_epoch(conn, scope, publication_id)
                 conn.commit()
                 return event
         except AipReleasePublicationError:
@@ -347,8 +424,13 @@ class AipReleasePublicationService:
 
     @staticmethod
     def _verify_gate_evidence(
-        conn: Any, scope: TenantScope, gate: ReleaseGateDecision
-    ) -> None:
+        conn: Any,
+        scope: TenantScope,
+        gate: ReleaseGateDecision,
+        *,
+        route_evidence: RouteEvalReleaseEvidence | None = None,
+        route_request_context: RouteReleaseRequestContext | None = None,
+    ) -> EvalReportRevision:
         legacy_hash = _canonical_hash(
             {
                 "target": gate.target,
@@ -396,9 +478,61 @@ class AipReleasePublicationService:
             raise AipReleasePublicationIntegrityError(
                 "release gate eval report exact references drifted"
             )
-        AipReleasePublicationService._require_supported_release_target(report.target)
+        AipReleasePublicationService._require_supported_release_target(
+            report.target, route_evidence, route_request_context
+        )
         if report.target.asset_type is AssetType.SKILL_TEMPLATE:
             AipReleasePublicationService._verify_signed_skill_report(conn, report)
+        return report
+
+    @staticmethod
+    def _verify_route_release(
+        conn: Any,
+        scope: TenantScope,
+        report: EvalReportRevision,
+        evidence: RouteEvalReleaseEvidence | None,
+        publication_id: str | None = None,
+        *,
+        request_context: RouteReleaseRequestContext | None = None,
+    ) -> None:
+        from aos_api.aip_model_route_eval_proof_authority import (
+            RouteEvalReleaseEvidence,
+            RouteEvalReleaseEvidenceRejected,
+            verify_route_eval_release_evidence,
+        )
+        from aos_api.aip_model_route_eval_release_material import (
+            RouteEvalReleaseAssemblyRejected,
+            RouteEvalReleaseEvidenceAssembler,
+        )
+        from aos_api.aip_route_release_request_context import (
+            RouteReleaseRequestContext,
+        )
+
+        has_evidence = type(evidence) is RouteEvalReleaseEvidence
+        has_context = type(request_context) is RouteReleaseRequestContext
+        if has_evidence == has_context:
+            raise AipReleaseGateRejected(
+                "Model/Route signed execution evidence is not supported"
+            )
+        try:
+            if has_context:
+                RouteEvalReleaseEvidenceAssembler().verify(
+                    conn, scope=scope, report=report,
+                    request_context=request_context,
+                    publication_id=publication_id)
+            else:
+                verify_route_eval_release_evidence(
+                    conn,
+                    scope=scope,
+                    report=report,
+                    evidence=evidence,
+                    publication_id=publication_id,
+                )
+        except (RouteEvalReleaseAssemblyRejected,
+                RouteEvalReleaseEvidenceRejected) as exc:
+            raise AipReleaseGateRejected(
+                "current Route release evidence is unavailable"
+            ) from exc
 
     @staticmethod
     def _verify_signed_skill_report(conn: Any, report: EvalReportRevision) -> None:
@@ -597,10 +731,25 @@ class AipReleasePublicationService:
         )
 
     @staticmethod
-    def _require_supported_release_target(target: AssetRevisionRef) -> None:
+    def _require_supported_release_target(
+        target: AssetRevisionRef,
+        route_evidence: RouteEvalReleaseEvidence | None = None,
+        route_request_context: RouteReleaseRequestContext | None = None,
+    ) -> None:
+        from aos_api.aip_model_route_eval_proof_authority import (
+            RouteEvalReleaseEvidence,
+        )
+        from aos_api.aip_route_release_request_context import (
+            RouteReleaseRequestContext,
+        )
+
         # Model/Route execution proofs require their own typed contract.  A valid
         # report hash alone must not open release while that producer is absent.
-        if target.asset_type in {AssetType.REGISTERED_MODEL, AssetType.MODEL_ROUTE}:
+        has_evidence = type(route_evidence) is RouteEvalReleaseEvidence
+        has_context = type(route_request_context) is RouteReleaseRequestContext
+        if target.asset_type is AssetType.REGISTERED_MODEL or (
+            target.asset_type is AssetType.MODEL_ROUTE
+            and has_evidence == has_context):
             raise AipReleaseGateRejected(
                 "Model/Route signed execution evidence is not supported"
             )

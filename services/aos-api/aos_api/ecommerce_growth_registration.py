@@ -157,6 +157,11 @@ class FirstDispatchRegistrationService:
         from aos_api.ecommerce_growth_successor_registration import register_successor
         return register_successor(self, scope=scope, request=request, actor=actor)
 
+    def prepare_successor_registration(self, *, scope: TenantScope, installation_id: str, idempotency_key: str, actor: str):
+        from aos_api.ecommerce_growth_successor_preparation import prepare_successor_registration
+        return prepare_successor_registration(self, scope=scope, installation_id=installation_id,
+            idempotency_key=idempotency_key, actor=actor)
+
     def read_successor_receipt(self, *, scope: TenantScope, installation_id: str, idempotency_key: str, actor: str):
         from aos_api.ecommerce_growth_successor_registration import decode_successor_receipt
         self._identity(scope,actor)
@@ -191,6 +196,7 @@ class FirstDispatchRegistrationService:
         permission=CurrentControlPermission(operation=APPLY_INSTALLATION_OPERATION)
         if permission(conn=conn,locked=locked,actor=actor) is not True:
             raise PermissionError('current receipt access denied')
+        return locked
 
     @staticmethod
     def _withdrawal_origin(conn,scope,receipt_id):

@@ -1262,6 +1262,7 @@ const BACKGROUND_CONFIGURATION_CHECKS = [
   ["background_identity", "后台业务身份"],
   ["protected_storage", "受保护保存位置"],
   ["identity_credential", "身份凭据"],
+  ["configuration_submission", "配置保存通道"],
 ] as const satisfies readonly (readonly [BackgroundProcessingConfigurationCheckKey, string])[];
 
 export function parseBackgroundProcessingConfigurationPreview(value: unknown, expectedTenant?: WorkshopTenant): BackgroundProcessingConfigurationPreviewResponse {

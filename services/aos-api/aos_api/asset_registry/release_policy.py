@@ -61,6 +61,27 @@ class ReleasePolicyResult:
     release_evidence_revision: str
 
 
+class _ContentDescriptorFields(Protocol):
+    """Content inputs only, not a release-policy record or authority."""
+
+    @property
+    def manifest(self) -> BundleManifest: ...
+
+    @property
+    def artifacts(self) -> list[dict[str, object]]: ...
+
+    @property
+    def content_hash(self) -> str: ...
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class _ContentDescriptorInput:
+    manifest: BundleManifest
+    artifacts: list[dict[str, object]]
+    content_hash: str
+    persisted_manifest: dict[str, object] | None
+
+
 class ReleasePolicy:
     """Validate release evidence and the current publisher trust root."""
 
@@ -367,7 +388,29 @@ class ReleasePolicy:
         return evidence_by_type
 
 
-def _verified_content_descriptor(record: ReleaseVersionRecord) -> dict[str, object]:
+def verify_content_descriptor(
+    *,
+    manifest: BundleManifest,
+    artifacts: list[dict[str, object]],
+    content_hash: str,
+    persisted_manifest: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Match content bytes only; no signature, release or execution authority.
+
+    Preserve the original descriptor's references and legacy serialization.
+    Neither inputs nor returned data represent a verified release record.
+    """
+    if (type(manifest) is not BundleManifest or type(artifacts) is not list
+            or type(content_hash) is not str
+            or (persisted_manifest is not None and type(persisted_manifest) is not dict)):
+        raise TypeError("exact content descriptor fields required")
+    return _verified_content_descriptor(_ContentDescriptorInput(
+        manifest=manifest, artifacts=artifacts, content_hash=content_hash,
+        persisted_manifest=persisted_manifest,
+    ))
+
+
+def _verified_content_descriptor(record: _ContentDescriptorFields) -> dict[str, object]:
     """Return the signed descriptor, accepting only semantics-equivalent legacy JSON."""
 
     current_manifest = record.manifest.model_dump(

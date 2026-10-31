@@ -11,7 +11,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 from urllib.parse import urlsplit
 
 import httpx
@@ -26,7 +26,12 @@ from aos_api.aip_model_runtime_contracts import (
     ModelRuntimeReadiness,
 )
 from aos_api.aip_model_runtime_store import (
-    AipModelRuntimeStore, ModelRuntimeStoreError, require_current_development_price,
+    AipModelRuntimeStore, ModelRuntimeStoreError, evaluation_candidate_ref,
+    require_current_development_price,
+)
+from aos_api.aip_eval_authority_store import (
+    AipEvalAuthorityStore,
+    AipEvalAuthorityError,
 )
 from aos_api.aip_network_policy_store import (
     AipNetworkPolicyStore,
@@ -42,6 +47,9 @@ from aos_api.aip_runtime_guard_policy_store import (
 )
 from aos_api.aip_secret_backend import ExactSecretResolver, SecretBackendError
 from aos_api.tenant_scope import TenantScope
+
+if TYPE_CHECKING:
+    from aos_api.aip_model_route_eval_proof_authority import RouteEvalReleaseEvidence
 
 
 class ExactProviderInvocationError(RuntimeError):
@@ -112,6 +120,7 @@ class ExactProviderInvoker:
         network_store: Any | None = None,
         governance_store: Any | None = None,
         plugin_authority: Any | None = None,
+        eval_authority_store: Any | None = None,
         secret_resolver: Any | None = None,
         transport: ProviderTransport | None = None,
     ) -> None:
@@ -120,6 +129,9 @@ class ExactProviderInvoker:
         self._network_store = network_store or AipNetworkPolicyStore()
         self._governance_store = governance_store or AipModelGovernancePolicyStore()
         self._plugin_authority = plugin_authority or ProviderPluginAuthority()
+        self._eval_authority_store = eval_authority_store or AipEvalAuthorityStore(
+            getattr(self._model_store, "_connect_factory", None)
+        )
         self._secret_resolver = secret_resolver or ExactSecretResolver()
         self._transport = transport or HttpxProviderTransport()
 
@@ -130,6 +142,7 @@ class ExactProviderInvoker:
         data_classification: str,
         *,
         max_output_tokens: int | None = None,
+        route_evidence: RouteEvalReleaseEvidence | None = None,
     ) -> dict[str, Any]:
         if max_output_tokens is not None and (
             type(max_output_tokens) is not int or not 1 <= max_output_tokens <= 1_000_000
@@ -148,6 +161,7 @@ class ExactProviderInvoker:
         modality = self._validate_composition(
             scope, resolution, route, policy, model, provider
         )
+        self._validate_current_route_release(scope, route, route_evidence)
         if max_output_tokens is not None and modality != "text":
             raise ExactProviderInvocationError("provider_output_limit_modality_blocked")
         price = self._validate_price_authority(scope, resolution, model)
@@ -184,6 +198,23 @@ class ExactProviderInvoker:
         return self._validated_response(
             response, route, model, provider, modality=modality
         )
+
+    def _validate_current_route_release(
+        self, scope: TenantScope, route: Any,
+        route_evidence: RouteEvalReleaseEvidence | None,
+    ) -> None:
+        """Recheck current publication before any secret or transport access."""
+        try:
+            self._eval_authority_store.require_exact_passed(
+                scope,
+                route.eval_gate_ref,
+                expected_target=evaluation_candidate_ref(route),
+                route_evidence=route_evidence,
+            )
+        except (AipEvalAuthorityError, TypeError, ValueError, AttributeError):
+            raise ExactProviderInvocationError(
+                "route_release_authority_blocked"
+            ) from None
 
     def _load_exact(self, scope: TenantScope, resolution: ModelRouteResolution):
         try:

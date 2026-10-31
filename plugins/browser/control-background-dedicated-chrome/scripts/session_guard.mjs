@@ -21,14 +21,28 @@ export async function withProfileLock(p,fn){
 }
 export async function processIdentity(pid){
  try{
- const [cmd,start]=await Promise.all([exec('/bin/ps',['-p',String(pid),'-o','command=']),exec('/bin/ps',['-p',String(pid),'-o','lstart='])]);
- return {cmd:cmd.stdout.trim(),start:start.stdout.trim()};
- }catch{return {cmd:'',start:''};}
+  const [cmd,start]=await Promise.all([exec('/bin/ps',['-p',String(pid),'-o','command=']),exec('/bin/ps',['-p',String(pid),'-o','lstart='])]);
+  return {cmd:cmd.stdout.trim(),start:start.stdout.trim()};
+ }catch{
+  // Restricted execution contexts (sandboxed automation shells) may deny /bin/ps.
+  // macOS pgrep has no by-pid mode; -fl pattern matches full command lines, so match the
+  // Chrome binary path and filter rows by the exact pid column. Command-line identity
+  // checks still apply; process start time is unavailable and is skipped (checkIdentity).
+  try{
+   const {stdout}=await exec('/usr/bin/pgrep',['-fl',CHROME]);
+   const line=stdout.trim().split('\n').find(item=>item.startsWith(String(pid)+' '));
+   if(!line)return {cmd:'',start:''};
+   return {cmd:line.slice(String(pid).length+1).trim(),start:''};
+  }catch{return {cmd:'',start:''};}
+ }
 }
 function hasArg(cmd,arg){return cmd.endsWith(arg)||cmd.includes(arg+' ');}
 export function checkIdentity(p,s,actual){
+ // actual.start==='' means ps was unavailable and identity came from pgrep: command-line
+ // identity (chrome path + exact user-data-dir + port args) is still fully verified,
+ // only the lstart equality check is skipped since pgrep cannot report it.
  if(!s||!actual.cmd.startsWith(CHROME+' ')||!hasArg(actual.cmd,`--user-data-dir=${p.profile}`)||
-   (s.processStartedAt&&s.processStartedAt!==actual.start))throw Error('managed-process-identity-mismatch');
+   (actual.start!==''&&s.processStartedAt&&s.processStartedAt!==actual.start))throw Error('managed-process-identity-mismatch');
  if(s.mode==='visible-handoff'&&(!s.processStartedAt||!s.instanceId))throw Error('managed-process-identity-mismatch');
  if(s.port&&!hasArg(actual.cmd,`--remote-debugging-port=${s.port}`))throw Error('managed-process-identity-mismatch');
  if(s.mode==='headless'&&!actual.cmd.includes('--headless'))throw Error('managed-process-identity-mismatch');
@@ -65,6 +79,14 @@ export function hasAuthenticatedJinshaDiagnostic(s){
   Array.isArray(observation?.loginMarkers)&&observation.loginMarkers.length===0&&
   Array.isArray(observation?.securityMarkers)&&observation.securityMarkers.length===0;
 }
+export function hasAuthenticatedJinshaTakeoverObservation(s){
+ const observations=s?.observations;
+ return Array.isArray(observations)&&observations.length===2&&observations.every(observation=>
+  observation?.authenticated===true&&observation?.reason==='AUTHENTICATED'&&
+  ['金鲨数据','臻肆外卖运营'].includes(observation?.title)&&observation?.url==='https://data.guoshuyufen.com/'&&
+  Array.isArray(observation?.loginMarkers)&&observation.loginMarkers.length===0&&
+  Array.isArray(observation?.securityMarkers)&&observation.securityMarkers.length===0);
+}
 export function hasAuthenticatedJinshaReleaseDiagnostic(s){
  const observation=s?.lastReleaseTargetDiagnosticObservation;
  return observation?.authenticated===true&&observation?.reason==='AUTHENTICATED'&&
@@ -91,15 +113,21 @@ export function checkPhase(s,o,action){
   const bound=(s.activeTargetId&&s.activeMarker)||(s.loginTargetId&&s.loginMarker);
   const legacyContextFailure=s.failure==='SECURITY_CHALLENGE'&&Array.isArray(s.observations)&&s.observations.some(x=>x.authenticated===true);
   const retryableContextFailure=['CONTEXT_MENU_NOT_UNIQUE','CONTEXT_WAIMAI_NOT_UNIQUE','CONTEXT_TAOBAO_NOT_UNIQUE','CONTEXT_SELECTION_UNVERIFIED'].includes(s.failure)&&(s.contextRepairAttempts??1)<2;
-  const diagnosedStructureFailure=(s.failure==='STRUCTURE_UNVERIFIED'||retryableContextFailure)&&hasSafeJinshaContextRecoveryObservation(s);
-  const phaseOk=s.phase==='TAKEOVER_VERIFIED'||s.phase==='BLOCKED'&&(s.failure==='CONTEXT_AUTHORIZATION_FAILED'||legacyContextFailure||diagnosedStructureFailure);
+  const diagnosedContextFailure=retryableContextFailure&&(
+   hasSafeJinshaContextRecoveryObservation(s)||
+   s.contextRepairAttempts===1&&s.contextDiagnosticAttempts===1&&hasAuthenticatedJinshaDiagnostic(s));
+  const diagnosedStructureFailure=s.failure==='STRUCTURE_UNVERIFIED'&&hasSafeJinshaContextRecoveryObservation(s);
+  const phaseOk=s.phase==='TAKEOVER_VERIFIED'||s.phase==='BLOCKED'&&(s.failure==='CONTEXT_AUTHORIZATION_FAILED'||legacyContextFailure||diagnosedStructureFailure||diagnosedContextFailure);
   if(s.site!=='jinsha'||!bound||!phaseOk||s.confirmationInstance!==s.instanceId)throw Error('jinsha-context-repair-forbidden');
   return;
  }
  if(action==='diagnose-target'||action==='verify-work-page'){
   const hasBoundTarget=(s.activeTargetId&&s.activeMarker)||(s.loginTargetId&&s.loginMarker);
   const contextFailure=['CONTEXT_MENU_NOT_UNIQUE','CONTEXT_WAIMAI_NOT_UNIQUE','CONTEXT_TAOBAO_NOT_UNIQUE','CONTEXT_SELECTION_UNVERIFIED'].includes(s.failure);
-  const contextDiagnostic=action==='diagnose-target'&&contextFailure&&hasSafeJinshaContextRecoveryObservation(s);
+  const authenticatedContextDiagnostic=action==='diagnose-target'&&s.site==='jinsha'&&contextFailure&&s.contextRepairAttempts===1&&
+   (s.contextDiagnosticAttempts??0)<1&&o['task-id']===s.taskId&&hasAuthenticatedJinshaTakeoverObservation(s);
+  const contextDiagnostic=action==='diagnose-target'&&contextFailure&&(
+   hasSafeJinshaContextRecoveryObservation(s)||authenticatedContextDiagnostic);
   const contextPostVerify=action==='verify-work-page'&&contextFailure&&hasAuthenticatedJinshaDiagnostic(s)&&(s.contextPostVerifyAttempts??0)<1;
   const initialReleaseDiagnostic=s.failure==='HANDOFF_OPERATION_FAILED';
   const correctionReleaseDiagnostic=s.failure==='WINDOW_RELEASE_UNSAFE'&&s.releaseResumeAttempts===1&&(s.releaseCorrectionAttempts??0)<1;

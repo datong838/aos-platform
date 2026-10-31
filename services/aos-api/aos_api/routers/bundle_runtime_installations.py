@@ -14,6 +14,8 @@ from fastapi.exceptions import RequestValidationError
 from psycopg import Error as DatabaseError
 
 from aos_api.ecommerce_growth_registration_contracts import FirstDispatchRegistrationRequest
+from aos_api.ecommerce_growth_successor_registration import SuccessorDispatchRegistrationRequest
+from aos_api.ecommerce_growth_successor_preparation import SuccessorPreparation
 from aos_api.ecommerce_growth_registration_withdrawal import RegistrationWithdrawalRequest
 from aos_api.tenant_scope import TenantScope
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -493,6 +495,64 @@ def get_ecommerce_growth_registration_status(
     return _invoke_registration(lambda: service.registration_status(
         scope=TenantScope(principal.org_id, principal.project_id),
         installation_id=installation_id, actor=principal.subject))
+
+
+@_registration_router.post(
+    '/{installation_id}/ecommerce-growth-successor-registrations',
+    operation_id='create_ecommerce_growth_successor_registration',
+    responses={201: {'description': 'Nonexecuting successor registration receipt'}, **_ERRORS},
+    openapi_extra={'parameters': [_IDEMPOTENCY_PARAMETER, _IF_MATCH_PARAMETER]},
+)
+def create_ecommerce_growth_successor_registration(
+    installation_id: CanonicalUuidPath, body: SuccessorDispatchRegistrationRequest,
+    request: Request, response: Response, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> dict:
+    key = _invoke(lambda: require_idempotency_key(request))
+    match = _invoke(lambda: require_if_match(request))
+    registration = body.registration
+    if (installation_id != registration.installationRef.installation_id
+            or key != registration.idempotencyKey
+            or match != f'"{registration.installationRef.revision}"'):
+        raise ApiError(code='REGISTRATION_REFERENCE_MISMATCH', message='安装、版本或请求编号不一致。', status_code=409)
+    service = _registration_service(control_plane)
+    result = _invoke_registration(lambda: service.register_successor(
+        scope=TenantScope(principal.org_id, principal.project_id), request=body, actor=principal.subject))
+    response.status_code = 200 if result['replayed'] else 201
+    return result
+
+
+@_registration_router.get(
+    '/{installation_id}/ecommerce-growth-successor-registrations/receipt',
+    operation_id='get_ecommerce_growth_successor_registration_receipt', responses=_ERRORS,
+    openapi_extra={'parameters': [_IDEMPOTENCY_PARAMETER]},
+)
+def get_ecommerce_growth_successor_registration_receipt(
+    installation_id: CanonicalUuidPath, request: Request, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> dict:
+    key = _invoke(lambda: require_idempotency_key(request))
+    service = _registration_service(control_plane)
+    return _invoke_registration(lambda: service.read_successor_receipt(
+        scope=TenantScope(principal.org_id, principal.project_id), installation_id=installation_id,
+        idempotency_key=key, actor=principal.subject))
+
+
+@_registration_router.get(
+    '/{installation_id}/ecommerce-growth-successor-registration-preparation',
+    operation_id='prepare_ecommerce_growth_successor_registration', response_model=SuccessorPreparation,
+    responses=_ERRORS, openapi_extra={'parameters': [_IDEMPOTENCY_PARAMETER]},
+)
+def prepare_ecommerce_growth_successor_registration(
+    installation_id: CanonicalUuidPath, request: Request, response: Response, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> SuccessorPreparation:
+    response.headers['Cache-Control'] = 'no-store'
+    key = _invoke(lambda: require_idempotency_key(request))
+    service = _registration_service(control_plane)
+    return _invoke_registration(lambda: service.prepare_successor_registration(
+        scope=TenantScope(principal.org_id, principal.project_id), installation_id=installation_id,
+        idempotency_key=key, actor=principal.subject))
 
 
 router.include_router(_registration_router)

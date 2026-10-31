@@ -139,7 +139,7 @@ def local_jwks() -> dict[str, Any]:
 def public_config() -> dict[str, Any]:
     grants = ["dev"] if allow_dev() else []
     if token_url():
-        grants.append("password")
+        grants.extend(["password", "refresh_token"])
     urls = jwks_urls()
     return {
         "issuer": issuer(),
@@ -168,17 +168,21 @@ def issue_password_token(
     password: str,
 ) -> dict[str, Any]:
     """Proxy Resource Owner Password to IdP (Dev Keycloak). Never log password."""
+    return _exchange_oidc_token({"grant_type": "password", "username": username, "password": password})
+
+
+def issue_refresh_token(*, refresh_token: str) -> dict[str, Any]:
+    """Extend the existing IdP session; never persist or log the credential."""
+    if not refresh_token or len(refresh_token) > 65536:
+        raise ValueError("valid refresh token required")
+    return _exchange_oidc_token({"grant_type": "refresh_token", "refresh_token": refresh_token})
+
+
+def _exchange_oidc_token(fields: dict[str, str]) -> dict[str, Any]:
     url = token_url()
     if not url:
         raise ValueError("AOS_OIDC_TOKEN_URL not configured")
-    form = urllib.parse.urlencode(
-        {
-            "grant_type": "password",
-            "client_id": client_id(),
-            "username": username,
-            "password": password,
-        }
-    ).encode("utf-8")
+    form = urllib.parse.urlencode({"client_id": client_id(), **fields}).encode("utf-8")
     req = urllib.request.Request(
         url,
         data=form,
@@ -189,8 +193,8 @@ def issue_password_token(
         with urllib.request.urlopen(req, timeout=15) as resp:
             raw = json.loads(resp.read().decode("utf-8"))
     except Exception as exc:
-        log.warning("oidc_password_grant_fail err=%s", type(exc).__name__)
-        raise ValueError(f"IdP token failed: {exc}") from exc
+        log.warning("oidc_token_grant_fail grant=%s err=%s", fields["grant_type"], type(exc).__name__)
+        raise ValueError("IdP token request failed") from None
     access = raw.get("access_token")
     if not access:
         raise ValueError("IdP response missing access_token")

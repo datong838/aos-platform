@@ -256,6 +256,7 @@ describe("后台处理业务入口", () => {
         { key: "background_identity", label: "后台业务身份", passed: true, detail: "后台业务身份坐标已准备。" },
         { key: "protected_storage", label: "受保护保存位置", passed: true, detail: "受保护保存位置已准备。" },
         { key: "identity_credential", label: "身份凭据", passed: true, detail: "当前身份凭据已安全就绪。" },
+        { key: "configuration_submission", label: "配置保存通道", passed: true, detail: "配置保存通道已安全开通。" },
       ],
       nextActions: ["确认后只保存配置；运行仍需另行满足审批和预算。"],
       sideEffects: { databaseWrite: false, configurationWrite: false, tokenRequest: false, businessProcessing: false, externalEffect: false },

@@ -34,6 +34,16 @@ exact target 只读诊断已证明该工作窗口随后完整加载并达到 `AU
 
 修改范围限定为 `scripts/session_guard.mjs`、`scripts/handoff.mjs`、`scripts/run_task.mjs`、对应测试与本插件说明文档。美团原规则、临时 fixture、其他 Profile 的原流程保持不变。先新增失败测试，再实现配置、站点分类与绑定页面前缀泛化；单元和隔离浏览器测试通过后，才启动真实金鲨登录交接。真实验收失败最多两次；出现登录或安全页立即停止。
 
+### 2026-09-28 已认证金鲨上下文失败的只读诊断恢复
+
+本次真实重连中，`takeover` 已对同一金鲨登录页完成两次认证，但随后 `ensure-jinsha-context` 因可见“外卖”命中不唯一而安全阻断。既有恢复门禁只接受页面为 `STRUCTURE_UNVERIFIED` 且含完整新版首页标志的诊断证据，遗漏了“当前目标已经 AUTHENTICATED、仅上下文选项定位失败”的场景，导致既定 `diagnose-target` 被 `handoff-diagnosis-forbidden` 拒绝。
+
+最小修复仅开放一次受绑定只读诊断：需为当前确认实例、当前 `taskId`、同一已绑定登录目标与 marker；失败码仅允许四种 `CONTEXT_*`；`contextRepairAttempts` 必须为 1；最近一次 takeover observation 必须明确为金鲨固定域名/根 URL、金鲨允许标题、已认证，且登录标志和安全标志为空。诊断只回读现有固定控件计数与非敏感 class/ARIA，不点击、不导航、不截图、不创建/关闭页面。若诊断发现登录或安全页，禁止上下文重试并交由用户处理。
+
+诊断成功后，只允许使用既定的唯一一次上下文恢复预算；恢复资格绑定新的诊断回执仍为 AUTHENTICATED、页面固定，且可见选项数量有可确定的精确定位依据。`contextRepairAttempts=2` 或诊断未通过时失败关闭。美团规则、登录流程、端口/Profile、页面写操作与所有业务入口保持不变。验收以纯门禁单测和插件全量离线回归完成，不在登录态手工尝试定位或切换路线。
+
+本次只读 DOM 诊断已观察到：同一页面“外卖”精确可见文本有两个命中，其中真实上下文项是 `.complete.cursor` 下的 `.completa_item`，另一个是 `.check_span.line_left_before` 装饰节点；平台项真实结构是 `.cut.cursor` 下的 `.cutli`。上下文恢复入口仅在这些容器内按完整可见文字唯一定位，再回读真实节点 class：外卖 `complete_active`、淘宝 `pitchOn`。不得用全页相似文本、索引顺序或坐标替代。
+
 真实首次接管在唯一候选页上返回 `STRUCTURE_UNVERIFIED`，但旧实现只在结构通过后才保存候选 targetId/marker，导致该失败页无法进入已有 `diagnose-target`。修订为：唯一候选通过站点强前缀后，先保存本次 taskId、loginTargetId 与 loginMarker，再做结构认证；诊断入口允许使用该已绑定登录目标。它仍不允许未确认、多候选、跨站点或没有目标标记的页面，也不增加接管重试次数。
 
 对于本次已由旧顺序产生、尚无 targetId/marker 的 `STRUCTURE_UNVERIFIED` 状态，仅允许同一已确认实例执行一次 `recover-target`：新建同站点后台页并在结构检查前落盘 activeTargetId/marker。该恢复用来取得可诊断目标，不关闭原页、不重启浏览器；后续仍受同一两次验证与一次恢复上限约束。

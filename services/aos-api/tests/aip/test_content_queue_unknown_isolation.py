@@ -7,6 +7,7 @@ import pytest
 
 from aos_api.ecommerce_content_execution_composition import CurrentContentRunner
 from aos_api.ecommerce_content_execution_worker import ContentExecutionFailure
+from aos_api.aip_route_worker_identity import RouteWorkerIdentityBlocked
 from aos_api.tenant_scope import TenantScope
 from test_aip_budget_reservation_pg import database
 
@@ -23,7 +24,7 @@ def runner_with_items(items, outcomes):
         assert scope == SCOPE
         yield object()
 
-    def run_one(scope, reservation_id):
+    def run_one(scope, reservation_id, **_kwargs):
         assert scope == SCOPE
         calls.append(reservation_id)
         outcome = outcomes[reservation_id]
@@ -34,6 +35,7 @@ def runner_with_items(items, outcomes):
     runner.connect = connect
     runner.journal = SimpleNamespace(list_held=lambda *_args, **_kwargs: list(items))
     runner.worker = SimpleNamespace(run_one=run_one)
+    runner.identity_provider = SimpleNamespace(acquire=lambda scope: object())
     return runner, calls
 
 
@@ -78,6 +80,24 @@ def test_unclassified_failure_is_not_silently_hidden_or_called_completed():
     assert calls == ["bad"]
 
 
+def test_identity_failure_blocks_only_that_item_and_never_enters_worker():
+    runner, calls = runner_with_items(["blocked", "independent"], {
+        "blocked": "must-not-run", "independent": "RESULT_RECORDED",
+    })
+    identity_calls = []
+    def acquire(_scope):
+        identity_calls.append(1)
+        if len(identity_calls) == 1:
+            raise RouteWorkerIdentityBlocked("ROUTE_WORKER_CURRENT_IDENTITY_REQUIRED")
+        return object()
+    runner.identity_provider = SimpleNamespace(acquire=acquire)
+    assert runner.run_pending(SCOPE) == [
+        {"reservationId": "blocked", "status": "BLOCKED_CURRENT_AUTHORITY"},
+        {"reservationId": "independent", "status": "RESULT_RECORDED"},
+    ]
+    assert calls == ["independent"]
+
+
 @pytest.mark.skipif(os.getenv("AOS_EXTENSION_PG_TEST") != "1", reason="isolated PostgreSQL opt-in")
 def test_native_unknown_hold_survives_while_independent_result_is_recorded(database):
     from datetime import UTC, datetime
@@ -113,13 +133,14 @@ def test_native_unknown_hold_survives_while_independent_result_is_recorded(datab
             (*scope.key, command["idempotencyKey"], "sha256:" + _payload(command)[1], Jsonb(receipt)))
 
     calls = []
-    def invoke(*_args):
+    def invoke(*_args, **_kwargs):
         calls.append("bounded-test-invocation")
         if len(calls) == 1:
             raise TimeoutError("test-only unknown outcome")
         return {"answer": "独立任务的测试内容"}
 
-    runner = CurrentContentRunner(connect_factory=factory, storage_schema=database.schema)
+    runner = CurrentContentRunner(connect_factory=factory, storage_schema=database.schema,
+        identity_provider=SimpleNamespace(acquire=lambda scope: object()))
     runner.worker = ContentExecutionWorker(factory, prepare=prepare, invoke=invoke,
                                          storage_schema=database.schema)
     assert runner.run_pending(scope) == [

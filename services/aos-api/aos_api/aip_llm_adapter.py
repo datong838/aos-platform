@@ -38,19 +38,26 @@ class LLMAdapter:
         system_prompt: str = "",
         data_classification: str | None = None,
         expected_selection: ModelRouteResolution | None = None,
+        route_evidence: Any | None = None,
     ) -> dict[str, Any]:
         if not lineage_id.strip():
             raise LLMRuntimeBlocked("lineage_id_required")
         if not data_classification:
             raise LLMRuntimeBlocked("data_classification_required")
         if expected_selection is None:
-            resolution = self._resolver.resolve(scope, route_id)
+            resolution = (self._resolver.resolve(
+                scope, route_id, route_evidence=route_evidence)
+                if route_evidence is not None
+                else self._resolver.resolve(scope, route_id))
         else:
             if (type(expected_selection) is not ModelRouteResolution
                 or getattr(getattr(expected_selection, "route", None), "asset_id", None) != route_id):
                 raise LLMRuntimeBlocked("expected_selection_invalid")
             try:
-                resolution = self._resolver.revalidate_selection(scope, expected_selection)
+                resolution = (self._resolver.revalidate_selection(
+                    scope, expected_selection, route_evidence=route_evidence)
+                    if route_evidence is not None
+                    else self._resolver.revalidate_selection(scope, expected_selection))
             except ValueError:
                 raise LLMRuntimeBlocked("expected_selection_invalid") from None
         if resolution.readiness is not ModelRuntimeReadiness.READY:
@@ -58,11 +65,12 @@ class LLMAdapter:
             raise LLMRuntimeBlocked(blockers)
         full_query = f"{system_prompt}\n\n{query}" if system_prompt else query
         try:
-            response = self._provider_invoker(
-                resolution,
-                full_query,
-                data_classification,
-            )
+            response = (self._provider_invoker(
+                resolution, full_query, data_classification,
+                route_evidence=route_evidence,
+            ) if route_evidence is not None else self._provider_invoker(
+                resolution, full_query, data_classification,
+            ))
         except ExactProviderInvocationError as exc:
             raise LLMRuntimeBlocked(exc.code) from None
         answer = response.get("answer")

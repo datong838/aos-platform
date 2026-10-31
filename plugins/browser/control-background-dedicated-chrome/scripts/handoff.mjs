@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 import {pathsFor,readState,safeProfileName} from './background_chrome.mjs';
-import {withProfileLock,atomicState,guardConnection,assertProcess,assertListener,checkPhase,sleep,publicUrl} from './session_guard.mjs';
+import {withProfileLock,atomicState,guardConnection,assertProcess,assertListener,checkPhase,sleep,publicUrl,hasAuthenticatedJinshaTakeoverObservation} from './session_guard.mjs';
 const require=createRequire(import.meta.url);
 const {chromium}=require('../../headless-playwright/node_modules/playwright-core');
 
@@ -130,6 +130,22 @@ export async function runHandoff(command,o){
 async function visibleExact(page,label){
  const hits=[];for(const frame of page.frames()){const loc=frame.getByText(label,{exact:true});for(let i=0;i<await loc.count();i++){const item=loc.nth(i);if(await item.isVisible().catch(()=>false))hits.push(item);}}return hits;
 }
+export function isJinshaContextControl(control,label,kind){
+ if(!control||control.visible!==true||String(control.text||'').trim()!==label)return false;
+ const own=String(control.className||'').split(/\s+/);const parent=String(control.parentClassName||'').split(/\s+/);
+ if(kind==='business')return own.includes('completa_item')&&parent.includes('complete')&&parent.includes('cursor');
+ if(kind==='platform')return own.includes('cutli')&&parent.includes('cut')&&parent.includes('cursor');
+ return false;
+}
+async function visibleJinshaContextControl(page,label,kind){
+ const matches=[];
+ for(const item of await visibleExact(page,label)){
+  const record=await item.evaluate(el=>({visible:true,text:String(el.innerText||el.textContent||'').trim(),className:String(el.className||''),parentClassName:String(el.parentElement?.className||'')}));
+  if(isJinshaContextControl(record,label,kind))matches.push(item);
+ }
+ if(matches.length!==1)throw Error(kind==='business'?'CONTEXT_WAIMAI_NOT_UNIQUE':'CONTEXT_TAOBAO_NOT_UNIQUE');
+ return matches[0];
+}
 export function shouldOpenJinshaContextMenu(waimaiCount){return waimaiCount===0;}
 async function ensureJinshaContext(p,s,o){
  const access=s;let b;
@@ -138,15 +154,15 @@ async function ensureJinshaContext(p,s,o){
   s={...s,contextRepairAttempts:inferredAttempts+1};await atomicState(p,{...s,phase:'REPAIRING_CONTEXT'});
   b=await connect(p,access,o,'ensure-jinsha-context');const id=s.activeTargetId||s.loginTargetId,marker=s.activeMarker||s.loginMarker;
   const page=await markedPage(b,s,id,marker);assertUrl(page.url(),s);
-  let waimai=await visibleExact(page,'外卖');
-  if(shouldOpenJinshaContextMenu(waimai.length)){const button=page.locator('.hamburger-container:visible');if(await button.count()!==1)throw Error('CONTEXT_MENU_NOT_UNIQUE');await button.click();await sleep(500);waimai=await visibleExact(page,'外卖');}
-  if(waimai.length!==1)throw Error('CONTEXT_WAIMAI_NOT_UNIQUE');
-  await waimai[0].click();await sleep(800);
-  let taobao=await visibleExact(page,'淘宝');if(taobao.length!==1)throw Error('CONTEXT_TAOBAO_NOT_UNIQUE');
-  await taobao[0].click();await sleep(1200);
-  waimai=await visibleExact(page,'外卖');taobao=await visibleExact(page,'淘宝');
-  const waimaiSelected=waimai.length===1&&String(await waimai[0].getAttribute('class')).split(/\s+/).includes('complete_active');
-  const taobaoSelected=taobao.length===1&&String(await taobao[0].getAttribute('class')).split(/\s+/).includes('pitchOn');
+  let waimai;
+  try{waimai=await visibleJinshaContextControl(page,'外卖','business');}
+  catch(e){if(e.message!=='CONTEXT_WAIMAI_NOT_UNIQUE')throw e;const button=page.locator('.hamburger-container:visible');if(await button.count()!==1)throw Error('CONTEXT_MENU_NOT_UNIQUE');await button.click();await sleep(500);waimai=await visibleJinshaContextControl(page,'外卖','business');}
+  await waimai.click();await sleep(800);
+  let taobao=await visibleJinshaContextControl(page,'淘宝','platform');
+  await taobao.click();await sleep(1200);
+  waimai=await visibleJinshaContextControl(page,'外卖','business');taobao=await visibleJinshaContextControl(page,'淘宝','platform');
+  const waimaiSelected=String(await waimai.getAttribute('class')).split(/\s+/).includes('complete_active');
+  const taobaoSelected=String(await taobao.getAttribute('class')).split(/\s+/).includes('pitchOn');
   if(!waimaiSelected||!taobaoSelected)throw Error('CONTEXT_SELECTION_UNVERIFIED');
   await sleep(1500);const observation=await requireAuthenticated(page,s);
   s={...s,phase:'TAKEOVER_VERIFIED',failure:null,context:{business:'外卖',platform:'淘宝',warnings:observation.contextMarkers||[],verifiedAt:new Date().toISOString()},observations:[observation]};
@@ -309,7 +325,13 @@ async function inspectFailedTarget(p,s,o,command){
     const correction=s.failure==='WINDOW_RELEASE_UNSAFE';const internal=s.failure==='handoff-release-resume-forbidden';
     await atomicState(p,{...s,lastReleaseTargetDiagnosticObservation:observation,...(correction?{releaseCorrectionReady:observation.authenticated===true,releaseCorrectionDiagnosticAt:new Date().toISOString()}:{}),...(internal?{releaseInternalReady:observation.authenticated===true,releaseInternalDiagnosticAt:new Date().toISOString()}:{})});
    }
-   else if(s.site==='jinsha'&&observation?.reason)await atomicState(p,{...s,lastDiagnosticObservation:observation});
+   else if(s.site==='jinsha'&&observation?.reason){
+    const contextFailure=['CONTEXT_MENU_NOT_UNIQUE','CONTEXT_WAIMAI_NOT_UNIQUE','CONTEXT_TAOBAO_NOT_UNIQUE','CONTEXT_SELECTION_UNVERIFIED'].includes(s.failure);
+    const authenticatedContextDiagnostic=contextFailure&&s.contextRepairAttempts===1&&
+     (s.contextDiagnosticAttempts??0)<1&&hasAuthenticatedJinshaTakeoverObservation(s);
+    await atomicState(p,{...s,lastDiagnosticObservation:observation,
+     ...(authenticatedContextDiagnostic?{contextDiagnosticAttempts:(s.contextDiagnosticAttempts??0)+1}:{})});
+   }
    const result={...receipt(s,command),observation,frames:page.frames().map(f=>({url:publicUrl(f.url()),main:f===page.mainFrame()}))};
    if(s.site==='jinsha'){
     const labels=['外卖','团购','分账','美团','淘宝','京东','总览','营业','顾客','智能斗金','推广魔方','全站推广列表','辅助驾驶','店铺列表','今日实时数据'];

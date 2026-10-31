@@ -1,6 +1,8 @@
+import { serializeCutover, parseCutoverReceipt, parseCutoverRead, type CutoverCommand } from "./cutover";
 import { parseConfigurationSources, serializeConfigurationStage, parseConfigurationStageReceipt, type ConfigurationStageRequest } from "./configurationStaging";
 import { withdrawalBody, parseWithdrawalReceipt, type WithdrawalIntent, type WithdrawalReceipt } from "./registrationWithdrawal";
 import { parseRegistrationStatus, type RegistrationStatus } from "./registrationStatus";
+import { serializeSuccessorRegistration, parseSuccessorRegistrationReceipt, parseSuccessorPreparation, type SuccessorRegistrationCommand } from "./successorRegistration";
 import { isOffline } from "../../lib/offlineStore";
 import { getApiBase } from "../apiBase";
 import { getDesktopClientVersion } from "../desktopClient";
@@ -571,6 +573,65 @@ export class AssetControlClient {
       serializeUninstallInstallationRequest(body),
       options,
     );
+  }
+
+  executeCutover(installationId: string, input: CutoverCommand, etagVersion: number) {
+    const op = ASSET_CONTROL_OPERATIONS.executeCutover;
+    if (isOffline()) offlineMutationDisabled(op.operationId);
+    const command = serializeCutover(input, installationId);
+    const path = fillPath(op, { installation_id: canonicalUuid(installationId, "installation_id") });
+    const headers = this.headers({ idempotencyKey: idempotencyKey(command.request.idempotencyKey), ifMatch: strongIfMatch(etagVersion) });
+    const tenant = { orgId: headers.get("X-Org-Id"), projectId: headers.get("X-Project-Id") };
+    return this.request<unknown>(op.operationId, path, { method: "POST", headers, body: JSON.stringify(command) })
+      .then(value => parseCutoverReceipt(value, command, tenant));
+  }
+
+  readCutoverPrepare(installationId: string, prepareKey: IdempotencyKey, operationId: string) {
+    return this.readCutover(installationId, prepareKey, operationId, false);
+  }
+
+  readCutoverHistory(installationId: string, prepareKey: IdempotencyKey, operationId: string) {
+    return this.readCutover(installationId, prepareKey, operationId, true);
+  }
+
+  private readCutover(installationId: string, prepareKey: IdempotencyKey, operationId: string, history: boolean) {
+    canonicalUuid(operationId, "cutover_operation_id");
+    const op = history ? ASSET_CONTROL_OPERATIONS.readCutoverHistory : ASSET_CONTROL_OPERATIONS.readCutoverPrepare;
+    const path = fillPath(op, { installation_id: canonicalUuid(installationId, "installation_id") });
+    const headers = this.headers({ idempotencyKey: idempotencyKey(prepareKey) });
+    const tenant = { orgId: headers.get("X-Org-Id"), projectId: headers.get("X-Project-Id") };
+    return this.request<unknown>(op.operationId, path, { method: "GET", headers })
+      .then(value => parseCutoverRead(value, installationId, operationId, tenant, history));
+  }
+
+  createSuccessorRegistration(input: SuccessorRegistrationCommand) {
+    const op = ASSET_CONTROL_OPERATIONS.createSuccessorRegistration;
+    if (isOffline()) offlineMutationDisabled(op.operationId);
+    const command = serializeSuccessorRegistration(input), r = command.registration;
+    const path = fillPath(op, { installation_id: canonicalUuid(r.installationRef.installationId, "installation_id") });
+    const headers = this.headers({ idempotencyKey: idempotencyKey(r.idempotencyKey), ifMatch: strongIfMatch(r.installationRef.revision) });
+    const tenant = { orgId: headers.get("X-Org-Id"), projectId: headers.get("X-Project-Id") };
+    return this.request<unknown>(op.operationId, path, { method: "POST", headers, body: JSON.stringify(command) })
+      .then(value => parseSuccessorRegistrationReceipt(value, command, tenant, false));
+  }
+
+  getSuccessorPreparation(installationId: string, key: IdempotencyKey) {
+    const op = ASSET_CONTROL_OPERATIONS.getSuccessorPreparation;
+    const path = fillPath(op, { installation_id: canonicalUuid(installationId, "installation_id") });
+    const headers = this.headers({ idempotencyKey: idempotencyKey(key) });
+    const tenant = { orgId: headers.get("X-Org-Id"), projectId: headers.get("X-Project-Id") };
+    return this.request<unknown>(op.operationId, path, { method: "GET", headers })
+      .then(value => parseSuccessorPreparation(value, installationId, key, tenant));
+  }
+
+  readSuccessorRegistration(input: SuccessorRegistrationCommand) {
+    const op = ASSET_CONTROL_OPERATIONS.readSuccessorRegistration;
+    const command = serializeSuccessorRegistration(input), r = command.registration;
+    const path = fillPath(op, { installation_id: canonicalUuid(r.installationRef.installationId, "installation_id") });
+    const headers = this.headers({ idempotencyKey: idempotencyKey(r.idempotencyKey) });
+    const tenant = { orgId: headers.get("X-Org-Id"), projectId: headers.get("X-Project-Id") };
+    return this.request<unknown>(op.operationId, path, { method: "GET", headers })
+      .then(value => parseSuccessorRegistrationReceipt(value, command, tenant, true));
   }
 
   withdrawRegistration(intent: WithdrawalIntent): Promise<WithdrawalReceipt> {

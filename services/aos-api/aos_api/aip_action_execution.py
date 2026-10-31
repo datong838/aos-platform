@@ -69,9 +69,20 @@ class AipActionExecutionService:
         self._adapters = adapters
 
     @staticmethod
+    def _reject_route_eval_action(proposal) -> None:
+        from aos_api.aip_action_policy import is_route_eval_action
+        if proposal is not None and is_route_eval_action(
+                proposal.get('action_type_id'), proposal.get('action_type_snapshot') or {}):
+            raise AipActionTransitionBlocked('ROUTE_EVAL_DEDICATED_OWNER_REQUIRED')
+
+    @staticmethod
     def _reject_bootstrap_action(proposal) -> None:
         if proposal is None:
             raise AipActionNotFound("proposal not found in scope")
+        AipActionExecutionService._reject_route_eval_action(proposal)
+        from aos_api.aip_action_policy import MODEL_JUDGE_CALL_ACTION_ID
+        if MODEL_JUDGE_CALL_ACTION_ID in {proposal['action_type_id'], (proposal['action_type_snapshot'] or {}).get('id')}:
+            raise AipActionTransitionBlocked('MODEL_JUDGE_DEDICATED_OWNER_REQUIRED')
         if is_source_license_action(proposal["action_type_id"], proposal["action_type_snapshot"] or {}):
             raise AipActionTransitionBlocked("SOURCE_LICENSE_DEDICATED_ISSUER_REQUIRED")
         if (proposal["action_type_id"] == "aip_request_model_eval"
@@ -486,6 +497,7 @@ class AipActionExecutionService:
                 lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, receipt["lease_id"])).fetchone()
                 return self._view(scope, receipt["proposal_id"], lease)
             proposal = conn.execute("SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s", (*scope.key, receipt["proposal_id"])).fetchone()
+            self._reject_route_eval_action(proposal)
             reconcile_attempt_id = f"reconcile-{canonical_hash({'receiptId': receipt_id})[:20]}"
             conn.execute(
                 """INSERT INTO aip_action_reconcile_attempt
@@ -773,6 +785,7 @@ class AipActionExecutionService:
         return new_id
 
     def _adapter_for_reconcile(self, proposal: Any, receipt: Any) -> Any | None:
+        self._reject_route_eval_action(proposal)
         raw_ref = receipt["adapter_revision_ref"]
         if raw_ref is None:
             return self._adapters.get(proposal["action_type_id"])
@@ -801,6 +814,8 @@ class AipActionExecutionService:
                 raise AipActionNotFound("receipt not found in scope")
             if receipt["receipt_kind"] != "initial" or receipt["status"] not in {"unknown", "accepted"}:
                 raise AipActionTransitionBlocked("manual reconciliation requires an initial unknown or accepted receipt")
+            proposal = conn.execute("SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s", (*scope.key, receipt["proposal_id"])).fetchone()
+            self._reject_route_eval_action(proposal)
             self._create_or_get_manual_case(
                 conn,
                 scope,
@@ -835,6 +850,8 @@ class AipActionExecutionService:
                 receipt = conn.execute("SELECT * FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND receipt_id=%s", (*scope.key, case["original_receipt_id"])).fetchone()
                 lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, receipt["lease_id"])).fetchone()
                 return self._view(scope, case["proposal_id"], lease)
+            proposal = conn.execute("SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s", (*scope.key, case["proposal_id"])).fetchone()
+            self._reject_route_eval_action(proposal)
             if int(case["version"]) != body.expected_version:
                 raise AipActionConflict("manual reconcile case version changed")
             if case["maker_id"] == principal.subject:
@@ -958,6 +975,7 @@ class AipActionExecutionService:
             ).fetchone()
         if original is None or receipt is None:
             raise AipActionNotFound("original proposal or receipt not found in scope")
+        self._reject_route_eval_action(original)
         if original["risk_level"] == "R4":
             raise AipActionTransitionBlocked("R4 compensation requires specialized policy")
         resolved_outcome = receipt["provider_outcome"] or (
@@ -1461,6 +1479,7 @@ class AipActionExecutionService:
     def _resolve_adapter(
         self, proposal: Any, binding: dict[str, Any]
     ) -> tuple[Any, dict[str, Any]]:
+        self._reject_route_eval_action(proposal)
         raw_ref = binding.get("adapterRevisionRef")
         if raw_ref is None:
             adapter = self._adapters.get(proposal["action_type_id"])
@@ -1526,6 +1545,7 @@ class AipActionExecutionService:
         }
 
     def _adapter_for_attempt(self, proposal: Any, attempt: Any) -> Any | None:
+        self._reject_route_eval_action(proposal)
         raw_ref = attempt["adapter_revision_ref"]
         if raw_ref is None:
             return self._adapters.get(proposal["action_type_id"])

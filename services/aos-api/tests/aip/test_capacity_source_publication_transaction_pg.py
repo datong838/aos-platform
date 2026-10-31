@@ -34,6 +34,11 @@ def registered_database_isolation(request, _isolated_postgres_database, monkeypa
         'test_controlled_source_signer_binds_original_jwt_pending_and_private_key',
         'test_current_source_consumer_rechecks_new_transaction',
         'test_current_source_consumer_accepts_independent_owner',
+        'test_occupation_source_consumption_uses_actual_business_caller',
+        'test_occupation_epoch_profile_requires_complete_native_audits',
+        'test_occupation_epoch_profile_keeps_issuer_publication_usable',
+        'test_occupation_epoch_profile_keeps_original_python_audits',
+        'test_occupation_epoch_profile_keeps_existing_consumer_usable',
         'test_exact_public_source_rejects_live_issuer_drift',
         'test_exact_public_source_rejects_bad_signature_and_unfinished_commit',
         'test_native_committed_sources_share_one_physical_account',
@@ -4921,7 +4926,7 @@ def exact_public_source_caller(native_full_signed_reader,request):
             assert row['signature'].startswith('publication_')
             revoked.append(row['signature'])
             owner.execute(sql.SQL('REVOKE EXECUTE ON FUNCTION '+row['signature']+' FROM aos_provider_capacity_issuer'))
-        include_consumer=request.node.originalname in {'test_current_source_consumer_rechecks_new_transaction','test_current_source_consumer_accepts_independent_owner'}
+        include_consumer=request.node.originalname in {'test_current_source_consumer_rechecks_new_transaction','test_current_source_consumer_accepts_independent_owner','test_occupation_source_consumption_uses_actual_business_caller','test_occupation_epoch_profile_keeps_existing_consumer_usable'}
         for statement in transaction.source_public_entry_statements(include_consumer=include_consumer):owner.execute(statement)
     _refresh_native_facts_transaction(caller)
     try:yield caller,raw,material,original

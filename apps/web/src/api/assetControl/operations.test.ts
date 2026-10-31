@@ -7,18 +7,18 @@ import {
 } from "./operations";
 
 describe("asset-control M2-B operation contract", () => {
-  it("freezes the 23 unique operation ids and paths", () => {
+  it("freezes the 29 unique operation ids and paths", () => {
     const operations = Object.values(ASSET_CONTROL_OPERATIONS);
 
-    expect(operations).toHaveLength(23);
-    expect(new Set(operations.map((operation) => operation.operationId)).size).toBe(23);
+    expect(operations).toHaveLength(29);
+    expect(new Set(operations.map((operation) => operation.operationId)).size).toBe(29);
     expect(
       new Set(
         operations.map(
           (operation) => `${operation.method} ${operation.pathTemplate}`,
         ),
       ).size,
-    ).toBe(23);
+    ).toBe(29);
   });
 
   it("requires idempotency for commands and If-Match for state actions", () => {
@@ -40,10 +40,16 @@ describe("asset-control M2-B operation contract", () => {
       "verify_bundle_installation",
       "rollback_bundle_installation",
       "uninstall_bundle_installation",
+      "create_ecommerce_growth_successor_registration",
+      "get_ecommerce_growth_successor_registration_receipt",
+      "prepare_ecommerce_growth_successor_registration",
       "withdraw_ecommerce_growth_registration",
       "get_ecommerce_growth_withdrawal_receipt",
       "submit_runtime_configuration_stage",
       "lookup_runtime_configuration_stage",
+      "execute_ecommerce_growth_cutover_phase",
+      "get_ecommerce_growth_cutover_prepare_receipt",
+      "get_ecommerce_growth_cutover_history",
       "create_bundle_runtime_operation",
     ]);
     expect(conditionalActions).toEqual([
@@ -54,7 +60,9 @@ describe("asset-control M2-B operation contract", () => {
       "verify_bundle_installation",
       "rollback_bundle_installation",
       "uninstall_bundle_installation",
+      "create_ecommerce_growth_successor_registration",
       "withdraw_ecommerce_growth_registration",
+      "execute_ecommerce_growth_cutover_phase",
       "create_bundle_runtime_operation",
     ]);
   });

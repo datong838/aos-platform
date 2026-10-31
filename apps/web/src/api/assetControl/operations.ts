@@ -13,6 +13,9 @@ export type AssetControlErrorStatus =
   | 503;
 
 export type AssetControlOperationId =
+  | "execute_ecommerce_growth_cutover_phase"
+  | "get_ecommerce_growth_cutover_prepare_receipt"
+  | "get_ecommerce_growth_cutover_history"
   | "resolve_bundle_composition"
   | "get_bundle_composition_lock"
   | "create_bundle_installation"
@@ -25,6 +28,9 @@ export type AssetControlOperationId =
   | "verify_bundle_installation"
   | "rollback_bundle_installation"
   | "uninstall_bundle_installation"
+  | "create_ecommerce_growth_successor_registration"
+  | "get_ecommerce_growth_successor_registration_receipt"
+  | "prepare_ecommerce_growth_successor_registration"
   | "withdraw_ecommerce_growth_registration"
   | "get_ecommerce_growth_withdrawal_receipt"
   | "get_ecommerce_growth_registration_status"
@@ -166,6 +172,21 @@ export const ASSET_CONTROL_OPERATIONS = {
     returnsEtag: true,
     errorStatuses: ACTION_ERRORS,
   },
+  createSuccessorRegistration: {
+    method: "POST", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-successor-registrations",
+    operationId: "create_ecommerce_growth_successor_registration", requiresIdempotencyKey: true,
+    requiresIfMatch: true, returnsEtag: false, errorStatuses: [...ACTION_ERRORS, 503],
+  },
+  readSuccessorRegistration: {
+    method: "GET", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-successor-registrations/receipt",
+    operationId: "get_ecommerce_growth_successor_registration_receipt", requiresIdempotencyKey: true,
+    requiresIfMatch: false, returnsEtag: false, errorStatuses: [...COMMAND_ERRORS, 503],
+  },
+  getSuccessorPreparation: {
+    method: "GET", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-successor-registration-preparation",
+    operationId: "prepare_ecommerce_growth_successor_registration", requiresIdempotencyKey: true,
+    requiresIfMatch: false, returnsEtag: false, errorStatuses: [...COMMAND_ERRORS, 503],
+  },
   withdrawRegistration: {
     method: "POST", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-registrations/withdrawals",
     operationId: "withdraw_ecommerce_growth_registration", requiresIdempotencyKey: true,
@@ -209,6 +230,21 @@ export const ASSET_CONTROL_OPERATIONS = {
     method: "GET", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/configurations",
     operationId: "list_bundle_runtime_configurations", requiresIdempotencyKey: false,
     requiresIfMatch: false, returnsEtag: false, errorStatuses: [...BASE_ERRORS, 409, 503],
+  },
+  executeCutover: {
+    method: "POST", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-cutovers/commands",
+    operationId: "execute_ecommerce_growth_cutover_phase", requiresIdempotencyKey: true,
+    requiresIfMatch: true, returnsEtag: false, errorStatuses: [...ACTION_ERRORS, 503],
+  },
+  readCutoverPrepare: {
+    method: "GET", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-cutovers/receipt",
+    operationId: "get_ecommerce_growth_cutover_prepare_receipt", requiresIdempotencyKey: true,
+    requiresIfMatch: false, returnsEtag: false, errorStatuses: [...COMMAND_ERRORS, 503],
+  },
+  readCutoverHistory: {
+    method: "GET", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-cutovers/history",
+    operationId: "get_ecommerce_growth_cutover_history", requiresIdempotencyKey: true,
+    requiresIfMatch: false, returnsEtag: false, errorStatuses: [...COMMAND_ERRORS, 503],
   },
   getRuntimeInstallation: {
     method: "GET",

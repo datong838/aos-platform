@@ -25,6 +25,8 @@ def _require_boundary(conn):
     from aos_api.aip_provider_capacity_publication_lock_boundary import audited_publication_epoch_caller
     try:
         publication_caller=audited_publication_epoch_caller(conn)
+        from aos_api.aip_provider_capacity_occupation_epoch_profile import occupation_epoch_profile_is_installed
+        occupation_profile=bool(publication_caller) and occupation_epoch_profile_is_installed(conn)
     except ValueError as error:
         raise CapacityEvidenceFenceBlocked('CAPACITY_EVIDENCE_PUBLICATION_CALLER_DRIFTED') from error
     role=conn.execute('SELECT * FROM pg_roles WHERE rolname=%s',(OWNER,)).fetchone()
@@ -60,7 +62,7 @@ def _require_boundary(conn):
         ids.append(row['oid'])
         caller='aos_runtime' if name=='lock' else 'aos_provider_capacity_issuer'
         allowed=[OWNER]+([caller] if reader else [])
-        if name=='issuer_lock' and publication_caller:
+        if publication_caller and (name=='issuer_lock' or (name=='lock' and occupation_profile)):
             allowed.append(publication_caller)
         grants=conn.execute('SELECT a.grantee,a.privilege_type,a.is_grantable FROM pg_proc p,'
             "LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s",(row['oid'],)).fetchall()

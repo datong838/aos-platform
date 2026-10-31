@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {checkPhase, checkIdentity, checkListeners, withProfileLock, handoffConfig, publicUrl} from './session_guard.mjs';
-import {classifyJinsha, classifyMeituan, requireUnique, canRelease, inViewport, shouldOpenJinshaContextMenu} from './handoff.mjs';
+import {classifyJinsha, classifyMeituan, requireUnique, canRelease, inViewport, shouldOpenJinshaContextMenu, isJinshaContextControl} from './handoff.mjs';
 
 test('manual confirmation gates every connection and binds the instance',()=>{
  const s={mode:'visible-handoff',phase:'MANUAL_LOGIN',instanceId:'new'};
@@ -96,6 +96,28 @@ test('Jinsha context failures remain diagnosable without reopening repair budget
  assert.doesNotThrow(()=>checkPhase(s,{instance:'new'},'diagnose-target'));
  assert.throws(()=>checkPhase(s,{instance:'new'},'verify-work-page'));
  assert.throws(()=>checkPhase({...s,lastDiagnosticObservation:{...observation,securityMarkers:['安全验证']}},{instance:'new'},'diagnose-target'));
+});
+test('an authenticated takeover permits one bound read-only context diagnosis and one repair retry',()=>{
+ const authenticated={authenticated:true,reason:'AUTHENTICATED',title:'臻肆外卖运营',url:'https://data.guoshuyufen.com/',loginMarkers:[],securityMarkers:[],contextMarkers:['授权失败']};
+ const s={mode:'visible-handoff',site:'jinsha',phase:'BLOCKED',failure:'CONTEXT_WAIMAI_NOT_UNIQUE',instanceId:'new',confirmationInstance:'new',loginTargetId:'login',loginMarker:'login-marker',taskId:'task',contextRepairAttempts:1,observations:[authenticated,authenticated]};
+ assert.doesNotThrow(()=>checkPhase(s,{instance:'new','task-id':'task'},'diagnose-target'));
+ for(const patch of [{site:'meituan'},{confirmationInstance:'old'},{taskId:'other'},{contextRepairAttempts:2},{contextDiagnosticAttempts:1},{observations:[authenticated,{...authenticated,securityMarkers:['滑动验证']}]}])
+  assert.throws(()=>checkPhase({...s,...patch},{instance:'new','task-id':'task'},'diagnose-target'));
+ const diagnosed={...s,lastDiagnosticObservation:authenticated,contextDiagnosticAttempts:1};
+ assert.doesNotThrow(()=>checkPhase(diagnosed,{instance:'new'},'ensure-jinsha-context'));
+ assert.throws(()=>checkPhase({...diagnosed,contextRepairAttempts:2},{instance:'new'},'ensure-jinsha-context'));
+ assert.throws(()=>checkPhase({...diagnosed,lastDiagnosticObservation:{...authenticated,loginMarkers:['账号登录']}},{instance:'new'},'ensure-jinsha-context'));
+});
+test('Jinsha context selection accepts only real menu items inside their fixed containers',()=>{
+ assert.equal(isJinshaContextControl({visible:true,text:'外卖',className:'completa_item complete_active completa_item3',parentClassName:'complete cursor'},'外卖','business'),true);
+ assert.equal(isJinshaContextControl({visible:true,text:'外卖',className:'',parentClassName:'check_span line_left_before'},'外卖','business'),false);
+ assert.equal(isJinshaContextControl({visible:true,text:'淘宝',className:'cutli cursor',parentClassName:'cut cursor'},'淘宝','platform'),true);
+ for(const record of [
+  {visible:false,text:'外卖',className:'completa_item',parentClassName:'complete cursor'},
+  {visible:true,text:'外卖 团购',className:'completa_item',parentClassName:'complete cursor'},
+  {visible:true,text:'外卖',className:'completa_item',parentClassName:'other cursor'},
+  {visible:true,text:'淘宝',className:'cutli cursor',parentClassName:'complete cursor'},
+ ])assert.equal(isJinshaContextControl(record,record.text.startsWith('淘宝')?'淘宝':'外卖',record.text.startsWith('淘宝')?'platform':'business'),false);
 });
 test('an authenticated Jinsha context diagnosis permits one read-only post-repair verification',()=>{
  const observation={authenticated:true,reason:'AUTHENTICATED',title:'臻肆外卖运营',url:'https://data.guoshuyufen.com/',markers:['数据中心','实时数据','活动监控'],loginMarkers:[],securityMarkers:[],contextMarkers:['授权失败']};

@@ -6,6 +6,7 @@ import { PageChrome } from "../../components/PageChrome";
 import { BudgetRevisionSetupPanel } from "./BudgetRevisionSetupPanel";
 import { BudgetActivationReviewPanel } from "./BudgetActivationReviewPanel";
 import { BudgetCostReviewPanel } from "./BudgetCostReviewPanel";
+import { BudgetPolicyRenewalReviewPanel } from "./BudgetPolicyRenewalReviewPanel";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -434,6 +435,7 @@ export function CapacityPage() {
         <BudgetRevisionSetupPanel />
         <BudgetActivationReviewPanel />
         <BudgetCostReviewPanel />
+        <BudgetPolicyRenewalReviewPanel />
         {sourceMode === "error" && (
           <div className="w2-a6a7-demo-banner" role="alert">
             <span className="w2-a6a7-demo-badge">加载失败</span>

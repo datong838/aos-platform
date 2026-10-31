@@ -21,6 +21,10 @@ from aos_api.aip_release_publication_service import (
     AipReleasePublicationPersistenceError,
     AipReleasePublicationService,
 )
+from aos_api.aip_route_release_request_context import (
+    RouteReleaseRequestContext,
+    optional_route_release_request_context,
+)
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
@@ -69,6 +73,8 @@ def _map_error(exc: Exception) -> ApiError:
 def derive_release_gate(
     body: DeriveReleaseGateRequest,
     principal: Principal = Depends(require_principal),
+    route_request_context: RouteReleaseRequestContext | None = Depends(
+        optional_route_release_request_context),
     service: AipReleasePublicationService = Depends(
         get_aip_release_publication_service
     ),
@@ -78,6 +84,7 @@ def derive_release_gate(
             TenantScope(principal.org_id, principal.project_id),
             actor=principal.subject,
             request=body,
+            route_request_context=route_request_context,
         )
     except Exception as exc:
         raise _map_error(exc) from exc
@@ -91,6 +98,8 @@ def derive_release_gate(
 def publish_logic_revision(
     body: PublishReleaseRequest,
     principal: Principal = Depends(require_principal),
+    route_request_context: RouteReleaseRequestContext | None = Depends(
+        optional_route_release_request_context),
     service: AipReleasePublicationService = Depends(
         get_aip_release_publication_service
     ),
@@ -100,6 +109,7 @@ def publish_logic_revision(
             TenantScope(principal.org_id, principal.project_id),
             actor=principal.subject,
             request=body,
+            route_request_context=route_request_context,
         )
     except Exception as exc:
         raise _map_error(exc) from exc

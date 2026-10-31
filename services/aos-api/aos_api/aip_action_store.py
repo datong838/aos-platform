@@ -145,7 +145,18 @@ class AipActionStore:
                  network_activation_guard=None, network_approval_guard=None,
                  first_content_guard=None, guard_activation_guard=None, guard_approval_guard=None,
                  model_eval_guard=None, source_license_guard=None, source_license_approval_guard=None,
-                 provider_capacity_guard=None, provider_capacity_source_guard=None) -> None:
+                 provider_capacity_guard=None, provider_capacity_source_guard=None, model_judge_guard=None,
+                 route_eval_guard=None) -> None:
+        if route_eval_guard is not None:
+            from aos_api.aip_model_route_eval_action import RouteEvalActionGuard
+            if type(route_eval_guard) is not RouteEvalActionGuard:
+                raise TypeError('exact Route Eval Action guard required')
+        self._route_eval_guard=route_eval_guard
+        if model_judge_guard is not None:
+            from aos_api.aip_model_eval_judge_action import ModelJudgeCallActionGuard
+            if type(model_judge_guard) is not ModelJudgeCallActionGuard:
+                raise TypeError('exact Model Judge Action guard required')
+        self._model_judge_guard=model_judge_guard
         if source_license_approval_guard is not None:
             from aos_api.aip_license_source_approval import SourceLicenseApprovalGuard
             if type(source_license_approval_guard) is not SourceLicenseApprovalGuard:
@@ -233,6 +244,16 @@ class AipActionStore:
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED') from exc
 
     def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
+        from aos_api.aip_action_policy import is_route_eval_action
+        if is_route_eval_action(body.action_type_id, action_snapshot):
+            if self._route_eval_guard is None:
+                raise AipActionTransitionBlocked('ROUTE_EVAL_ACTION_PRODUCER_REQUIRED')
+            return self._route_eval_guard.check_request(conn,scope,actor_id,body,action_snapshot,risk)
+        from aos_api.aip_action_policy import MODEL_JUDGE_CALL_ACTION_ID
+        if MODEL_JUDGE_CALL_ACTION_ID in {body.action_type_id, action_snapshot.get('id')}:
+            if self._model_judge_guard is None:
+                raise AipActionTransitionBlocked('MODEL_JUDGE_ACTION_PRODUCER_REQUIRED')
+            return self._model_judge_guard.check_request(conn,scope,actor_id,body,action_snapshot,risk)
         if "aip_review_provider_capacity_source" in {body.action_type_id, action_snapshot.get("id")}:
             if self._provider_capacity_source_guard is None:
                 raise AipActionTransitionBlocked('PROVIDER_CAPACITY_SOURCE_GUARD_REQUIRED')
@@ -296,6 +317,16 @@ class AipActionStore:
             impact_preview=body.impact_preview_ref)[0]
 
     def _internal_proposal_guard(self, conn, scope, actor_id, row, *, checker):
+        from aos_api.aip_action_policy import is_route_eval_action
+        if is_route_eval_action(row['action_type_id'], row['action_type_snapshot']):
+            if self._route_eval_guard is None:
+                raise AipActionTransitionBlocked('ROUTE_EVAL_ACTION_PRODUCER_REQUIRED')
+            return self._route_eval_guard.check_proposal(conn,scope,actor_id,row,checker=checker)
+        from aos_api.aip_action_policy import MODEL_JUDGE_CALL_ACTION_ID
+        if MODEL_JUDGE_CALL_ACTION_ID in {row['action_type_id'], row['action_type_snapshot'].get('id')}:
+            if self._model_judge_guard is None:
+                raise AipActionTransitionBlocked('MODEL_JUDGE_ACTION_PRODUCER_REQUIRED')
+            return self._model_judge_guard.check_proposal(conn,scope,actor_id,row,checker=checker)
         if "aip_review_provider_capacity_source" in {row['action_type_id'],row['action_type_snapshot'].get('id')}:
             if self._provider_capacity_source_guard is None:
                 raise AipActionTransitionBlocked('PROVIDER_CAPACITY_SOURCE_GUARD_REQUIRED')
@@ -1201,6 +1232,13 @@ class AipActionStore:
     ) -> ActionDraftBundle:
         request_hash = canonical_hash(body.model_dump(mode="json", by_alias=True))
         with self._connect(scope) as conn:
+            judge_prelocked=None
+            if self._model_judge_guard is not None:
+                judge_prelocked=self._model_judge_guard.prelock_decision(conn,scope,proposal_id)
+            route_prelocked=None
+            if self._route_eval_guard is not None:
+                route_prelocked=self._route_eval_guard.prelock_decision(
+                    conn,scope,actor_id,proposal_id)
             self._idempotency_lock(conn, scope, "approval", idempotency_key)
             row = conn.execute(
                 "SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s FOR UPDATE",
@@ -1208,6 +1246,10 @@ class AipActionStore:
             ).fetchone()
             if row is None:
                 raise AipActionNotFound("proposal not found in scope")
+            if self._model_judge_guard is not None:
+                self._model_judge_guard.assert_prelocked_proposal(row,judge_prelocked)
+            if self._route_eval_guard is not None:
+                self._route_eval_guard.assert_prelocked_proposal(row,route_prelocked)
             current_roles = self._internal_proposal_guard(conn, scope, actor_id, row, checker=True)
             if current_roles is not None:
                 actor_roles = current_roles
@@ -1216,8 +1258,14 @@ class AipActionStore:
                 (*scope.key, idempotency_key),
             ).fetchone()
             if replay is not None:
-                if row['action_type_id'] in {'aip_request_provider_capacity','aip_review_provider_capacity_source'} and replay['actor_id'] != actor_id:
-                    raise AipActionTransitionBlocked('PROVIDER_CAPACITY_CHECKER_REPLAY_DRIFTED')
+                from aos_api.aip_action_policy import is_route_eval_action
+                route_action=is_route_eval_action(row['action_type_id'],row['action_type_snapshot'])
+                if (route_action or row['action_type_id'] in {'aip_request_provider_capacity',
+                        'aip_review_provider_capacity_source','aip_request_model_judge_call'}) and replay['actor_id'] != actor_id:
+                    if route_action:message='ROUTE_EVAL_CHECKER_REPLAY_DRIFTED'
+                    elif row['action_type_id']=='aip_request_model_judge_call':message='JUDGE_CHECKER_REPLAY_DRIFTED'
+                    else:message='PROVIDER_CAPACITY_CHECKER_REPLAY_DRIFTED'
+                    raise AipActionTransitionBlocked(message)
                 if replay["request_hash"] != request_hash or replay["proposal_id"] != proposal_id:
                     raise AipActionIdempotencyConflict("idempotency key reused for different approval")
                 return self._bundle(conn, scope, proposal_id)
@@ -1251,6 +1299,10 @@ class AipActionStore:
                      AND decision='approved' ORDER BY created_at,approval_event_id""",
                 (*scope.key, proposal_id),
             ).fetchall()
+            from aos_api.aip_action_policy import is_route_eval_action
+            if (body.decision is ApprovalDecision.APPROVED and approval_rows
+                    and is_route_eval_action(row['action_type_id'],row['action_type_snapshot'])):
+                raise AipActionTransitionBlocked('ROUTE_EVAL_UNIQUE_APPROVAL_REQUIRED')
             slot_id = f"checker.{len(approval_rows) + 1}"
             eligibility_snapshot_hash = canonical_hash(
                 {
