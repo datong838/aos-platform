@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ExactRuntimeRef, ModelRouteRevision, RegisteredModelRevision, RuntimePolicyRevision } from "./contracts";
-import { buildQyhModelDraft, buildQyhPolicyDraft, buildQyhRouteDraft, canonicalRuntimeHash, prepareQyhSuccessorDrafts, type QyhSuccessorDraftClient } from "./successorDrafts";
+import { buildQyhModelDraft, buildQyhPolicyDraft, buildQyhRouteDraft, canonicalRuntimeHash, inspectQyhSuccessorDraftState, prepareQyhSuccessorDrafts, type QyhSuccessorDraftClient } from "./successorDrafts";
 
 const H = "a".repeat(64), PAIR = "b".repeat(64);
 const tenant = { orgId: "org-org", projectId: "dev-project" };
@@ -94,6 +94,33 @@ describe("QYH successor drafts", () => {
     const client = clientFactory();
     vi.mocked(client.model).mockResolvedValue({ ...model, priceSnapshotRef: ref("OtherPriceRevision", "old-price") });
     await expect(prepareQyhSuccessorDrafts({ pairedPolicyRef, pairedPriceRef, now: () => "2026-10-31T01:00:00Z" }, client)).rejects.toThrow(/完整接续预检已漂移/);
+    expect(client.publishModel).not.toHaveBeenCalled();
+    expect(client.publishPolicy).not.toHaveBeenCalled();
+    expect(client.publishRoute).not.toHaveBeenCalled();
+  });
+  it("recognizes three exact current drafts after a page reload without publishing", async () => {
+    const { nextModel, nextPolicy, nextRoute } = await drafts();
+    const client = clientFactory();
+    vi.mocked(client.model).mockImplementation(async (_id, revision) => revision === model.revision ? model : nextModel);
+    vi.mocked(client.policy).mockImplementation(async (_id, revision) => revision === policy.revision ? policy : nextPolicy);
+    vi.mocked(client.route).mockImplementation(async (_id, revision) => revision === route.revision ? route : nextRoute);
+    await expect(inspectQyhSuccessorDraftState({ pairedPolicyRef, pairedPriceRef, now: () => "2026-10-31T03:00:00Z" }, client)).resolves.toMatchObject({
+      status: "prepared",
+      observed: { model: true, policy: true, route: true },
+      model: { revision: 13 }, policy: { revision: 14 }, route: { revision: 13 },
+    });
+    expect(client.publishModel).not.toHaveBeenCalled();
+    expect(client.publishPolicy).not.toHaveBeenCalled();
+    expect(client.publishRoute).not.toHaveBeenCalled();
+  });
+  it("freezes a partially observed chain without filling or resending missing drafts", async () => {
+    const { nextModel } = await drafts();
+    const client = clientFactory();
+    vi.mocked(client.model).mockImplementation(async (_id, revision) => revision === model.revision ? model : nextModel);
+    await expect(inspectQyhSuccessorDraftState({ pairedPolicyRef, pairedPriceRef, now: () => "2026-10-31T03:00:00Z" }, client)).resolves.toMatchObject({
+      status: "partial_observed",
+      observed: { model: true, policy: false, route: false },
+    });
     expect(client.publishModel).not.toHaveBeenCalled();
     expect(client.publishPolicy).not.toHaveBeenCalled();
     expect(client.publishRoute).not.toHaveBeenCalled();

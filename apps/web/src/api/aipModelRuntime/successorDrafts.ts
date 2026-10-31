@@ -1,5 +1,5 @@
 import type { ExactRuntimeRef, ModelRouteRevision, RegisteredModelRevision, RuntimePolicyRevision } from "./contracts";
-import { inspectQyhSuccessorPreflight, QYH_RUNTIME_SUCCESSOR } from "./qyhSuccessorPreflight";
+import { inspectQyhSuccessorPreflight, QYH_RUNTIME_SUCCESSOR, type QyhSuccessorPreflight } from "./qyhSuccessorPreflight";
 
 export type QyhSuccessorDraftClient = {
   model(id: string, revision?: number): Promise<RegisteredModelRevision>;
@@ -12,6 +12,21 @@ export type QyhSuccessorDraftClient = {
 
 type PrepareInput = { pairedPolicyRef: ExactRuntimeRef; pairedPriceRef: ExactRuntimeRef; now?: () => string };
 type Prepared = { status: "prepared"; model: RegisteredModelRevision; policy: RuntimePolicyRevision; route: ModelRouteRevision };
+export type QyhSuccessorDraftState = {
+  status: "ready_to_prepare" | "partial_observed" | "prepared";
+  observed: { model: boolean; policy: boolean; route: boolean };
+  model: RegisteredModelRevision;
+  policy: RuntimePolicyRevision;
+  route: ModelRouteRevision;
+  preflight: QyhSuccessorPreflight;
+};
+
+type ResolvedDraftState = QyhSuccessorDraftState & {
+  suffix: string;
+  modelBase: RegisteredModelRevision;
+  policyBase: RuntimePolicyRevision;
+  routeBase: ModelRouteRevision;
+};
 
 function canonicalJson(value: unknown): string {
   if (value === null || typeof value === "boolean" || typeof value === "string") return JSON.stringify(value);
@@ -111,7 +126,7 @@ async function publishAndRead<T extends { revision: number; contentHash: string 
   return current;
 }
 
-export async function prepareQyhSuccessorDrafts(input: PrepareInput, client: QyhSuccessorDraftClient): Promise<Prepared> {
+async function resolveQyhSuccessorDraftState(input: PrepareInput, client: QyhSuccessorDraftClient): Promise<ResolvedDraftState> {
   const suffix = pairSuffix(input), at = (input.now ?? (() => new Date().toISOString()))();
   const [currentModel, currentPolicy, currentRoute] = await Promise.all([
     client.model(QYH_RUNTIME_SUCCESSOR.modelId), client.policy(QYH_RUNTIME_SUCCESSOR.policyId), client.route(QYH_RUNTIME_SUCCESSOR.routeId),
@@ -138,17 +153,42 @@ export async function prepareQyhSuccessorDrafts(input: PrepareInput, client: Qyh
   });
   if (!refreshedPreflight.ready) throw new Error("写入前完整接续预检已漂移");
 
-  const modelResult = modelState.done ? modelState.target : await publishAndRead(
-    () => client.publishModel(modelState.target, `qyh-successor-model-${suffix}-r${modelState.target.revision}`, modelState.base.revision),
-    () => client.model(modelState.target.registeredModelId), modelState.target,
+  const observed = { model: modelState.done, policy: policyState.done, route: routeDone };
+  const completed = Number(observed.model) + Number(observed.policy) + Number(observed.route);
+  return {
+    status: completed === 0 ? "ready_to_prepare" : completed === 3 ? "prepared" : "partial_observed",
+    observed,
+    model: modelState.target,
+    policy: policyState.target,
+    route: routeTarget,
+    preflight: refreshedPreflight,
+    suffix,
+    modelBase: modelState.base,
+    policyBase: policyState.base,
+    routeBase,
+  };
+}
+
+export async function inspectQyhSuccessorDraftState(input: PrepareInput, client: QyhSuccessorDraftClient): Promise<QyhSuccessorDraftState> {
+  const { status, observed, model, policy, route, preflight } = await resolveQyhSuccessorDraftState(input, client);
+  return { status, observed, model, policy, route, preflight };
+}
+
+export async function prepareQyhSuccessorDrafts(input: PrepareInput, client: QyhSuccessorDraftClient): Promise<Prepared> {
+  const state = await resolveQyhSuccessorDraftState(input, client);
+  const { suffix, modelBase, policyBase, routeBase } = state;
+
+  const modelResult = state.observed.model ? state.model : await publishAndRead(
+    () => client.publishModel(state.model, `qyh-successor-model-${suffix}-r${state.model.revision}`, modelBase.revision),
+    () => client.model(state.model.registeredModelId), state.model,
   );
-  const policyResult = policyState.done ? policyState.target : await publishAndRead(
-    () => client.publishPolicy(policyState.target, `qyh-successor-policy-${suffix}-r${policyState.target.revision}`, policyState.base.revision),
-    () => client.policy(policyState.target.policyId), policyState.target,
+  const policyResult = state.observed.policy ? state.policy : await publishAndRead(
+    () => client.publishPolicy(state.policy, `qyh-successor-policy-${suffix}-r${state.policy.revision}`, policyBase.revision),
+    () => client.policy(state.policy.policyId), state.policy,
   );
-  const routeResult = routeDone ? routeTarget : await publishAndRead(
-    () => client.publishRoute(routeTarget, `qyh-successor-route-${suffix}-r${routeTarget.revision}`, routeBase.revision),
-    () => client.route(routeTarget.routeId), routeTarget,
+  const routeResult = state.observed.route ? state.route : await publishAndRead(
+    () => client.publishRoute(state.route, `qyh-successor-route-${suffix}-r${state.route.revision}`, routeBase.revision),
+    () => client.route(state.route.routeId), state.route,
   );
   return { status: "prepared", model: modelResult, policy: policyResult, route: routeResult };
 }

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "aos.qyh-successor-draft-recovery-checkpoint/v1",
+  "recordedAt": "2026-10-31T20:52:00+08:00",
+  "tenant": { "orgId": "org-org", "projectId": "dev-project" },
+  "sourceHead": "42f1027b4",
+  "result": "DRAFT_REFRESH_RECOVERY_AND_EVAL_HANDOFF_IMPLEMENTED_NOT_EXECUTED",
+  "businessAcceptance": false,
+  "engineeringClosed": 2,
+  "realBusinessAccepted": 0,
+  "developmentLoginSkipPreserved": true,
+  "states": {
+    "readyToPrepare": "active base heads exactly revalidated",
+    "partialObserved": "one or two exact drafts observed; automatic continuation frozen",
+    "prepared": "three exact drafts observed; Eval navigation only"
+  },
+  "writes": {
+    "browserConfirmationClicked": false,
+    "databaseWritten": false,
+    "evalCreated": false,
+    "assetActivated": false,
+    "providerCalled": false,
+    "modelCalled": false
+  },
+  "tests": {
+    "focused": "15/15 passed",
+    "adjacent": "168/168 passed",
+    "typescript": "passed",
+    "webBuild": "passed",
+    "diffCheck": "passed"
+  },
+  "browser": {
+    "url": "http://127.0.0.1:18434/aip/capacity",
+    "pageLoaded": true,
+    "developmentModeVisible": true,
+    "optionalLoginVisible": true,
+    "fixedExpiryVisible": "2027-03-31 12:00 Asia/Shanghai",
+    "pairedConsumeObserved": false,
+    "successorStateClaimed": false
+  },
+  "sha256": {
+    "successorDrafts.ts": "77fdfe10617388fa7342e2a0196146a222785f2a71b483029c1faeee34b3d437",
+    "successorDrafts.test.ts": "a5dab9cbbde9f7cfb9ab06401c0b8f9002a954b0f252f611bf71c7cef123290f",
+    "QyhRuntimeSuccessorPreflightPanel.tsx": "c046f536d89a74847359110effed63f71df7f60ab15bc9436383c11e2896ff61",
+    "QyhRuntimeSuccessorPreflightPanel.test.tsx": "fc1bba0b7c4e4a5db76add1ea6f798996678600372326f5a9ddf9c6f4905154d",
+    "plan.md": "c9e95d508b96507c50410f8e463ff34e69728dab66d6aef62b7a9779d0fc2598"
+  },
+  "next": "本人完成 native cost 与 paired-window consume 后明确准备草稿；刷新可恢复真实草稿状态，三个草稿精确观察后再由本人进入 Eval 门控。"
+}
