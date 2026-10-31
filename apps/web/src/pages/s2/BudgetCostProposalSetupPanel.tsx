@@ -10,7 +10,7 @@ import {
 } from "../../config/qyhCostRenewalDefaults";
 import type { BudgetTarget } from "../../api/aipBudgetActivation";
 import { getAuthRevision, getTenant } from "../../api/tenant";
-import { budgetIdentity, useBudgetRequestGuard } from "./useBudgetRequestGuard";
+import { useBudgetRequestGuard } from "./useBudgetRequestGuard";
 
 type Member = { subject: string; role?: string };
 

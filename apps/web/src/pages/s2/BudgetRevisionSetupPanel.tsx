@@ -79,11 +79,6 @@ export function exactBudgetDraftReadback(value: unknown, expected: BudgetDraftBo
 
 import { defaultBudgetDraftInput } from "../../config/qyhCostRenewalDefaults";
 
-const EMPTY: BudgetDraftInput = {
-  budgetId: "", dailyYuan: "", monthlyYuan: "", alertThresholdPct: "", effectiveFrom: "", effectiveUntil: "",
-  owner: "", overBudgetApprover: "",
-};
-
 export function BudgetRevisionSetupPanel() {
   const [input, setInput] = useState<BudgetDraftInput>(() => defaultBudgetDraftInput());
   const [attempted, setAttempted] = useState(false);
