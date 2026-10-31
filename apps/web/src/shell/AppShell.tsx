@@ -689,7 +689,7 @@ export function AppShell() {
           </aside>
           <main className="main">
             <OfflineBanner />
-            <DevOidcSessionBanner />
+            {onWorkshopPrimaryVisualRoute ? null : <DevOidcSessionBanner />}
             <ApiStatusBar />
             <div className="content" ref={contentRef}>
               <Outlet key={workspaceKey} />

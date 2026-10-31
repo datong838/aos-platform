@@ -376,7 +376,22 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
       expect(host.querySelector('.nav a[href="/workshop/buddy"]'), path).not.toBeNull();
       expect(host.querySelector('.nav a[href="/aip/model-runtime"]'), path).not.toBeNull();
       expect(host.querySelector(".analyst-exact-side-nav"), path).toBeNull();
+      expect(host.textContent, path).not.toContain("正式办理时登录");
     }
+  });
+
+  it("非八工作台办理页仍保留开发期按需正式登录入口", async () => {
+    const client = { listModules: async () => primaryWorkshopCatalog() };
+    await act(async () => root.render(
+      <MemoryRouter initialEntries={["/aip/capacity"]}>
+        <EcommerceWorkshopCatalogProvider client={client}>
+          <Routes><Route element={<AppShell />}><Route path="aip/capacity" element={<p>容量管理</p>} /></Route></Routes>
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+    expect(host.textContent).toContain("正式办理时登录");
+    expect(host.querySelector('input[type="password"]')).toBeNull();
   });
 
   it("任务总控路由启用独立视觉壳并保留搜索与日历入口", async () => {

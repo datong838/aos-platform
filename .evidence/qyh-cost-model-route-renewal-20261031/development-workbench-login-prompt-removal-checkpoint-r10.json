@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "aos.qyh.development-workbench-login-prompt-removal-checkpoint/v1",
+  "recordedAt": "2026-10-31T23:34:00+08:00",
+  "branch": "m1",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "result": "EIGHT_DEVELOPMENT_WORKBENCHES_BROWSE_WITHOUT_LOGIN_PROMPT",
+  "change": {
+    "workbenchLoginPromptVisible": false,
+    "formalHandlingPageLoginPromptVisible": true,
+    "formalLoginFormDefaultExpanded": false,
+    "loginCapabilityRemoved": false,
+    "backendAuthorizationRelaxed": false
+  },
+  "verification": {
+    "red": "Eight-workbench shell assertion failed before implementation because the global formal-login prompt remained visible.",
+    "focusedBoundaryTests": "2 passed, 17 skipped",
+    "adjacentLoginCatalogRouteTests": "19 passed",
+    "typescript": "passed",
+    "fullShellKnownDebt": "3 pre-existing development-preview assertions retained as TD-017",
+    "shadowWeb": {
+      "port": 18435,
+      "cockpitHttp": 200,
+      "apiHealthHttp": 200,
+      "routeEvalRunOptionsAnonymousHttp": 401,
+      "renewalGatewayAnonymousHttp": 403,
+      "eightWorkbenchLinksVisible": true,
+      "workbenchFormalLoginPromptVisible": false,
+      "stopped": true
+    },
+    "formalWeb": {
+      "oldPid": 91935,
+      "newPid": 1123,
+      "port": 18434,
+      "singleRestart": true,
+      "hmr": false,
+      "apiProxy": "http://127.0.0.1:18080",
+      "cockpitHttp": 200,
+      "apiHealthHttp": 200,
+      "routeEvalRunOptionsAnonymousHttp": 401,
+      "renewalGatewayAnonymousHttp": 403,
+      "eightWorkbenchLinksVisible": true,
+      "workbenchFormalLoginPromptVisible": false,
+      "capacityFormalLoginPromptVisible": true,
+      "capacityLoginFormExpanded": false
+    }
+  },
+  "hashes": {
+    "apps/web/src/shell/AppShell.tsx": "a337a63a2cb73cc17ac9aa6acf874c2bc4ea4995d848a6a71f018d99e38e6156",
+    "apps/web/src/shell/AppShell.workshop.test.tsx": "732a19b13fea3398b656647ed0fb51d4f8ab6bad66b0797a09f68e67f54ce500",
+    "D-waves/2026-10-31-QYH价格模型策略路由接续方案.md": "b25ebea8e7143d82ce2d07c6ede84217410cdefce4863f5464db422f2d35254c",
+    "业务主线优先与技术债台账/2026-10-31.md": "b94770c5fd4ed6672f3f269b11f6102c7962e1af6bb405a8eea997e89562a510"
+  },
+  "boundaries": {
+    "currentBusinessDatabaseTouched": false,
+    "apiRestarted": false,
+    "renewalGatewaysRestarted": false,
+    "credentialsEnteredOrRead": false,
+    "businessObjectsCreated": false,
+    "hostWorkerProviderModelSchedule": "OFF",
+    "mallSourceRead": false,
+    "pushed": false
+  },
+  "stageAccounting": {
+    "engineeringClosed": "2/8",
+    "realBusinessAccepted": "0/8",
+    "changed": false
+  },
+  "nextHardGap": "Human native cost and policy-window approval remains required only on formal handling pages before current-install configuration; workbench development browsing no longer asks for login."
+}
