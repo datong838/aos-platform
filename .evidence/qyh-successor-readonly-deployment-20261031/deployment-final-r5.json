@@ -1,0 +1,77 @@
+{
+  "phase": "ROUTE_EVAL_RUN_OPTIONS_FORMAL_READONLY_DEPLOYED",
+  "head": "f1db3d2b4cb1d916107217664efd143384432e15",
+  "commit": "f1db3d2b4cb1d916107217664efd143384432e15",
+  "source": {
+    "path": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-successor-readonly-deployment-20261031/private/source-r5",
+    "baseline": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-successor-readonly-deployment-20261031/private/source-r4",
+    "fileCount": 31609,
+    "manifestSha256": "e7fad743c4ceefc7f38dc6db1a2075161ce3307e4520b2817e4186ff457f9cf4",
+    "envelopeSha256": "6e5096dc9b978a4206531bd545f680761685768398fd0d698ce52c37bfba1ee3",
+    "overlayFiles": 2
+  },
+  "formalProcesses": {
+    "api": {
+      "pid": 16589,
+      "startIdentity": "darwin:1793456359:529239",
+      "port": 18080,
+      "source": "source-r5"
+    },
+    "renewalGateway": {
+      "pid": 18257,
+      "startIdentity": "darwin:1793456435:846312",
+      "port": 18462,
+      "writerEnabled": false
+    },
+    "windowGateway": {
+      "pid": 18258,
+      "startIdentity": "darwin:1793456435:847666",
+      "port": 18468,
+      "writerEnabled": false
+    },
+    "web": {
+      "pid": 91935,
+      "port": 18434,
+      "apiProxy": "http://127.0.0.1:18080",
+      "restarted": false
+    }
+  },
+  "checks": {
+    "sourceAndProcessContractAccepted": true,
+    "shadowHealth": 200,
+    "shadowOpenapi": 200,
+    "shadowRunOptionsAnonymous": 401,
+    "shadowSnapshotAnonymous": 401,
+    "shadowOtherPostClosed": 405,
+    "shadowExitConfirmed": true,
+    "shadowPortReleased": true,
+    "apiHealth": 200,
+    "apiOpenapi": 200,
+    "apiOidc": 200,
+    "apiRunOptionsAnonymous": 401,
+    "apiSnapshotAnonymous": 401,
+    "apiRunOptionsPostClosed": 405,
+    "renewalGatewayAnonymous": 403,
+    "windowGatewayAnonymous": 403,
+    "webCockpit": 200,
+    "webProxyHealth": 200,
+    "webProxyRunOptionsAnonymous": 401,
+    "browserEightWorkbenchLinksVisible": true,
+    "browserFormalLoginCollapsed": true
+  },
+  "boundaries": {
+    "tenant": "org-org/dev-project",
+    "databaseReadOnly": true,
+    "hostWorkerProviderSchedule": "OFF",
+    "businessObjectsCreated": false,
+    "evalRunRead": false,
+    "providerCalled": false,
+    "modelCalled": false,
+    "humanLoginPerformed": false,
+    "existingUserBrowserReloaded": false,
+    "cursorDirtyCommitted": false,
+    "engineeringAccepted": "2/8",
+    "realBusinessAccepted": "0/8"
+  },
+  "next": "本人正式登录后明确点击只读查找真实 queued/running EvalRun；选择后仍需再次读取单条权威 Run 和只读 snapshot，不得推导批准或执行权。"
+}
