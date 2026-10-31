@@ -4,6 +4,21 @@ import { inquireCost, readCostReview, restoreCostReference, saveCostReference, s
  type CostRef, type CostReview, type CostResult } from '../../api/aipBudgetCost';
 import { budgetIdentity, useBudgetRequestGuard } from './useBudgetRequestGuard';
 import {BudgetPolicyWindowReviewPanel} from './BudgetPolicyWindowReviewPanel';
+import { COST_CONFIRM_DEFAULTS } from '../../config/qyhCostRenewalDefaults';
+
+function defaultChoice(operation: CostRef['operation']): string {
+  if (operation === 'decide') return COST_CONFIRM_DEFAULTS.decide;
+  if (operation === 'consume') return COST_CONFIRM_DEFAULTS.consume;
+  if (operation === 'configure') return COST_CONFIRM_DEFAULTS.configure;
+  return '';
+}
+
+function confirmLabel(operation: CostRef['operation']): string {
+  if (operation === 'decide') return '确认批准（推荐默认）';
+  if (operation === 'consume') return '确认启用预算（推荐默认）';
+  if (operation === 'configure') return '确认生成费用配置（推荐默认）';
+  return '撤销费用批准';
+}
 
 export function BudgetCostReviewPanel(){
  const initial=useRef(restoreCostReference(typeof window==='undefined'?'':window.location.search));
@@ -11,7 +26,9 @@ export function BudgetCostReviewPanel(){
  const [choice,setChoice]=useState(''),[reason,setReason]=useState(''),[ref,setRef]=useState<CostRef|null>(initial.current?.ref??null);
  const [source,setSource]=useState<CostReview|null>(null),[result,setResult]=useState<CostResult|null>(null),sourceIdentity=useRef('');
  const [consumption,setConsumption]=useState<CostResult|null>(null);
- const [message,setMessage]=useState('先读取费用提议与原请求，再由适用账号明确复核。');
+ const [message,setMessage]=useState('推荐默认已选；您只需确认。有提议 ID 时会自动读取。');
+ const pendingAutoLoad=useRef(false);
+ const lastSubmitOp=useRef<CostRef['operation']|null>(null);
  function clear(){setConsumption(null);setSource(null);setResult(null);setRef(null);sourceIdentity.current='';}
  const guard=useBudgetRequestGuard(()=>{clear();setId('');setChoice('');setReason('');setMessage('身份或工作区已变化，请重新读取费用提议。');});
  function invalidate(){guard.invalidate();clear();}
@@ -29,10 +46,35 @@ export function BudgetCostReviewPanel(){
  useEffect(()=>{
   function onCreated(event: Event){const detail=(event as CustomEvent<{proposalId?:string}>).detail;
    if(typeof detail?.proposalId!=='string'||!detail.proposalId.trim())return;
-   invalidate();setOperation('decide');setId(detail.proposalId);setMessage('已填入新提议 ID；请先读取费用提议，再由审核人提交复核。');}
+   invalidate();pendingAutoLoad.current=true;setOperation('decide');setId(detail.proposalId);setChoice(COST_CONFIRM_DEFAULTS.decide);
+   setMessage('已填入提议 ID 并将自动读取；请用审核人账号点「确认批准」。');}
   window.addEventListener('aos-cost-proposal-created',onCreated);
   return ()=>window.removeEventListener('aos-cost-proposal-created',onCreated);
  },[]);
+ useEffect(()=>{
+  if(!pendingAutoLoad.current||!id.trim()||guard.busyRef.current)return;
+  pendingAutoLoad.current=false;
+  setChoice(defaultChoice(operation));
+  void load();
+ },[id,operation]);
+ useEffect(()=>{
+  if(!source||sourceIdentity.current!==budgetIdentity())return;
+  if(operation==='revoke'){setChoice('');return;}
+  if(operation==='configure'&&consumption?.status!=='observed'){setChoice('');return;}
+  if(operation==='consume'&&source.decision?.decision!=='approved'){setChoice('');return;}
+  if(operation==='decide'&&source.decision!==null){setChoice('');return;}
+  setChoice(defaultChoice(operation));
+ },[source,operation,consumption]);
+ useEffect(()=>{
+  if(result?.status!=='observed'||!lastSubmitOp.current||!source)return;
+  const op=lastSubmitOp.current;
+  lastSubmitOp.current=null;
+  const actor=getTenant().subject;
+  const p=source.proposal.proposal;
+  if(op==='decide'&&actor===p.checkerSubject){pendingAutoLoad.current=true;setOperation('consume');setChoice(COST_CONFIRM_DEFAULTS.consume);setMessage('已批准。请切回 maker 账号后点「确认启用预算」。');}
+  else if(op==='consume'&&actor===p.makerSubject){pendingAutoLoad.current=true;setOperation('configure');setChoice(COST_CONFIRM_DEFAULTS.configure);setMessage('已启用。请点「确认生成费用配置」。');}
+  else if(op==='configure'){setMessage('费用配置已确认；cost 父链本步完成。');}
+ },[result,source]);
  async function load(){if(guard.busyRef.current)return;setSource(null);setResult(null);setConsumption(null);
   await run(async current=>{const value=await readCostReview(id.trim());if(!current())throw new Error('身份已变化');
    const next={id:value.proposal.proposalId,operation};saveCostReference(next,guard.attempted(next));
@@ -51,23 +93,28 @@ export function BudgetCostReviewPanel(){
    &&[p.proposal.makerSubject,p.proposal.checkerSubject].includes(actor)&&reason.length>0&&reason.length<=500&&reason.trim()===reason&&!/[\u0000-\u001f\u007f]/.test(reason);
  }
  async function submit(){if(guard.busyRef.current||!eligible()||!source||!ref)return;
-  const original=ref;guard.markAttempted(original);setResult({status:'unresolved'});
+  const original=ref;lastSubmitOp.current=operation;guard.markAttempted(original);setResult({status:'unresolved'});
   await run(async()=>{saveCostReference(original,true);return {ref:original,result:await submitCost(original,source,choice,reason,operation==='configure'?consumption??undefined:undefined)};});
  }
  const p=source?.proposal.proposal,t=p?.target,b=p?.basis;
  return <><section className="card" aria-label="费用风险审核与恢复" style={{padding:18,marginTop:16}}>
   <h2>费用风险审核与恢复</h2>
   <p>开发风险额度是待审核的费用承担范围，不是实际账单或 Provider 计费上限。批准仅记录审核意见；发起人可另行启用已批准预算。启用预算不会启动模型或业务，执行时仍须核验当前授权与额度。</p>
-  <div style={{display:'flex',flexWrap:'wrap',gap:12}}>
-   <label>操作<select aria-label="费用审核操作" value={operation} disabled={guard.busy} onChange={e=>{invalidate();setOperation(e.target.value as CostRef['operation']);setChoice('');setReason('');}}>
-    <option value="decide">独立复核费用提议</option><option value="revoke">撤销费用批准</option><option value="consume">启用已批准预算</option><option value="configure">生成费用配置</option>
-   </select></label>
-   <label>费用提议 ID<input aria-label="费用提议 ID" maxLength={160} value={id} disabled={guard.busy} onChange={e=>{invalidate();setId(e.target.value);setChoice('');setReason('');}}/></label>
-  </div>
-  <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:12}}>
-   <button type="button" className="btn" disabled={guard.busy||!id.trim()} onClick={()=>void load()}>读取费用提议</button>
-   <button type="button" className="btn" disabled={guard.busy||!ref} onClick={()=>{if(ref)void run(async()=>({ref,result:await inquireCost(ref,source??undefined,operation==='configure'&&consumption?.status==='observed'?consumption:undefined)}));}}>查询费用原请求</button>
-  </div>
+  <p>当前步骤：<strong>{operation==='decide'?'复核批准':operation==='consume'?'启用预算':operation==='configure'?'生成配置':'撤销'}</strong>
+   {id&&<> · 提议 <code>{id}</code></>}</p>
+  <details>
+   <summary>高级：改步骤 / 提议 ID / 只读查询</summary>
+   <div style={{display:'flex',flexWrap:'wrap',gap:12,marginTop:8}}>
+    <label>操作<select aria-label="费用审核操作" value={operation} disabled={guard.busy} onChange={e=>{invalidate();pendingAutoLoad.current=false;setOperation(e.target.value as CostRef['operation']);setChoice(defaultChoice(e.target.value as CostRef['operation']));setReason('');}}>
+     <option value="decide">独立复核费用提议</option><option value="revoke">撤销费用批准</option><option value="consume">启用已批准预算</option><option value="configure">生成费用配置</option>
+    </select></label>
+    <label>费用提议 ID<input aria-label="费用提议 ID" maxLength={160} value={id} disabled={guard.busy} onChange={e=>{invalidate();pendingAutoLoad.current=false;setId(e.target.value);setChoice(defaultChoice(operation));setReason('');}}/></label>
+   </div>
+   <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:8}}>
+    <button type="button" className="btn" disabled={guard.busy||!id.trim()} onClick={()=>void load()}>读取费用提议</button>
+    <button type="button" className="btn" disabled={guard.busy||!ref} onClick={()=>{if(ref)void run(async()=>({ref,result:await inquireCost(ref,source??undefined,operation==='configure'&&consumption?.status==='observed'?consumption:undefined)}));}}>查询费用原请求</button>
+   </div>
+  </details>
   {p&&t&&b&&<div aria-label="费用提议内容">
    <p>预算 {t.budgetId} · 候选第 {t.revision} 版 · 日上限 ¥{(t.dailyLimitMinor/100).toFixed(2)} · 月上限 ¥{(t.monthlyLimitMinor/100).toFixed(2)}</p>
    <p>Provider：{b.provider.assetId}（第 {b.provider.revision} 版）；模型：{b.providerModelId}</p>
@@ -79,10 +126,11 @@ export function BudgetCostReviewPanel(){
    {source.revocation&&<p>撤销人 {source.revocation.actorSubject}；原因：{source.revocation.reason}</p>}
   </div>}
   {operation==='configure'&&<p>{consumption?.status==='observed'?'已观察到对应预算启用回执，可复核生成费用配置。':'须先确认此提议对应的预算已启用；缺少、冲突或未知回执时不能生成费用配置。'}</p>}
-  {operation==='configure'?<label>费用配置确认<select aria-label="费用配置确认" value={choice} disabled={guard.busy} onChange={e=>setChoice(e.target.value)}><option value="">请明确选择</option><option value="configure">确认生成此批准对应的费用配置</option></select></label>:operation==='consume'?<label>预算启用确认<select aria-label="预算启用确认" value={choice} disabled={guard.busy} onChange={e=>setChoice(e.target.value)}><option value="">请明确选择</option><option value="consume">确认启用此批准对应的预算</option></select></label>:operation==='decide'?<label>复核意见<select aria-label="费用复核意见" value={choice} disabled={guard.busy} onChange={e=>setChoice(e.target.value)}>
+  {operation!=='revoke'&&<p role="status">推荐选择：<strong>{choice||defaultChoice(operation)}</strong>（可在高级里改）</p>}
+  {operation==='configure'?<label className="sr-only">费用配置确认<select aria-label="费用配置确认" value={choice} disabled={guard.busy} onChange={e=>setChoice(e.target.value)}><option value="">请明确选择</option><option value="configure">确认生成此批准对应的费用配置</option></select></label>:operation==='consume'?<label className="sr-only">预算启用确认<select aria-label="预算启用确认" value={choice} disabled={guard.busy} onChange={e=>setChoice(e.target.value)}><option value="">请明确选择</option><option value="consume">确认启用此批准对应的预算</option></select></label>:operation==='decide'?<label className="sr-only">复核意见<select aria-label="费用复核意见" value={choice} disabled={guard.busy} onChange={e=>setChoice(e.target.value)}>
    <option value="">请明确选择</option><option value="approved">批准此费用提议</option><option value="rejected">拒绝此费用提议</option>
   </select></label>:<label>撤销原因<input aria-label="费用撤销原因" maxLength={500} value={reason} disabled={guard.busy} onChange={e=>setReason(e.target.value)}/></label>}
-  <div style={{marginTop:12}}><button type="button" className="btn btn-primary" disabled={guard.busy||!eligible()} onClick={()=>void submit()}>{operation==='configure'?'生成费用配置':operation==='consume'?'启用已批准预算':operation==='decide'?'提交费用复核':'撤销费用批准'}</button></div>
+  <div style={{marginTop:12}}><button type="button" className="btn btn-primary" disabled={guard.busy||!eligible()} onClick={()=>void submit()}>{confirmLabel(operation)}</button></div>
   <p role="status">{message}</p>{result?.status==='observed'&&<p>原记录：{result.id}</p>}
   {result?.status==='observed'&&result.priceRef&&result.policyRef&&<div aria-label="费用配置历史引用"><p>价格配置：{result.priceRef.assetId} · 第 {result.priceRef.revision} 版</p><p>预算策略：{result.policyRef.assetId} · 第 {result.policyRef.revision} 版</p><p>这些引用证明原配置已生成，不代表当前仍有效或业务已运行。</p></div>}
  </section><BudgetPolicyWindowReviewPanel/></>;

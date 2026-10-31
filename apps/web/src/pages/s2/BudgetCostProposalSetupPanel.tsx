@@ -6,6 +6,7 @@ import {
   STABLE_DEV_MONTHS,
   stableDevWindowLabel,
   targetCoversStableDev,
+  resolveDevCheckerSubject,
 } from "../../config/qyhCostRenewalDefaults";
 import type { BudgetTarget } from "../../api/aipBudgetActivation";
 import { getAuthRevision, getTenant } from "../../api/tenant";
@@ -54,10 +55,11 @@ export function BudgetCostProposalSetupPanel() {
     void apiGetAuthoritative<Member[]>(`/v1/workspaces/${encodeURIComponent(projectId)}/members`)
       .then((list) => {
         if (!Array.isArray(list)) return;
-        setMembers(list.filter((m) => typeof m.subject === "string"));
+        const filtered = list.filter((m) => typeof m.subject === "string");
+        setMembers(filtered);
         const me = getTenant().subject;
-        const other = list.find((m) => m.subject && m.subject !== me);
-        if (other?.subject) setChecker((c) => c || other.subject);
+        const picked = resolveDevCheckerSubject(filtered, me);
+        if (picked) setChecker((c) => c || picked);
       })
       .catch(() => { /* 成员列表不可用时仍允许手填 checker */ });
   }, []);
@@ -127,27 +129,30 @@ export function BudgetCostProposalSetupPanel() {
       </p>
       <p>目标开发窗（默认）：{stableDevWindowLabel()}。正式续期截止单独办理，此处只保证开发期不断档。</p>
       {candidateTarget && <p>权威候选第 2 版有效期：{candidateTarget.effectiveFrom} → {candidateTarget.effectiveUntil}</p>}
-      <p>发起人（当前登录）：<strong>{me}</strong> · 身份键 {budgetIdentity()}</p>
+      <p>发起人（当前登录）：<strong>{me}</strong> · 独立审核人（推荐默认）：<strong>{checker || "加载中…"}</strong></p>
       {!candidateReady && <p role="alert">{candidateError || "正在读取预算候选…"}</p>}
-      <label>
-        独立审核人登录名
-        <input
-          aria-label="独立审核人登录名"
-          list="aos-cost-checker-members"
-          value={checker}
-          maxLength={200}
-          disabled={attempted || guard.busy}
-          onChange={(e) => setChecker(e.target.value)}
-        />
-      </label>
-      <datalist id="aos-cost-checker-members">
-        {members.filter((m) => m.subject !== me).map((m) => (
-          <option key={m.subject} value={m.subject}>{m.role ?? "member"}</option>
-        ))}
-      </datalist>
+      <input type="hidden" aria-label="独立审核人登录名" value={checker} readOnly />
+      <details style={{ marginTop: 8 }}>
+        <summary>高级：更换审核人</summary>
+        <label>
+          独立审核人登录名
+          <input
+            list="aos-cost-checker-members"
+            value={checker}
+            maxLength={200}
+            disabled={attempted || guard.busy}
+            onChange={(e) => setChecker(e.target.value)}
+          />
+        </label>
+        <datalist id="aos-cost-checker-members">
+          {members.filter((m) => m.subject !== me).map((m) => (
+            <option key={m.subject} value={m.subject}>{m.role ?? "member"}</option>
+          ))}
+        </datalist>
+      </details>
       <div style={{ marginTop: 12 }}>
         <button type="button" className="btn btn-primary" disabled={!candidateReady || attempted || guard.busy || !checker.trim()} onClick={() => void submit()}>
-          按 {STABLE_DEV_MONTHS} 个月开发默认发起费用提议
+          确认发起（推荐默认已填）
         </button>
       </div>
       <p role="status">{message}</p>

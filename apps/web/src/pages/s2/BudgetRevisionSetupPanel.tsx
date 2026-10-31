@@ -178,9 +178,11 @@ export function BudgetRevisionSetupPanel() {
   }
 
   return <section className="card" aria-label="预算草稿配置" style={{ padding: 18, marginTop: 16 }}>
-    <h2>预算修订草稿</h2>
-    <p>金额单位为元，服务端存分；日/月上限、告警阈值、负责人、超预算审批人及生效窗口均由您明确填写。此处不会自动激活或调用付费能力。</p>
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10 }}>
+    <h2>预算修订草稿（推荐默认）</h2>
+    <p>三月开发窗 · {input.budgetId || "—"} · 日 {input.dailyYuan || "—"} 元 / 月 {input.monthlyYuan || "—"} 元。您只需确认写入 draft。</p>
+    <details>
+      <summary>高级：改字段</summary>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, marginTop: 8 }}>
       <label>预算 ID<input value={input.budgetId} disabled={attempted} onChange={e => setField("budgetId", e.target.value)} /></label>
       <label>日上限（元）<input inputMode="decimal" value={input.dailyYuan} disabled={attempted} onChange={e => setField("dailyYuan", e.target.value)} /></label>
       <label>月上限（元）<input inputMode="decimal" value={input.monthlyYuan} disabled={attempted} onChange={e => setField("monthlyYuan", e.target.value)} /></label>
@@ -190,9 +192,10 @@ export function BudgetRevisionSetupPanel() {
       <label>负责人<input value={input.owner} disabled={attempted} onChange={e => setField("owner", e.target.value)} /></label>
       <label>超预算审批人<input value={input.overBudgetApprover} disabled={attempted} onChange={e => setField("overBudgetApprover", e.target.value)} /></label>
     </div>
+    </details>
     <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
       <button type="button" className="btn" disabled={busy} onClick={() => void lookupExisting()}>按 ID 只读查询</button>
-      <button type="button" className="btn btn-primary" disabled={busy || attempted} onClick={() => void submit()}>创建 draft 并核对</button>
+      <button type="button" className="btn btn-primary" disabled={busy || attempted} onClick={() => void submit()}>确认写入 draft（推荐默认）</button>
       <button type="button" className="btn" disabled={busy || !attempted} onClick={() => void reconcile()}>只读核对原命令</button>
     </div>
     <p role="status">{message}</p>

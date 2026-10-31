@@ -79,3 +79,20 @@ export function stableDevWindowLabel(reference = new Date()): string {
   const { effectiveFrom, effectiveUntil } = computeStableDevWindow(reference);
   return `${effectiveFrom} → ${effectiveUntil}（${STABLE_DEV_MONTHS} 个月，无需中途续期）`;
 }
+
+/** 费用父链：用户只需点「确认」，选项由推荐默认填充。 */
+export const COST_CONFIRM_DEFAULTS = {
+  decide: "approved",
+  consume: "consume",
+  configure: "configure",
+} as const;
+
+export function resolveDevCheckerSubject(members: { subject: string; role?: string }[], maker?: string): string {
+  const env = import.meta.env.VITE_AOS_DEV_CHECKER_SUBJECT?.trim();
+  if (env && env !== maker) return env;
+  const me = maker ?? "";
+  const admin = members.find((m) => m.subject && m.subject !== me && (m.role === "admin" || m.role === "owner"));
+  if (admin?.subject) return admin.subject;
+  const other = members.find((m) => m.subject && m.subject !== me);
+  return other?.subject ?? "";
+}
