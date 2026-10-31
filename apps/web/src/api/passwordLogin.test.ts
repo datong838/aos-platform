@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { loginPassword } from "./passwordLogin";
-import { clearAccessToken, getAccessToken, getTenant } from "./tenant";
+import { clearAccessToken, getAccessToken, getTenant, resetTenantToDefault } from "./tenant";
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { LocalLoginGate } from "../components/auth/LocalLoginGate";
 
-afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); clearAccessToken(); sessionStorage.clear(); });
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); clearAccessToken(); resetTenantToDefault(); sessionStorage.clear(); });
 describe("human password login", () => {
   it("uses original grant and canonical me before publishing memory session", async () => {
     vi.stubEnv("VITE_AOS_SKIP_LOGIN_GATE", "0");
@@ -41,6 +41,14 @@ describe("human password login", () => {
       .mockResolvedValueOnce(new Response("{}", { status: 403 })); vi.stubGlobal("fetch", fetch);
     await expect(loginPassword("user", "private")).rejects.toThrow("登录失败");
     expect(getAccessToken()).toBeNull();
+  });
+  it("rejects a canonical identity that drifts from the requested QYH tenant", async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(new Response('{"accessToken":"signed"}'))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ subject: "human", orgId: "dev-org", projectId: "dev-project", roles: ["admin"], markings: [], tokenKind: "oidc" })));
+    vi.stubGlobal("fetch", fetch);
+    await expect(loginPassword("user", "private")).rejects.toThrow("登录失败");
+    expect(getAccessToken()).toBeNull();
+    expect(getTenant()).toMatchObject({ orgId: "org-org", projectId: "dev-project" });
   });
 });
 

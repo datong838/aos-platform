@@ -24,7 +24,7 @@ export async function loginPassword(username: string, password: string): Promise
     });
     if (!meResponse.ok) throw new Error();
     const me: MeResponse = await meResponse.json();
-    if (!me.subject || !me.orgId || !me.projectId) throw new Error();
+    if (!me.subject || me.orgId !== tenant.orgId || me.projectId !== tenant.projectId) throw new Error();
     applyMeToTenant(me);
     setAccessToken(tokens.accessToken);
     startSessionRefresh(tokens, me);
