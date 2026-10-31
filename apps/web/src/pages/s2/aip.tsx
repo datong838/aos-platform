@@ -20,6 +20,11 @@ import {
   type ModelRouteRevision,
   type ModelRuntimeOverview,
 } from "../../api/aipModelRuntime";
+import {
+  inspectModelRuntimeEvalHandoff,
+  parseModelRuntimeEvalHandoff,
+  type MatchedModelRuntimeEvalHandoff,
+} from "../../api/aipModelRuntime/evalHandoff";
 import { MODEL_CONFIG_NO_VAULT } from "../../lib/productCopy";
 import {
   aipEvidenceSdk,
@@ -3696,8 +3701,18 @@ export function assertEvalResultConsistency(
 /** 81 · Evals 真实运行、报告与门控检查 */
 export function EvalsPage() {
   const [searchParams] = useSearchParams();
+  const searchKey = searchParams.toString();
   const suiteFromUrl = String(searchParams.get("suite") || "").trim();
   const proposalFromUrl = String(searchParams.get("proposal") || "").trim();
+  const runtimeHandoffInput = useMemo(() => {
+    const handoffParams = new URLSearchParams(searchKey);
+    if (!handoffParams.has("runtimeHandoff")) return { present: false, expected: null, error: "" };
+    try {
+      return { present: true, expected: parseModelRuntimeEvalHandoff(handoffParams), error: "" };
+    } catch (error) {
+      return { present: true, expected: null, error: String((error as Error).message || error) };
+    }
+  }, [searchKey]);
   const suitesApi = useJsonGet<{ items: EvalSuiteSummary[] }>("/v1/evals/suites");
   const graphsApi = useJsonGet<{ items: Array<{ id: string; name: string; revision: number; graph_hash: string; persisted: boolean }> }>("/v1/aip/logic/graphs");
   const [suiteId, setSuiteId] = useState(suiteFromUrl);
@@ -3717,6 +3732,9 @@ export function EvalsPage() {
   const [regressionHistory, setRegressionHistory] = useState<EvalReport[]>([]);
   const [historyState, setHistoryState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
   const [historyMessage, setHistoryMessage] = useState("");
+  const [runtimeHandoff, setRuntimeHandoff] = useState<MatchedModelRuntimeEvalHandoff | null>(null);
+  const [runtimeHandoffState, setRuntimeHandoffState] = useState<"idle" | "loading" | "ready" | "blocked">("idle");
+  const [runtimeHandoffMessage, setRuntimeHandoffMessage] = useState("");
 
   const suites = suitesApi.data?.items || [];
   const graphs = graphsApi.data?.items || [];
@@ -3733,6 +3751,34 @@ export function EvalsPage() {
   useEffect(() => {
     if (!targetId && graphs[0]?.id) setTargetId(graphs[0].id);
   }, [graphs, targetId]);
+  useEffect(() => {
+    let current = true;
+    setRuntimeHandoff(null);
+    if (!runtimeHandoffInput.present) {
+      setRuntimeHandoffState("idle");
+      setRuntimeHandoffMessage("");
+      return () => { current = false; };
+    }
+    if (!runtimeHandoffInput.expected) {
+      setRuntimeHandoffState("blocked");
+      setRuntimeHandoffMessage(`交接已阻断：${runtimeHandoffInput.error || "交接参数不完整"}`);
+      return () => { current = false; };
+    }
+    setRuntimeHandoffState("loading");
+    setRuntimeHandoffMessage("正在只读核对当前模型与路由 Eval 候选…");
+    void aipModelRuntime.evalCandidates().then((candidates) => {
+      const matched = inspectModelRuntimeEvalHandoff(runtimeHandoffInput.expected!, candidates);
+      if (!current) return;
+      setRuntimeHandoff(matched);
+      setRuntimeHandoffState("ready");
+      setRuntimeHandoffMessage("两个当前候选已精确匹配；仅形成待正式执行清单，尚未运行 Eval。");
+    }).catch((error) => {
+      if (!current) return;
+      setRuntimeHandoffState("blocked");
+      setRuntimeHandoffMessage(`交接已阻断：${String((error as Error).message || error)}`);
+    });
+    return () => { current = false; };
+  }, [runtimeHandoffInput]);
 
   async function createQuickStartSuite() {
     setBusy(true);
@@ -4035,6 +4081,26 @@ export function EvalsPage() {
           result.detail || "—",
         ])}
       />
+
+      {runtimeHandoffInput.present ? (
+        <section style={{ border: "1px solid var(--aos-border)", padding: 16, marginTop: 16 }} data-testid="qyh-runtime-eval-handoff">
+          <h3 style={{ marginTop: 0 }}>栖月汇模型链 Eval 精确交接</h3>
+          <p className={runtimeHandoffState === "blocked" ? "error" : "aos-text"} role="status">{runtimeHandoffMessage}</p>
+          {runtimeHandoffState === "ready" && runtimeHandoff ? (
+            <BpTable
+              columns={["候选", "当前草稿", "下一目标", "当前头版本", "状态"]}
+              rows={([ ["模型", runtimeHandoff.model], ["路由", runtimeHandoff.route] ] as const).map(([label, item]) => [
+                label,
+                `${item.sourceRef.assetId}@${item.sourceRef.revision}`,
+                `${item.targetRef.assetId}@${item.targetRef.revision}`,
+                String(item.expectedHeadVersion),
+                "待正式执行（不可自动运行）",
+              ])}
+            />
+          ) : null}
+          <p className="aos-text">本交接只读当前候选；不会创建 EvalRun、Gate 或批准，也不会调用 Provider 或模型。</p>
+        </section>
+      ) : null}
 
       <section style={{ border: "1px solid var(--aos-border)", padding: 16, marginTop: 16 }} data-testid="eval-target-inventory">
         <h3 style={{ marginTop: 0 }}>全量评测目标与执行计划</h3>

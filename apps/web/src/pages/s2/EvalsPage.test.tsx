@@ -2,6 +2,8 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { buildModelRuntimeEvalHandoffHref } from "../../api/aipModelRuntime/evalHandoff";
+import { QYH_RUNTIME_SUCCESSOR } from "../../api/aipModelRuntime/qyhSuccessorPreflight";
 import {
   assertEvalResultConsistency,
   buildEvalTargetInventory,
@@ -39,6 +41,17 @@ describe("EvalsPage · 真实运行与门控", () => {
   targetRef: { assetType: "RegisteredModelRevision", assetId: "model-1", revision: 2, contentHash: "b".repeat(64) },
   expectedHeadVersion: 1, sourceLifecycle: "validated" as const, executionAllowed: false as const,
 };
+  const routeCandidate = {
+    sourceRef: { assetType: "ModelRouteRevision", assetId: QYH_RUNTIME_SUCCESSOR.routeId, revision: 8, contentHash: "d".repeat(64) },
+    targetRef: { assetType: "ModelRouteRevision", assetId: QYH_RUNTIME_SUCCESSOR.routeId, revision: 9, contentHash: "e".repeat(64) },
+    expectedHeadVersion: 8, sourceLifecycle: "draft" as const, executionAllowed: false as const,
+  };
+  const qyhModelCandidate = {
+    ...modelCandidate,
+    sourceRef: { ...modelCandidate.sourceRef, assetId: QYH_RUNTIME_SUCCESSOR.modelId },
+    targetRef: { ...modelCandidate.targetRef, assetId: QYH_RUNTIME_SUCCESSOR.modelId },
+    sourceLifecycle: "draft" as const,
+  };
 
 const graph = {
     id: "logic-1",
@@ -147,6 +160,52 @@ const graph = {
     expect(rows[3].contentHash).toBe(modelCandidate.targetRef.contentHash);
     expect(rows[3].revision).toBe("2");
     expect(rows[3].costEvidence).not.toContain("零费用");
+  });
+
+  it("从栖月汇深链只读匹配精确模型与路由候选且不自动执行", async () => {
+    const href = buildModelRuntimeEvalHandoffHref(qyhModelCandidate.sourceRef, routeCandidate.sourceRef);
+    apiMocks.apiGet.mockImplementation((path: string) => {
+      if (path === "/v1/evals/suites") return Promise.resolve({ items: [] });
+      if (path === "/v1/aip/logic/graphs") return Promise.resolve(graphList);
+      if (path === "/v1/aip/model-runtime/eval-candidates") return Promise.resolve([qyhModelCandidate, routeCandidate]);
+      return Promise.reject(new Error(`unexpected path ${path}`));
+    });
+
+    await act(async () => root.render(createElement(MemoryRouter, { initialEntries: [href] }, createElement(EvalsPage))));
+    await flush();
+
+    expect(host.textContent).toContain("栖月汇模型链 Eval 精确交接");
+    expect(host.textContent).toContain(`${QYH_RUNTIME_SUCCESSOR.modelId}@2`);
+    expect(host.textContent).toContain(`${QYH_RUNTIME_SUCCESSOR.routeId}@9`);
+    expect(host.textContent).toContain("待正式执行（不可自动运行）");
+    expect(apiMocks.apiGet).toHaveBeenCalledWith("/v1/aip/model-runtime/eval-candidates");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
+  });
+
+  it("栖月汇深链任一候选漂移时整体阻断且不回退执行", async () => {
+    const href = buildModelRuntimeEvalHandoffHref(qyhModelCandidate.sourceRef, routeCandidate.sourceRef);
+    apiMocks.apiGet.mockImplementation((path: string) => {
+      if (path === "/v1/evals/suites") return Promise.resolve({ items: [] });
+      if (path === "/v1/aip/logic/graphs") return Promise.resolve(graphList);
+      if (path === "/v1/aip/model-runtime/eval-candidates") return Promise.resolve([
+        qyhModelCandidate,
+        {
+          ...routeCandidate,
+          sourceRef: { ...routeCandidate.sourceRef, revision: 9 },
+          targetRef: { ...routeCandidate.targetRef, revision: 10 },
+        },
+      ]);
+      return Promise.reject(new Error(`unexpected path ${path}`));
+    });
+
+    await act(async () => root.render(createElement(MemoryRouter, { initialEntries: [href] }, createElement(EvalsPage))));
+    await flush();
+
+    expect(host.textContent).toContain("栖月汇模型链 Eval 精确交接");
+    expect(host.textContent).toContain("交接已阻断");
+    expect(host.textContent).toContain("路由候选未精确匹配");
+    expect(host.textContent).not.toContain("待正式执行（不可自动运行）");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });
 
   it("回归历史只接受同一 Logic 精确修订与摘要", () => {

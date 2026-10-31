@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { aipModelRuntime, type ExactRuntimeRef } from "../../api/aipModelRuntime";
+import { buildModelRuntimeEvalHandoffHref } from "../../api/aipModelRuntime/evalHandoff";
 import type { QyhSuccessorPreflight } from "../../api/aipModelRuntime/qyhSuccessorPreflight";
 import { inspectQyhSuccessorDraftState, prepareQyhSuccessorDrafts, type QyhSuccessorDraftState } from "../../api/aipModelRuntime/successorDrafts";
 
@@ -41,7 +42,10 @@ export function QyhRuntimeSuccessorPreflightPanel({ pairedPolicyRef, pairedPrice
       <p>paired 策略 <code>{pairedPolicyRef.assetId}@{pairedPolicyRef.revision}</code> · 价格 <code>{pairedPriceRef.assetId}@{pairedPriceRef.revision}</code></p>
       {result.ready && draftState?.status === "ready_to_prepare" ? <button type="button" className="btn btn-primary" disabled={preparing || attempted} onClick={() => void prepare()}>{preparing ? "正在逐步回读…" : "确认准备三个草稿（不激活）"}</button> : null}
       {draftState?.status === "partial_observed" ? <p role="alert">只读观察到部分精确草稿；为避免 unknown 重发，不自动补写。请先核对原命令结果和当前权威头。</p> : null}
-      {draftState?.status === "prepared" ? <p><Link className="btn" to="/aip/evals">进入评测门控（不会自动运行）</Link></p> : null}
+      {draftState?.status === "prepared" ? <p><Link className="btn" to={buildModelRuntimeEvalHandoffHref(
+        { assetType: "RegisteredModelRevision", assetId: draftState.model.registeredModelId, revision: draftState.model.revision, contentHash: draftState.model.contentHash },
+        { assetType: "ModelRouteRevision", assetId: draftState.route.routeId, revision: draftState.route.revision, contentHash: draftState.route.contentHash },
+      )}>进入评测门控（不会自动运行）</Link></p> : null}
       {message ? <p role="status">{message}</p> : null}
       {attempted && !preparing && !message.includes("三个草稿已精确回读") ? <button type="button" className="btn" onClick={() => setReload((value) => value + 1)}>重新读取当前头（不重发）</button> : null}
     </> : null}

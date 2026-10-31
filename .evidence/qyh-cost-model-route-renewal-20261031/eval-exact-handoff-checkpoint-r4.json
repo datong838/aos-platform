@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "aos.qyh-model-runtime-eval-handoff-checkpoint/v1",
+  "recordedAt": "2026-10-31T21:00:00+08:00",
+  "tenant": { "orgId": "org-org", "projectId": "dev-project" },
+  "sourceHead": "af96d82f1",
+  "result": "EXACT_READONLY_EVAL_HANDOFF_IMPLEMENTED_NOT_EXECUTED",
+  "businessAcceptance": false,
+  "engineeringClosed": 2,
+  "realBusinessAccepted": 0,
+  "developmentLoginSkipPreserved": true,
+  "handoff": {
+    "sources": ["RegisteredModelRevision", "ModelRouteRevision"],
+    "authority": "GET /v1/aip/model-runtime/eval-candidates",
+    "exactCurrentCandidateRequired": true,
+    "executionAllowed": false,
+    "automaticPost": false
+  },
+  "writes": {
+    "databaseWritten": false,
+    "evalRunCreated": false,
+    "gateCreated": false,
+    "assetActivated": false,
+    "providerCalled": false,
+    "modelCalled": false
+  },
+  "tests": {
+    "focused": "23/23 passed",
+    "adjacent": "83/83 passed",
+    "typescript": "passed",
+    "webBuild": "passed",
+    "diffCheck": "passed"
+  },
+  "browser": {
+    "capacityUrl": "http://127.0.0.1:18434/aip/capacity",
+    "evalUrl": "http://127.0.0.1:18434/aip/evals",
+    "developmentModeVisible": true,
+    "optionalLoginVisible": true,
+    "eightWorkbenchNavigationVisible": true,
+    "fixedExpiryVisible": "2027-03-31 12:00 Asia/Shanghai",
+    "pairedConsumeObserved": false,
+    "preparedDraftsClaimed": false,
+    "exactHandoffClaimed": false
+  },
+  "sha256": {
+    "evalHandoff.ts": "47f340ddffc1a2524b9ce7410849b3a8db8f0e7c1aea9a166ea8ec96aa511fcb",
+    "evalHandoff.test.ts": "3aea28fa6a9cb7d8803d25a8c9d6693c20a285b3db811a165f8a5df7c5cdde2b",
+    "QyhRuntimeSuccessorPreflightPanel.tsx": "b466f7336a1b783e28a16634adcb1a74996591b3b2c01f84d89947a3ef1c217b",
+    "QyhRuntimeSuccessorPreflightPanel.test.tsx": "dec40980f08e0f14c4cf92d068b2ca66be4b7fa67032f0fb8a0c3ee6d6c4a94e",
+    "aip.tsx": "cb4b32c941c38332ee918c35865966617ff27169142ac830d935204dfccaa295",
+    "EvalsPage.test.tsx": "116c530ef8daaa1c7a9212b4b30f9e5b20d9ba5f3451c3d224a49bf2677629de"
+  },
+  "next": "本人完成 native cost、paired-window consume 与三个草稿准备后，由页面精确交接到 Eval；正式执行仍需独立身份、预算、批准和权威回包。"
+}

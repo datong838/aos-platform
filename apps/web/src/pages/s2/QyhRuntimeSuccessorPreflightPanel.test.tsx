@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ExactRuntimeRef } from "../../api/aipModelRuntime";
+import { parseModelRuntimeEvalHandoff } from "../../api/aipModelRuntime/evalHandoff";
 import { inspectQyhSuccessorDraftState, prepareQyhSuccessorDrafts } from "../../api/aipModelRuntime/successorDrafts";
 import { QyhRuntimeSuccessorPreflightPanel } from "./QyhRuntimeSuccessorPreflightPanel";
 
@@ -61,7 +62,14 @@ describe("QYH successor preflight panel", () => {
     const root = await render();
     expect(host.textContent).toContain("三个追加式草稿已准备");
     expect(host.textContent).toContain("待办理 Eval，仍未评测、未激活、不可调用");
-    expect(host.querySelector<HTMLAnchorElement>('a[href="/aip/evals"]')).toBeTruthy();
+    const evalLink = Array.from(host.querySelectorAll<HTMLAnchorElement>("a"))
+      .find((item) => item.textContent?.includes("进入评测门控"));
+    expect(evalLink).toBeTruthy();
+    const handoff = parseModelRuntimeEvalHandoff(new URL(evalLink!.href).searchParams);
+    expect(handoff).toEqual({
+      model: { assetType: "RegisteredModelRevision", assetId: model.registeredModelId, revision: model.revision, contentHash: model.contentHash },
+      route: { assetType: "ModelRouteRevision", assetId: route.routeId, revision: route.revision, contentHash: route.contentHash },
+    });
     expect(host.textContent).not.toContain("确认准备三个草稿");
     expect(prepareQyhSuccessorDrafts).not.toHaveBeenCalled();
     await act(async () => root.unmount());
