@@ -66,7 +66,7 @@ async function renew(session: Session): Promise<void> {
   }
 }
 
-/** Credentials stay in this module's memory; no storage, events, or business replay. */
+/** Refresh in memory; dev bypass may mirror the session into tab-scoped storage for reload recovery. */
 export function startSessionRefresh(value: unknown, me: MeResponse): void {
   stopSessionRefresh();
   const initial = tokens(value);

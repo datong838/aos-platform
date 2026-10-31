@@ -234,6 +234,9 @@ function readinessLabel(readiness: string) {
 export function WorkshopListPage() {
   const [filter, setFilter] = useState<CategoryId>("all");
   const workshopCatalog = useEcommerceWorkshopCatalog();
+  const visibleWorkshopModules = workshopCatalog.developmentPreview
+    ? workshopCatalog.previewModules
+    : workshopCatalog.modules;
 
   const availablePlatformApps = useMemo(
     () => CATALOG_APPS.filter(
@@ -260,7 +263,9 @@ export function WorkshopListPage() {
           <div className="wl-head-text">
             <h1 className="wl-head-title">应用列表</h1>
             <p className="wl-head-lede">
-              已安装电商工作台来自当前有效安装；平台辅助入口单独列出，不计入八个业务工作台。
+              {workshopCatalog.developmentPreview
+                ? "开发预览只开放八个业务工作台前端路由；登录后再核验当前有效安装与业务数据。"
+                : "已安装电商工作台来自当前有效安装；平台辅助入口单独列出，不计入八个业务工作台。"}
             </p>
           </div>
           <Link to="/workshop/create" data-testid="btn-new-module" className="wl-btn-new">
@@ -273,39 +278,40 @@ export function WorkshopListPage() {
 
         <section className="wl-panel" data-testid="installed-ecommerce-section">
           <div className="wl-panel-head">
-            <h2 className="wl-panel-title">已安装电商工作台</h2>
-            <span className="wl-panel-meta">当前有效安装 · {workshopCatalog.modules.length} 个</span>
+            <h2 className="wl-panel-title">{workshopCatalog.developmentPreview ? "电商工作台开发预览" : "已安装电商工作台"}</h2>
+            <span className="wl-panel-meta">{workshopCatalog.developmentPreview ? "未验证安装与数据" : "当前有效安装"} · {visibleWorkshopModules.length} 个</span>
           </div>
           {workshopCatalog.phase === "loading" ? (
             <AsyncStateBoundary state="loading" />
-          ) : workshopCatalog.phase === "forbidden" ? (
+          ) : workshopCatalog.phase === "forbidden" && !workshopCatalog.developmentPreview ? (
             <AsyncStateBoundary state="forbidden" />
-          ) : workshopCatalog.phase === "failed" && workshopCatalog.modules.length === 0 ? (
+          ) : workshopCatalog.phase === "failed" && visibleWorkshopModules.length === 0 ? (
             <AsyncStateBoundary
               state="failed"
               action={<button type="button" onClick={workshopCatalog.reload}>重新读取目录</button>}
             />
-          ) : workshopCatalog.modules.length === 0 ? (
+          ) : visibleWorkshopModules.length === 0 ? (
             <AsyncStateBoundary state="not-installed" />
           ) : (
             <>
               {workshopCatalog.phase === "stale" ? (
                 <AsyncStateBoundary state="stale" dataCutoff={workshopCatalog.response?.dataCutoff ?? null} />
               ) : null}
+              {workshopCatalog.developmentPreview ? <p role="status">开发期已跳过登录；以下只开放前端路由，安装状态、业务数据与受保护操作须登录后核验。</p> : null}
               <div className="wl-grid" data-testid="installed-ecommerce-grid">
-                {workshopCatalog.modules.map((module) => (
+                {visibleWorkshopModules.map((module) => (
                   <article key={`${module.moduleId}:${module.moduleRef.moduleArtifactHash}`} className="wl-mod-card">
                     <Link to={module.route} className="wl-mod-main">
-                      <div className="wl-mod-eyebrow is-purple">已安装 · {readinessLabel(module.readiness)}</div>
+                      <div className="wl-mod-eyebrow is-purple">{workshopCatalog.developmentPreview ? "开发预览 · 数据需登录" : `已安装 · ${readinessLabel(module.readiness)}`}</div>
                       <div className="wl-mod-title is-purple">{module.menuLabel}</div>
                       <p className="wl-mod-desc">从当前工作区进入业务运行视图</p>
                     </Link>
                     <div className="wl-mod-actions">
                       <Link to={module.route}>▶ 打开运行态</Link>
-                      <details className="aos-inline-audit">
+                      {workshopCatalog.developmentPreview ? <span>未验证安装</span> : <details className="aos-inline-audit">
                         <summary>审计信息</summary>
                         <code>{module.moduleId}</code> · <code>{module.moduleRef.bundleId}@{module.moduleRef.version}</code>
-                      </details>
+                      </details>}
                     </div>
                   </article>
                 ))}

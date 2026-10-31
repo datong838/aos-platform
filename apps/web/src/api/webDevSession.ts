@@ -1,7 +1,15 @@
 import { getApiBase } from "./apiBase";
-import { applyMeToTenant, clearAccessToken, getTenant, setAccessToken, type MeResponse } from "./tenant";
+import {
+  applyMeToTenant,
+  clearAccessToken,
+  DEFAULT_TENANT,
+  resetTenantToDefault,
+  setAccessToken,
+  type MeResponse,
+} from "./tenant";
 import { isLoginGateSkipped } from "../config/devAuthBypass";
 import { startSessionRefresh, stopSessionRefresh } from "./sessionRefresh";
+import { bootstrapTenantFromMe } from "./client";
 
 const STORAGE_KEY = "aos-web-dev-session-v1";
 
@@ -49,19 +57,19 @@ export async function restoreWebDevSession(): Promise<boolean> {
   if (!stored) return false;
   stopSessionRefresh();
   clearAccessToken();
-  const tenant = getTenant();
   async function verify(accessToken: string): Promise<MeResponse | null> {
     const meResponse = await fetch(`${getApiBase()}/v1/me`, {
       cache: "no-store",
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "X-Org-Id": tenant.orgId,
-        "X-Project-Id": tenant.projectId,
+        "X-Org-Id": DEFAULT_TENANT.orgId,
+        "X-Project-Id": DEFAULT_TENANT.projectId,
       },
     });
     if (!meResponse.ok) return null;
     const me: MeResponse = await meResponse.json();
-    if (!me.subject || !me.orgId || !me.projectId || me.tokenKind !== "oidc") return null;
+    if (!me.subject || me.orgId !== DEFAULT_TENANT.orgId || me.projectId !== DEFAULT_TENANT.projectId
+      || me.tokenKind !== "oidc") return null;
     return me;
   }
   let me = await verify(stored.accessToken);
@@ -92,4 +100,19 @@ export async function restoreWebDevSession(): Promise<boolean> {
   startSessionRefresh(active, me);
   window.dispatchEvent(new Event("aos-auth-updated"));
   return true;
+}
+
+/**
+ * Keep login optional during development without allowing the dev identity to
+ * replace the QYH ecommerce tenant. A verified QYH OIDC session is reused;
+ * otherwise the UI stays in the exact QYH scope and protected writes remain
+ * unauthenticated/fail-closed.
+ */
+export async function prepareWebDevelopmentContext(): Promise<void> {
+  if (!isLoginGateSkipped()) {
+    await bootstrapTenantFromMe();
+    return;
+  }
+  if (await restoreWebDevSession()) return;
+  resetTenantToDefault();
 }

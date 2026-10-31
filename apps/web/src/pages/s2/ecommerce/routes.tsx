@@ -13,6 +13,9 @@ export function EcommerceWorkshopEntryRoute() {
   const latest = useRef({ runtime, legacy, pathname });
   latest.current = { runtime, legacy, pathname };
   if (runtime === null) return <EcommerceWorkshopHost />;
+  if (legacy.developmentPreview && findInstalledWorkshopRoute(legacy.previewModules, pathname)) {
+    return <EcommerceWorkshopHost />;
+  }
   const matches = runtime.items.filter(entry => entry.module.route === pathname);
   const legacyMatch = findInstalledWorkshopRoute(legacy.modules, pathname);
   const reload = () => { runtime.reload(); legacy.reload(); };

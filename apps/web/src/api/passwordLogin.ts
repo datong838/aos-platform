@@ -3,7 +3,7 @@ import { applyMeToTenant, clearAccessToken, getTenant, setAccessToken, type MeRe
 import { startSessionRefresh, stopSessionRefresh } from "./sessionRefresh";
 import { clearWebDevSession, persistWebDevSession } from "./webDevSession";
 
-/** Original server authentication; credentials and refresh tokens never persist. */
+/** Original server authentication; the password never persists and dev recovery is tab-scoped only. */
 export async function loginPassword(username: string, password: string): Promise<void> {
   stopSessionRefresh();
   clearWebDevSession();

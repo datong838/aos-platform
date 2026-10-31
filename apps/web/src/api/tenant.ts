@@ -93,6 +93,23 @@ export function setTenant(partial: Partial<TenantContext>) {
   }
 }
 
+/** Restore the exact QYH development scope without retaining a foreign subject or roles. */
+export function resetTenantToDefault() {
+  current = { ...DEFAULT_TENANT };
+  persist(current);
+  console.info("[aos-tenant]", {
+    event: "default_tenant_restored",
+    orgId: current.orgId,
+    projectId: current.projectId,
+    workspaceName: current.workspaceName,
+  });
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("aos-tenant-updated", { detail: { ...current } }),
+    );
+  }
+}
+
 export function tenantAuthHeaders(): Record<string, string> {
   const t = getTenant();
   const bearer = accessTokenOverride || "dev";

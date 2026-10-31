@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { setTenant } from "../../api/tenant";
+import { EcommerceWorkshopClientError } from "../../api/ecommerceWorkshop";
 import { EcommerceWorkshopCatalogProvider } from "./EcommerceWorkshopCatalogContext";
 import { InstalledModuleNavigation } from "./InstalledModuleNavigation";
 import { moduleWithReadiness, workshopCatalogFixture, workshopModuleFixture } from "./workshopTestFixtures";
@@ -102,6 +103,26 @@ describe("InstalledModuleNavigation", () => {
     expect(host.textContent).not.toContain("未安装");
     expect(host.textContent).not.toContain("已就绪");
     expect(host.textContent).toContain("工作台目录读取失败");
+  });
+
+  it("开发期无登录且 API 禁用 dev token 时显示八个明确标注的预览入口", async () => {
+    const unauthorized = new EcommerceWorkshopClientError("dev token disabled", {
+      status: 401,
+      operationId: "ecommerceWorkshopModulesList",
+      body: { code: "AUTH_DEV_DISABLED", message: "disabled", details: null, traceId: "trace-dev" },
+    });
+    await act(async () => root.render(
+      <MemoryRouter>
+        <EcommerceWorkshopCatalogProvider client={{ listModules: async () => { throw unauthorized; } }}>
+          <InstalledModuleNavigation />
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+
+    expect(host.querySelectorAll("a[data-workshop-preview='true']")).toHaveLength(8);
+    expect(host.textContent).toContain("开发预览入口");
+    expect(host.textContent).not.toContain("已安装");
   });
 
   it("空目录可重读恢复真实入口", async () => {

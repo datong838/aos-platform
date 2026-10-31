@@ -8,7 +8,7 @@ export function InstalledModuleNavigation() {
   const runtime = useOptionalRuntimeWorkshopCatalog();
   const runtimeModules = runtime?.phase === 'ready'
     ? runtime.items.filter(entry => !catalog.modules.some(module => module.route === entry.module.route)) : [];
-  const notice = runtimeModules.length && catalog.phase === 'empty' ? null : {
+  const notice = catalog.developmentPreview ? "开发预览入口 · 安装与数据需登录核验" : runtimeModules.length && catalog.phase === 'empty' ? null : {
     loading: "正在读取工作台目录",
     empty: "暂无可见工作台入口",
     failed: "工作台目录读取失败",
@@ -34,6 +34,20 @@ export function InstalledModuleNavigation() {
           key={`${module.moduleId}:${module.moduleRef.moduleArtifactHash}`}
           to={module.route}
           data-workshop-module-id={module.moduleId}
+          className={({ isActive }) =>
+            `aos-nav-link ecommerce-workshop-nav-link${isActive ? " is-active" : ""}`
+          }
+        >
+          <span className="ecommerce-workshop-nav-glyph" aria-hidden="true" />
+          <span className="aos-nav-label">{module.menuLabel}</span>
+        </NavLink>
+      ))}
+      {catalog.previewModules.map((module) => (
+        <NavLink
+          key={`preview:${module.moduleId}`}
+          to={module.route}
+          data-workshop-module-id={module.moduleId}
+          data-workshop-preview="true"
           className={({ isActive }) =>
             `aos-nav-link ecommerce-workshop-nav-link${isActive ? " is-active" : ""}`
           }

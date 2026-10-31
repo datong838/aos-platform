@@ -17,6 +17,10 @@ import {
 } from "../../api/ecommerceWorkshop";
 import { getTenant, getAuthRevision } from "../../api/tenant";
 import type { WorkshopRouteRetirementDecision } from "./workshopLifecycleAcceptance";
+import {
+  canUseDevelopmentWorkshopPreview,
+  DEVELOPMENT_WORKSHOP_PREVIEW_MODULES,
+} from "./developmentWorkshopPreview";
 
 export type EcommerceWorkshopCatalogPhase =
   | "loading"
@@ -40,6 +44,8 @@ export type EcommerceWorkshopCatalogClient = Pick<
 
 export type EcommerceWorkshopCatalogValue = EcommerceWorkshopCatalogState & {
   modules: readonly EcommerceWorkshopModule[];
+  previewModules: readonly EcommerceWorkshopModule[];
+  developmentPreview: boolean;
   reload: () => void;
 };
 
@@ -181,11 +187,16 @@ export function EcommerceWorkshopCatalogProvider({
   }, [load]);
 
   const value = useMemo<EcommerceWorkshopCatalogValue>(
-    () => ({
-      ...state,
-      modules: state.response?.items ?? [],
-      reload,
-    }),
+    () => {
+      const developmentPreview = canUseDevelopmentWorkshopPreview(state.error?.status ?? null);
+      return {
+        ...state,
+        modules: state.response?.items ?? [],
+        previewModules: developmentPreview ? DEVELOPMENT_WORKSHOP_PREVIEW_MODULES : [],
+        developmentPreview,
+        reload,
+      };
+    },
     [reload, state],
   );
 

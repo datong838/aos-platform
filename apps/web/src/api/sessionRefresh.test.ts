@@ -9,8 +9,8 @@ const response = (value: unknown) => new Response(JSON.stringify(value));
 beforeEach(() => { vi.useFakeTimers(); setTenant(me); setAccessToken("access-old"); });
 afterEach(() => { stopSessionRefresh(); clearAccessToken(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
-describe("memory-only human session renewal", () => {
-  it("renews the same human and rotates refresh credentials without persistence", async () => {
+describe("human session renewal", () => {
+  it("renews the same human and rotates only the tab-scoped development session", async () => {
     const fetch = vi.fn().mockResolvedValueOnce(response(tokens("new"))).mockResolvedValueOnce(response(me))
       .mockResolvedValueOnce(response(tokens("next"))).mockResolvedValueOnce(response(me));
     vi.stubGlobal("fetch", fetch);
@@ -22,9 +22,12 @@ describe("memory-only human session renewal", () => {
     await vi.advanceTimersByTimeAsync(30_000);
     expect(JSON.parse(fetch.mock.calls[2][1].body).refreshToken).toBe("refresh-new");
     expect(getAccessToken()).toBe("access-next");
-    for (const storage of [localStorage, sessionStorage]) {
-      for (let n = 0; n < storage.length; n++) expect(storage.getItem(storage.key(n)!)).not.toMatch(/refresh-(old|new|next)|access-(old|new|next)/);
+    for (let n = 0; n < localStorage.length; n++) {
+      expect(localStorage.getItem(localStorage.key(n)!)).not.toMatch(/refresh-(old|new|next)|access-(old|new|next)/);
     }
+    expect(Array.from({ length: sessionStorage.length }, (_, index) => sessionStorage.key(index)).sort())
+      .toEqual(["aos-tenant-v1", "aos-web-dev-session-v1"]);
+    expect(JSON.parse(sessionStorage.getItem("aos-web-dev-session-v1")!)).toEqual(tokens("next"));
   });
 
   it.each(["rejected", "network"])("does not retry %s renewal or log out the current page", async (failure) => {

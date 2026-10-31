@@ -10,6 +10,7 @@ import { fixture, tenant } from '../../../api/runtimeWorkshop.testFixtures';
 import { parseRuntimeWorkshopCatalog } from '../../../api/runtimeWorkshop';
 import { setTenant } from '../../../api/tenant';
 import { EcommerceWorkshopEntryRoute } from './routes';
+import { EcommerceWorkshopClientError } from '../../../api/ecommerceWorkshop';
 
 vi.mock('../../../components/extensions/RuntimeWorkshopHost', () => ({ RuntimeWorkshopHost: () => <div data-testid="signed-host" /> }));
 vi.mock('../../../components/workshop/EcommerceWorkshopHost', () => ({ EcommerceWorkshopHost: (props: { onCatalogReload?: () => void }) => <div data-testid="legacy-host"><button data-testid="reload-all" onClick={props.onCatalogReload}>重新读取目录</button></div> }));
@@ -46,6 +47,22 @@ it('preserves an existing legacy page when no runtime page claims it', async () 
   await render('legacy');
   expect(host.querySelector('[data-testid="legacy-host"]')).not.toBeNull();
   expect(host.querySelector('[data-testid="signed-host"]')).toBeNull();
+});
+it('routes a no-login development preview even when the runtime catalog is unavailable', async () => {
+  const unauthorized = new EcommerceWorkshopClientError('dev disabled', {
+    status: 401,
+    operationId: 'ecommerceWorkshopModulesList',
+    body: { code: 'AUTH_DEV_DISABLED', message: 'disabled', details: null, traceId: 'trace-dev' },
+  });
+  await act(async () => root.render(<MemoryRouter initialEntries={['/workshop/analyst']}>
+    <RuntimeWorkshopCatalogProvider client={async () => { throw new Error('runtime unavailable'); }}>
+      <EcommerceWorkshopCatalogProvider client={{ listModules: async () => { throw unauthorized; } }}>
+        <EcommerceWorkshopEntryRoute />
+      </EcommerceWorkshopCatalogProvider>
+    </RuntimeWorkshopCatalogProvider>
+  </MemoryRouter>));
+  await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+  expect(host.querySelector('[data-testid="legacy-host"]')).not.toBeNull();
 });
 it.each(['conflict', 'failed', 'unknown-legacy'] as const)('loads neither host when %s', async kind => {
   await render(kind);

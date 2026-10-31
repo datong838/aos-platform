@@ -52,7 +52,10 @@ function EcommerceWorkshopContent({ onCatalogReload }: { onCatalogReload?: () =>
   const contextId = searchParams.get("context");
   const currentTargetId = searchParams.get("target");
   const catalog = useEcommerceWorkshopCatalog();
-  const match = findInstalledWorkshopRoute(catalog.modules, location.pathname);
+  const match = findInstalledWorkshopRoute(
+    catalog.developmentPreview ? catalog.previewModules : catalog.modules,
+    location.pathname,
+  );
 
   if (match?.kind === "legacy") {
     return <Navigate to={match.module.route} replace />;
@@ -65,6 +68,7 @@ function EcommerceWorkshopContent({ onCatalogReload }: { onCatalogReload?: () =>
         dataCutoff={catalog.response?.dataCutoff ?? null}
         catalogStale={catalog.phase === "stale"}
         exposeReadOnlyWhenUnverified={exposesReadOnly}
+        developmentPreview={catalog.developmentPreview}
       >
         <EcommerceWorkshopSharedContext contextId={contextId} currentTargetId={currentTargetId} />
         {match.module.moduleId === "ecommerce.task-cockpit" ? <TaskCockpitPage /> : match.module.moduleId === "ecommerce.operations" ? <OperationsPage /> : match.module.moduleId === "ecommerce.content-campaign" ? <ContentCampaignPage /> : match.module.moduleId === "ecommerce.creator-growth" ? <CreatorGrowthPage /> : match.module.moduleId === "ecommerce.media-studio" ? <MediaStudioPage /> : match.module.moduleId === "ecommerce.analyst" ? <AnalystPage /> : match.module.moduleId === "ecommerce.price-governance" ? <PriceGovernancePage /> : match.module.moduleId === "ecommerce.customer" ? <CustomerPage /> : undefined}

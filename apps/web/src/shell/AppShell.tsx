@@ -358,11 +358,14 @@ export function AppShell() {
   const contentRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef<HTMLElement>(null);
   const workshopCatalog = useEcommerceWorkshopCatalog();
+  const visibleWorkshopModules = workshopCatalog.developmentPreview
+    ? workshopCatalog.previewModules
+    : workshopCatalog.modules;
   const runtimeCatalog = useOptionalRuntimeWorkshopCatalog();
   const runtimeWorkshop = runtimeCatalog?.phase === 'ready'
     ? runtimeCatalog.items.find(entry => entry.module.route === location.pathname) : undefined;
   const activeWorkshop = findInstalledWorkshopRoute(
-    workshopCatalog.modules,
+    visibleWorkshopModules,
     location.pathname,
   );
   const staticActive = findNavPage(location.pathname);
