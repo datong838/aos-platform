@@ -1,0 +1,70 @@
+{
+  "schema": "aos.qyh.m2-canonical-resource-recovery/v1",
+  "observedAt": "2026-10-31T22:30:30+08:00",
+  "branch": "m1",
+  "headBefore": "4cf70ca44ebb8e7d75c4542067e53f20dd5fb4c0",
+  "taskId": "qyh-m2-native166-original-history-actual-20261027-h1029-h1031",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "resource": {
+    "context": "colima-aos-extension",
+    "container": "qyh-m2-native166-canonical-r1-20261027-pg",
+    "containerId": "8ad56b817e7c81db6ebf57ddfd4d064bb583ba79f80fbec4a9e78164eec5095f",
+    "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "volume": "qyh-m2-native166-canonical-r1-20261027-data",
+    "network": "qyh-m2-native166-canonical-r1-20261027-net",
+    "ip": "172.24.0.2",
+    "hostPorts": [],
+    "startedAt": "2026-10-31T14:30:18.571822587Z",
+    "status": "running",
+    "oomKilled": false,
+    "dead": false,
+    "automaticCrashRecoveryCompleted": true
+  },
+  "readonlyIdentity": {
+    "database": "aos_refresh_activation_native",
+    "databaseOid": 16384,
+    "clusterName": "qyh-canonical166-8af8248e67b4128101100eda",
+    "serverVersionNum": 160014,
+    "transactionReadOnly": true,
+    "alembicVersion": "a0v_165"
+  },
+  "readonlyFacts": {
+    "orgOrgParents": 1,
+    "devProjectParents": 1,
+    "devOrgParents": 0,
+    "devOrgWorkspaces": 0,
+    "installations": 2,
+    "installationCommands": 6,
+    "runtimeEvents": 0,
+    "runtimeGuardPolicyHeads": 2,
+    "budgetHeads": 1,
+    "modelGovernancePolicyHeads": 1
+  },
+  "actions": {
+    "containerStartCount": 1,
+    "newContainerCreated": false,
+    "newVolumeCreated": false,
+    "newNetworkCreated": false,
+    "migration166Executed": false,
+    "businessDatabaseTouched": false,
+    "hostWorkerProviderSchedule": "OFF",
+    "oldOrUnknownReplayed": false
+  },
+  "verification": {
+    "identityMatchesFrozenCanonicalLab": true,
+    "onlyPositiveTenantPresent": true,
+    "persistentHistoryReadable": true,
+    "sourceMigrationSha256": "28d65323629bf349a52f84737e56a5befeefbc1b7a396bb28aece44fa1dedd86",
+    "nativeTestSha256": "06d04fd9d3604fb9d0101bb20183fef16e27779b7aff1f948db226fc53410c23",
+    "planSha256": "d36e774968f1797de85cd6a792590bdd71b0638e03aafc219816c9101d94cf14"
+  },
+  "progress": {
+    "engineeringAccepted": "2/8",
+    "realBusinessAccepted": "0/8",
+    "m2Accepted": false
+  },
+  "nextHardGap": "在现有 Task/Lease 内建立短生命周期、精确归属的 canonical PG 连接入口，使用现有 NativeMigrationBinding 对真实 a0v_166 执行 savepoint 升级与回滚；不得改写历史、绕过 Owner 或把资源恢复计作 M2。"
+}
