@@ -3,7 +3,7 @@
 | 顺序 | 文件 | 用途 |
 |------|------|------|
 | 1 | `cost-parent-review-material.md` | Cost 父链人读材料 |
-| 2 | `human-native-cost-playbook.md` | Web 办理步骤 |
+| 2 | `human-native-cost-playbook.md` | Web 办理步骤（入口 **`/aip/capacity` 容量管理**，非运行就绪） |
 | 3 | `paired-window-review-material.md` | Cost 完成后的 paired 窗口 |
 | 4 | `successor-chain-review-material.json` | Model/Policy/Route 后继顺序 |
 | 5 | `verification.json` | 本任务验证收据 |

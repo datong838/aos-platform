@@ -171,6 +171,11 @@ export function ModelRuntimePage() {
       <section className="card" style={{ padding: 18, marginTop: 16 }}><h2 style={{ marginTop: 0 }}>路由运行准备</h2>{data.resolutions.length ? data.resolutions.map(item => <article key={item.route.assetId} style={{ padding: "12px 0", borderTop: "1px solid var(--aos-border)" }}><strong>{item.readiness === "ready" ? "路由运行条件已通过" : "路由运行条件需复核"}</strong><p>{item.readiness === "ready" ? "已选择有效模型与供应商" : "处理负责人和下一步见页面上方“运行准备行动卡”。"}</p><details><summary>技术标识（审计用）</summary><code>{item.route.assetId}@{item.route.revision}</code>{item.selectedModel ? <> · 模型 <code>{item.selectedModel.assetId}</code></> : null}{item.selectedProvider ? <> · 供应商 <code>{item.selectedProvider.assetId}</code></> : null}{item.selectedPriceSnapshot ? <> · 价格快照 <code>{item.selectedPriceSnapshot.assetId}</code></> : null}{item.blockerCodes.length ? <><br /><code>{item.blockerCodes.join(" · ")}</code></> : null}</details></article>) : <div className="notice">当前没有精确路由；请先在模型路由页建立并保存权威修订。</div>}</section>
       {cost ? <section className="card" style={{ padding: 18, marginTop: 16 }} aria-label="成本与预算权威">
         <h2 style={{ marginTop: 0 }}>成本与预算权威</h2>
+        <p className="notice" style={{ marginTop: 0 }}>
+          费用提议复核、预算启用与费用配置在{" "}
+          <Link to="/aip/capacity">容量管理 · 费用风险审核与恢复</Link>
+          办理；本页仅只读汇总。
+        </p>
         <p>用量：{cost.usage.state === "unobserved" ? "尚未观测，不能按 0 成本解释" : `${cost.usage.receiptCount} 条用量凭证（实测 ${cost.usage.measuredCount} / 估算 ${cost.usage.estimatedCount} / 未知 ${cost.usage.unknownCount}）`} · 调整单 {cost.usage.adjustmentCount}</p>
         {Object.keys(cost.usage.costTotals).length ? <p>成本合计：{Object.entries(cost.usage.costTotals).map(([currency, amount]) => `${currency} ${amount}`).join(" · ")}</p> : <p>成本合计：尚无实际模型调用记录（不代表免费或零成本）</p>}
         <div style={grid}>{cost.modelPrices.map(item => <article className="notice" key={item.modelRef.assetId}><strong>{item.providerModelId}</strong><div>{item.status === "priced" ? "已定价" : item.status === "approved_zero" ? "审批零价" : item.status === "unit_mismatch" ? "计价单位不匹配" : "价格条件需复核"}</div>{item.blockerCodes.length ? <small>{formatBlockers(item.blockerCodes)}</small> : null}</article>)}</div>
