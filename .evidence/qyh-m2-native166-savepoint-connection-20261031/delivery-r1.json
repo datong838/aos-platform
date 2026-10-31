@@ -1,0 +1,19 @@
+{
+  "schema": "aos-memory-delivery-receipt/v1",
+  "task_id": "qyh-m2-native166-savepoint-connection-20261031",
+  "base_revision": "AOS-002055",
+  "completed_revision": "AOS-002055",
+  "completed_at": "2026-10-31T22:38:54+08:00",
+  "result": "EXACT_FORWARD_OPENED_PREFLIGHT_READ_AND_CLEANED: 18458 transport connected to the exact canonical container, read-only identity preflight found original refresh history count 0, migration was correctly fenced, exact SSH PID and listener were removed.",
+  "changed_files": [
+    "aos-platform/.evidence/qyh-m2-native166-savepoint-connection-20261031/connection-result-r1.json"
+  ],
+  "commits": [],
+  "verification": [
+    "PID 39569 and listener 18458 absent after cleanup; canonical DB remains a0v_165 with refresh history count 0."
+  ],
+  "risks": [
+    "Transport task grants no database or product authority; native166 remains unexecuted until original service-path history is nonempty."
+  ],
+  "blockers": []
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "aos-memory-task-receipt/v1",
+  "task_id": "qyh-m2-native166-savepoint-connection-20261031",
+  "owner": "codex-01a190f8-e1f7-7631-821c-3ac7b969bc40",
+  "base_revision": "AOS-002055",
+  "created_at": "2026-10-31T22:36:22+08:00",
+  "lease_expires_at": "2026-11-02T20:00:00+08:00",
+  "status": "ACTIVE",
+  "scope": [
+    "aos-platform/.evidence/qyh-m2-native166-savepoint-connection-20261031",
+    "localForward:127.0.0.1:18458-to-colima-aos-extension/8ad56b817e7c81db6ebf57ddfd4d064bb583ba79f80fbec4a9e78164eec5095f:5432",
+    "localProcess:codex-01a190f8-e1f7-7631-821c-3ac7b969bc40/native166-savepoint-ssh"
+  ],
+  "excluded_scope": [
+    "current-business-DB-product-source-migration-definition-role-DDL-business-Owner-call-Host-worker-Provider-Schedule-old-journal-unknown-replay-push-Goal"
+  ],
+  "expected_outputs": [
+    "One short-lived exact SSH local forward to the already-owned canonical isolated PG, with PID/argv/listener admission and precise cleanup; transport only, no DB or product authority."
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "aos-native166-savepoint-preflight/v1",
+  "observedAt": "2026-10-31T22:38:30+08:00",
+  "knownOutcome": "FENCED_ORIGINAL_REFRESH_HISTORY_EMPTY",
+  "identity": {
+    "database": "aos_refresh_activation_native",
+    "databaseOid": 16384,
+    "currentRole": "aos_app",
+    "sessionRole": "aos_app",
+    "databaseOwner": "aos_app",
+    "superuser": true,
+    "bypassRls": true,
+    "canLogin": true,
+    "clusterName": "qyh-canonical166-8af8248e67b4128101100eda",
+    "serverVersion": 160014,
+    "alembicVersion": "a0v_165",
+    "transactionReadOnly": true
+  },
+  "originalRefreshHistoryCount": 0,
+  "requiredMinimumHistoryCount": 2,
+  "migrationAttempted": false,
+  "runnerExecuted": false,
+  "databaseWriteAttempted": false,
+  "persistentReadback": {
+    "alembicVersion": "a0v_165",
+    "originalRefreshHistoryCount": 0,
+    "clusterName": "qyh-canonical166-8af8248e67b4128101100eda"
+  },
+  "sourceHashes": {
+    "migration": "28d65323629bf349a52f84737e56a5befeefbc1b7a396bb28aece44fa1dedd86",
+    "nativeTest": "06d04fd9d3604fb9d0101bb20183fef16e27779b7aff1f948db226fc53410c23",
+    "runner": "0943f2b461b97ced6e1e27a67c03d9592450ffd8a5d180d5d8e30438bb686702",
+    "plan": "9af6eecc50108fa21277b805578992bd0501c232adb2869c8e9920b51eb14274"
+  },
+  "nextHardGap": "Use the original service path under the active M2 Task to produce and reconcile at least two nonempty refresh receipts for the two prepared installations; do not insert history directly. Only then rerun the separately frozen native166 savepoint diagnostic."
+}

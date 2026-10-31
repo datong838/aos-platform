@@ -1,0 +1,19 @@
+{
+  "schema": "aos-native166-savepoint-connection-result/v1",
+  "taskId": "qyh-m2-native166-savepoint-connection-20261031",
+  "observedAt": "2026-10-31T22:38:30+08:00",
+  "knownOutcome": "EXACT_FORWARD_OPENED_PREFLIGHT_READ_AND_CLEANED",
+  "localEndpoint": "127.0.0.1:18458",
+  "remoteEndpoint": "172.24.0.2:5432",
+  "containerId": "8ad56b817e7c81db6ebf57ddfd4d064bb583ba79f80fbec4a9e78164eec5095f",
+  "sshPid": 39569,
+  "listenerAdmitted": true,
+  "preflightConnected": true,
+  "cleanup": {
+    "exactPidAbsent": true,
+    "listener18458Absent": true
+  },
+  "databaseAuthority": false,
+  "productAuthority": false,
+  "businessAcceptance": false
+}

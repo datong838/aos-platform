@@ -1,0 +1,18 @@
+# Derived from `colima -p aos-extension ssh-config` at 2026-10-31 22:35 +08:00.
+Host colima-aos-extension
+  IdentityFile "/Users/ddt/.colima/_lima/_config/user"
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  NoHostAuthenticationForLocalhost yes
+  PreferredAuthentications publickey
+  Compression no
+  BatchMode yes
+  IdentitiesOnly yes
+  GSSAPIAuthentication no
+  Ciphers "^aes128-gcm@openssh.com,aes256-gcm@openssh.com"
+  User ddt
+  ControlMaster no
+  ControlPath none
+  ControlPersist no
+  Hostname 127.0.0.1
+  Port 51648

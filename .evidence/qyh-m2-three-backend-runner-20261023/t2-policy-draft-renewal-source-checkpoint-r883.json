@@ -1,0 +1,40 @@
+{
+  "schema": "aos-t2-policy-draft-renewal-source-checkpoint/v1",
+  "observedAt": "2026-10-31T22:45:00+08:00",
+  "authority": "AOS-002055",
+  "branch": "m1",
+  "taskId": "qyh-m2-three-backend-runner-20261023-h1027-h1029-h1031",
+  "result": "SOURCE_ONLY_RENEWAL_CONTRACT_GREEN",
+  "facts": {
+    "currentRevision": 1,
+    "currentHeadVersion": 1,
+    "currentLifecycle": "draft",
+    "currentWindowExpired": true,
+    "nextRevision": 2,
+    "expectedVersion": 1,
+    "authorizedUntil": "2027-03-31T04:00:00Z",
+    "outputLifecycle": "draft",
+    "providerCalled": false,
+    "databaseWritten": false,
+    "nativeApprovalProduced": false
+  },
+  "verification": {
+    "newTests": "11 passed",
+    "adjacentTests": "16 passed, 11 subtests passed",
+    "pyCompile": "PASS",
+    "diffCheck": "PASS"
+  },
+  "sourceHashes": {
+    "plan": "3e2bddbb7c022a2fd8f83ac3ec64ad76456ec145399fe5890a5680ed27c4dc3a",
+    "source": "79644eb83464cafc57399d63374e2947252fcbe0515d8099cf79455bd00ea48a",
+    "test": "b33c43c7f623e651adbfad3e5538887fa0c87b9c98cac8e0cbe90b558ebce598"
+  },
+  "acceptance": {
+    "engineeringClosed": 2,
+    "engineeringTotal": 8,
+    "businessAccepted": 0,
+    "businessTotal": 8,
+    "m2Completed": false
+  },
+  "nextHardGap": "Create a separately scoped actual renewal window with a durable four-step journal; re-read exact revision-1 heads before each original Store publish, keep all outputs draft, and reconcile unknown outcomes read-only without replay."
+}
