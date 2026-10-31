@@ -77,13 +77,15 @@ export function exactBudgetDraftReadback(value: unknown, expected: BudgetDraftBo
     && row.lifecycle === "draft" && row.hardStop === true && row.unknownUsageBehavior === "block";
 }
 
+import { defaultBudgetDraftInput } from "../../config/qyhCostRenewalDefaults";
+
 const EMPTY: BudgetDraftInput = {
   budgetId: "", dailyYuan: "", monthlyYuan: "", alertThresholdPct: "", effectiveFrom: "", effectiveUntil: "",
   owner: "", overBudgetApprover: "",
 };
 
 export function BudgetRevisionSetupPanel() {
-  const [input, setInput] = useState<BudgetDraftInput>(EMPTY);
+  const [input, setInput] = useState<BudgetDraftInput>(() => defaultBudgetDraftInput());
   const [attempted, setAttempted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("仅创建 draft；不会激活预算、批准费用或启动模型调用。");
