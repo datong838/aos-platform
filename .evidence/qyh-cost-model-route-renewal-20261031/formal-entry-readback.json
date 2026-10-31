@@ -58,7 +58,12 @@
     ]
   },
   "result": "AUTHENTICATED_CURRENT_REFS_CAPTURED_FORMAL_READONLY_ENTRIES_LOADED_NOT_BUSINESS_AUTHORIZED",
-  "safeNextStep": "Prepare and review non-signing cost parent materials from captured refs; native human approval still required before any POST propose/decide/consume or paired-window writes. Do not enable writer/Host/worker/Provider/model.",
+  "costParentReviewMaterial": {
+    "status": "READY",
+    "humanReadable": ".evidence/qyh-cost-model-route-renewal-20261031/cost-parent-review-material.md",
+    "structured": ".evidence/qyh-cost-model-route-renewal-20261031/cost-parent-review-material.json"
+  },
+  "safeNextStep": "Human reviews cost-parent non-signing material in browser; native cost propose/decide/consume only after explicit approval. Then prepare paired-window non-signing material. Do not enable writer/Host/worker/Provider/model.",
   "effects": {
     "databaseRead": false,
     "databaseWrite": false,

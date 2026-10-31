@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "taskId": "qyh-cost-model-route-renewal-20261031",
+  "observedAt": "2026-10-31T17:26:00+08:00",
+  "result": "COST_PARENT_NON_SIGNING_REVIEW_MATERIAL_READY",
+  "artifacts": {
+    "humanReadable": ".evidence/qyh-cost-model-route-renewal-20261031/cost-parent-review-material.md",
+    "structured": ".evidence/qyh-cost-model-route-renewal-20261031/cost-parent-review-material.json",
+    "materialDraft": ".evidence/qyh-cost-model-route-renewal-20261031/material-draft.json",
+    "authenticatedReadback": ".evidence/qyh-cost-model-route-renewal-20261031/authenticated-current-readback-r1.json"
+  },
+  "uiEntry": {
+    "webPath": "/aip/model-runtime",
+    "panel": "BudgetCostReviewPanel includes BudgetPolicyWindowReviewPanel (readonly until native parent exists)"
+  },
+  "stageCounters": {
+    "engineeringClosed": "2/8",
+    "realBusinessAccepted": "0/8"
+  },
+  "effects": {
+    "proposalSubmitted": false,
+    "decisionSubmitted": false,
+    "consumptionSubmitted": false,
+    "databaseWrite": false,
+    "modelInvoked": false
+  },
+  "nextGate": "HUMAN_REVIEW_COST_PARENT_MATERIAL_THEN_NATIVE_COST_CHAIN"
+}

@@ -14,17 +14,9 @@
     "modelInvocationAllowed": false
   },
   "currentReadback": {
-    "status": "AUTHENTICATED_READ_COMPLETE",
+    "status": "CURRENT_EXACT",
     "authenticatedReadRequired": true,
     "observedAt": "2026-10-31T17:14:27+08:00",
-    "sessionChannel": "cursor-embedded-browser-reuse-login",
-    "driftVsPreviousRefs": "EXACT_HASH_MATCH",
-    "windowBlockers": [
-      "BUDGET_POLICY_OUT_OF_WINDOW",
-      "PRICE_SNAPSHOT_OUT_OF_WINDOW"
-    ],
-    "routeResolutionReadiness": "blocked",
-    "receipt": ".evidence/qyh-cost-model-route-renewal-20261031/authenticated-current-readback-r1.json",
     "refs": {
       "budget": {
         "assetType": "BudgetRevision",
@@ -114,7 +106,7 @@
     "effectiveFrom": null,
     "effectiveUntil": "2027-03-31T04:00:00Z",
     "targetPairHash": null,
-    "status": "WAITING_FOR_NON_SIGNING_COST_PARENT_REVIEW_AND_NATIVE_APPROVAL"
+    "status": "WAITING_FOR_COST_PARENT_AND_CURRENT_READBACK"
   },
   "successors": {
     "registeredModelId": "a0v-agnes-2-5-flash-readonly-dev",

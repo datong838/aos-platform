@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aos.qyh-cost-model-route-renewal-material/v1",
+  "title": "QYH cost, model, runtime policy and route renewal material",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "state",
+    "tenant",
+    "authorization",
+    "currentReadback",
+    "previousRefs",
+    "costParent",
+    "pairedWindow",
+    "successors",
+    "humanCheckpoint",
+    "prohibitedActions"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "state": { "const": "NON_SIGNING_NOT_SUBMITTED" },
+    "tenant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["orgId", "projectId"],
+      "properties": {
+        "orgId": { "const": "org-org" },
+        "projectId": { "const": "dev-project" }
+      }
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerModelId", "currency", "dailyLimitMinor", "monthlyLimitMinor", "effectiveUntil", "modelInvocationAllowed"],
+      "properties": {
+        "providerModelId": { "const": "agnes-2.5-flash" },
+        "currency": { "const": "CNY" },
+        "dailyLimitMinor": { "const": 10000 },
+        "monthlyLimitMinor": { "const": 100000 },
+        "effectiveUntil": { "const": "2027-03-31T04:00:00Z" },
+        "modelInvocationAllowed": { "const": false }
+      }
+    },
+    "currentReadback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "authenticatedReadRequired", "observedAt", "refs"],
+      "properties": {
+        "status": { "enum": ["PENDING_AUTHENTICATED_READ", "CURRENT_EXACT"] },
+        "authenticatedReadRequired": { "const": true },
+        "observedAt": { "type": ["string", "null"] },
+        "refs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["budget", "provider", "budgetPolicy", "price", "model", "runtimePolicy", "route"],
+          "properties": {
+            "budget": { "$ref": "#/$defs/nullableRef" },
+            "provider": { "$ref": "#/$defs/nullableRef" },
+            "budgetPolicy": { "$ref": "#/$defs/nullableRef" },
+            "price": { "$ref": "#/$defs/nullableRef" },
+            "model": { "$ref": "#/$defs/nullableRef" },
+            "runtimePolicy": { "$ref": "#/$defs/nullableRef" },
+            "route": { "$ref": "#/$defs/nullableRef" }
+          }
+        }
+      }
+    },
+    "previousRefs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observedAt", "budgetPolicy", "price", "model", "runtimePolicy", "route"],
+      "properties": {
+        "observedAt": { "type": "string" },
+        "budgetPolicy": { "$ref": "#/$defs/exactRef" },
+        "price": { "$ref": "#/$defs/exactRef" },
+        "model": { "$ref": "#/$defs/exactRef" },
+        "runtimePolicy": { "$ref": "#/$defs/exactRef" },
+        "route": { "$ref": "#/$defs/exactRef" }
+      }
+    },
+    "costParent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["proposalId", "proposalHash", "decisionId", "consumptionReceiptId", "status"],
+      "properties": {
+        "proposalId": { "type": "null" },
+        "proposalHash": { "type": "null" },
+        "decisionId": { "type": "null" },
+        "consumptionReceiptId": { "type": "null" },
+        "status": { "const": "NOT_PROPOSED" }
+      }
+    },
+    "pairedWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effectiveFrom", "effectiveUntil", "targetPairHash", "status"],
+      "properties": {
+        "effectiveFrom": { "type": "null" },
+        "effectiveUntil": { "const": "2027-03-31T04:00:00Z" },
+        "targetPairHash": { "type": "null" },
+        "status": { "const": "WAITING_FOR_COST_PARENT_AND_CURRENT_READBACK" }
+      }
+    },
+    "successors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registeredModelId", "runtimePolicyId", "routeId", "status"],
+      "properties": {
+        "registeredModelId": { "const": "a0v-agnes-2-5-flash-readonly-dev" },
+        "runtimePolicyId": { "const": "a0v-ecommerce-runtime-policy-v1" },
+        "routeId": { "const": "a0v-ecommerce-text-readonly-v1" },
+        "status": { "const": "WAITING_FOR_PAIRED_POLICY_PRICE_AND_EXACT_EVALUATION" }
+      }
+    },
+    "humanCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "status", "mayBeInferredFromChat"],
+      "properties": {
+        "required": { "const": true },
+        "status": { "const": "PENDING_NATIVE_REVIEW" },
+        "mayBeInferredFromChat": { "const": false }
+      }
+    },
+    "prohibitedActions": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "nullableRef": {
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/exactRef" }
+      ]
+    },
+    "exactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assetType", "assetId", "revision", "contentHash"],
+      "properties": {
+        "assetType": { "type": "string", "minLength": 1 },
+        "assetId": { "type": "string", "minLength": 1 },
+        "revision": { "type": "integer", "minimum": 1 },
+        "contentHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

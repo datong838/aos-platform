@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "state": "NON_SIGNING_NOT_SUBMITTED",
+  "kind": "cost_parent_human_review",
+  "observedAt": "2026-10-31T17:24:00+08:00",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "authorization": {
+    "providerModelId": "agnes-2.5-flash",
+    "currency": "CNY",
+    "dailyLimitMinor": 10000,
+    "monthlyLimitMinor": 100000,
+    "effectiveUntil": "2027-03-31T04:00:00Z",
+    "modelInvocationAllowed": false
+  },
+  "receipts": {
+    "authenticatedCurrentReadback": ".evidence/qyh-cost-model-route-renewal-20261031/authenticated-current-readback-r1.json",
+    "nativeLedgerBaseline": ".evidence/qyh-post-renewal-binding-readonly-20261031/native-parent-confirmation-r2.json",
+    "humanReadable": ".evidence/qyh-cost-model-route-renewal-20261031/cost-parent-review-material.md"
+  },
+  "currentExactRefs": {
+    "budget": {
+      "assetType": "BudgetRevision",
+      "assetId": "a0v-ecommerce-hard-stop-budget-v1",
+      "revision": 1,
+      "contentHash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+    },
+    "budgetPolicy": {
+      "assetType": "BudgetPolicyRevision",
+      "assetId": "a0v-ecommerce-budget-policy-v1",
+      "revision": 13,
+      "contentHash": "883dbced85d632e2d7027493c5b5555e72deb331d1b63a3b180e2c4ae7f94696"
+    },
+    "price": {
+      "assetType": "ModelPriceSnapshotRevision",
+      "assetId": "a0v-agnes-2-5-flash-development-deferred-v1",
+      "revision": 12,
+      "contentHash": "ac76df7da928c0468a69f18c3d559c3139fbb951154e89c21bb88e3c2c20c06c"
+    },
+    "model": {
+      "assetType": "RegisteredModelRevision",
+      "assetId": "a0v-agnes-2-5-flash-readonly-dev",
+      "revision": 12,
+      "contentHash": "f3bb08836758f194023bde3eecde8890f00192704e08897ed368a40928dd0a73"
+    },
+    "runtimePolicy": {
+      "assetType": "RuntimePolicyRevision",
+      "assetId": "a0v-ecommerce-runtime-policy-v1",
+      "revision": 13,
+      "contentHash": "bc8b9b0bace9c57c21cbd93d188b3ed8292dffe2271611abaf60cfe380abd019"
+    },
+    "route": {
+      "assetType": "ModelRouteRevision",
+      "assetId": "a0v-ecommerce-text-readonly-v1",
+      "revision": 12,
+      "contentHash": "f9628f91d6a161eef844e2e933322adcbcdca3abcaa72f5c18e1f8c1ec82ddfd"
+    },
+    "provider": {
+      "assetType": "ProviderInstanceRevision",
+      "assetId": "a0v-agnes-text-readonly-dev",
+      "revision": 1,
+      "contentHash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+    }
+  },
+  "windowBlockers": [
+    "BUDGET_POLICY_OUT_OF_WINDOW",
+    "PRICE_SNAPSHOT_OUT_OF_WINDOW"
+  ],
+  "nativeLedger": {
+    "costProposals": 0,
+    "costDecisions": 0,
+    "costConsumptions": 0,
+    "reconciledAt": "2026-10-31T17:24:00+08:00",
+    "method": "READONLY_BASELINE_NO_NEW_POST"
+  },
+  "formalCostParentRoutes": {
+    "baseUrl": "http://127.0.0.1:18080",
+    "proposalPost": "POST /v1/aip/budgets/cost-proposals",
+    "decidePostGet": "POST|GET /v1/aip/budgets/cost-proposals/{proposal_id}/review-requests/decide",
+    "consumptionPostGet": "POST|GET /v1/aip/budgets/cost-proposals/{proposal_id}/consumption-request",
+    "policyWindowSourceGet": "GET /v1/aip/budgets/cost-proposals/{proposal_id}/policy-window-source"
+  },
+  "proposalTemplate": {
+    "note": "Canonical field template only; request hash and ids are assigned only at human submit time.",
+    "schemaVersion": 1,
+    "tenant": { "orgId": "org-org", "projectId": "dev-project" },
+    "target": {
+      "budgetId": "a0v-ecommerce-hard-stop-budget-v1",
+      "currentHeadRevision": 1,
+      "nextActiveRevision": 2,
+      "dailyLimitMinor": 10000,
+      "monthlyLimitMinor": 100000,
+      "hardStop": true
+    },
+    "basis": {
+      "kind": "development_risk_proposal",
+      "providerRef": {
+        "assetType": "ProviderInstanceRevision",
+        "assetId": "a0v-agnes-text-readonly-dev",
+        "revision": 1,
+        "contentHash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+      },
+      "providerModelId": "agnes-2.5-flash",
+      "riskMinorFieldsRequireHumanApproval": [
+        "perRequestRiskMinor",
+        "totalRiskMinor",
+        "maxRequests"
+      ]
+    },
+    "subjectsRequireIndependentMakerChecker": true
+  },
+  "humanReviewChecklist": [
+    "tenant_org_org_dev_project",
+    "limits_match_100_cny_day_1000_cny_month",
+    "accept_cost_parent_before_paired_window",
+    "native_ledger_zero_or_reconcile_only",
+    "no_host_worker_provider_model_start"
+  ],
+  "result": "COST_PARENT_REVIEW_MATERIAL_READY_NOT_SUBMITTED",
+  "effects": {
+    "proposalSubmitted": false,
+    "decisionSubmitted": false,
+    "consumptionSubmitted": false,
+    "credentialsRead": false,
+    "databaseWrite": false,
+    "modelInvoked": false
+  }
+}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-10-31T17:14:27+08:00",
+  "capturedAt": "2026-10-31T17:26:00+08:00",
   "tenant": {
     "orgId": "org-org",
     "projectId": "dev-project"
@@ -56,5 +56,6 @@
   },
   "writes": 0,
   "modelCalls": 0,
-  "nextGate": "NON_SIGNING_COST_PARENT_REVIEW_MATERIAL_FROM_CAPTURED_REFS"
+  "costParentReviewMaterial": ".evidence/qyh-cost-model-route-renewal-20261031/cost-parent-review-material.json",
+  "nextGate": "HUMAN_REVIEW_COST_PARENT_THEN_NATIVE_COST_CHAIN"
 }

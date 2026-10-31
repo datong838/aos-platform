@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "state": "NON_SIGNING_BLOCKED_WAITING_COST_PARENT",
+  "observedAt": "2026-10-31T17:26:00+08:00",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "gateway": {
+    "baseUrl": "http://127.0.0.1:18468",
+    "writerEnabled": false,
+    "routes": [
+      "POST /v1/aip/budget-policy-window/propose",
+      "POST /v1/aip/budget-policy-window/decide",
+      "POST /v1/aip/budget-policy-window/consume",
+      "GET /v1/aip/budget-policy-window/requests/{operation}/{idempotency_key}"
+    ]
+  },
+  "targetWindow": {
+    "effectiveUntil": "2027-03-31T04:00:00Z",
+    "effectiveFrom": null,
+    "note": "effectiveFrom assigned at native submit time inside parent budget window"
+  },
+  "requiredParentRefs": {
+    "costProposalId": null,
+    "costProposalHash": null,
+    "costDecisionId": null,
+    "costConsumptionReceiptId": null
+  },
+  "targetPairBinding": {
+    "budgetPolicySuccessorId": "a0v-ecommerce-budget-policy-v1",
+    "priceSnapshotSuccessorId": "a0v-agnes-2-5-flash-development-deferred-v1",
+    "targetPairHash": null
+  },
+  "blocker": "COST_PARENT_NATIVE_CHAIN_NOT_COMPLETED",
+  "effects": {
+    "proposalSubmitted": false,
+    "decisionSubmitted": false,
+    "consumptionSubmitted": false
+  }
+}
