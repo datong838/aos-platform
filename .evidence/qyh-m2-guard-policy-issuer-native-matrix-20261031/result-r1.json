@@ -1,0 +1,105 @@
+{
+  "schema": "aos-guard-issuer-native-matrix-result/v1",
+  "observedAt": "2026-10-31T23:24:43+08:00",
+  "taskId": "qyh-m2-guard-policy-issuer-native-matrix-20261031",
+  "owner": "codex-01a190f8-e1f7-7631-821c-3ac7b969bc40",
+  "authorityRevision": "AOS-002055",
+  "head": "a7c4528dd69589f96619b194da544ea7b0374255",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "resource": {
+    "dockerContext": "colima-aos-extension",
+    "containerId": "d04973d5eb4be30b885d721b66d7c83be292c9dea265ff2986388842559fc136",
+    "container": "qyh-m2-guard-issuer-native-r1-20261031-pg",
+    "image": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+    "network": "qyh-m2-guard-issuer-native-r1-20261031-net",
+    "volume": "qyh-m2-guard-issuer-native-r1-20261031-data",
+    "database": "aos_guard_issuer_native_r1",
+    "databaseOwner": "aos_app",
+    "localForward": "127.0.0.1:18459"
+  },
+  "schemaState": {
+    "migrationHead": "a0v_170",
+    "publicTableCount": 621,
+    "guardFunctionCount": 5,
+    "guardTriggerCount": 6,
+    "targetWorkspacePresentInTwa": true,
+    "targetWorkspacePresentInMeta": true
+  },
+  "pgMatrix": {
+    "status": "GREEN",
+    "passed": 9,
+    "failed": 0,
+    "covers": [
+      "egress positive approval and exact inquiry",
+      "data-classification positive approval and exact inquiry",
+      "self approval rejected before attempt",
+      "revoked checker rejected before attempt",
+      "wrong signature rejected before attempt",
+      "cross-tenant token rejected before attempt",
+      "before-commit unknown not reexecuted",
+      "after-commit observation not reexecuted",
+      "runtime login cannot impersonate private issuer"
+    ],
+    "syntheticProposalCount": 9,
+    "syntheticApprovalCount": 3,
+    "syntheticDraftGuardRevisionCount": 9,
+    "activeGuardRevisionCount": 0,
+    "activationAuthorized": false,
+    "attemptFileCount": 4,
+    "attemptFilesMode": "0600"
+  },
+  "transportMatrix": {
+    "status": "PARTIAL_GREEN",
+    "passed": 23,
+    "failed": 0,
+    "covers": [
+      "same-UID native peer rejection",
+      "frame size, truncation and deadline rejection",
+      "duplicate-key and invalid-method rejection",
+      "exact execute/inquiry wire contract",
+      "single-send client fallback to inquiry",
+      "private passfile and database identity drift rejection"
+    ],
+    "crossUidPositiveVerified": false,
+    "blocker": "No pre-provisioned distinct AOS API and Guard Issuer OS service identities exist; current user cannot non-interactively provision them. Product requires api_uid != issuer_uid and kernel getpeereid proof."
+  },
+  "cleanup": {
+    "issuerLogin": false,
+    "issuerPasswordNull": true,
+    "issuerInherit": false,
+    "issuerSuperuser": false,
+    "passfileScrubbed": true,
+    "failedR1StateRetained": true,
+    "successfulR2StateRetained": true,
+    "containerStoppedCleanly": true,
+    "containerExitCode": 0,
+    "localForwardClosed": true
+  },
+  "hashes": {
+    "plan-r1.md": "acbf7c7bd12bcec75db91eebdb7325f8d6dd154d4db8a483cfff021bebf4fda6",
+    "test_native_guard_issuer_pg_r1.py": "247ec2756217d8816245d16a0c590bba089aad72218df727932cdc83a2b2a374",
+    "positive-egress-attempt": "5b64b6e03569c83cb9e3915546b76f0c0f9252bbfd68aa5e164f11b173bfea82",
+    "positive-data-classification-attempt": "b63b4a3f1ca56bdd38f254c8c969cd5bbe810d98ed76ce71bc91f3dbc17a5539",
+    "unknown-before-commit-attempt": "e76675b064f817dae81e0c3ccfda83836dedc38a9af77c875eddbabe05b500d4",
+    "unknown-after-commit-attempt": "54bbf0e22d922620851430cc3bc550b665583fd9d3e6b3ae3893442269fb4d78"
+  },
+  "stageAccounting": {
+    "engineeringClosed": 2,
+    "realBusinessAccepted": 0,
+    "changed": false,
+    "reason": "Isolated issuer infrastructure evidence is not a real business chain or lifecycle acceptance."
+  },
+  "boundaries": {
+    "currentBusinessDatabaseTouched": false,
+    "currentStackCredentialsRead": false,
+    "hostWorkerProviderModelScheduleStarted": false,
+    "realHumanApprovalCreated": false,
+    "realPolicyActivated": false,
+    "oldRunReplayed": false,
+    "mallSourceRead": false,
+    "pushed": false
+  }
+}
