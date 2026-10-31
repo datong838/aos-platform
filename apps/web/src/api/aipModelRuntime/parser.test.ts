@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseModelEvalCandidate, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision } from "./parser";
+import { parseModelEvalCandidate, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision, parseRuntimePolicyRevision } from "./parser";
 
 const H = "a".repeat(64);
 const ref = (assetType: string, assetId: string) => ({ assetType, assetId, revision: 1, contentHash: H });
@@ -32,6 +32,17 @@ describe("AIP-7 exact model runtime parser", () => {
     const route = parseModelRouteRevision({ tenant: empty.tenant, routeId: "route-1", revision: 3, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-1"), weight: 100 }], strategy: "failover", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-1"), evalGateRef: ref("EvalGateDecision", "gate-1"), lifecycle: "active", createdBy: "fde", createdAt: empty.generatedAt });
     expect(route.lifecycle).toBe("active");
     expect(route.candidates[0].model.assetId).toBe("model-1");
+  });
+  it("严格解析运行策略的五类精确依赖与默认禁入语义", () => {
+    const policy = parseRuntimePolicyRevision({ tenant: empty.tenant, policyId: "policy-1", revision: 2, contentHash: H,
+      networkPolicyRef: ref("NetworkPolicyRevision", "network-1"), egressPolicyRef: ref("EgressPolicyRevision", "egress-1"),
+      dataClassificationPolicyRef: ref("DataClassificationPolicyRevision", "classification-1"), quotaPolicyRef: ref("QuotaPolicyRevision", "quota-1"),
+      budgetPolicyRef: ref("BudgetPolicyRevision", "budget-1"), deadlineMs: 30000, maxAttempts: 1, allowedFallbackReasons: [],
+      unknownUsageBehavior: "block", unknownPriceBehavior: "block", killSwitchEnabled: true, lifecycle: "active", createdBy: "fde", createdAt: empty.generatedAt });
+    expect(policy.budgetPolicyRef.assetId).toBe("budget-1");
+    expect(policy.killSwitchEnabled).toBe(true);
+    expect(() => parseRuntimePolicyRevision({ ...policy, budgetPolicyRef: ref("RegisteredModelRevision", "bad") })).toThrow(/budgetPolicyRef/);
+    expect(() => parseRuntimePolicyRevision({ ...policy, unknownPriceBehavior: "allow" })).toThrow(/unknownPriceBehavior/);
   });
   it("拒绝错误 exact ref、重复候选和不守恒权重", () => {
     const base = { tenant: empty.tenant, routeId: "route-1", revision: 3, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-1"), weight: 60 }, { model: ref("RegisteredModelRevision", "model-2"), weight: 30 }], strategy: "weighted", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-1"), evalGateRef: ref("EvalGateDecision", "gate-1"), lifecycle: "validated", createdBy: "fde", createdAt: empty.generatedAt };

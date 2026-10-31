@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "aos.qyh-successor-preflight-checkpoint/v1",
+  "recordedAt": "2026-10-31T20:37:57+08:00",
+  "tenant": { "orgId": "org-org", "projectId": "dev-project" },
+  "result": "READ_ONLY_PREFLIGHT_IMPLEMENTED",
+  "businessAcceptance": false,
+  "engineeringClosed": 2,
+  "realBusinessAccepted": 0,
+  "writes": {
+    "modelRuntimePostAdded": false,
+    "databaseWritten": false,
+    "providerCalled": false,
+    "modelCalled": false
+  },
+  "tests": {
+    "focused": "39/39 passed",
+    "adjacent": "168/168 passed",
+    "finalFocusedAndWindow": "52/52 passed",
+    "typescript": "passed",
+    "webBuild": "passed"
+  },
+  "browser": {
+    "url": "http://127.0.0.1:18434/aip/capacity",
+    "developmentLoginSkipPreserved": true,
+    "fixedAuthorizedExpiryVisible": "2027-03-31T04:00:00.000Z",
+    "pairedConsumeObserved": false,
+    "successorReadyClaimed": false
+  },
+  "sha256": {
+    "qyhSuccessorPreflight.ts": "98b995d8f60dad29a96865ec6c21dbf8564b7084d920ba2412168d9818d420ac",
+    "QyhRuntimeSuccessorPreflightPanel.tsx": "b8b955e48211069fb4c43a73dc67040bde1b6965cb8777ef397fefbf4c1f41e0",
+    "parser.ts": "cca7ee32dac96fc97c958716bfe8964a6a91843685d082bac72d3415be27d87e",
+    "plan.md": "6ab210f03aa65033da401ba321b667ddf3808813ebff149a23c134a9cfff1588"
+  },
+  "next": "本人真实 OIDC 会话完成 native cost 与 paired-window consume 后，以本预检读取当前精确头；通过后再方案化三个追加式 draft，仍不调用模型。"
+}

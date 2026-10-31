@@ -90,6 +90,27 @@ export type RegisteredModelRevision = {
   createdAt: string;
 };
 
+export type RuntimePolicyRevision = {
+  tenant: { orgId: string; projectId: string };
+  policyId: string;
+  revision: number;
+  contentHash: string;
+  networkPolicyRef: ExactRuntimeRef;
+  egressPolicyRef: ExactRuntimeRef;
+  dataClassificationPolicyRef: ExactRuntimeRef;
+  quotaPolicyRef: ExactRuntimeRef;
+  budgetPolicyRef: ExactRuntimeRef;
+  deadlineMs: number;
+  maxAttempts: number;
+  allowedFallbackReasons: string[];
+  unknownUsageBehavior: "block" | "reconcile";
+  unknownPriceBehavior: "block" | "reconcile";
+  killSwitchEnabled: boolean;
+  lifecycle: RuntimeLifecycle;
+  createdBy: string;
+  createdAt: string;
+};
+
 export type ModelEvalCandidate = {
   sourceRef: ExactRuntimeRef;
   targetRef: ExactRuntimeRef;

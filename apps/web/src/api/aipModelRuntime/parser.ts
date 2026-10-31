@@ -1,4 +1,4 @@
-import type { ModelEvalCandidate, ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeChainOverview, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeChainNode, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeModelImpactTrace, RuntimeQuotaAuthoritySummary, RuntimeReadiness, RuntimeResolution, RuntimeRouteChain, RuntimeTaskModelTrace, RuntimeTraceRef, RuntimeUsageAttributionDimension, RuntimeUsageAuthoritySummary } from "./contracts";
+import type { ModelEvalCandidate, ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeChainOverview, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeChainNode, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeModelImpactTrace, RuntimePolicyRevision, RuntimeQuotaAuthoritySummary, RuntimeReadiness, RuntimeResolution, RuntimeRouteChain, RuntimeTaskModelTrace, RuntimeTraceRef, RuntimeUsageAttributionDimension, RuntimeUsageAuthoritySummary } from "./contracts";
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
 function array(value: unknown, label: string): unknown[] { if (!Array.isArray(value)) throw new Error(`${label} 必须是数组`); return value; }
@@ -55,6 +55,38 @@ export function parseRegisteredModelRevision(value: unknown): RegisteredModelRev
     contextWindow: integer(raw.contextWindow, "contextWindow", 1), quotaPolicyRef: ref(raw.quotaPolicyRef, "quotaPolicyRef"),
     budgetPolicyRef: ref(raw.budgetPolicyRef, "budgetPolicyRef"), priceSnapshotRef: ref(raw.priceSnapshotRef, "priceSnapshotRef"),
     evalGateRef: configurationEval(raw.evalGateRef, lifecycle), lifecycle,
+    createdBy: string(raw.createdBy, "createdBy"), createdAt: iso(raw.createdAt, "createdAt"),
+  };
+}
+
+export function parseRuntimePolicyRevision(value: unknown): RuntimePolicyRevision {
+  const raw = object(value, "RuntimePolicyRevision");
+  const exact = (key: string, kind: string) => {
+    const value = ref(raw[key], key);
+    if (value.assetType !== kind) throw new Error(`${key} 类型必须为 ${kind}`);
+    return value;
+  };
+  const allowedFallbackReasons = strings(raw.allowedFallbackReasons, "allowedFallbackReasons");
+  if (new Set(allowedFallbackReasons).size !== allowedFallbackReasons.length) throw new Error("allowedFallbackReasons 不能重复");
+  if (allowedFallbackReasons.some((item) => ["safety_rejected", "egress_denied", "pii_denied", "policy_denied"].includes(item))) throw new Error("allowedFallbackReasons 不能放宽安全或策略拒绝");
+  const deadlineMs = integer(raw.deadlineMs, "deadlineMs", 100);
+  const maxAttempts = integer(raw.maxAttempts, "maxAttempts", 1);
+  if (deadlineMs > 3_600_000) throw new Error("deadlineMs 不能超过 3600000");
+  if (maxAttempts > 20) throw new Error("maxAttempts 不能超过 20");
+  return {
+    tenant: tenant(raw.tenant, "tenant"), policyId: string(raw.policyId, "policyId"),
+    revision: integer(raw.revision, "revision", 1), contentHash: sha(raw.contentHash, "contentHash"),
+    networkPolicyRef: exact("networkPolicyRef", "NetworkPolicyRevision"),
+    egressPolicyRef: exact("egressPolicyRef", "EgressPolicyRevision"),
+    dataClassificationPolicyRef: exact("dataClassificationPolicyRef", "DataClassificationPolicyRevision"),
+    quotaPolicyRef: exact("quotaPolicyRef", "QuotaPolicyRevision"),
+    budgetPolicyRef: exact("budgetPolicyRef", "BudgetPolicyRevision"),
+    deadlineMs, maxAttempts,
+    allowedFallbackReasons,
+    unknownUsageBehavior: enumeration(raw.unknownUsageBehavior, "unknownUsageBehavior", ["block", "reconcile"] as const),
+    unknownPriceBehavior: enumeration(raw.unknownPriceBehavior, "unknownPriceBehavior", ["block", "reconcile"] as const),
+    killSwitchEnabled: boolean(raw.killSwitchEnabled, "killSwitchEnabled"),
+    lifecycle: enumeration<RuntimeLifecycle>(raw.lifecycle, "lifecycle", ["draft", "validated", "active", "suspended", "revoked"]),
     createdBy: string(raw.createdBy, "createdBy"), createdAt: iso(raw.createdAt, "createdAt"),
   };
 }

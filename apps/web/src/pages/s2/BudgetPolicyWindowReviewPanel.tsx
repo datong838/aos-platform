@@ -4,6 +4,7 @@ import type {PolicyWindowSource, WindowCommand, WindowDecisionReceipt, WindowGat
  WindowObservation, WindowOperation, WindowProposeReceipt, WindowReceiptLinks, WindowRef,
  WindowRequestIndex, WindowRevocationReceipt, WindowConsumeReceipt} from '../../api/aipBudgetPolicyWindow';
 import {useBudgetRequestGuard} from './useBudgetRequestGuard';
+import {QyhRuntimeSuccessorPreflightPanel} from './QyhRuntimeSuccessorPreflightPanel';
 
 const field:CSSProperties={display:'flex',flexDirection:'column',gap:6,flex:'1 1 240px',minWidth:0};
 const flow:CSSProperties={display:'flex',flexWrap:'wrap',gap:12,marginTop:12};
@@ -95,7 +96,7 @@ export function BudgetPolicyWindowReviewPanel(){
  }
  const locked=guard.busy||!!frozen;
  const p=prepared?.proposal;
- return <section aria-label="预算策略子窗口审核" style={{marginTop:24,padding:20,border:'1px solid #dce4ee',borderRadius:12,background:'#fff',overflowWrap:'anywhere'}}>
+ return <><section aria-label="预算策略子窗口审核" style={{marginTop:24,padding:20,border:'1px solid #dce4ee',borderRadius:12,background:'#fff',overflowWrap:'anywhere'}}>
   <h3 style={{marginTop:0,color:'#1557b0'}}>预算策略与价格窗口</h3>
   <p>共享原预算，不增加预算。提议、审核、生成配置与撤销分别确认；不会自动批准或启动模型、业务。</p>
   <div style={flow}>
@@ -147,5 +148,5 @@ export function BudgetPolicyWindowReviewPanel(){
   <p role="status">{message}</p>
   {reference&&<p>原操作：{reference.operation} / {reference.key}；{observation?.status??'尚未确认'}</p>}
   {history.length>0&&<details open><summary>原操作列表（仅查询，不代表批准）</summary><ul>{history.map(item=><li key={item.operation+':'+item.idempotencyKey}><button type="button" className="btn" disabled={guard.busy||!!frozen} onClick={()=>void query({operation:item.operation,key:item.idempotencyKey})}>{item.operation} / {item.idempotencyKey}</button></li>)}</ul></details>}
- </section>;
+ </section>{consumed&&<QyhRuntimeSuccessorPreflightPanel pairedPolicyRef={consumed.policyRef} pairedPriceRef={consumed.priceRef}/>}</>;
 }
