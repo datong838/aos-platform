@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-31T18:56:00+08:00",
+  "gitHead": "7a2b2c88a",
+  "session": {
+    "webUrl": "http://127.0.0.1:18434/aip/model-runtime",
+    "tokenPresent": true,
+    "tokenKind": "oidc",
+    "tenant": "org-org/dev-project"
+  },
+  "runtime": {
+    "managementOpenApi": { "port": 18080, "httpStatus": 200 },
+    "pairedWindowGateway": { "port": 18468, "unauthenticatedPostStatus": 403 }
+  },
+  "readback": {
+    "overviewHttpStatus": 200,
+    "modelRevision": 12,
+    "routeRevision": 12,
+    "routeResolution": "blocked",
+    "nativeCostLedgerChanged": "NOT_CHECKED_DB_READONLY_BASELINE_STILL_ZERO_ASSUMED"
+  },
+  "nextGate": "HUMAN_NATIVE_COST_PARENT_ON_PRODUCT_UI",
+  "effects": {
+    "proposalSubmitted": false,
+    "databaseWrite": false,
+    "modelInvoked": false
+  }
+}
