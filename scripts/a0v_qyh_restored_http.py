@@ -88,11 +88,14 @@ def load_management_oidc_config(path):
 class ReadOnlyManagementApp:
     """Local inspection only; product authentication and tenant checks still run."""
     def __init__(self, app, *, allow_password_login=False,
-                 allow_route_worker_configuration=False):
+                 allow_route_worker_configuration=False,
+                 allow_route_eval_context_snapshot=False):
         self.app = app
         self.allow_password_login = allow_password_login is True
         self.allow_route_worker_configuration = (
             allow_route_worker_configuration is True)
+        self.allow_route_eval_context_snapshot = (
+            allow_route_eval_context_snapshot is True)
 
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'websocket':
@@ -105,9 +108,15 @@ class ReadOnlyManagementApp:
             and scope['method'] == 'POST'
             and scope['path'] ==
             '/v1/ecommerce-workshop/background-processing/configure')
+        route_eval_context_snapshot = (
+            self.allow_route_eval_context_snapshot and scope['type'] == 'http'
+            and scope['method'] == 'POST'
+            and scope['path'] ==
+            '/v1/aip/model-runtime/route-eval-context-snapshot')
         if (scope['type'] == 'http'
                 and scope['method'] not in {'GET', 'HEAD', 'OPTIONS'}
-                and not login and not route_worker_configuration):
+                and not login and not route_worker_configuration
+                and not route_eval_context_snapshot):
             body = b'{"code":"RESTORED_MANAGEMENT_READ_ONLY","message":"Management inspection is read only."}'
             await send({'type': 'http.response.start', 'status': 405,
                         'headers': [(b'content-type', b'application/json'), (b'cache-control', b'no-store')]})
@@ -483,6 +492,10 @@ def route_worker_configuration_post_enabled():
     return os.environ.get('AOS_ROUTE_WORKER_CONFIGURATION_POST_ENABLED') == '1'
 
 
+def route_eval_context_snapshot_post_enabled():
+    return os.environ.get('AOS_ROUTE_EVAL_CONTEXT_SNAPSHOT_POST_ENABLED') == '1'
+
+
 def management_app():
     config = os.environ.get('AOS_LOCAL_MANAGEMENT_OIDC_CONFIG')
     if config:
@@ -512,6 +525,7 @@ def management_app():
         app,
         allow_password_login=bool(config),
         allow_route_worker_configuration=route_worker_configuration_post_enabled(),
+        allow_route_eval_context_snapshot=route_eval_context_snapshot_post_enabled(),
     )
 
 def main():

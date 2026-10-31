@@ -113,6 +113,40 @@ def test_configuration_gate_rejects_truthy_nonboolean(entry):
     assert response.status_code == 405
 
 
+def test_explicit_route_eval_context_gate_delegates_only_exact_snapshot(entry):
+    from starlette.testclient import TestClient
+    observed = []
+
+    async def product(scope, receive, send):
+        observed.append((scope['method'], scope['path']))
+        await send({'type':'http.response.start','status':401,'headers':[]})
+        await send({'type':'http.response.body','body':b''})
+
+    client = TestClient(entry.ReadOnlyManagementApp(
+        product, allow_route_eval_context_snapshot=True))
+    exact = '/v1/aip/model-runtime/route-eval-context-snapshot'
+    assert client.post(exact, json={}).status_code == 401
+    for path in [exact + '/', exact + '/other',
+                 '/v1/aip/model-runtime/evaluation-candidates',
+                 '/v1/aip/model-runtime/preflight-model-evaluation']:
+        assert client.post(path, json={}).status_code == 405
+    assert client.put(exact, json={}).status_code == 405
+    assert observed == [('POST', exact)]
+
+
+def test_route_eval_context_gate_rejects_truthy_nonboolean(entry):
+    from starlette.testclient import TestClient
+
+    async def product(*_args):
+        pytest.fail('truthy route Eval context flag bypassed readonly gate')
+
+    client = TestClient(entry.ReadOnlyManagementApp(
+        product, allow_route_eval_context_snapshot='1'))
+    response = client.post(
+        '/v1/aip/model-runtime/route-eval-context-snapshot', json={})
+    assert response.status_code == 405
+
+
 @pytest.mark.parametrize(('value', 'expected'), [
     (None, False), ('', False), ('true', False), ('01', False), ('1', True),
 ])
@@ -123,6 +157,19 @@ def test_configuration_post_environment_gate_is_exact(entry, monkeypatch, value,
     else:
         monkeypatch.setenv(key, value)
     assert entry.route_worker_configuration_post_enabled() is expected
+
+
+@pytest.mark.parametrize(('value', 'expected'), [
+    (None, False), ('', False), ('true', False), ('01', False), ('1', True),
+])
+def test_route_eval_context_post_environment_gate_is_exact(
+        entry, monkeypatch, value, expected):
+    key = 'AOS_ROUTE_EVAL_CONTEXT_SNAPSHOT_POST_ENABLED'
+    if value is None:
+        monkeypatch.delenv(key, raising=False)
+    else:
+        monkeypatch.setenv(key, value)
+    assert entry.route_eval_context_snapshot_post_enabled() is expected
 
 
 def test_owned_exact_local_oidc_config(entry, tmp_path):
