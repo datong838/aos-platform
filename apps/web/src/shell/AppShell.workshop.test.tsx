@@ -186,7 +186,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelectorAll("[data-workshop-module-id]")).toHaveLength(0);
   });
 
-  it("目录读取失败时全壳不回退旧电商链接或静态模块入口", async () => {
+  it("目录读取失败时栖月汇开发壳恢复八工作台预览且不回退旧链接", async () => {
     const client = { listModules: async () => { throw new Error("catalog unavailable"); } };
     await act(async () => root.render(
       <MemoryRouter initialEntries={["/workshop/operations"]}>
@@ -201,24 +201,18 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     ));
     await flush();
 
-    expect(host.querySelector(".ecommerce-workshop-host-state")?.textContent).toContain("读取失败");
+    expect(host.querySelector(".ecommerce-workshop-host-state")).toBeNull();
+    expect(host.querySelectorAll("a[data-workshop-preview='true']")).toHaveLength(8);
+    expect(host.textContent).toContain("统一运营驾驶舱");
+    expect(host.textContent).not.toContain("登录后核验安装目录");
+    expect(host.textContent).toContain("正式办理前核验安装目录");
     expect(host.querySelector('a[href="/workshop/orders"]')).toBeNull();
     expect(host.querySelector('a[href="/workshop/inventory"]')).toBeNull();
-    expect(host.querySelectorAll("[data-workshop-module-id]")).toHaveLength(0);
+    expect(host.querySelectorAll("[data-workshop-module-id]")).toHaveLength(8);
   });
 
   it.each([
     ["空目录", { listModules: async () => workshopCatalogFixture({ items: [] }) }, "当前工作台入口不可用"],
-    ["目录读取失败", { listModules: async () => { throw new Error("catalog unavailable"); } }, "读取失败"],
-    ["目录无权", { listModules: async () => { throw new EcommerceWorkshopClientError("forbidden", {
-      status: 403,
-      operationId: "ecommerceWorkshopModulesList",
-      body: { code: "FORBIDDEN", message: "forbidden", details: null, traceId: "trace-forbidden" },
-    }); } }, "没有访问权限"],
-    ["目录租户漂移", { listModules: async () => workshopCatalogFixture({
-      orgId: "dev-org",
-      projectId: "dev-project",
-    }) }, "读取失败"],
     ["仅安装其他模块", { listModules: async () => workshopCatalogFixture({
       items: [workshopModuleFixture({
         moduleId: "ecommerce.content-campaign",
@@ -255,6 +249,36 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelector(".topbar-left")).not.toBeNull();
     expect(host.querySelector(".brand-block")).not.toBeNull();
     expect(host.querySelectorAll('[data-workshop-module-id="ecommerce.operations"]')).toHaveLength(0);
+  });
+
+  it.each([
+    ["目录读取失败", { listModules: async () => { throw new Error("catalog unavailable"); } }],
+    ["目录 403", { listModules: async () => { throw new EcommerceWorkshopClientError("forbidden", {
+      status: 403,
+      operationId: "ecommerceWorkshopModulesList",
+      body: { code: "FORBIDDEN", message: "forbidden", details: null, traceId: "trace-forbidden" },
+    }); } }],
+    ["目录租户漂移", { listModules: async () => workshopCatalogFixture({
+      orgId: "dev-org",
+      projectId: "dev-project",
+    }) }],
+  ] as const)("%s 时精确栖月汇开发境显示八工作台预览", async (_caseName, client) => {
+    await act(async () => root.render(
+      <MemoryRouter initialEntries={["/workshop/operations"]}>
+        <EcommerceWorkshopCatalogProvider client={client}>
+          <Routes><Route element={<AppShell />}>
+            <Route path="workshop/:workshopModule/*" element={<EcommerceWorkshopEntryRoute />} />
+          </Route></Routes>
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+
+    expect(host.querySelector(".ecommerce-workshop-host-state")).toBeNull();
+    expect(host.querySelectorAll("a[data-workshop-preview='true']")).toHaveLength(8);
+    expect(host.querySelectorAll('[data-workshop-module-id="ecommerce.operations"]')).toHaveLength(1);
+    expect(host.textContent).toContain("统一运营驾驶舱");
+    expect(host.querySelector('a[href="/workshop/orders"]')).toBeNull();
   });
 
   it("canonical 深层路径保持在同一 Module Shell 与唯一 active 导航中", async () => {

@@ -117,7 +117,7 @@ export function EcommerceWorkshopShell({
       <details className="ecommerce-workshop-technical-context">
         <summary>
           <span>技术与数据诊断</span>
-          <small>{module.moduleId} · {developmentPreview ? "开发预览，登录后核验安装目录" : `模块能力${READINESS_LABEL[module.readiness]} · 安装目录截止 ${dataCutoff ?? "待验证"}`}</small>
+          <small>{module.moduleId} · {developmentPreview ? "开发预览，正式办理前核验安装目录" : `模块能力${READINESS_LABEL[module.readiness]} · 安装目录截止 ${dataCutoff ?? "待验证"}`}</small>
         </summary>
         <div className="ecommerce-workshop-technical-context-body">
           {developmentPreview ? <p role="status">当前仅开放前端开发入口；安装状态、业务数据和受保护操作均未授权，登录后以正式目录为准。</p> : <dl className="ecommerce-workshop-context-refs" aria-label="模块版本上下文">

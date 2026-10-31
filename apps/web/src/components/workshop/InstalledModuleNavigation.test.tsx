@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { setTenant } from "../../api/tenant";
+import { clearAccessToken, setAccessToken, setTenant } from "../../api/tenant";
 import { EcommerceWorkshopClientError } from "../../api/ecommerceWorkshop";
 import { EcommerceWorkshopCatalogProvider } from "./EcommerceWorkshopCatalogContext";
 import { InstalledModuleNavigation } from "./InstalledModuleNavigation";
@@ -24,6 +24,7 @@ describe("InstalledModuleNavigation", () => {
 
   beforeEach(() => {
     sessionStorage.clear();
+    clearAccessToken();
     setTenant({ orgId: "org-org", projectId: "dev-project", workspaceName: "real" });
     host = document.createElement("div");
     document.body.appendChild(host);
@@ -31,6 +32,7 @@ describe("InstalledModuleNavigation", () => {
   });
 
   afterEach(() => {
+    clearAccessToken();
     act(() => root.unmount());
     host.remove();
   });
@@ -106,7 +108,7 @@ describe("InstalledModuleNavigation", () => {
     expect(host.textContent).toContain("开发预览入口");
   });
 
-  it("旧冻结 API 返回 404/503 时仍显示八工作台开发预览，但 403 不降级", async () => {
+  it("旧冻结 API 返回 403/404/503 时均保留栖月汇开发免登录预览", async () => {
     const error = (status: number) => new EcommerceWorkshopClientError("catalog unavailable", {
       status,
       operationId: "ecommerceWorkshopModulesList",
@@ -144,8 +146,36 @@ describe("InstalledModuleNavigation", () => {
       </MemoryRouter>,
     ));
     await flush();
+    expect(host.querySelectorAll("a[data-workshop-preview='true']")).toHaveLength(8);
+    expect(host.textContent).toContain("开发预览入口");
+  });
+
+  it("目录 403 不得给其他租户或已登录会话降级", async () => {
+    const forbidden = new EcommerceWorkshopClientError("forbidden", {
+      status: 403,
+      operationId: "ecommerceWorkshopModulesList",
+      body: { code: "FORBIDDEN", message: "forbidden", details: null, traceId: "trace" },
+    });
+    setTenant({ orgId: "dev-org", projectId: "dev-project", workspaceName: "other" });
+    await act(async () => root.render(
+      <MemoryRouter><EcommerceWorkshopCatalogProvider client={{ listModules: async () => { throw forbidden; } }}>
+        <InstalledModuleNavigation />
+      </EcommerceWorkshopCatalogProvider></MemoryRouter>,
+    ));
+    await flush();
     expect(host.querySelectorAll("a[data-workshop-preview='true']")).toHaveLength(0);
-    expect(host.textContent).toContain("没有读取工作台目录的权限");
+
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    setTenant({ orgId: "org-org", projectId: "dev-project", workspaceName: "real" });
+    await act(async () => setAccessToken("authenticated-test-token"));
+    await act(async () => root.render(
+      <MemoryRouter><EcommerceWorkshopCatalogProvider client={{ listModules: async () => { throw forbidden; } }}>
+        <InstalledModuleNavigation />
+      </EcommerceWorkshopCatalogProvider></MemoryRouter>,
+    ));
+    await flush();
+    expect(host.querySelectorAll("a[data-workshop-preview='true']")).toHaveLength(0);
   });
 
   it("开发期无登录且 API 禁用 dev token 时显示八个明确标注的预览入口", async () => {

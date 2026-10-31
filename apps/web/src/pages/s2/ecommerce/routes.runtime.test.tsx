@@ -81,6 +81,23 @@ it.each([404, 503])('routes the no-login preview when the frozen API catalog ret
   expect(host.querySelector('[data-testid="legacy-host"]')).not.toBeNull();
   expect(host.textContent).not.toContain('已安装工作台目录暂不可用');
 });
+it('routes the QYH no-login preview when the frozen API catalog returns 403', async () => {
+  const forbidden = new EcommerceWorkshopClientError('catalog forbidden', {
+    status: 403,
+    operationId: 'ecommerceWorkshopModulesList',
+    body: { code: 'FORBIDDEN', message: 'forbidden', details: null, traceId: 'trace-403' },
+  });
+  await act(async () => root.render(<MemoryRouter initialEntries={['/workshop/analyst']}>
+    <RuntimeWorkshopCatalogProvider client={async () => { throw new Error('runtime unavailable'); }}>
+      <EcommerceWorkshopCatalogProvider client={{ listModules: async () => { throw forbidden; } }}>
+        <EcommerceWorkshopEntryRoute />
+      </EcommerceWorkshopCatalogProvider>
+    </RuntimeWorkshopCatalogProvider>
+  </MemoryRouter>));
+  await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+  expect(host.querySelector('[data-testid="legacy-host"]')).not.toBeNull();
+  expect(host.textContent).not.toContain('已安装工作台目录暂不可用');
+});
 it.each(['conflict', 'failed', 'unknown-legacy'] as const)('loads neither host when %s', async kind => {
   await render(kind);
   expect(host.querySelector('[data-testid="signed-host"]')).toBeNull();

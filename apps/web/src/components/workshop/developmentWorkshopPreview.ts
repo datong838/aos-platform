@@ -34,9 +34,9 @@ export const DEVELOPMENT_WORKSHOP_PREVIEW_MODULES: readonly EcommerceWorkshopMod
       dependencyType: "installation",
       dependencyId: item.moduleId,
       state: "unknown",
-      reasonCode: "DEVELOPMENT_PREVIEW_LOGIN_REQUIRED",
+      reasonCode: "DEVELOPMENT_PREVIEW_INSTALLATION_UNVERIFIED",
       recoverable: true,
-      requiredAction: "登录后读取栖月汇当前有效安装与业务数据",
+      requiredAction: "开发预览可继续；正式办理前再登录核对栖月汇当前有效安装与业务数据",
       ref: null,
     }],
     dependencyRefs: [],
@@ -57,7 +57,7 @@ export const DEVELOPMENT_WORKSHOP_PREVIEW_MODULES: readonly EcommerceWorkshopMod
 
 export function canUseDevelopmentWorkshopPreview(status: number | null): boolean {
   const tenant = getTenant();
-  return (status === 0 || status === 401 || status === 404 || status === 503)
+  return (status === 0 || status === 401 || status === 403 || status === 404 || status === 503)
     && isLoginGateSkipped()
     && getAccessToken() === null
     && tenant.orgId === "org-org"
