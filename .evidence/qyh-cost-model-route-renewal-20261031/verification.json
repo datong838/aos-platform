@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-10-31T17:08:00+08:00",
+  "result": "PLAN_AND_NON_SIGNING_DRAFT_GREEN_FORMAL_PAIRED_WINDOW_READONLY_ENTRIES_LOADED",
+  "checks": {
+    "jsonParse": "PASS",
+    "schemaSubsetValidation": "PASS",
+    "formalEntryMapJsonParse": "PASS",
+    "formalEntryReadbackJsonParse": "PASS",
+    "formalEntryRuntimeComparison": "PASS_AFTER_READONLY_RUNTIME_INTEGRATION",
+    "candidateContractTests": "231_PASSED_7_WARNINGS",
+    "candidateContractTestDatabase": "DISPOSABLE_POSTGRES_REMOVED",
+    "nonBlockingWarningsDebt": "TD-012",
+    "memoryValidate": "GREEN",
+    "coveredSchemaKeywords": [
+      "$ref",
+      "anyOf",
+      "type",
+      "const",
+      "enum",
+      "required",
+      "additionalProperties",
+      "items",
+      "minItems",
+      "uniqueItems",
+      "minLength",
+      "pattern",
+      "minimum"
+    ],
+    "thirdPartyDraft202012EngineAvailable": false,
+    "authorizationValues": "PASS",
+    "targetExpiry": "2027-03-31T04:00:00Z",
+    "targetExpiryAsiaShanghai": "2027-03-31T12:00:00+08:00",
+    "providerModelId": "agnes-2.5-flash",
+    "dailyLimitMinor": 10000,
+    "monthlyLimitMinor": 100000,
+    "currentRefsNotInvented": "PASS",
+    "humanApprovalNotInferred": "PASS",
+    "sensitiveValueScan": "PASS",
+    "proposalSubmitted": false,
+    "decisionSubmitted": false,
+    "consumptionSubmitted": false,
+    "databaseWrites": 0,
+    "modelCalls": 0,
+    "runtimeStarted": false
+  },
+  "liveBoundary": {
+    "openApiRead": "PASS",
+    "authenticatedRuntimeReads": "401_AUTH_REQUIRED",
+    "modelRuntimeManagementRoutesLoaded": true,
+    "costParentRoutesLoaded": true,
+    "policyWindowSourceRouteLoaded": true,
+    "pairedWindowGateway18468Listening": true,
+    "candidateSourceIsRuntimeAuthority": false,
+    "credentialReadOrBypassAttempted": false,
+    "nextRequiredAction": "Normal human OIDC login on org-org/dev-project, then authenticated readonly current-ref inventory and non-signing cost parent materials; no native POST, writer, or model calls."
+  },
+  "files": {
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-31-QYH价格模型策略路由接续方案.md": "86ad9b5eaa63c9e51244221cd2949ea3b7570868af10a3cb5cbee2d7b8ace992",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/业务主线优先与技术债台账/2026-10-31.md": "f05be06e7fb1ca16da464ab2b74270b9170f2919b750c7c4794898d1a31421e3",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/plan.md": "46ffe3607bcde42315534b142ab1ff06fec63ca184efc719e9427d6a8d91c816",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/approval-material-schema.json": "42f70d60e284825ee263667d7ca5dd9933c3ce1c8caba58a66c734a17b08df3a",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/current-readonly-inventory.json": "5880dece82c365e5c722d13e2e713457c8dcc140d89414de2e8f3f298dfc39d3",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/material-draft.json": "49462d71b27915c235dad184965e9504fb22811a6affafe36e4779c55b3708e3",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/formal-entry-map.json": "7d364de7d867b4111086953a37b54383981632bd0a10113a9024c09ad94b67b3",
+    "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-cost-model-route-renewal-20261031/formal-entry-readback.json": "2e63745edc76a03b9354a7cb7f4b812c9eec521be7816d04e8a31240c37bf6f6"
+  },
+  "stageCounters": {
+    "engineeringClosed": "2/8",
+    "realBusinessAccepted": "0/8"
+  }
+}

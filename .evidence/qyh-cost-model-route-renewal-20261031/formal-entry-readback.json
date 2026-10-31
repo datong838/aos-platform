@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-31T17:08:00+08:00",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "runtime": {
+    "managementBaseUrl": "http://127.0.0.1:18080",
+    "openApiReadable": true,
+    "modelRuntimeRoutesLoaded": {
+      "modelsPostAndGet": true,
+      "policiesPostAndGet": true,
+      "priceSnapshotsPostAndGet": true,
+      "routesPostAndGet": true,
+      "overviewGet": true,
+      "costOverviewGet": true,
+      "routeResolutionGet": true
+    },
+    "costParentRoutesLoaded": {
+      "proposalPostAndGet": true,
+      "reviewRequestPostAndGet": true,
+      "consumptionRequestPostAndGet": true,
+      "policyWindowSourceGet": true
+    },
+    "pairedWindowGateway": {
+      "baseUrl": "http://127.0.0.1:18468",
+      "listening": true,
+      "unauthenticatedStatusHttpCode": 403,
+      "writerEnabled": false
+    }
+  },
+  "sourceState": {
+    "head": "9064d485f83eace20729fb856dcf41880eb14a71",
+    "frozenRuntimeRoot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-successor-readonly-deployment-20261031/private/source-r3",
+    "budgetRouterCandidatePresent": true,
+    "budgetRouterCandidateIntegratedInHead": true,
+    "pairedWindowGatewayCandidatePresent": true,
+    "pairedWindowGatewayIntegratedInFrozenRuntime": true,
+    "candidateSourceMayBeTreatedAsRuntimeAuthority": false
+  },
+  "candidateContractVerification": {
+    "finalRepositoryRootAttempt": "231_PASSED_7_WARNINGS",
+    "isolatedPostgres": "postgres:16-alpine@127.0.0.1:5433 removed after run",
+    "warningsDeferredToDebt": "TD-012"
+  },
+  "result": "FORMAL_PAIRED_WINDOW_READONLY_ENTRIES_LOADED_NOT_BUSINESS_AUTHORIZED",
+  "safeNextStep": "Reuse normal Chrome OIDC login for authenticated current-ref readback on org-org/dev-project; then prepare non-signing cost parent review materials. Do not POST propose/decide/consume or enable writer/Host/worker/Provider/model.",
+  "effects": {
+    "databaseRead": false,
+    "databaseWrite": false,
+    "credentialsRead": false,
+    "proposalSubmitted": false,
+    "decisionSubmitted": false,
+    "consumptionSubmitted": false,
+    "modelInvoked": false,
+    "runtimeMutated": false
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "aos-window-s2-runtime-integration-checkpoint/v1",
+  "at": "2026-10-31T17:08:00+08:00",
+  "taskId": "qyh-budget-policy-window-s2-entry-20261018-h1031",
+  "m1Head": "9064d485f83eace20729fb856dcf41880eb14a71",
+  "result": "RUNTIME_READONLY_ENTRIES_LOADED",
+  "notBusinessAuthorized": true,
+  "openApiPolicyWindowSource": true,
+  "gateway18468Listening": true,
+  "writerEnabled": false,
+  "contractTests": "231 passed, 7 warnings (TD-012)",
+  "effects": {
+    "databaseWrite": false,
+    "nativeCostOrWindowPost": false,
+    "modelInvoked": false,
+    "hostWorkerProvider": "OFF"
+  },
+  "evidence": {
+    "implementationPlanR2": ".evidence/qyh-budget-policy-window-s2-entry-20261018/implementation-plan-r2.md",
+    "runtimeReadbackR1": ".evidence/qyh-budget-policy-window-s2-entry-20261018/runtime-readonly-readback-r1.json"
+  }
+}
