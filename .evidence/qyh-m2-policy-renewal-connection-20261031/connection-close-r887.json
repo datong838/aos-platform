@@ -1,0 +1,11 @@
+{
+  "closedAt": "2026-10-31T22:53:00+08:00",
+  "listener": "127.0.0.1:18458",
+  "listenerAbsent": true,
+  "pid": 51712,
+  "processAbsent": true,
+  "schema": "aos-t2-policy-renewal-connection-close/v1",
+  "sshExitCode": 255,
+  "sshExitReason": "intentional SIGINT after verified read-only reconciliation",
+  "target": "colima-aos-extension/8ad56b817e7c81db6ebf57ddfd4d064bb583ba79f80fbec4a9e78164eec5095f:5432"
+}

@@ -1,0 +1,29 @@
+{
+  "activePoliciesCreated": false,
+  "at": "2026-10-31T14:52:35.403225+00:00",
+  "facts": {
+    "budget": {
+      "factHash": "sha256:d9988df409d6de45875201d9909a4540f9f650fdfed41e81cce081102eaf7d8e",
+      "operationId": "aip10r-abf06969bf2e42f698ef"
+    },
+    "data": {
+      "factHash": "sha256:3f1390aee2fdb3de5dc78d7cc621a517e71907b669b70f7d78fd384de8272daa",
+      "operationId": "aip10g-65896c3392f74f72a2c3"
+    },
+    "egress": {
+      "factHash": "sha256:f0013a556f72e7c22fdfe36ccfe833bd3928346b80381e7b147756a91e054681",
+      "operationId": "aip10g-93eda2d77d074c68944c"
+    },
+    "quota": {
+      "factHash": "sha256:61d2b4f369202bd428a32e5fd69b5260c81a9d6ce9c785b6ea6be76da3c0f26f",
+      "operationId": "aip10p-6e1fdf73bce64ae0a805"
+    }
+  },
+  "mode": "readonly",
+  "outcomes": [
+    "COMPLETE"
+  ],
+  "providerCalled": false,
+  "schema": "aos-t2-policy-draft-renewal-result/v1",
+  "unknown": false
+}

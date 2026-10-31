@@ -1,0 +1,26 @@
+{
+  "authority": "AOS-002055",
+  "containerId": "8ad56b817e7c81db6ebf57ddfd4d064bb583ba79f80fbec4a9e78164eec5095f",
+  "containerImage": "sha256:7e7dbab8d3b431a20793a6d99cb5a6bc84e44914309917f1bf5589a7568cdefd",
+  "head": "deeba368a35ac3cda289d7bc07794c5a91fa8d00",
+  "owner": "codex-01a190f8-e1f7-7631-821c-3ac7b969bc40",
+  "protectedDirtyHash": "0d1731a5a7809ff30aad03cbd6b9010dd77bff34bdbbdb8ae9b672975b716118",
+  "schema": "aos-t2-policy-draft-renewal-actual/v1",
+  "sourceFiles": {
+    ".evidence/qyh-m2-native166-original-history-actual-20261027/t2-policy-draft-renewal-actual-plan-r884.md": "8862080d56de6da1cfab2b73c9be388c5e7ebe58405e43fb3c816c6d59852ce1",
+    ".evidence/qyh-m2-three-backend-runner-20261023/t2_durable_activation_intent_r409.py": "f6bc483592effb8cea8850b9f0bbc94b8f910fc163a3a424bbea711fd4becc19",
+    ".evidence/qyh-m2-three-backend-runner-20261023/t2_policy_draft_renewal_actual_r884.py": "bce716bf5511f6617f0e47011cd18a1285709a71ae7350d636ee90c98b7915b8",
+    ".evidence/qyh-m2-three-backend-runner-20261023/t2_policy_draft_renewal_r883.py": "79644eb83464cafc57399d63374e2947252fcbe0515d8099cf79455bd00ea48a",
+    ".evidence/qyh-m2-three-backend-runner-20261023/test_t2_policy_draft_renewal_actual_r884.py": "789050f984355acd855314e9aa55eed8d6ad8d14d203ef799420389e234835fd"
+  },
+  "ssh": {
+    "pid": 51712,
+    "start": "Sat Oct 31 22:49:36 2026"
+  },
+  "taskHashes": {
+    "qyh-m2-native166-original-history-actual-20261027-h1029-h1031": "d55dd533011e7fa7d030bd3d0f18b8eab7f38dfdde929bf0b2b6b78b105c69fd",
+    "qyh-m2-policy-renewal-connection-20261031": "3aa3d52c051b1dbdf7e9612b7015e0239c6c27b5056554259efc42e38eeb83f2",
+    "qyh-m2-three-backend-runner-20261023-h1027-h1029-h1031": "00536f317e3c257280d51eed12a6f930e42eda0a75b51bfa2143c846c0657ec2"
+  },
+  "thread": "01a190f8-e1f7-7631-821c-3ac7b969bc40"
+}

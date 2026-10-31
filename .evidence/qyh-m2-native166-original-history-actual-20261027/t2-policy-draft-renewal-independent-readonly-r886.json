@@ -1,0 +1,103 @@
+{
+  "activePolicyCount": 0,
+  "databaseWrites": 0,
+  "devOrgPositiveRowsVisible": 0,
+  "heads": [
+    {
+      "current_revision": 2,
+      "kind": "budget",
+      "resource_id": "m2-three-t2-budget",
+      "version": 2
+    },
+    {
+      "current_revision": 2,
+      "kind": "data_classification",
+      "resource_id": "m2-three-t2-data",
+      "version": 2
+    },
+    {
+      "current_revision": 2,
+      "kind": "egress",
+      "resource_id": "m2-three-t2-egress",
+      "version": 2
+    },
+    {
+      "current_revision": 2,
+      "kind": "quota",
+      "resource_id": "m2-three-t2-quota",
+      "version": 2
+    }
+  ],
+  "providerCalled": false,
+  "refreshReceiptCount": 0,
+  "renewalReceiptCount": 4,
+  "revisions": [
+    {
+      "effective_from": "2026-10-28 06:40:40.433192+00:00",
+      "effective_until": "2026-10-28 07:10:41.433192+00:00",
+      "kind": "budget",
+      "lifecycle": "draft",
+      "resource_id": "m2-three-t2-budget",
+      "revision": 1
+    },
+    {
+      "effective_from": "2026-10-31 14:50:00+00:00",
+      "effective_until": "2027-03-31 04:00:00+00:00",
+      "kind": "budget",
+      "lifecycle": "draft",
+      "resource_id": "m2-three-t2-budget",
+      "revision": 2
+    },
+    {
+      "effective_from": "2026-10-28 06:40:40.433192+00:00",
+      "effective_until": "2026-10-28 07:10:41.433192+00:00",
+      "kind": "data_classification",
+      "lifecycle": "draft",
+      "resource_id": "m2-three-t2-data",
+      "revision": 1
+    },
+    {
+      "effective_from": "2026-10-31 14:50:00+00:00",
+      "effective_until": "2027-03-31 04:00:00+00:00",
+      "kind": "data_classification",
+      "lifecycle": "draft",
+      "resource_id": "m2-three-t2-data",
+      "revision": 2
+    },
+    {
+      "effective_from": "2026-10-28 06:40:40.433192+00:00",
+      "effective_until": "2026-10-28 07:10:41.433192+00:00",
+      "kind": "egress",
+      "lifecycle": "draft",
+      "resource_id": "m2-three-t2-egress",
+      "revision": 1
+    },
+    {
+      "effective_from": "2026-10-31 14:50:00+00:00",
+      "effective_until": "2027-03-31 04:00:00+00:00",
+      "kind": "egress",
+      "lifecycle": "draft",
+      "resource_id": "m2-three-t2-egress",
+      "revision": 2
+    },
+    {
+      "effective_from": "2026-10-28 06:40:40.433192+00:00",
+      "effective_until": "2026-10-28 07:10:41.433192+00:00",
+      "kind": "quota",
+      "lifecycle": "draft",
+      "resource_id": "m2-three-t2-quota",
+      "revision": 1
+    },
+    {
+      "effective_from": "2026-10-31 14:50:00+00:00",
+      "effective_until": "2027-03-31 04:00:00+00:00",
+      "kind": "quota",
+      "lifecycle": "draft",
+      "resource_id": "m2-three-t2-quota",
+      "revision": 2
+    }
+  ],
+  "schema": "aos-t2-policy-draft-renewal-independent-readonly/v1",
+  "valid": true,
+  "verifiedAt": "2026-10-31T14:53:18.802294+00:00"
+}

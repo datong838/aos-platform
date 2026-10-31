@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-31T22:53:45+08:00",
+  "authority": "AOS-002055",
+  "businessAcceptedStages": 0,
+  "engineeringClosed": 2,
+  "facts": {
+    "activePolicyCount": 0,
+    "devOrgPositiveRowsVisible": 0,
+    "freshOutcomes": [
+      "ISSUE",
+      "ISSUE",
+      "ISSUE",
+      "COMPLETE"
+    ],
+    "headsRevision": 2,
+    "headsVersion": 2,
+    "providerCalled": false,
+    "refreshReceiptCount": 0,
+    "renewalReceiptCount": 4,
+    "revision1Preserved": true,
+    "revision2Lifecycle": "draft",
+    "unknown": false,
+    "validUntil": "2027-03-31T04:00:00Z"
+  },
+  "files": {
+    "connection-close-r887.json": "89ea301bdadcca371ffdb65d13da7042c7de43b8b2a592544275868506275b34",
+    "t2-policy-draft-renewal-actual-plan-r884.md": "15603245e283748e15529c2ce66467ddd0dc3d25e62982560106ddd1eec6dc3d",
+    "t2-policy-draft-renewal-execution-intent-r884.json": "14ff865baea294897522b9fad63c2e96bdc2324c156e28e749b309f9b09ea616",
+    "t2-policy-draft-renewal-independent-readonly-r886.json": "319b31adeadcc2d05719401bc50869e0764a2ac96e543a97b26df04ad66f43d2",
+    "t2-policy-draft-renewal-readonly-r885.json": "e8df5d1be6fe8893d6e7c8fde6997b41d223d699848dfafe51c547ed97401f4f",
+    "t2-policy-draft-renewal-result-r884.json": "a60765fd314413a69f2eee5ebd8caaa34e6b5fb3e2d82ba9b215b88d0e7400f9",
+    "t2_policy_draft_renewal_actual_r884.py": "bce716bf5511f6617f0e47011cd18a1285709a71ae7350d636ee90c98b7915b8",
+    "t2_policy_draft_renewal_verify_r886.py": "849a16f3b3c3ddf4439ed900f71aefb48f2a3379976d78a24401b42330537669",
+    "test_t2_policy_draft_renewal_actual_r884.py": "789050f984355acd855314e9aa55eed8d6ad8d14d203ef799420389e234835fd"
+  },
+  "head": "deeba368a35ac3cda289d7bc07794c5a91fa8d00",
+  "nextHardGap": "本人原生批准后走原安装、配置、启用、切流 Owner 路径，自然产生至少两条刷新回执；此前不执行 native166 savepoint。",
+  "schema": "aos-t2-policy-draft-renewal-checkpoint/v1",
+  "tests": {
+    "compile": "PASS",
+    "focusedAndAdjacent": "18 passed",
+    "memoryValidate": "GREEN",
+    "resultReadonlyFactsIdentical": true
+  },
+  "thread": "01a190f8-e1f7-7631-821c-3ac7b969bc40"
+}
