@@ -3,11 +3,17 @@ from __future__ import annotations
 
 import os
 
-from fastapi import APIRouter, Depends, Header, Query, Response, status
+from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
+from starlette.concurrency import run_in_threadpool
 
 from aos_api.aip_budget_contracts import BudgetLifecycle, BudgetRevision, BudgetRevisionCreate
 from aos_api.aip_budget_cost_basis import BudgetCostBasisProposal
 from aos_api.aip_budget_cost_proposal_store import BudgetCostProposalStore
+from aos_api.aip_budget_policy_renewal_identity import _HUMAN
+from aos_api.aip_budget_policy_window_review import (
+    BudgetPolicyWindowReviewSource, BudgetPolicyWindowReviewReader,
+    BudgetPolicyWindowReviewDenied, BudgetPolicyWindowReviewUnavailable,
+)
 from aos_api.aip_budget_cost_product import BudgetCostReviewRequest, configured_budget_cost_product, budget_cost_request
 from aos_api.aip_budget_consumer_product import (
     BudgetConsumptionRequest, configured_budget_consumer_product, budget_consumption_request,
@@ -24,6 +30,7 @@ from aos_api.aip_budget_activation_contracts import (
 )
 from aos_api.aip_budget_activation_store import (
     AipBudgetActivationStore, BudgetActivationConflict, BudgetActivationDenied, BudgetActivationInquiryUnavailable,
+    _key as _validate_window_source_id,
 )
 from aos_api.aip_budget_activation_product import (
     BudgetProductBlocked, BudgetRequestRef, inquire_request, submit_request,
@@ -44,6 +51,7 @@ router = APIRouter(prefix="/v1/aip/budgets", tags=["aip-budgets"])
 _STORE = AipBudgetAuthorityStore()
 _ACTIVATION_STORE = AipBudgetActivationStore()
 _COST_PROPOSALS = BudgetCostProposalStore()
+_WINDOW_REVIEW = BudgetPolicyWindowReviewReader()
 
 
 def get_store() -> AipBudgetAuthorityStore:
@@ -138,6 +146,49 @@ def read_cost_review(proposal_id: str, response: Response,
                      principal: Principal = Depends(require_principal)) -> dict:
     response.headers['Cache-Control'] = 'no-store'
     return _cost_call(_COST_PROPOSALS.review, principal, proposal_id)
+
+
+
+def get_budget_policy_window_review_reader() -> BudgetPolicyWindowReviewReader:
+    return _WINDOW_REVIEW
+
+
+@router.get('/cost-proposals/{proposal_id}/policy-window-source',
+            response_model=BudgetPolicyWindowReviewSource)
+async def read_budget_policy_window_source(
+    proposal_id: str, request: Request, response: Response,
+    principal: Principal = Depends(require_principal),
+    reader: BudgetPolicyWindowReviewReader = Depends(get_budget_policy_window_review_reader),
+):
+    # This new contract has a narrower caller/scope than generic cost history.
+    # No maker impersonation, human decision or protected executor is involved.
+    if (type(principal) is not Principal or principal.token_kind != 'oidc'
+            or principal.subject != _HUMAN
+            or (principal.org_id, principal.project_id) != ('org-org', 'dev-project')):
+        raise ApiError(code='BUDGET_POLICY_WINDOW_SOURCE_FORBIDDEN',
+                       message='当前身份或工作区不能读取此父预算事实', status_code=403)
+    try:
+        _validate_window_source_id(proposal_id)
+    except BudgetActivationDenied:
+        raise ApiError(code='BUDGET_POLICY_WINDOW_SOURCE_INPUT_INVALID',
+                       message='父费用提议标识必须完整且准确', status_code=400) from None
+    if request.query_params:
+        raise ApiError(code='BUDGET_POLICY_WINDOW_SOURCE_INPUT_INVALID',
+                       message='此读取入口不接收附加参数或内容', status_code=400)
+    async for chunk in request.stream():
+        if chunk:
+            raise ApiError(code='BUDGET_POLICY_WINDOW_SOURCE_INPUT_INVALID',
+                           message='此读取入口不接收附加参数或内容', status_code=400)
+    try:
+        result = await run_in_threadpool(reader.read, principal, proposal_id)
+    except BudgetPolicyWindowReviewDenied:
+        raise ApiError(code='BUDGET_POLICY_WINDOW_SOURCE_FORBIDDEN',
+                       message='当前身份不能读取此父预算事实', status_code=403) from None
+    except BudgetPolicyWindowReviewUnavailable:
+        raise ApiError(code='BUDGET_POLICY_WINDOW_SOURCE_UNAVAILABLE',
+                       message='父预算事实暂无法完整核验，请保留原提议标识', status_code=503) from None
+    response.headers['Cache-Control'] = 'no-store'
+    return result
 
 
 def _cost_review(response, proposal_id, operation, body, principal, authorization):

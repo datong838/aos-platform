@@ -1,0 +1,34 @@
+{
+  "schema": "aos-window-s2-runtime-readback/v1",
+  "at": "2026-10-31T17:00:00+08:00",
+  "taskId": "qyh-budget-policy-window-s2-entry-20261018-h1031",
+  "headBeforeCommit": "47c847aa796a3bd826340d2253af377d6d9fc7da",
+  "integrationState": "RUNTIME_ENTRIES_LOADED_NOT_BUSINESS_AUTHORIZED",
+  "openApi": {
+    "url": "http://127.0.0.1:18080/openapi.json",
+    "policyWindowSourcePresent": true,
+    "path": "/v1/aip/budgets/cost-proposals/{proposal_id}/policy-window-source"
+  },
+  "apiProcess": {
+    "pid": 4618,
+    "port": 18080,
+    "sourceRoot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-successor-readonly-deployment-20261031/private/source-r3",
+    "writerEnabled": false
+  },
+  "pairedWindowGateway": {
+    "port": 18468,
+    "pid": 4944,
+    "listenHost": "127.0.0.1",
+    "config": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/qyh-successor-readonly-deployment-20261031/private/window-http-readonly-config-r1.json",
+    "writerEnabled": false,
+    "unauthenticatedStatusProbe": 403
+  },
+  "tests": {
+    "commandRoot": "/Users/ddt/work/projects/ai_agent/aos-platform",
+    "database": "disposable postgres:16-alpine on 127.0.0.1:5433 removed after run",
+    "result": "231 passed, 7 warnings (TD-012)"
+  },
+  "databaseWrites": 0,
+  "nativeCostOrWindowPosts": 0,
+  "hostWorkerProviderModel": "OFF"
+}

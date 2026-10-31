@@ -50,6 +50,9 @@ def _receipt(conn, scope, actor, key):
 
 
 class BudgetCostProposalStore:
+    def __init__(self, *, read_connect_factory=None):
+        self._read_connect_factory = read_connect_factory
+
     def create(self, principal, proposal: BudgetCostBasisProposal, key: str) -> dict:
         scope, actor, p, key = _input(principal, proposal, key)
         if not isinstance(p.basis, DevelopmentRiskProposal):
@@ -91,7 +94,7 @@ class BudgetCostProposalStore:
         scope, actor = _identity(principal)
         _key(proposal_id)
         try:
-            with connect_read_only(scope) as conn:
+            with (connect_read_only if self._read_connect_factory is None else self._read_connect_factory)(scope) as conn:
                 _require_inquiry_connection(conn,scope)
                 _member(conn,scope,actor,label='REVIEWER',lock=False)
                 row = _row(conn,scope,proposal_id)
@@ -106,7 +109,7 @@ class BudgetCostProposalStore:
     def inquire(self, principal, proposal: BudgetCostBasisProposal, key: str) -> dict:
         scope, actor, p, key = _input(principal,proposal,key)
         try:
-            with connect_read_only(scope) as conn:
+            with (connect_read_only if self._read_connect_factory is None else self._read_connect_factory)(scope) as conn:
                 _require_inquiry_connection(conn,scope)
                 _member(conn,scope,actor,label='MAKER',lock=False)
                 receipt = _receipt(conn,scope,actor,key)
@@ -133,7 +136,7 @@ class BudgetCostProposalStore:
         scope, actor = _identity(principal)
         _key(proposal_id)
         try:
-            with connect_read_only(scope) as conn:
+            with (connect_read_only if self._read_connect_factory is None else self._read_connect_factory)(scope) as conn:
                 _require_inquiry_connection(conn, scope)
                 _member(conn, scope, actor, label='REVIEWER', lock=False)
                 row = _row(conn, scope, proposal_id)
