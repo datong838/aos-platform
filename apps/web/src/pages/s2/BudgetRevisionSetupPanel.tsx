@@ -174,7 +174,7 @@ export function BudgetRevisionSetupPanel() {
 
   return <section className="card" aria-label="预算草稿配置" style={{ padding: 18, marginTop: 16 }}>
     <h2>预算修订草稿（推荐默认）</h2>
-    <p>三月开发窗 · {input.budgetId || "—"} · 日 {input.dailyYuan || "—"} 元 / 月 {input.monthlyYuan || "—"} 元。您只需确认写入 draft。</p>
+    <p>固定截止 2027-03-31 12:00（北京时间） · {input.budgetId || "—"} · 日 {input.dailyYuan || "—"} 元 / 月 {input.monthlyYuan || "—"} 元。您只需确认写入 draft。</p>
     <details>
       <summary>高级：改字段</summary>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, marginTop: 8 }}>

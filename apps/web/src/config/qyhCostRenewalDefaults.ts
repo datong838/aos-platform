@@ -1,34 +1,23 @@
-/** 开发默认：连续 3 个月有效，不依赖正式续期截止日。 */
-export const STABLE_DEV_MONTHS = 3;
+/** 用户明确授权的唯一截止：2027-03-31 12:00（北京时间）。 */
+export const QYH_AUTHORIZED_EFFECTIVE_UNTIL = "2027-03-31T04:00:00.000Z";
 
-export type StableDevWindow = { effectiveFrom: string; effectiveUntil: string };
+export type AuthorizedQyhWindow = { effectiveFrom: string; effectiveUntil: string };
 
-export function addUtcMonths(from: Date, months: number): Date {
-  const d = new Date(from.getTime());
-  d.setUTCMonth(d.getUTCMonth() + months);
-  return d;
-}
-
-/** 滚动开发窗：从略早于「现在」起算，至少覆盖 STABLE_DEV_MONTHS 个自然月。 */
-export function computeStableDevWindow(reference = new Date()): StableDevWindow {
+/** 开始时间允许略早于当前时点；截止时间不得滚动或扩大。 */
+export function computeAuthorizedQyhWindow(reference = new Date()): AuthorizedQyhWindow {
   const effectiveFrom = new Date(reference.getTime() - 60_000);
-  const effectiveUntil = addUtcMonths(reference, STABLE_DEV_MONTHS);
-  return { effectiveFrom: effectiveFrom.toISOString(), effectiveUntil: effectiveUntil.toISOString() };
+  return { effectiveFrom: effectiveFrom.toISOString(), effectiveUntil: QYH_AUTHORIZED_EFFECTIVE_UNTIL };
 }
 
-export function minimumStableDevUntil(reference = new Date()): number {
-  return addUtcMonths(reference, STABLE_DEV_MONTHS).getTime();
-}
-
-export function targetCoversStableDev(target: { effectiveFrom: string; effectiveUntil: string }, reference = new Date()): boolean {
+export function targetMatchesAuthorizedQyhWindow(target: { effectiveFrom: string; effectiveUntil: string }, reference = new Date()): boolean {
   const from = Date.parse(target.effectiveFrom);
   const until = Date.parse(target.effectiveUntil);
   const now = reference.getTime();
   if (!Number.isFinite(from) || !Number.isFinite(until) || until <= from) return false;
-  return from <= now && until >= minimumStableDevUntil(reference);
+  return from <= now && now < until && until === Date.parse(QYH_AUTHORIZED_EFFECTIVE_UNTIL);
 }
 
-/** 栖月汇开发默认（非正式续期材料）；费用提议 target 须与 activation-candidate 字节级一致。 */
+/** 栖月汇授权默认；费用提议 target 须与 activation-candidate 字节级一致。 */
 export const QYH_COST_RENEWAL = {
   tenant: { orgId: "org-org", projectId: "dev-project" } as const,
   budgetId: "a0v-ecommerce-hard-stop-budget-v1",
@@ -38,7 +27,7 @@ export const QYH_COST_RENEWAL = {
     dailyLimitMinor: 10_000,
     monthlyLimitMinor: 100_000,
     get window() {
-      return computeStableDevWindow();
+      return computeAuthorizedQyhWindow();
     },
   },
   provider: {
@@ -62,7 +51,7 @@ export type QyhBudgetDraftInput = {
 };
 
 export function defaultBudgetDraftInput(reference = new Date()): QyhBudgetDraftInput {
-  const { effectiveFrom, effectiveUntil } = computeStableDevWindow(reference);
+  const { effectiveFrom, effectiveUntil } = computeAuthorizedQyhWindow(reference);
   return {
     budgetId: QYH_COST_RENEWAL.budgetId,
     dailyYuan: "100",
@@ -75,9 +64,9 @@ export function defaultBudgetDraftInput(reference = new Date()): QyhBudgetDraftI
   };
 }
 
-export function stableDevWindowLabel(reference = new Date()): string {
-  const { effectiveFrom, effectiveUntil } = computeStableDevWindow(reference);
-  return `${effectiveFrom} → ${effectiveUntil}（${STABLE_DEV_MONTHS} 个月，无需中途续期）`;
+export function authorizedQyhWindowLabel(reference = new Date()): string {
+  const { effectiveFrom, effectiveUntil } = computeAuthorizedQyhWindow(reference);
+  return `${effectiveFrom} → ${effectiveUntil}（固定截止：2027-03-31 12:00 北京时间）`;
 }
 
 /** 费用父链：用户只需点「确认」，选项由推荐默认填充。 */

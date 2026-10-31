@@ -1,26 +1,26 @@
 import { describe, expect, it } from "vitest";
 import {
-  STABLE_DEV_MONTHS,
-  addUtcMonths,
-  computeStableDevWindow,
-  minimumStableDevUntil,
-  targetCoversStableDev,
+  QYH_AUTHORIZED_EFFECTIVE_UNTIL,
+  computeAuthorizedQyhWindow,
+  targetMatchesAuthorizedQyhWindow,
 } from "./qyhCostRenewalDefaults";
 
-describe("stable dev window defaults", () => {
+describe("QYH authorized renewal window defaults", () => {
   const ref = new Date("2026-10-31T12:00:00.000Z");
 
-  it("covers at least STABLE_DEV_MONTHS from reference", () => {
-    const w = computeStableDevWindow(ref);
+  it("uses the exact human-authorized expiry instead of a rolling window", () => {
+    const w = computeAuthorizedQyhWindow(ref);
     expect(Date.parse(w.effectiveFrom)).toBeLessThanOrEqual(ref.getTime());
-    expect(Date.parse(w.effectiveUntil)).toBeGreaterThanOrEqual(minimumStableDevUntil(ref));
-    expect(addUtcMonths(ref, STABLE_DEV_MONTHS).toISOString()).toBe(w.effectiveUntil);
+    expect(w.effectiveUntil).toBe(QYH_AUTHORIZED_EFFECTIVE_UNTIL);
+    expect(w.effectiveUntil).toBe("2027-03-31T04:00:00.000Z");
   });
 
-  it("rejects targets shorter than the stable window", () => {
-    const ok = { effectiveFrom: "2026-10-01T00:00:00Z", effectiveUntil: "2027-02-01T00:00:00Z" };
-    const short = { effectiveFrom: "2026-10-01T00:00:00Z", effectiveUntil: "2026-11-30T00:00:00Z" };
-    expect(targetCoversStableDev(ok, ref)).toBe(true);
-    expect(targetCoversStableDev(short, ref)).toBe(false);
+  it("rejects both shorter and later rolling targets", () => {
+    const exact = { effectiveFrom: "2026-10-01T00:00:00Z", effectiveUntil: QYH_AUTHORIZED_EFFECTIVE_UNTIL };
+    const short = { ...exact, effectiveUntil: "2027-02-01T00:00:00Z" };
+    const later = { ...exact, effectiveUntil: "2027-04-01T00:00:00Z" };
+    expect(targetMatchesAuthorizedQyhWindow(exact, ref)).toBe(true);
+    expect(targetMatchesAuthorizedQyhWindow(short, ref)).toBe(false);
+    expect(targetMatchesAuthorizedQyhWindow(later, ref)).toBe(false);
   });
 });

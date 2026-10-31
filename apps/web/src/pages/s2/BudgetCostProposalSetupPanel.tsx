@@ -3,9 +3,9 @@ import { apiGetAuthoritative } from "../../api/client";
 import { createCostProposal, readCostActivationCandidate, type CostProposalCreateBody } from "../../api/aipBudgetCost";
 import {
   QYH_COST_RENEWAL,
-  STABLE_DEV_MONTHS,
-  stableDevWindowLabel,
-  targetCoversStableDev,
+  QYH_AUTHORIZED_EFFECTIVE_UNTIL,
+  authorizedQyhWindowLabel,
+  targetMatchesAuthorizedQyhWindow,
   resolveDevCheckerSubject,
 } from "../../config/qyhCostRenewalDefaults";
 import type { BudgetTarget } from "../../api/aipBudgetActivation";
@@ -21,7 +21,7 @@ export function BudgetCostProposalSetupPanel() {
   const [candidateError, setCandidateError] = useState("");
   const [attempted, setAttempted] = useState(false);
   const [candidateTarget, setCandidateTarget] = useState<BudgetTarget | null>(null);
-  const [message, setMessage] = useState(`三月开发默认：${stableDevWindowLabel()}；提交前读取权威预算候选第 2 版，须覆盖满 ${STABLE_DEV_MONTHS} 个月。`);
+  const [message, setMessage] = useState(`授权窗口：${authorizedQyhWindowLabel()}；提交前读取权威预算候选第 2 版，截止时间必须精确一致。`);
   const guard = useBudgetRequestGuard(() => {
     setAttempted(false);
     setMessage("身份或工作区已变化，请重新读取预算候选。");
@@ -34,9 +34,9 @@ export function BudgetCostProposalSetupPanel() {
         const candidate = await readCostActivationCandidate(QYH_COST_RENEWAL.budgetId);
         if (!cancelled) {
           setCandidateTarget(candidate.target);
-          if (!targetCoversStableDev(candidate.target)) {
+          if (!targetMatchesAuthorizedQyhWindow(candidate.target)) {
             setCandidateReady(false);
-            setCandidateError(`权威候选有效期不足 ${STABLE_DEV_MONTHS} 个月（至 ${candidate.target.effectiveUntil}）。请先按页顶预算草稿默认调整并激活候选。`);
+            setCandidateError(`权威候选截止为 ${candidate.target.effectiveUntil}，与授权截止 ${QYH_AUTHORIZED_EFFECTIVE_UNTIL} 不一致。请先按页顶预算草稿默认调整并激活候选。`);
           } else {
             setCandidateReady(true);
             setCandidateError("");
@@ -76,8 +76,8 @@ export function BudgetCostProposalSetupPanel() {
     let candidate;
     try {
       candidate = await readCostActivationCandidate(QYH_COST_RENEWAL.budgetId);
-      if (!targetCoversStableDev(candidate.target)) {
-        setMessage(`预算候选未覆盖 ${STABLE_DEV_MONTHS} 个月开发窗（至 ${candidate.target.effectiveUntil}），不能发起；请先更新预算 draft。`);
+      if (!targetMatchesAuthorizedQyhWindow(candidate.target)) {
+        setMessage(`预算候选截止 ${candidate.target.effectiveUntil} 与授权截止 ${QYH_AUTHORIZED_EFFECTIVE_UNTIL} 不一致，不能发起；请先更新预算 draft。`);
         setAttempted(false);
         return;
       }
@@ -121,13 +121,13 @@ export function BudgetCostProposalSetupPanel() {
   const me = getTenant().subject ?? "（未识别登录名）";
   return (
     <section className="card" aria-label="费用提议发起" style={{ padding: 18, marginTop: 16 }}>
-      <h2>费用提议发起（{STABLE_DEV_MONTHS} 个月开发默认）</h2>
+      <h2>费用提议发起（固定授权截止）</h2>
       <p>
         预算 <code>{QYH_COST_RENEWAL.budgetId}</code> · 模型 {QYH_COST_RENEWAL.authorization.providerModelId} ·
         日 ¥{(QYH_COST_RENEWAL.authorization.dailyLimitMinor / 100).toFixed(0)} / 月 ¥{(QYH_COST_RENEWAL.authorization.monthlyLimitMinor / 100).toFixed(0)} ·
         风险 {QYH_COST_RENEWAL.risk.perRequestRiskMinor}/{QYH_COST_RENEWAL.risk.totalRiskMinor}/{QYH_COST_RENEWAL.risk.maxRequests}（单次/总/次数）。
       </p>
-      <p>目标开发窗（默认）：{stableDevWindowLabel()}。正式续期截止单独办理，此处只保证开发期不断档。</p>
+      <p>目标授权窗口：{authorizedQyhWindowLabel()}。此处不得滚动延长或改回旧截止。</p>
       {candidateTarget && <p>权威候选第 2 版有效期：{candidateTarget.effectiveFrom} → {candidateTarget.effectiveUntil}</p>}
       <p>发起人（当前登录）：<strong>{me}</strong> · 独立审核人（推荐默认）：<strong>{checker || "加载中…"}</strong></p>
       {!candidateReady && <p role="alert">{candidateError || "正在读取预算候选…"}</p>}
