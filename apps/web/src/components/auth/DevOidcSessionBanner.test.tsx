@@ -45,10 +45,13 @@ describe("development optional OIDC login", () => {
   it("keeps login optional until the human explicitly opens it", async () => {
     await renderBanner();
     expect(host.textContent).toContain("开发模式");
+    expect(host.textContent).toContain("浏览八工作台无需登录");
+    expect(host.querySelector("button")?.textContent).toBe("正式办理时登录");
     expect(host.querySelector('input[type="password"]')).toBeNull();
     expect(loginPassword).not.toHaveBeenCalled();
 
     await act(async () => host.querySelector<HTMLButtonElement>("button")!.click());
+    expect(host.querySelector("button")?.textContent).toBe("收起正式登录");
     expect(host.querySelector('input[type="password"]')).not.toBeNull();
     expect(loginPassword).not.toHaveBeenCalled();
   });

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "aos.qyh.development-workbench-preview-checkpoint/v1",
+  "recordedAt": "2026-10-31T21:33:28+08:00",
+  "branch": "m1",
+  "baseHead": "784c25f9ad3c4dc2f5921675b10841290ae3c5ba",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "problem": "开发期已允许跳过登录，但冻结开发 API 对工作台目录返回 503 时未进入开发预览，导致八工作台入口消失并误导用户展开登录。",
+  "rootCause": {
+    "observedUrl": "http://127.0.0.1:18434/api/v1/ecommerce-workshop/modules",
+    "observedStatus": 503,
+    "previousAllowedStatuses": [0, 401, 404]
+  },
+  "change": {
+    "allowedPreviewStatuses": [0, 401, 404, 503],
+    "requiredScope": "development bypass + no OIDC token + org-org/dev-project",
+    "stillFailClosed": ["403", "authenticated session mismatch", "non-QYH tenant", "protected business operations"],
+    "loginUi": "collapsed by default; labelled as required only for formal handling"
+  },
+  "verification": {
+    "tests": "3 files, 19 tests passed",
+    "typeScript": "pnpm exec tsc --noEmit passed",
+    "livePage": "http://127.0.0.1:18434/workshop/cockpit?previewCheck=2",
+    "liveResult": "eight ecommerce workshop links visible; task cockpit rendered; login form absent; formal-login button collapsed",
+    "databaseWrites": 0,
+    "providerCalls": 0,
+    "modelCalls": 0
+  },
+  "acceptanceBoundary": {
+    "engineeringStages": "2/8 unchanged",
+    "realBusinessStages": "0/8 unchanged",
+    "notClaimed": ["installed catalog verified", "business data authorized", "business acceptance"]
+  },
+  "plan": {
+    "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/微商城电商接入方案/D-waves/2026-10-31-QYH价格模型策略路由接续方案.md",
+    "sha256": "3dc9fa47141c4c48ece6e1cf31c00459a0ad8ebaea71dfd40040efb35af2f8ff",
+    "section": "16. 开发免登录下八工作台预览恢复"
+  }
+}

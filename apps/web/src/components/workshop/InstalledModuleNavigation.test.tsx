@@ -88,7 +88,7 @@ describe("InstalledModuleNavigation", () => {
     expect(host.querySelector("button")?.textContent).toBe("重新读取目录");
   });
 
-  it("目录读取失败时不伪造产品入口或安装状态", async () => {
+  it("开发免登录时目录连接失败仍显示八个明确标注的预览入口", async () => {
     await act(async () => root.render(
       <MemoryRouter initialEntries={["/workshop/customer"]}>
         <EcommerceWorkshopCatalogProvider client={{ listModules: async () => { throw new Error("catalog unavailable"); } }}>
@@ -99,10 +99,53 @@ describe("InstalledModuleNavigation", () => {
     await flush();
 
     const links = [...host.querySelectorAll<HTMLAnchorElement>("a")];
-    expect(links).toHaveLength(0);
+    expect(links).toHaveLength(8);
+    expect(host.querySelectorAll("a[data-workshop-preview='true']")).toHaveLength(8);
     expect(host.textContent).not.toContain("未安装");
     expect(host.textContent).not.toContain("已就绪");
-    expect(host.textContent).toContain("工作台目录读取失败");
+    expect(host.textContent).toContain("开发预览入口");
+  });
+
+  it("旧冻结 API 返回 404/503 时仍显示八工作台开发预览，但 403 不降级", async () => {
+    const error = (status: number) => new EcommerceWorkshopClientError("catalog unavailable", {
+      status,
+      operationId: "ecommerceWorkshopModulesList",
+      body: { code: status === 403 ? "FORBIDDEN" : "NOT_FOUND", message: "unavailable", details: null, traceId: "trace" },
+    });
+    await act(async () => root.render(
+      <MemoryRouter>
+        <EcommerceWorkshopCatalogProvider client={{ listModules: async () => { throw error(404); } }}>
+          <InstalledModuleNavigation />
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+    expect(host.querySelectorAll("a[data-workshop-preview='true']")).toHaveLength(8);
+
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    await act(async () => root.render(
+      <MemoryRouter>
+        <EcommerceWorkshopCatalogProvider client={{ listModules: async () => { throw error(503); } }}>
+          <InstalledModuleNavigation />
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+    expect(host.querySelectorAll("a[data-workshop-preview='true']")).toHaveLength(8);
+
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    await act(async () => root.render(
+      <MemoryRouter>
+        <EcommerceWorkshopCatalogProvider client={{ listModules: async () => { throw error(403); } }}>
+          <InstalledModuleNavigation />
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+    expect(host.querySelectorAll("a[data-workshop-preview='true']")).toHaveLength(0);
+    expect(host.textContent).toContain("没有读取工作台目录的权限");
   });
 
   it("开发期无登录且 API 禁用 dev token 时显示八个明确标注的预览入口", async () => {

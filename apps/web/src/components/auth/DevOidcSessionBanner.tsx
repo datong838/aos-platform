@@ -27,10 +27,10 @@ export function DevOidcSessionBanner() {
     >
       <strong>开发模式</strong>
       <span style={{ marginLeft: 8 }}>
-        当前可继续开发预览；费用、预算和配置办理仍需本人真实登录。
+        浏览八工作台无需登录；只有费用、预算、配置及真实数据办理才需本人正式登录。
       </span>
       <button type="button" style={{ marginLeft: 8 }} aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
-        {expanded ? "收起登录" : "办理前登录"}
+        {expanded ? "收起正式登录" : "正式办理时登录"}
       </button>
       {expanded ? <div role="dialog" aria-label="开发期按需登录" style={{ maxWidth: 420, padding: "12px 0 4px" }}>
         <LocalPasswordLoginForm

@@ -57,7 +57,7 @@ export const DEVELOPMENT_WORKSHOP_PREVIEW_MODULES: readonly EcommerceWorkshopMod
 
 export function canUseDevelopmentWorkshopPreview(status: number | null): boolean {
   const tenant = getTenant();
-  return status === 401
+  return (status === 0 || status === 401 || status === 404 || status === 503)
     && isLoginGateSkipped()
     && getAccessToken() === null
     && tenant.orgId === "org-org"

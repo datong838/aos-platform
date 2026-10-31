@@ -64,6 +64,23 @@ it('routes a no-login development preview even when the runtime catalog is unava
   await act(async () => { await Promise.resolve(); await Promise.resolve(); });
   expect(host.querySelector('[data-testid="legacy-host"]')).not.toBeNull();
 });
+it.each([404, 503])('routes the no-login preview when the frozen API catalog returns %s', async (status) => {
+  const missing = new EcommerceWorkshopClientError('catalog endpoint missing', {
+    status,
+    operationId: 'ecommerceWorkshopModulesList',
+    body: { code: status === 404 ? 'NOT_FOUND' : 'SERVICE_UNAVAILABLE', message: 'missing', details: null, traceId: `trace-${status}` },
+  });
+  await act(async () => root.render(<MemoryRouter initialEntries={['/workshop/analyst']}>
+    <RuntimeWorkshopCatalogProvider client={async () => { throw new Error('runtime unavailable'); }}>
+      <EcommerceWorkshopCatalogProvider client={{ listModules: async () => { throw missing; } }}>
+        <EcommerceWorkshopEntryRoute />
+      </EcommerceWorkshopCatalogProvider>
+    </RuntimeWorkshopCatalogProvider>
+  </MemoryRouter>));
+  await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+  expect(host.querySelector('[data-testid="legacy-host"]')).not.toBeNull();
+  expect(host.textContent).not.toContain('已安装工作台目录暂不可用');
+});
 it.each(['conflict', 'failed', 'unknown-legacy'] as const)('loads neither host when %s', async kind => {
   await render(kind);
   expect(host.querySelector('[data-testid="signed-host"]')).toBeNull();
