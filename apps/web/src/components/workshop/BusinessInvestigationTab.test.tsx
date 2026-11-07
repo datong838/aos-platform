@@ -77,6 +77,10 @@ describe("BusinessInvestigationTab", () => {
     expect(host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')?.value).toBe("niushop:1");
     expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-a");
     expect(host.textContent).toContain("栖月汇小程序店铺");
+    expect(host.textContent).toContain("创建时间只标识分析记录本身");
+    expect(host.textContent).toContain("截止往前 30 天");
+    expect(host.textContent).toContain("只读模式，不发送补数或刷新命令");
+    expect(host.textContent).toContain("当前 Case 尚无 Run");
     const emptyClient = { ...client, listCases: vi.fn().mockResolvedValue({ tenant, items: [], count: 0 }), listRuns: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={emptyClient} />));
     expect(host.textContent).toContain("栖月汇小程序店铺");
