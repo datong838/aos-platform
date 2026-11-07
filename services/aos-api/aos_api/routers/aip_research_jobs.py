@@ -23,6 +23,7 @@ from aos_api.aip_research_job import (
     ResearchSubmissionReceipt,
     RetryResearchJobRequest,
 )
+from aos_api.aip_research_artifact_storage import configured_artifact_hash_resolver
 from aos_api.aip_research_job_service import AipResearchJobService
 from aos_api.aip_research_job_store import (
     AipResearchJobBlocked,
@@ -35,7 +36,12 @@ from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/research-authority", tags=["aip-research-authority"])
-_SERVICE = AipResearchJobService()
+_HASH_RESOLVER = configured_artifact_hash_resolver()
+_SERVICE = (
+    AipResearchJobService(artifact_hash_resolver=_HASH_RESOLVER)
+    if _HASH_RESOLVER is not None
+    else AipResearchJobService()
+)
 
 
 def get_aip_research_job_service() -> AipResearchJobService:
