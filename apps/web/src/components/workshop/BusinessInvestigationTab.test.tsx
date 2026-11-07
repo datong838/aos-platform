@@ -81,6 +81,7 @@ describe("BusinessInvestigationTab", () => {
     expect(host.textContent).toContain("截止往前 30 天");
     expect(host.textContent).toContain("只读模式，不发送补数或刷新命令");
     expect(host.textContent).toContain("当前 Case 尚无 Run");
+    expect(host.textContent).toContain("也不展示演示画像、问题图、机会图、方案或内部任务");
     const emptyClient = { ...client, listCases: vi.fn().mockResolvedValue({ tenant, items: [], count: 0 }), listRuns: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={emptyClient} />));
     expect(host.textContent).toContain("栖月汇小程序店铺");
