@@ -7,7 +7,7 @@ import { WORKSHOP_ACCEPTANCE_MODULES } from "./workshopAcceptance";
 import { moduleWithReadiness, workshopModuleFixture } from "./workshopTestFixtures";
 import { AnalystSelectionProvider, usePublishAnalystSelection } from "./AnalystSelectionContext";
 
-const headerSelection = { tenant: { orgId: "org-org", projectId: "dev-project" }, channelId: "niushop:1", entityId: "store-a", channelLabel: "私域商城", sourceCutoffAt: "2026-10-20T18:00:00Z" };
+const headerSelection = { tenant: { orgId: "org-org", projectId: "dev-project" }, channelId: "niushop:1", entityId: "store-a", channelLabel: "栖月汇微商城", sourceCutoffAt: "2026-10-20T18:00:00Z" };
 const headerClient = {};
 function SelectionFixture() { usePublishAnalystSelection(headerSelection, headerClient); return null; }
 
@@ -33,7 +33,7 @@ describe("EcommerceWorkshopShell", () => {
       <SelectionFixture /><EcommerceWorkshopShell module={workshopModuleFixture({ moduleId: "ecommerce.analyst" })} dataCutoff={null} />
     </AnalystSelectionProvider>));
     const text = host.querySelector(".analyst-exact-context-strip")?.textContent;
-    expect(text).toContain("私域商城"); expect(text).toContain("选店来源截止");
+    expect(text).toContain("栖月汇微商城"); expect(text).toContain("选店来源截止");
     expect(text).toContain("2026-10-20T18:00:00Z"); expect(text).toContain("负责人未绑定");
     expect(text).toContain("业务操作：只读"); expect(text).not.toContain("新鲜度 OK");
   });

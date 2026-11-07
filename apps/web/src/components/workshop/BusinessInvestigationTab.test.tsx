@@ -34,13 +34,13 @@ describe("BusinessInvestigationTab", () => {
     const listCases = vi.fn().mockResolvedValue({ tenant, items: cases, count: cases.length });
     const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases, listRuns: vi.fn().mockResolvedValue(emptyRuns()) };
     await act(async () => root.render(<AnalystSelectionProvider active><HeaderSelectionProbe /><BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled={false} /></AnalystSelectionProvider>));
-    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("私域商城/niushop:1/store-a");
+    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("栖月汇微商城/niushop:1/store-a");
     let release!: (value: { tenant: typeof tenant; items: typeof cases; count: number }) => void;
     listCases.mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
     await act(async () => [...host.querySelectorAll("button")].find((b) => b.textContent === "重新读取列表")!.click());
     expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("unknown");
     await act(async () => release({ tenant, items: cases, count: cases.length }));
-    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("私域商城/niushop:1/store-a");
+    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("栖月汇微商城/niushop:1/store-a");
     const channel = host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')!;
     await act(async () => { channel.value = "wechat-store"; channel.dispatchEvent(new Event("change", { bubbles: true })); });
     expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("wechat-store/wechat-store/store-c");
@@ -51,7 +51,7 @@ describe("BusinessInvestigationTab", () => {
     const listCases = vi.fn().mockResolvedValue({ tenant, items: [], count: 0 });
     const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases, listRuns: vi.fn() };
     await act(async () => root.render(<AnalystSelectionProvider active><HeaderSelectionProbe /><BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled={false} /></AnalystSelectionProvider>));
-    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("私域商城/niushop:1/store-a");
+    expect(host.querySelector('[data-testid="header-selection"]')?.textContent).toBe("栖月汇微商城/niushop:1/store-a");
     expect(host.textContent).toContain("当前没有可见分析记录"); expect(client.listRuns).not.toHaveBeenCalled();
     listCases.mockRejectedValueOnce(new EcommerceInvestigationClientError("forbidden", 403, "FORBIDDEN"));
     await act(async () => [...host.querySelectorAll("button")].find((b) => b.textContent === "重新读取列表")!.click());

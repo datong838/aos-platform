@@ -6,7 +6,7 @@ import { AnalystSelectionProvider, useAnalystSelection, usePublishAnalystSelecti
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const tenant = { orgId: "org-org", projectId: "dev-project" };
-const value: AnalystSelection = { tenant, channelId: "niushop:1", entityId: "store-a", channelLabel: "私域商城", sourceCutoffAt: null };
+const value: AnalystSelection = { tenant, channelId: "niushop:1", entityId: "store-a", channelLabel: "栖月汇微商城", sourceCutoffAt: null };
 const clientA = {}, clientB = {};
 function Publisher({ data, client = clientA }: { data: AnalystSelection | null; client?: object }) {
   usePublishAnalystSelection(data, client);

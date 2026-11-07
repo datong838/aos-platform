@@ -116,7 +116,7 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
       tenant: { orgId: tenant.orgId, projectId: tenant.projectId },
       channelId: selectedChannelId,
       entityId: displayEntityId,
-      channelLabel: selectedChannelId === defaultChannelId ? "私域商城" : selectedChannelId,
+      channelLabel: selectedChannelId === defaultChannelId ? "栖月汇微商城" : selectedChannelId,
       sourceCutoffAt: selectedChannelId === defaultChannelId && selectedEntityKey === defaultEntityKey ? selectionCutoff : null,
     };
   }, [client, phase, tenant?.orgId, tenant?.projectId, selectedChannelId, displayEntityId,
@@ -268,7 +268,7 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
           <div className="business-investigation-empty-case-main">
             <span className="business-investigation-empty-kicker">经营分析记录</span>
             <div className="business-investigation-empty-title"><strong>当前没有可见分析记录</strong><span>可信空</span><span>只读</span></div>
-            <div className="business-investigation-empty-target"><b>经营实体</b><span>{defaultEntity && selectedEntityKey === defaultEntity.key ? "栖月汇小程序店铺" : selectedEntityKey ? entities.find((item) => item.key === selectedEntityKey)?.entityId : "未选择经营实体"}</span><small>{defaultEntity && selectedEntityKey === defaultEntity.key ? `私域商城 · ${defaultEntity.entityId}` : "等待正式分析记录"}</small></div>
+            <div className="business-investigation-empty-target"><b>经营实体</b><span>{defaultEntity && selectedEntityKey === defaultEntity.key ? "栖月汇小程序店铺" : selectedEntityKey ? entities.find((item) => item.key === selectedEntityKey)?.entityId : "未选择经营实体"}</span><small>{defaultEntity && selectedEntityKey === defaultEntity.key ? `栖月汇微商城 · ${defaultEntity.entityId}` : "等待正式分析记录"}</small></div>
             <div className="business-investigation-empty-meta"><span>分析类型：待核对</span><span>范围：当前租户 / 只读</span><span>负责人：未绑定</span><span>周期计划：尚未建立</span></div>
           </div>
           <div className="business-investigation-empty-actions"><button type="button" onClick={loadCases}>重新读取列表</button></div>
@@ -291,7 +291,7 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
       {phase === "ready" ? <button type="button" onClick={loadCases}>重新读取列表</button> : null}
       {(phase === "ready" || phase === "empty") && !defaultEntity ? <p role="status">默认店铺待核对；未自动选择其他店铺，可手动查看已有分析记录。</p> : null}
       {phase === "ready" ? <div className="business-investigation-selector" aria-label="生意探究三级选择">
-        <label><span>1 · 渠道视角</span><select aria-label="渠道视角" value={selectedChannelId} onChange={(event) => onChannelChange(event.currentTarget.value)}><option value="" disabled>请选择渠道</option>{channels.map((channelId) => <option key={channelId} value={channelId}>{channelId === defaultEntity?.channelId ? "私域商城" : channelId}</option>)}</select><small>来自正式选择或 Case 的 exact ChannelRevision。</small></label>
+        <label><span>1 · 渠道视角</span><select aria-label="渠道视角" value={selectedChannelId} onChange={(event) => onChannelChange(event.currentTarget.value)}><option value="" disabled>请选择渠道</option>{channels.map((channelId) => <option key={channelId} value={channelId}>{channelId === defaultEntity?.channelId ? "栖月汇微商城" : channelId}</option>)}</select><small>来自正式选择或 Case 的 exact ChannelRevision。</small></label>
         <fieldset><legend>2 · 经营实体</legend><div className="business-investigation-entities">{entities.map((entity, index) => <button type="button" role="radio" aria-checked={selectedEntityKey === entity.key} tabIndex={selectedEntityKey === entity.key ? 0 : -1} className={selectedEntityKey === entity.key ? "is-selected" : ""} key={entity.key} onClick={() => onEntityChange(entity.key)} onKeyDown={(event) => {
           if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
           event.preventDefault();

@@ -17,7 +17,7 @@ import { EcommerceWorkshopEntryRoute } from "../pages/s2/ecommerce/routes";
 import { AppShell } from "./AppShell";
 import { usePublishAnalystSelection } from "../components/workshop/AnalystSelectionContext";
 
-const headerSelection = { tenant: { orgId: "org-org", projectId: "dev-project" }, channelId: "niushop:1", entityId: "store-a", channelLabel: "私域商城", sourceCutoffAt: null };
+const headerSelection = { tenant: { orgId: "org-org", projectId: "dev-project" }, channelId: "niushop:1", entityId: "store-a", channelLabel: "栖月汇微商城", sourceCutoffAt: null };
 const headerClient = {};
 function HeaderSelectionFixture() {
   const catalog = useEcommerceWorkshopCatalog();
@@ -131,7 +131,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     await flush();
     const selected = host.querySelector<HTMLSelectElement>('.analyst-exact-header-right select[aria-label="当前渠道视角"]');
     expect(selected?.value).toBe("niushop:1"); expect(selected?.disabled).toBe(true);
-    expect(selected?.selectedOptions[0]?.textContent).toBe("私域商城");
+    expect(selected?.selectedOptions[0]?.textContent).toBe("栖月汇微商城");
     expect(host.querySelector(".analyst-exact-owner")?.textContent).toBe("经营参谋（负责人未绑定）");
   });
 
