@@ -50,6 +50,10 @@ describe("SourceReadinessPanel", () => {
     expect(host.textContent).toContain("源配置权威待补齐");
     expect(host.textContent).toContain("待处理对象12");
     expect(host.textContent).toContain("未知 / 未知");
+    expect(host.textContent).toContain("检查时间");
+    expect(host.textContent).toContain(checkedAt);
+    expect(host.textContent).toMatch(/数据截止\s*待核对/);
+    expect(host.querySelector(".source-readiness-summary")?.textContent).not.toMatch(/数据截止\s*2026-08-21T14:00:00Z/);
     expect(client.getSourceReadiness).toHaveBeenCalledTimes(1);
   });
 
