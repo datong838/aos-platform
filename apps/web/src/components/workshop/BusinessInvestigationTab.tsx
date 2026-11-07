@@ -107,7 +107,10 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
   const displayEntityId = entities.find((item) => item.key === selectedEntityKey)?.entityId ?? "";
   const defaultChannelId = defaultEntity?.channelId;
   const defaultEntityKey = defaultEntity?.key;
-  const selectionCutoff = canonicalSelection?.sourceReadinessCutoffAt ?? null;
+  // Only publish a shop-source cutoff when readiness is ready; blocked envelopes reuse checkedAt as cutoff.
+  const selectionCutoff = canonicalSelection?.sourceReadinessStatus === "ready"
+    ? (canonicalSelection.sourceReadinessCutoffAt ?? null)
+    : null;
   // Memoize primitives: publishing must not recreate a value on every Context render.
   const headerSelection = useMemo<AnalystSelection | null>(() => {
     if (loadedClient.current !== client || (phase !== "ready" && phase !== "empty")
@@ -120,7 +123,8 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
       sourceCutoffAt: selectedChannelId === defaultChannelId && selectedEntityKey === defaultEntityKey ? selectionCutoff : null,
     };
   }, [client, phase, tenant?.orgId, tenant?.projectId, selectedChannelId, displayEntityId,
-      defaultChannelId, selectedEntityKey, defaultEntityKey, selectionCutoff, contextRevision]);
+      defaultChannelId, selectedEntityKey, defaultEntityKey, selectionCutoff, contextRevision,
+      canonicalSelection?.sourceReadinessStatus]);
   usePublishAnalystSelection(headerSelection, client);
 
   const resetHandoff = () => { setHandoffPhase("idle"); setHandoffFailure(""); setHandoffCompiled(null); setHandoffIssued(null); setHandoffToken(null); };
