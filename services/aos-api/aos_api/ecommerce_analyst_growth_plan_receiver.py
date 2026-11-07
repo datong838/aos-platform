@@ -14,7 +14,7 @@ from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
 from aos_api.ecommerce_analyst_authority_store import EcommerceAnalystAuthorityStore, canonical_hash
 from aos_api.ecommerce_analyst_growth_plan_draft import draft_from_completed_generation
-from aos_api.ecommerce_analyst_growth_plan_sources import require_growth_plan_sources
+from aos_api.ecommerce_analyst_growth_plan_sources import require_growth_plan_sources, require_current_revision
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
 from aos_api.tenant_scope import TenantScope
@@ -26,11 +26,33 @@ class GrowthPlanDraftReceiver:
             raise ValueError("explicit scoped connection factory required")
         self._connect_factory = connect_factory
 
+    def recover_with_formal_source(
+            self, scope: TenantScope, *, source_service, parent_request, source_ref,
+            installation_id, installation_revision, installation_etag, **recovery):
+        """Receive only an original completed draft under live Source locks."""
+        from aos_api.aip_formal_source_disclosure import FormalSourceDisclosureService
+        if type(source_service) is not FormalSourceDisclosureService:
+            raise TypeError('original formal Source service required')
+        with source_service.source_transaction(
+                scope, recovery.get('actor'), parent_request, source_ref=source_ref,
+                installation_id=installation_id, installation_revision=installation_revision,
+                installation_etag=installation_etag) as (conn, store):
+            @contextmanager
+            def bound(requested_scope):
+                if requested_scope != scope:
+                    raise ValueError('growth-plan formal Source transaction scope mismatch')
+                yield conn
+            return GrowthPlanDraftReceiver(bound).recover(scope, source_store=store, **recovery)
+
     def recover(self, scope: TenantScope, *, attempt_id: str, decision_ref: AnalystExactRef,
                 budget: str, task_type: str, actor: str, markings: list[str],
-                now: datetime, max_source_age: timedelta) -> AnalystExactRef:
+                now: datetime, max_source_age: timedelta, source_store=None) -> AnalystExactRef:
         """Recover an already completed output, never invoke or retry a Provider."""
         from aos_api.aip_agent_text_output import read_agent_text
+        if source_store is not None:
+            from aos_api.aip_metric_query_evidence import _production
+            with self._connect_factory(scope) as conn:
+                _production(conn, scope, source_store)
         attempt = AipAgentRunExecutionService(self._connect_factory).get(scope, attempt_id)
         if ((attempt.tenant.org_id, attempt.tenant.project_id) != scope.key
                 or attempt.attempt_id != attempt_id or attempt.status != "succeeded"
@@ -42,11 +64,12 @@ class GrowthPlanDraftReceiver:
         # artifact and current source authority before any new plan is saved.
         return self.receive(scope, attempt_id=attempt_id, decision_ref=decision_ref,
                             answer=answer, budget=budget, task_type=task_type, actor=actor,
-                            markings=markings, now=now, max_source_age=max_source_age)
+                            markings=markings, now=now, max_source_age=max_source_age,
+                            **({'source_store': source_store} if source_store is not None else {}))
 
     def receive(self, scope: TenantScope, *, attempt_id: str, decision_ref: AnalystExactRef,
                 answer: str, budget: str, task_type: str, actor: str, markings: list[str],
-                now: datetime, max_source_age: timedelta) -> AnalystExactRef:
+                now: datetime, max_source_age: timedelta, source_store=None) -> AnalystExactRef:
         if not actor.strip() or decision_ref.resource_type != "DecisionSummaryRevision":
             raise ValueError("actor and exact decision required")
         if not isinstance(answer, str) or len(answer.encode("utf-8")) > 131072:
@@ -55,6 +78,9 @@ class GrowthPlanDraftReceiver:
                                    "attemptId": attempt_id})
         key = "growth-draft-receive:" + identity
         with self._connect_factory(scope) as conn:
+            if source_store is not None:
+                from aos_api.aip_metric_query_evidence import _production
+                _production(conn, scope, source_store)
             # The existing Owner commits only after all validations and inserts.
             # Do not place this inside conn.transaction(): Owner owns the commit.
             conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", (key,))
@@ -108,7 +134,8 @@ class GrowthPlanDraftReceiver:
                     raise ValueError("generation replay command drifted")
                 return replay_ref
             decision = require_growth_plan_sources(conn, scope, decision_ref, markings=markings,
-                                                    now=now, max_source_age=max_source_age)
+                                                    now=now, max_source_age=max_source_age,
+                                                    **({'source_store': source_store} if source_store is not None else {}))
             inputs = {(ref.resource_type, ref.resource_id, ref.revision, ref.authority)
                       for ref in run.request.input_refs}
             required = {(ref.resource_type, ref.resource_id, str(ref.revision), "postgresql")
@@ -116,5 +143,10 @@ class GrowthPlanDraftReceiver:
             if not required.issubset(inputs):
                 raise ValueError("D03 run did not declare exact planning inputs")
             draft = draft_from_completed_generation(decision=decision, attempt=attempt, answer=answer,
-                                                    budget=budget, task_type=task_type, actor=actor)
-            return owner.publish_plan(scope, actor, key, draft, expected_version=0)
+                                                    budget=budget, task_type=task_type, actor=actor,
+                                                    source_cutoff_at=require_current_revision(conn, scope, decision.insight_ref).cutoff_at)
+            ref = owner.publish_plan(scope, actor, key, draft, expected_version=0)
+            if source_store is not None:
+                source_store._formal_source_authority.validate_commit(conn, scope)
+                conn.commit()
+            return ref

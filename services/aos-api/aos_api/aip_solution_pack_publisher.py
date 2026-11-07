@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 from dataclasses import dataclass
 from collections.abc import Mapping
@@ -123,6 +124,19 @@ def _exact_definition_version(value: str) -> str:
     return value
 
 
+def exact_definition_identity_allowed(principal) -> bool:
+    """Use the original explicit dev identity; never relabel it as OIDC."""
+    from aos_api.auth import Principal
+    from aos_api.oidc import allow_dev
+    if type(principal) is not Principal:
+        return False
+    if principal.token_kind == 'oidc':
+        return True
+    return (principal.token_kind == 'dev' and principal.subject == 'user:dev'
+            and os.getenv('AOS_AUTH_ALLOW_DEV', '').strip().lower() in {'1', 'true', 'yes', 'on'}
+            and allow_dev())
+
+
 class AipSolutionPackPublisher:
     def __init__(
         self,
@@ -238,6 +252,7 @@ class AipSolutionPackPublisher:
     def publish_exact_verified(
         self, *, principal, connect_factory, reader, loader, signed_root: Path,
         source_ref: str, idempotency_key: str, attempt_directory: Path,
+        expected_content_hash: str | None = None,
     ):
         """Internal scoped metadata batch; no route, skill activation or business grant."""
         from psycopg.pq import TransactionStatus
@@ -252,7 +267,7 @@ class AipSolutionPackPublisher:
         from aos_api.aip_solution_pack_signed_preflight import (
             inspect_exact_signed_source, read_exact_definition_documents,
         )
-        if (type(principal) is not Principal or principal.token_kind != "oidc"
+        if (not exact_definition_identity_allowed(principal)
                 or type(principal.subject) is not str or not principal.subject
                 or principal.subject != principal.subject.strip()
                 or not principal.subject.isprintable() or not callable(connect_factory)
@@ -269,6 +284,8 @@ class AipSolutionPackPublisher:
         proof, documents = read_exact_definition_documents(
             reader=reader, loader=loader, signed_root=signed_root, source_ref=source_ref,
         )
+        if expected_content_hash is not None and proof.content_hash != expected_content_hash:
+            raise AipSolutionPackInvalid("confirmed source hash differs from current signed source")
         batch = self._prepare_requests(documents, expected_version=proof.bundle_version,
                                        source_revision=proof.bundle_version)
         request_hash = self._hash({

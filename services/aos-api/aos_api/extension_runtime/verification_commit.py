@@ -20,13 +20,21 @@ class HealthObservationStale(RuntimeConflict):
     """A healthy probe expired while entering its atomic control transaction."""
 
 
-def _fresh_health(conn, checked_at):
+class HealthObservationFuture(RuntimeConflict):
+    """DB clock moved behind a trusted probe; discard it and re-probe."""
+
+
+def _fresh_health(conn, checked_at, *, retry_clock_regression=False):
+    if type(retry_clock_regression) is not bool:
+        raise TypeError("exact health re-probe mode required")
     if not isinstance(checked_at,datetime) or checked_at.utcoffset() is None:
         raise RuntimeConflict('trusted health time required')
     row=conn.execute('SELECT clock_timestamp() AS now').fetchone()
     age=(_values(row,('now',))[0]-checked_at).total_seconds()
     if age < 0:
-        raise RuntimeConflict('health observation is stale or in the future')
+        if not retry_clock_regression:
+            raise RuntimeConflict('health observation is stale or in the future')
+        raise HealthObservationFuture('health observation is stale or in the future')
     if age > 3:
         raise HealthObservationStale('health observation is stale or in the future')
 

@@ -15,9 +15,10 @@ from urllib.parse import urlencode
 
 import psycopg
 
-from aos_api.aip_contracts import ResourceRef, StepRunStatus, TaskRunStatus
+from aos_api.aip_contracts import PlanStep, ResourceRef, StepRunStatus, TaskRunStatus
 from aos_api.db import connect
-from aos_api.aip_production_contracts import ExactRevisionRef
+from aos_api.aip_production_contracts import ExactRevisionRef, ResponsibilitySlot
+from aos_api.aip_production_contract_store import canonical_hash
 from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TASK_COCKPIT_SCHEMA_VERSION,
     TaskCockpitBlocker,
@@ -1473,10 +1474,47 @@ class EcommerceWorkshopTaskCockpit:
             "productionStartGateRequired",
             "productionStartGateRef",
         }
+        current_keys = expected_production_keys | {
+            "inputHash", "compilationHash", "productionContextRef", "governedDependencies"
+        }
+        current_compilation = isinstance(production, dict) and set(production) == current_keys
+        if current_compilation:
+            try:
+                context = ExactRevisionRef.model_validate(production["productionContextRef"])
+                if context.resource_type != "ProductionContextRevision":
+                    raise ValueError("production context type drifted")
+                dependencies = production["governedDependencies"]
+                if not isinstance(dependencies, list):
+                    raise ValueError("governed dependencies must be exact refs")
+                for dependency in dependencies:
+                    ExactRevisionRef.model_validate(dependency)
+                canonical_steps = [PlanStep.model_validate(item).model_dump(mode="json", by_alias=True) for item in steps]
+                if canonical_steps != steps:
+                    raise ValueError("current Plan steps are not canonical")
+                stages = production["stageCompilation"]
+                input_hash = canonical_hash({
+                    "compilerVersion": production["compilerVersion"],
+                    "templateRef": production["stageTemplateRef"],
+                    "responsibilityPlanRef": production["responsibilityPlanRef"],
+                    "productionContextRef": production["productionContextRef"],
+                    "governedDependencies": dependencies,
+                    "normalizedStageIds": [item["stageId"] for item in stages],
+                })
+                edges = [{"from": parent, "to": stage["stageId"]} for stage in stages for parent in stage["dependsOn"]]
+                if production["inputHash"] != input_hash or production["compilationHash"] != canonical_hash({
+                    "inputHash": input_hash, "steps": canonical_steps, "dependencies": edges,
+                }):
+                    raise ValueError("current compiler hashes drifted")
+                # Display projection only; the immutable source Plan is untouched.
+                production = {key: production[key] for key in expected_production_keys}
+                steps = [{key: item[key] for key in ("stepKey", "title", "inputRefs")} for item in canonical_steps]
+            except (KeyError, TypeError, ValueError) as exc:
+                raise drift("current compilation metadata is invalid") from exc
         if not isinstance(production, dict) or set(production) != expected_production_keys:
             raise drift("productionContract shape is invalid")
         if (
-            production["compilerVersion"] != "w2c.v1"
+            production["compilerVersion"] not in {"w2c.v1", "w7c.v1"}
+            or (production["compilerVersion"] == "w7c.v1" and not current_compilation)
             or production["productionStartGateRequired"] is not True
         ):
             raise drift("compiler or start gate semantics changed")
@@ -1548,7 +1586,7 @@ class EcommerceWorkshopTaskCockpit:
                 },
                 stageTemplateRef=template_ref,
                 responsibilityPlanRef=responsibility_ref,
-                compilerVersion="w2c.v1",
+                compilerVersion=production["compilerVersion"],
                 stages=stages,
                 applicableStageIds=applicable,
                 notApplicableStageIds=not_applicable,
@@ -1598,6 +1636,18 @@ class EcommerceWorkshopTaskCockpit:
         expected_assignee_keys = {"kind", "resourceId", "version"}
         if not isinstance(raw_slots, list) or not raw_slots:
             raise drift("responsibility slots are unavailable")
+        projected_slots = []
+        for item in raw_slots:
+            if isinstance(item, dict) and set(item) == expected_slot_keys | {"assigneeResolutionReceiptId"}:
+                try:
+                    parsed = ResponsibilitySlot.model_validate(item)
+                    if parsed.model_dump(mode="json", by_alias=True) != item:
+                        raise ValueError("current responsibility slot is not canonical")
+                    item = {key: item[key] for key in expected_slot_keys}
+                except (TypeError, ValueError) as exc:
+                    raise drift("current responsibility slot is invalid") from exc
+            projected_slots.append(item)
+        raw_slots = projected_slots
         if any(
             not isinstance(item, dict)
             or set(item) != expected_slot_keys

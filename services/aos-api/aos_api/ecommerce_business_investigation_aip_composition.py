@@ -270,10 +270,25 @@ class PostgresAipProductionCompositionSource:
             ):
                 blockers.append("AIP_SKILL_BINDING_READINESS_STALE")
 
+        exact_context_profile: str | None = None
+        if production_context_ref is not None and len(contexts) == 1:
+            context = contexts[0]
+            observed_context_ref = InvestigationExactRef(
+                resourceType="ProductionContextRevision",
+                resourceId=str(context["context_id"]),
+                revision=int(context["revision"]),
+                contentHash=_sha(str(context["content_hash"])),
+            )
+            if (observed_context_ref == production_context_ref
+                    and context["lifecycle"] == "frozen"
+                    and context["readiness"] == "ready"):
+                exact_context_profile = str(context["profile"])
+
         matching_stages = [
             row
             for row in stages
             if row["lifecycle"] == "frozen"
+            and (exact_context_profile is None or row["profile"] == exact_context_profile)
             and tuple(stage.get("stageId") for stage in (row["stages"] or []))
             == INVESTIGATION_STAGE_IDS
         ]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+import time
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query
@@ -128,6 +129,18 @@ def _recover_stale_runs(
         raise _history_unavailable(exc) from exc
 
 
+def _run_timestamp_clock(started_at: datetime, *, monotonic=time.monotonic):
+    """Project elapsed run time into the DB record's timestamp domain only.
+
+    This clock is never an expiry, policy or lease authority. Wall-clock skew
+    between PostgreSQL and the API must not prevent durable run termination.
+    """
+    if not isinstance(started_at, datetime) or started_at.utcoffset() is None:
+        raise ValueError("aware database run timestamp required")
+    origin = monotonic()
+    return lambda: started_at + timedelta(seconds=monotonic() - origin)
+
+
 @router.post("/{graph_id}/dry-run", response_model=LogicDryRun)
 def dry_run_logic_graph(
     graph_id: str,
@@ -190,6 +203,7 @@ def dry_run_logic_graph(
     if started.replay is not None:
         return started.replay
     assert started.started_at is not None
+    executor = LogicDryRunExecutor(adapters, now=_run_timestamp_clock(started.started_at))
     result = executor.execute_guarded(
         graph, body.inputs, run_id=started.run_id, started_at=started.started_at
     )

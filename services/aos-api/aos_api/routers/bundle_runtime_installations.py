@@ -50,12 +50,12 @@ CanonicalUuidPath = Annotated[
 class RuntimeOperationRequest(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True)
 
-    kind: Literal["runtime-apply", "runtime-verify", "configure", "enable", "disable"]
+    kind: Literal["runtime-apply", "runtime-verify", "runtime-recover", "configure", "enable", "disable"]
     target: dict[str, Any] | None = None
 
     @model_validator(mode="after")
     def target_matches_kind(self) -> "RuntimeOperationRequest":
-        if self.kind in {"runtime-apply", "runtime-verify"} and self.target is not None:
+        if self.kind in {"runtime-apply", "runtime-verify", "runtime-recover"} and self.target is not None:
             raise ValueError("preparation operations do not accept a target")
         if self.kind in {"configure", "enable", "disable"} and self.target is None:
             raise ValueError("runtime control operation requires an exact target")
@@ -152,6 +152,23 @@ def current_preparation_executable(
 
 def get_runtime_configuration_candidate_reader() -> RuntimeConfigurationCandidateReader:
     return RuntimeConfigurationCandidateReader()
+
+
+def current_recovery_context(request: Request, *, org_id: str, project_id: str,
+                             installation_id: str) -> str | None:
+    state=request.app.state
+    task=getattr(state,'extension_runtime_host_task',None)
+    selection=getattr(state,'extension_runtime_host_selection',None)
+    try:
+        from aos_api.extension_runtime.runtime_host import RuntimeHost
+        host=getattr(selection,'host',None)
+        if (getattr(state,'extension_runtime_host_status',None)!='ACTIVE'
+                or task is None or task.done() or type(host) is not RuntimeHost):
+            return None
+        return host.recovery_engine_context(TenantScope(org_id,project_id),
+            installation_id=UUID(installation_id))
+    except Exception:
+        return None
 
 
 ControlPlaneDependency = Annotated[Any, Depends(get_runtime_control_plane)]
@@ -345,6 +362,10 @@ def create_bundle_runtime_operation(
                 request, org_id=principal.org_id, project_id=principal.project_id,
                 installation_id=installation_id, kind=body.kind,
             ), **common))
+    elif body.kind=='runtime-recover':
+        receipt=_invoke(lambda:control_plane.lifecycle_service.request_recovery(
+            recovery_admission=lambda:current_recovery_context(request,org_id=principal.org_id,
+                project_id=principal.project_id,installation_id=installation_id),**common))
     else:
         selection = getattr(request.app.state, "extension_runtime_host_selection", None)
         if (getattr(request.app.state, "extension_runtime_host_status", None) == "ACTIVE"

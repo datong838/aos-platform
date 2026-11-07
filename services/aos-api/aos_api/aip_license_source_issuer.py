@@ -218,6 +218,9 @@ def issue_source_license_in_transaction(*, conn, principal, command, loader, rel
     guard.check_replay(factory._connection, scope, principal.subject, row)
     if _now(conn) >= min(expires_at, fact.expires_at):
         raise SourceLicenseIssuanceBlocked('SOURCE_LICENSE_EXPIRED_BEFORE_COMMIT')
+    # Check the original pending receipt/issuance/head constraint before the
+    # caller receives an issuance result. Commit uncertainty still propagates.
+    conn.execute('SET CONSTRAINTS source_issuer_atomic_triple_a0v142 IMMEDIATE')
     return result
 
 

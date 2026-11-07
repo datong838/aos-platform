@@ -1,25 +1,34 @@
-"""Read-only tenant-scoped API for AIP-4 authority records."""
+"""Tenant-scoped authority reads and explicit queue-only Skill preparation."""
 # FastAPI dependency injection intentionally evaluates Depends at import time.
 # ruff: noqa: B008
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header, Response
+from fastapi.responses import JSONResponse
+from pydantic import model_validator
+
+from aos_api.aip_agent_registry_store import AipAgentRegistryNotFound
+from aos_api.aip_contracts import AipContractModel
 
 from aos_api.aip_eval_authority_store import (
     AipEvalAuthorityNotFound,
+    AipEvalAuthorityConflict,
     AipEvalAuthorityPersistenceError,
     AipEvalAuthorityStore,
 )
 from aos_api.aip_eval_contracts import (
     DatasetRevisionRef,
+    AssetRevisionRef,
+    AssetType,
     EvalRunAuthorityRecord,
     EvalSuiteRevision,
     LineageEvent,
 )
 from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
 from aos_api.auth import Principal, require_principal
-from aos_api.errors import ApiError
+from aos_api.errors import ApiError, error_payload
+from aos_api.ecommerce_skill_eval_queue import queue_skill_eval, skill_eval_queue_run_id
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(
@@ -36,6 +45,58 @@ def get_aip_eval_authority_store() -> AipEvalAuthorityStore:
 
 def get_aip_eval_pack_registry() -> AipEvalPackRegistry:
     return _REGISTRY
+
+
+class QueueSkillEvalRequest(AipContractModel):
+    suite_ref: AssetRevisionRef
+
+    @model_validator(mode="after")
+    def exact_suite(self):
+        ref = self.suite_ref
+        if (ref.asset_type is not AssetType.EVAL_SUITE or not ref.revision.isdecimal()
+                or int(ref.revision) < 1 or str(int(ref.revision)) != ref.revision):
+            raise ValueError("exact positive EvalSuite reference required")
+        return self
+
+
+def get_skill_eval_queue():
+    return queue_skill_eval
+
+
+@router.post("/skill-runs", response_model=EvalRunAuthorityRecord)
+def queue_skill_run(
+    body: QueueSkillEvalRequest,
+    response: Response,
+    principal: Principal = Depends(require_principal),
+    idempotency_key: str = Header(min_length=1, max_length=200, alias="Idempotency-Key"),
+    prepare=Depends(get_skill_eval_queue),
+):
+    """Persist metadata only; never start Target, Judge, Host or Provider."""
+    if not {"admin", "owner"}.intersection(principal.roles):
+        raise ApiError(code="AIP_SKILL_EVAL_QUEUE_FORBIDDEN", message="无权创建评测运行", status_code=403)
+    if idempotency_key != idempotency_key.strip():
+        raise ApiError(code="AIP_SKILL_EVAL_QUEUE_KEY_INVALID", message="请求标识不能有首尾空格", status_code=422)
+    scope = _scope(principal)
+    run_id = skill_eval_queue_run_id(scope, idempotency_key)
+    location = "/v1/aip/eval-authority/runs/" + run_id
+    headers = {"Cache-Control": "no-store", "Location": location}
+    try:
+        result = prepare(scope, body.suite_ref, idempotency_key=idempotency_key, actor=principal.subject)
+        if (result.tenant.org_id, result.tenant.project_id) != scope.key or result.run_id != run_id:
+            raise RuntimeError("queued result scope or identity differs")
+    except (AipEvalAuthorityNotFound, AipAgentRegistryNotFound):
+        return JSONResponse(status_code=404, headers=headers, content=error_payload(
+            code="AIP_SKILL_EVAL_SOURCE_NOT_FOUND", message="评测来源或目标版本不存在"))
+    except (AipEvalAuthorityConflict, ValueError):
+        return JSONResponse(status_code=409, headers=headers, content=error_payload(
+            code="AIP_SKILL_EVAL_QUEUE_CONFLICT", message="评测来源或请求绑定不符合当前要求"))
+    except Exception:
+        return JSONResponse(status_code=503, headers=headers, content=error_payload(
+            code="AIP_SKILL_EVAL_QUEUE_OUTCOME_UNKNOWN",
+            message="结果尚未确认，请读取原运行核对，不要重复提交",
+            details={"runId": run_id, "readUrl": location, "outcomeUnknown": True}))
+    response.headers.update(headers)
+    return result
 
 
 def _scope(principal: Principal) -> TenantScope:

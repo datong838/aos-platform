@@ -1188,14 +1188,18 @@ function parseOperationsBlocker(value: unknown): OperationsBlocker {
 
 function parseOperationsCountLedger(value: unknown): OperationsCountLedger {
   const raw = record(value, "operations.countLedger");
-  exact(raw, ["sourceTotal", "attached", "unmatched", "conflicted"], "operations.countLedger");
-  const result = {
+  exact(raw, ["sourceTotal", "attached", "unmatched", "conflicted", ...("populationTotal" in raw ? ["populationTotal"] : [])], "operations.countLedger");
+  const result: OperationsCountLedger = {
     sourceTotal: integer(raw.sourceTotal, "operations.countLedger.sourceTotal"),
     attached: integer(raw.attached, "operations.countLedger.attached"),
     unmatched: integer(raw.unmatched, "operations.countLedger.unmatched"),
     conflicted: integer(raw.conflicted, "operations.countLedger.conflicted"),
   };
   if (result.sourceTotal !== result.attached + result.unmatched + result.conflicted) throw new TypeError("operations.countLedger 数量不守恒");
+  if ("populationTotal" in raw) {
+    result.populationTotal = nullable(raw.populationTotal, (v) => integer(v, "operations.countLedger.populationTotal"));
+    if (result.populationTotal !== null && result.populationTotal < result.sourceTotal) throw new TypeError("operations.countLedger.populationTotal 小于读取窗口");
+  }
   return result;
 }
 

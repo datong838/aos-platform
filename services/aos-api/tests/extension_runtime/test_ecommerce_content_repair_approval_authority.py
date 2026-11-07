@@ -83,9 +83,15 @@ def _check(row, dispatch):
         upper_bound_minor=1000, dispatch=dispatch)
 
 
-def test_repair_approval_binds_exact_new_input_and_installation():
+def test_repair_approval_binds_exact_new_input_and_installation(monkeypatch):
+    # This test isolates the existing exact tuple check. The producer is tested
+    # separately against its native Action rows and current-source fixtures.
+    import aos_api.ecommerce_content_repair_action as producer
+    calls = []
+    monkeypatch.setattr(producer, 'revalidate_repair_approval', lambda tx, scope, proposal, actor: calls.append((scope.key, proposal, actor)))
     dispatch, row = _case()
     _check(row, dispatch)
+    assert calls == [(SCOPE.key, 'proposal-1', 'reviewer-1')]
     for key in ("returnDecisionRef", "briefRef", "priorArtifactRef",
                 "installationBindingRef", "capabilityRef", "budgetUpperBoundMinor"):
         drift = deepcopy(row)
@@ -102,3 +108,14 @@ def test_repair_approval_binds_exact_new_input_and_installation():
             _check({**row, **drift}, dispatch)
     with pytest.raises(ValueError):
         _check(row, SimpleNamespace(**{**vars(dispatch), "execution_epoch": 4}))
+
+
+def test_exact_tuple_cannot_bypass_dedicated_current_producer(monkeypatch):
+    import aos_api.ecommerce_content_repair_action as producer
+    from aos_api.aip_action_store import AipActionTransitionBlocked
+    def denied(*args):
+        raise AipActionTransitionBlocked('REPAIR_ACTION_PROPOSAL_BINDING_DRIFTED')
+    monkeypatch.setattr(producer, 'revalidate_repair_approval', denied)
+    dispatch, row = _case()
+    with pytest.raises(AipActionTransitionBlocked, match='PROPOSAL_BINDING_DRIFTED'):
+        _check(row, dispatch)

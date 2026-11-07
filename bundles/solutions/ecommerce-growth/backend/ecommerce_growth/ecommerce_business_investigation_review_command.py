@@ -15,6 +15,8 @@ from .sdk_ports import ExactRef
 
 ARTIFACT_FAMILIES = ("portrait", "diagnosis", "growth_plan", "evidence_summary")
 _CJK = re.compile(r"[\u3400-\u9fff]")
+# Permit ordinary Chinese punctuation without accepting other NFKC changes.
+_BUSINESS_PUNCTUATION = str.maketrans("，：；！？（）［］｛｝．", ",:;!?()[]{}.")
 _TECHNICAL_POLLUTION = re.compile(
     r"(?:(?:AR|W|R|N)\s*[-_]?\s*\d|技术方案|开发任务|波次|API|SQL|DDL|数据库迁移|代码|(?:/[\w.-]+){2,}|(?:[\w.-]+/)+[\w.-]+\.(?:py|ts|tsx|js|sql|md|json|ya?ml)|[A-Za-z]:\\+[^\\\s]+(?:\\+[^\\\s]+)+)",
     re.IGNORECASE,
@@ -272,8 +274,8 @@ class AcceptedStageHandoffRequest:
         for value in self.content_task.business_text_values():
             normalized = "".join(ch for ch in unicodedata.normalize("NFKC", value)
                                  if unicodedata.category(ch) != "Cf")
-            if (normalized != value or value != value.strip()
-                    or not _CJK.search(value) or _TECHNICAL_POLLUTION.search(value)):
+            if (normalized != value.translate(_BUSINESS_PUNCTUATION) or value != value.strip()
+                    or not _CJK.search(normalized) or _TECHNICAL_POLLUTION.search(normalized)):
                 raise ValueError("accepted stage Handoff requires Chinese business text")
 
     def command_payload(self) -> dict[str, object]:

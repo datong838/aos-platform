@@ -156,7 +156,10 @@ class AipModelRuntimeStore:
         except ProviderPluginAuthorityError as exc:
             raise ModelRuntimeDependencyBlocked(f"provider plugin {exc.code}") from None
         try:
-            self._guard_policy_store.require_provider_dependencies(scope, item)
+            if item.lifecycle is ModelRuntimeLifecycle.DRAFT:
+                self._guard_policy_store.require_provider_dependencies(scope, item, draft_storage_only=True)
+            else:
+                self._guard_policy_store.require_provider_dependencies(scope, item)
         except GuardPolicyDependencyBlocked as exc:
             raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("provider_instance", scope, actor, key, item, expected_version)
@@ -170,18 +173,23 @@ class AipModelRuntimeStore:
                     expected_target=evaluation_candidate_ref(item),
                 )
             price = self.get_price_snapshot(scope, item.price_snapshot_ref.asset_id, item.price_snapshot_ref.revision)
-            self.require_model_governance(scope, item, price)
+            if item.lifecycle is ModelRuntimeLifecycle.DRAFT:
+                self.require_model_governance(scope, item, price, draft_storage_only=True)
+            else:
+                self.require_model_governance(scope, item, price)
         except (ModelGovernancePolicyDependencyBlocked, AipEvalGateDependencyBlocked) as exc:
             raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("registered_model", scope, actor, key, item, expected_version)
 
-    def require_model_governance(self, scope: TenantScope, model: RegisteredModelRevision, price: ModelPriceSnapshotRevision, *, now: datetime | None = None) -> None:
+    def require_model_governance(self, scope: TenantScope, model: RegisteredModelRevision, price: ModelPriceSnapshotRevision, *, now: datetime | None = None, draft_storage_only: bool = False) -> None:
         """Validate exact model/price binding through the current governance Owner."""
         self._check_scope(scope, model)
         self._check_scope(scope, price)
         ref = model.price_snapshot_ref
         if (price.price_snapshot_id, price.revision, price.content_hash) != (ref.asset_id, ref.revision, ref.content_hash):
             raise ModelRuntimeDependencyBlocked("model price snapshot exact ref drifted")
+        if draft_storage_only is True and model.lifecycle is not ModelRuntimeLifecycle.DRAFT:
+            raise ModelRuntimeDependencyBlocked("draft model dependencies are storage only")
         instant = now or datetime.now(UTC)
         if model.lifecycle.value == "active" and (
             price.lifecycle.value != "active"
@@ -192,16 +200,24 @@ class AipModelRuntimeStore:
         if model.lifecycle is ModelRuntimeLifecycle.ACTIVE:
             require_current_development_price(self, scope, price)
         try:
-            self._governance_policy_store.require_model_dependencies(scope, model, price=price, now=instant)
+            if draft_storage_only is True:
+                self._governance_policy_store.require_model_dependencies(scope, model, price=price, now=instant, draft_storage_only=True)
+            else:
+                self._governance_policy_store.require_model_dependencies(scope, model, price=price, now=instant)
         except ModelGovernancePolicyDependencyBlocked as exc:
             raise ModelRuntimeDependencyBlocked(str(exc)) from None
 
     def publish_policy(self, scope: TenantScope, actor: str, key: str, item: RuntimePolicyRevision, *, expected_version: int = 0) -> RuntimePolicyRevision:
         try:
-            self._network_policy_store.require_runtime_policy_dependency(scope, item)
-            self._guard_policy_store.require_exact_active(scope, item.egress_policy_ref)
-            self._guard_policy_store.require_exact_active(scope, item.data_classification_policy_ref)
-            self._governance_policy_store.require_runtime_policy_dependencies(scope, item)
+            if item.lifecycle is ModelRuntimeLifecycle.DRAFT:
+                self._network_policy_store.require_runtime_policy_dependency(scope, item, draft_storage_only=True)
+                self._guard_policy_store.require_runtime_policy_dependencies(scope, item, draft_storage_only=True)
+                self._governance_policy_store.require_runtime_policy_dependencies(scope, item, draft_storage_only=True)
+            else:
+                self._network_policy_store.require_runtime_policy_dependency(scope, item)
+                self._guard_policy_store.require_exact_active(scope, item.egress_policy_ref)
+                self._guard_policy_store.require_exact_active(scope, item.data_classification_policy_ref)
+                self._governance_policy_store.require_runtime_policy_dependencies(scope, item)
         except (NetworkPolicyDependencyBlocked, GuardPolicyDependencyBlocked, ModelGovernancePolicyDependencyBlocked) as exc:
             raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("runtime_policy", scope, actor, key, item, expected_version)
@@ -552,8 +568,9 @@ class AipModelRuntimeStore:
             self._receipt(conn, scope, "provider_health.record", key, request_hash, {
                 "resourceType": "ProviderHealthObservation", "resourceId": observation.observation_id
             }, actor)
+            stored = self._health(conn, scope, observation.observation_id)
             conn.commit()
-            return self._health(conn, scope, observation.observation_id)
+            return stored
 
     def list_latest_provider_health(
         self, scope: TenantScope
@@ -631,8 +648,11 @@ class AipModelRuntimeStore:
             )
             result = {"resourceType": type(item).__name__, "resourceId": asset_id, "revision": item.revision, "contentHash": item.content_hash}
             self._receipt(conn, scope, operation, key, request_hash, result, actor)
+            # Tenant RLS scope is transaction-local: read the stored revision
+            # before commit clears it, and return only after commit succeeds.
+            stored = self._get(kind, scope, asset_id, item.revision, conn=conn)
             conn.commit()
-            return self._get(kind, scope, asset_id, item.revision, conn=conn)
+            return stored
 
     def _get(self, kind: str, scope: TenantScope, asset_id: str, revision: int | None, *, conn: Any | None = None) -> RevisionT:
         id_alias, model = self._SPECS[kind]

@@ -163,13 +163,14 @@ class AipResearchJobStore:
                     created_at,
                 ),
             )
-            conn.commit()
             row = conn.execute(
                 """SELECT * FROM aip_research_provider_revision
                    WHERE org_id=%s AND project_id=%s AND provider_id=%s AND revision=%s""",
                 (scope.org_id, scope.project_id, request.provider_id, request.revision),
             ).fetchone()
-            return self._provider(scope, row)
+            result = self._provider(scope, row)
+            conn.commit()
+            return result
 
     def create_job(
         self,
@@ -302,13 +303,14 @@ class AipResearchJobStore:
                     created_at,
                 ),
             )
-            conn.commit()
             row = conn.execute(
                 """SELECT * FROM aip_research_job_manifest
                    WHERE org_id=%s AND project_id=%s AND job_id=%s""",
                 (scope.org_id, scope.project_id, job_id),
             ).fetchone()
-            return self._snapshot(conn, scope, row)
+            result = self._snapshot(conn, scope, row)
+            conn.commit()
+            return result
 
     def record_submission(
         self,
@@ -354,13 +356,14 @@ class AipResearchJobStore:
                     created_at,
                 ),
             )
-            conn.commit()
             row = conn.execute(
                 """SELECT * FROM aip_research_submission_receipt
                    WHERE org_id=%s AND project_id=%s AND submission_receipt_id=%s""",
                 (scope.org_id, scope.project_id, receipt_id),
             ).fetchone()
-            return self._submission(scope, row)
+            result = self._submission(scope, row)
+            conn.commit()
+            return result
 
     def record_event(
         self,
@@ -431,8 +434,9 @@ class AipResearchJobStore:
                     created_at,
                 ),
             )
+            result = self._snapshot(conn, scope, job)
             conn.commit()
-            return self._snapshot(conn, scope, job)
+            return result
 
     def record_callback_nonce(
         self,
@@ -557,7 +561,6 @@ class AipResearchJobStore:
                     created_at,
                 ),
             )
-            conn.commit()
             row = conn.execute(
                 """SELECT r.*,a.artifact_type,a.schema_ref
                    FROM aip_research_artifact_receipt r
@@ -565,7 +568,9 @@ class AipResearchJobStore:
                    WHERE r.org_id=%s AND r.project_id=%s AND r.artifact_receipt_id=%s""",
                 (scope.org_id, scope.project_id, receipt_id),
             ).fetchone()
-            return self._artifact(scope, row)
+            result = self._artifact(scope, row)
+            conn.commit()
+            return result
 
     def record_delivery(
         self,
@@ -1129,13 +1134,14 @@ class AipResearchJobStore:
                 created_at,
             ),
         )
-        conn.commit()
         row = conn.execute(
             """SELECT * FROM aip_research_delivery_receipt
                WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
             (scope.org_id, scope.project_id, receipt_id),
         ).fetchone()
-        return self._delivery(scope, row)
+        result = self._delivery(scope, row)
+        conn.commit()
+        return result
 
     @staticmethod
     def _event_rows(

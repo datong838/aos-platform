@@ -6,6 +6,7 @@ are never retried; a failed commit or close requires read-only reconciliation.
 """
 from contextlib import contextmanager
 from dataclasses import dataclass
+import hashlib
 import re
 from typing import Literal
 
@@ -13,9 +14,11 @@ from psycopg.pq import TransactionStatus
 from psycopg.rows import dict_row
 
 from aos_api.aip_eval_execution_authority import EvalExecutionRejected
+from aos_api.aip_eval_authority_store import AipEvalAuthorityStore
+from aos_api.aip_eval_contracts import EvalRunEvent, EvalRunStatus
 from aos_api.aip_eval_writer_reconcile import reconcile_signed_skill_eval_intent
 from aos_api.aip_signed_skill_eval_intent_store import SignedSkillEvalIntentStore, SkillEvalIntentConflict
-from aos_api.aip_skill_eval_atomic_finisher import finish_signed_skill_eval_with_connection
+from aos_api.aip_skill_eval_atomic_finisher import finish_signed_skill_eval_with_connection, _bounded_finisher
 from aos_api.aip_skill_eval_producer_connection import configured_skill_producer_connection
 from aos_api.aip_skill_eval_producer_identity import require_skill_producer_identity
 from aos_api.db import connect_read_only
@@ -157,6 +160,72 @@ class SkillEvalProducerTransactions:
             result = dict(SignedSkillEvalIntentStore().create(conn, scope, run_id=run_id,
                 idempotency_key=idempotency_key, request_hash=request_hash))
         return result
+
+    @staticmethod
+    def _start_context(scope, intent_id, request_hash, expected_intent_version, event):
+        _scope(scope)
+        _identifier(intent_id)
+        _hash(request_hash)
+        _version(expected_intent_version)
+        if (expected_intent_version != 1 or type(event) is not EvalRunEvent
+                or (event.tenant.org_id, event.tenant.project_id) != scope.key
+                or event.sequence != 2 or event.event_type != 'status_changed'
+                or event.from_status is not EvalRunStatus.QUEUED
+                or event.to_status is not EvalRunStatus.RUNNING
+                or event.payload_hash != hashlib.sha256(
+                    b'{"from":"queued","to":"running"}').hexdigest()
+                or event.created_at.utcoffset() is None):
+            raise ValueError('exact new Skill start event required')
+
+    def start_run(self, scope, *, intent_id, request_hash, expected_intent_version, event):
+        """Commit original queued-to-running metadata, never effect admission."""
+        self._start_context(scope, intent_id, request_hash, expected_intent_version, event)
+        with self._write(scope, writer=False) as conn:
+            _bounded_finisher(conn)
+            conn.execute('SET LOCAL ROLE aos_aip_eval_writer')
+            intent = SignedSkillEvalIntentStore().get(conn, scope, intent_id)
+            if (intent is None or intent['run_id'] != event.run_id
+                    or intent['request_hash'] != request_hash
+                    or intent['version'] != expected_intent_version):
+                raise ValueError('original new Skill start intent differs')
+            context = conn.execute(
+                'SELECT session_user AS login,clock_timestamp() AS checked_at').fetchone()
+            conn.execute('SET LOCAL ROLE aos_skill_eval_finisher')
+            authority = AipEvalAuthorityStore()
+            row = authority._run_row(conn, scope, event.run_id, for_update=True)
+            if (row is None or row['target_ref'].get('assetType') != 'skill_template'
+                    or row['version'] != 1 or row['status'] != 'queued'
+                    or event.actor != context['login']
+                    or not row['created_at'] <= event.created_at <= context['checked_at']):
+                raise ValueError('original queued Skill Run or start actor/clock differs')
+            result = authority._transition_eval_run_with_connection(
+                conn, scope, event, expected_version=1)
+        return result
+
+    def reconcile_start_run(self, scope, *, intent_id, request_hash,
+                            expected_intent_version, event):
+        """Read exact original start evidence; absence never authorizes resend."""
+        self._start_context(scope, intent_id, request_hash, expected_intent_version, event)
+        with connect_read_only(scope=scope, inherit_scope=False) as conn:
+            _readonly(conn, scope, self.expected_database)
+            intent = SignedSkillEvalIntentStore().get(conn, scope, intent_id)
+            if intent is None:
+                return None
+            if (intent['run_id'] != event.run_id or intent['request_hash'] != request_hash
+                    or type(intent['version']) is not int or intent['version'] < expected_intent_version):
+                raise ValueError('original Skill start reconciliation intent differs')
+            authority = AipEvalAuthorityStore()
+            stored = authority._run_event_by_sequence(conn, scope, event.run_id, 2)
+            if stored is None:
+                return None
+            if stored != event:
+                raise ValueError('original Skill start event differs')
+            row = authority._run_row(conn, scope, event.run_id)
+            if (row is None or row['target_ref'].get('assetType') != 'skill_template'
+                    or row['version'] < 2 or row['status'] == 'queued'
+                    or row['started_at'] != event.created_at):
+                raise ValueError('original Skill start Run differs')
+            return authority._run_from_row(row)
 
     def claim_dispatch(self, scope, request):
         _request(request)

@@ -77,17 +77,27 @@ class ArtifactPublicationStore:
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
         self._connect_factory = connect_factory or db_connect
 
-    def publish(
-        self,
-        scope: TenantScope,
-        *,
-        expected_head_revision: int,
-        artifact: BusinessInvestigationArtifactRevision,
-        binding: BusinessInvestigationArtifactBinding,
-        receipt: ArtifactPublicationReceipt,
-    ) -> ArtifactPublicationWrite:
+    def publish(self, scope, *, expected_head_revision, artifact, binding, receipt):
+        return self._publish(scope, expected_head_revision=expected_head_revision,
+            artifact=artifact, binding=binding, receipt=receipt)
+
+    def publish_bound_stage(self, scope, *, expected_head_revision, artifact,
+                            binding, receipt, stage_attempt):
+        return self._publish(scope, expected_head_revision=expected_head_revision,
+            artifact=artifact, binding=binding, receipt=receipt, stage_attempt=stage_attempt)
+
+    def _publish(self, scope, *, expected_head_revision, artifact, binding, receipt,
+                 stage_attempt=None):
         try:
             with self._connect_factory(scope) as conn:
+                if stage_attempt is not None:
+                    linked = conn.execute(
+                        "SELECT public.ecommerce_investigation_stage_link_a0v_177(%s,%s,%s,%s,%s,%s) AS linked",
+                        (Jsonb(artifact.run_ref.model_dump(mode="json", by_alias=True)),
+                         stage_attempt.run_id, stage_attempt.step_run_id, stage_attempt.attempt,
+                         stage_attempt.input_hash, stage_attempt.step_key)).fetchone()
+                    if linked is None or linked["linked"] is not True:
+                        raise ArtifactPublicationBlocked("STAGE_ATTEMPT_RUN_DRIFTED")
                 row = conn.execute(
                     """SELECT receipt_data,replayed
                     FROM ecommerce_investigation_publish_artifact_biw6_002(%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb)""",
@@ -157,9 +167,12 @@ class BusinessInvestigationArtifactPublisher:
             or f"sha256:{subject.content_hash}" != artifact.content_hash
         ):
             raise ArtifactPublicationBlocked("EVAL_ARTIFACT_DRIFTED")
-        if stage_attempt.step_key != quality_gate.stage:
+        allowed_steps = ({"solution_design", "solution-design"}
+                         if quality_gate.stage == "solution_design" else {quality_gate.stage})
+        if stage_attempt.step_key not in allowed_steps:
             raise ArtifactPublicationBlocked("STAGE_ATTEMPT_KEY_DRIFTED")
-        if stage_attempt.run_id != artifact.run_ref.resource_id:
+        distinct_runtime = stage_attempt.run_id != artifact.run_ref.resource_id
+        if distinct_runtime and type(self._authority) is not ArtifactPublicationStore:
             raise ArtifactPublicationBlocked("STAGE_ATTEMPT_RUN_DRIFTED")
         if artifact.revision != expected_head_revision + 1:
             raise ArtifactPublicationBlocked("ARTIFACT_EXPECTED_VERSION_DRIFTED")
@@ -216,12 +229,15 @@ class BusinessInvestigationArtifactPublisher:
             published_by=actor,
             published_at=published_at,
         )
-        result = self._authority.publish(
+        publish = (self._authority.publish_bound_stage if distinct_runtime
+                   else self._authority.publish)
+        result = publish(
             scope,
             expected_head_revision=expected_head_revision,
             artifact=artifact,
             binding=binding,
             receipt=receipt,
+            **({"stage_attempt": stage_attempt} if distinct_runtime else {}),
         )
         if result.authority != receipt:
             raise ArtifactPublicationBlocked("PUBLICATION_RECEIPT_DRIFTED")

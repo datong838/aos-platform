@@ -295,7 +295,7 @@ def test_content_review_command_rejects_hash_source_and_decision_drift():
         _strict_content_review_command(boolean_alias)
 
 
-def test_accepted_stage_review_execution_stays_closed_before_database_effects(monkeypatch):
+def test_accepted_stage_review_requires_current_qualification_and_native_host(monkeypatch):
     item = command()
     item["sourceKind"] = "accepted-stage-v1"
     item["sourceArtifactRefs"] = [ref("Artifact", "original-stage-artifact")]
@@ -335,17 +335,15 @@ def test_accepted_stage_review_execution_stays_closed_before_database_effects(mo
         service.revalidate(transaction=NoDatabaseEffects(), scope=SCOPE,
                            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
                            command=item)
-    with pytest.raises(ValueError, match="Host is not wired"):
-        service.revalidate(transaction=ReadCurrentTimeOnly(), scope=SCOPE,
-                           dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_review"),
-                           command=item)
+    assert service.revalidate(transaction=ReadCurrentTimeOnly(), scope=SCOPE,
+                              dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_review"),
+                              command=item) is None
     assert observed == [NOW, "content-issue-eval-human-event", "independent-human-reviewer"]
-    with pytest.raises(ValueError, match="Host is not wired"):
+    with pytest.raises(TypeError, match="Host transaction"):
         service.execute(transaction=NoDatabaseEffects(), scope=SCOPE, dispatch_ref=None,
                         command=item, checked_at=NOW, occurred_at=NOW)
-    with pytest.raises(ValueError, match="Host is not wired"):
-        service.verify_receipt(transaction=NoDatabaseEffects(), scope=SCOPE,
-                               dispatch=None, command=item, receipt={})
+    assert service.verify_receipt(transaction=NoDatabaseEffects(), scope=SCOPE,
+                                  dispatch=None, command=item, receipt={}) == {}
 
 
 def test_accepted_stage_review_rejects_missing_content_issue_before_reviewer(monkeypatch):

@@ -12,6 +12,15 @@ from fastapi.security import HTTPBearer
 
 from aos_api.asset_registry.errors import AssetNotFoundError, AssetRegistryError
 from aos_api.auth import Principal, require_principal
+from aos_api.ecommerce_operations_object_reader import (
+    EcommerceOperationsObjectReader, OperationsObjectReadError, OperationsObjectSearchResponse, ObjectType,
+)
+
+
+@lru_cache(maxsize=1)
+def get_ecommerce_operations_object_reader() -> EcommerceOperationsObjectReader:
+    return EcommerceOperationsObjectReader()
+
 from aos_api.ecommerce_workshop_read_catalog import EcommerceWorkshopReadCatalog
 from aos_api.ecommerce_workshop_catalog import (
     EcommerceWorkshopCatalog,
@@ -240,6 +249,19 @@ from aos_api.ecommerce_workshop_price_disposition import (
     PriceDispositionRevision,
     RecordPriceDispositionObservationRequest,
 )
+from aos_api.ecommerce_price_case_workspace import (
+    PriceCaseWorkspaceService,SavePriceCaseRequest,PriceCaseSources,PriceCaseSaveState,
+)
+from aos_api.aip_production_contract_store import ProductionContractError
+from aos_api.ecommerce_price_adoption import (
+    PriceAdoptionService, PriceAdoptionQuestionRequest, PriceAdoptionDecisionRequest,
+    PriceAdoptionRecordRequest, PriceAdoptionContext, PriceAdoptionResult,
+)
+from aos_api.aip_action_models import ActionDraftBundle
+from aos_api.aip_action_store import AipActionStoreError
+from aos_api.ecommerce_price_advice_workflow import PriceAdviceWorkflow, PrepareInternalPriceAdviceRequest, PriceAdviceCommandState, PriceAdviceWorkspace, PendingPriceAdviceCommands, ResumePriceAdviceCommandRequest
+from aos_api.ecommerce_price_analysis import PriceAnalysisService, PriceAnalysisInputs, PriceComparisonPreview
+from aos_api.ecommerce_workshop_price_disposition import ComparePriceCaseRequest, AssessPriceCaseRequest, PriceCaseAssessment
 from aos_api.ecommerce_workshop_price_disposition_store import EcommerceWorkshopPriceDispositionStore
 from aos_api.ecommerce_workshop_customer import EcommerceWorkshopCustomer
 from aos_api.ecommerce_workshop_customer_source_reader import EcommerceWorkshopCustomerSourceReader
@@ -564,6 +586,35 @@ def get_price_disposition_readonly() -> EcommercePriceDispositionReadonlyReader:
 PriceDispositionReadonlyDependency = Annotated[
     EcommercePriceDispositionReadonlyReader, Depends(get_price_disposition_readonly)
 ]
+
+
+def get_price_advice_workflow() -> PriceAdviceWorkflow:
+    return PriceAdviceWorkflow()
+
+
+def get_price_adoption_service() -> PriceAdoptionService:
+    import os
+    return PriceAdoptionService(human_subject=os.environ.get("AOS_PRICE_ADVICE_HUMAN_SUBJECT") or None)
+
+
+def get_price_case_workspace() -> PriceCaseWorkspaceService:
+    return PriceCaseWorkspaceService()
+
+
+PriceCaseWorkspaceDependency = Annotated[PriceCaseWorkspaceService,Depends(get_price_case_workspace)]
+
+
+PriceAdoptionDependency = Annotated[PriceAdoptionService, Depends(get_price_adoption_service)]
+
+
+PriceAdviceWorkflowDependency = Annotated[PriceAdviceWorkflow, Depends(get_price_advice_workflow)]
+
+
+def get_price_analysis() -> PriceAnalysisService:
+    return PriceAnalysisService()
+
+
+PriceAnalysisDependency = Annotated[PriceAnalysisService, Depends(get_price_analysis)]
 
 
 def get_ecommerce_workshop_price_disposition() -> EcommerceWorkshopPriceDispositionService:
@@ -1381,7 +1432,7 @@ def get_ecommerce_workshop_module_readiness(
     request: Request,
     module_id: ModuleIdPath,
     principal: PrincipalDependency,
-    catalog: CatalogDependency,
+    catalog: ReadCatalogDependency,
 ) -> EcommerceWorkshopModuleReadinessResponse:
     _reject_query_parameters(request)
     return _invoke(
@@ -1736,6 +1787,41 @@ def restore_ecommerce_workshop_background_processing(
         factory=factory,
         idempotency_key=idempotency_key,
     )
+
+
+@router.get("/views/operations/objects", response_model=OperationsObjectSearchResponse,
+            operation_id="ecommerceWorkshopOperationsObjectsGet", responses=_ERRORS)
+def search_ecommerce_operations_objects(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: ReadCatalogDependency,
+    reader: Annotated[EcommerceOperationsObjectReader, Depends(get_ecommerce_operations_object_reader)],
+    object_type: Annotated[ObjectType, Query(alias="objectType")],
+    query: Annotated[str, Query(max_length=120)] = "",
+    offset: Annotated[int, Query(ge=0, le=100000)] = 0,
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+    cutoff: datetime | None = None,
+) -> OperationsObjectSearchResponse:
+    keys = [key for key, _ in request.query_params.multi_items()]
+    if (set(keys) - {"objectType", "query", "offset", "limit", "cutoff"}
+            or len(keys) != len(set(keys)) or "\x00" in query):
+        raise ApiError(code="INVALID_OPERATIONS_SEARCH", message="检索参数无效", status_code=422)
+    now = datetime.now(UTC)
+    cutoff = cutoff or now
+    if cutoff.utcoffset() is None or cutoff > now:
+        raise ApiError(code="INVALID_OPERATIONS_SEARCH", message="数据截止时间无效", status_code=422)
+    _require_operations_installation(principal=principal, catalog=catalog)
+    query = query.strip()
+    try:
+        page = reader.read_page(org_id=principal.org_id, project_id=principal.project_id,
+            object_type=object_type, cutoff=cutoff, query=query, offset=offset, limit=limit)
+    except OperationsObjectReadError as exc:
+        raise ApiError(code="OPERATIONS_SEARCH_UNAVAILABLE", message="业务对象暂时读取失败，请重新查询", status_code=503) from exc
+    following = offset + limit
+    return OperationsObjectSearchResponse(tenant={"orgId": principal.org_id, "projectId": principal.project_id},
+        object_type=object_type, query=query, data_cutoff=cutoff, offset=offset, limit=limit,
+        total_count=page.total_count, items=page.items,
+        next_offset=following if following < page.total_count and following <= 100000 else None)
 
 
 @router.get(
@@ -2575,6 +2661,237 @@ def get_price_research_contribution_view(
             raise ApiError(code=exc.code, message="当前价格贡献暂不可读，请核对保存记录或读取范围。",
                            status_code=503) from exc
     return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+
+
+def _price_adoption_call(operation):
+    try:
+        return operation()
+    except PriceDispositionBlocked as exc:
+        raise _map_price_disposition_error(exc) from exc
+    except PriceDispositionReadonlyError as exc:
+        raise ApiError(code=exc.code, message="采纳历史暂不可读。", status_code=503) from exc
+    except AipActionStoreError as exc:
+        # Preserve the original AIP control's HTTP classifications.
+        from aos_api.routers.aip_actions import _map_error
+        raise _map_error(exc) from exc
+
+
+@router.get("/views/price-governance/internal-advice/adoption-context", response_model=PriceAdoptionContext,
+    operation_id="ecommerceWorkshopPriceAdoptionContext", responses=_ERRORS)
+def get_price_adoption_context(request: Request, principal: PrincipalDependency,
+    catalog: ReadCatalogDependency, service: PriceAdoptionDependency) -> PriceAdoptionContext:
+    from pydantic import ValidationError
+    if (set(request.query_params) != {'ref'} or len(request.query_params.getlist('ref')) != 1
+            or len(request.query_params['ref']) > 2000):
+        raise ApiError(code="PRICE_ADOPTION_QUERY_INVALID", message="建议版本查询参数无效。", status_code=400)
+    try:
+        body = PriceAdoptionQuestionRequest.model_validate_json(request.query_params['ref'])
+    except (ValueError, ValidationError) as exc:
+        raise ApiError(code="PRICE_ADOPTION_QUERY_INVALID", message="建议版本查询参数无效。", status_code=422) from exc
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    return _price_adoption_call(lambda: service.context(principal, body.disposition_ref))
+
+
+@router.post("/price-governance/internal-advice/adoption-question", response_model=ActionDraftBundle,
+    operation_id="ecommerceWorkshopPriceAdoptionQuestion", responses=_ERRORS)
+def propose_price_adoption(body: PriceAdoptionQuestionRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")], principal: PrincipalDependency,
+    catalog: CatalogDependency, service: PriceAdoptionDependency) -> ActionDraftBundle:
+    key = _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    return _price_adoption_call(lambda: service.propose(principal, key, body))
+
+
+@router.post("/price-governance/internal-advice/adoption-decision", response_model=PriceAdoptionResult,
+    operation_id="ecommerceWorkshopPriceAdoptionDecision", responses=_ERRORS)
+def decide_price_adoption(body: PriceAdoptionDecisionRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")], principal: PrincipalDependency,
+    catalog: CatalogDependency, service: PriceAdoptionDependency) -> PriceAdoptionResult:
+    key = _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    return _price_adoption_call(lambda: service.decide(principal, key, body))
+
+
+@router.post("/price-governance/internal-advice/adoption-record", response_model=PriceAdoptionResult,
+    operation_id="ecommerceWorkshopPriceAdoptionRecord", responses=_ERRORS)
+def record_price_adoption(body: PriceAdoptionRecordRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")], principal: PrincipalDependency,
+    catalog: CatalogDependency, service: PriceAdoptionDependency) -> PriceAdoptionResult:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    return _price_adoption_call(lambda: service.record(principal, body))
+
+
+@router.get("/views/price-governance/internal-advice/pending",response_model=PendingPriceAdviceCommands,
+    operation_id="ecommerceWorkshopPriceAdvicePendingCommands",responses=_ERRORS)
+def get_pending_price_advice(request: Request,principal: PrincipalDependency,catalog: ReadCatalogDependency,
+    service: PriceAdviceWorkflowDependency) -> PendingPriceAdviceCommands:
+    _reject_query_parameters(request)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    try:return service.pending(TenantScope(principal.org_id,principal.project_id),principal.subject)
+    except PriceDispositionBlocked as exc:raise _map_price_disposition_error(exc) from exc
+
+
+@router.get("/views/price-governance/internal-advice/commands/{command_id}",response_model=PriceAdviceCommandState,
+    operation_id="ecommerceWorkshopPriceAdviceStateById",responses=_ERRORS)
+def get_price_advice_state_by_id(command_id: Annotated[str,Path(pattern=r"^price-advice-command-[0-9a-f]{40}$")],
+    request: Request,principal: PrincipalDependency,catalog: ReadCatalogDependency,
+    service: PriceAdviceWorkflowDependency) -> PriceAdviceCommandState:
+    _reject_query_parameters(request)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    try:return service.command_state(TenantScope(principal.org_id,principal.project_id),command_id,principal.subject)
+    except PriceDispositionBlocked as exc:raise _map_price_disposition_error(exc) from exc
+
+
+@router.post("/price-governance/internal-advice/{command_id}/resume",response_model=PriceDispositionRevision,
+    operation_id="ecommerceWorkshopPriceAdviceResume",responses=_ERRORS)
+def resume_price_advice(command_id: Annotated[str,Path(pattern=r"^price-advice-command-[0-9a-f]{40}$")],
+    body: ResumePriceAdviceCommandRequest,idempotency_key: Annotated[str,Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,catalog: CatalogDependency,service: PriceAdviceWorkflowDependency) -> PriceDispositionRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    try:return service.resume(TenantScope(principal.org_id,principal.project_id),command_id,principal.subject)
+    except PriceDispositionBlocked as exc:raise _map_price_disposition_error(exc) from exc
+
+
+@router.get("/views/price-governance/internal-advice",response_model=PriceAdviceWorkspace,
+    operation_id="ecommerceWorkshopPriceAdviceWorkspace",responses=_ERRORS)
+def get_price_advice_workspace(request: Request,principal: PrincipalDependency,catalog: ReadCatalogDependency,
+    service: PriceAdviceWorkflowDependency) -> PriceAdviceWorkspace:
+    _reject_query_parameters(request)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    try:return service.workspace(TenantScope(principal.org_id,principal.project_id))
+    except PriceDispositionReadonlyError as exc:
+        raise ApiError(code=exc.code,message="价格事项与建议暂不可读。",status_code=503) from exc
+    except PriceDispositionBlocked as exc:raise _map_price_disposition_error(exc) from exc
+
+
+@router.get("/views/price-governance/internal-advice/command",response_model=PriceAdviceCommandState,
+    operation_id="ecommerceWorkshopPriceAdviceCommandState",responses=_ERRORS)
+def get_price_advice_command_state(request: Request,principal: PrincipalDependency,catalog: ReadCatalogDependency,
+    service: PriceAdviceWorkflowDependency) -> PriceAdviceCommandState:
+    if set(request.query_params)!={'key'} or len(request.query_params.getlist('key'))!=1:
+        raise ApiError(code="PRICE_ADVICE_COMMAND_QUERY_INVALID",message="保存查询参数无效。",status_code=400)
+    key=_prepare_idempotency(request.query_params['key'])
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    try:return service.state(TenantScope(principal.org_id,principal.project_id),key,principal.subject)
+    except PriceDispositionBlocked as exc:raise _map_price_disposition_error(exc) from exc
+
+
+@router.post("/price-governance/internal-advice",response_model=PriceDispositionRevision,
+    operation_id="ecommerceWorkshopPriceAdvicePrepare",status_code=201,responses=_ERRORS)
+def prepare_internal_price_advice(body: PrepareInternalPriceAdviceRequest,
+    idempotency_key: Annotated[str,Header(alias="Idempotency-Key")],principal: PrincipalDependency,
+    catalog: CatalogDependency,service: PriceAdviceWorkflowDependency) -> PriceDispositionRevision:
+    key=_prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    try:return service.prepare(TenantScope(principal.org_id,principal.project_id),key,body,principal.subject)
+    except PriceDispositionBlocked as exc:raise _map_price_disposition_error(exc) from exc
+
+
+@router.post("/price-governance/internal-advice/{command_id}/freeze",response_model=PriceDispositionRevision,
+    operation_id="ecommerceWorkshopPriceAdviceFreeze",responses=_ERRORS)
+def freeze_internal_price_advice(command_id: Annotated[str,Path(pattern=r"^price-advice-command-[0-9a-f]{40}$")],
+    body: FreezePriceDispositionRequest,idempotency_key: Annotated[str,Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,catalog: CatalogDependency,service: PriceAdviceWorkflowDependency) -> PriceDispositionRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    try:return service.freeze(TenantScope(principal.org_id,principal.project_id),command_id,body,principal.subject)
+    except PriceDispositionBlocked as exc:raise _map_price_disposition_error(exc) from exc
+
+
+@router.get("/views/price-governance/analysis", response_model=PriceAnalysisInputs,
+    operation_id="ecommerceWorkshopPriceAnalysisInputs", responses=_ERRORS)
+def get_price_analysis_inputs(request: Request, principal: PrincipalDependency,
+    catalog: ReadCatalogDependency, service: PriceAnalysisDependency) -> PriceAnalysisInputs:
+    _reject_query_parameters(request)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    try:
+        return service.inputs(TenantScope(principal.org_id,principal.project_id))
+    except PriceDispositionBlocked as exc:
+        raise _map_price_disposition_error(exc) from exc
+
+
+@router.get("/views/price-governance/analysis/comparison", response_model=PriceComparisonPreview,
+    operation_id="ecommerceWorkshopPriceComparisonPreview", responses=_ERRORS)
+def get_price_comparison_preview(request: Request, principal: PrincipalDependency,
+    catalog: ReadCatalogDependency, service: PriceAnalysisDependency) -> PriceComparisonPreview:
+    if set(request.query_params) != {"inputs"} or len(request.query_params.getlist("inputs")) != 1:
+        raise ApiError(code="PRICE_COMPARISON_QUERY_INVALID",message="比较参数缺失或重复。",status_code=400)
+    raw=request.query_params["inputs"]
+    if len(raw)>20000:
+        raise ApiError(code="PRICE_COMPARISON_QUERY_INVALID",message="比较参数过长。",status_code=422)
+    try:
+        body=ComparePriceCaseRequest.model_validate_json(raw)
+    except ValueError as exc:
+        raise ApiError(code="PRICE_COMPARISON_QUERY_INVALID",message="比较参数无效。",status_code=422) from exc
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    try:
+        return service.compare(TenantScope(principal.org_id,principal.project_id),body)
+    except PriceDispositionBlocked as exc:
+        raise _map_price_disposition_error(exc) from exc
+    except PriceResearchBlocked as exc:
+        raise _map_price_research_error(exc) from exc
+
+
+def _price_case_workspace_query(request,model):
+    if set(request.query_params)!={'inputs'} or len(request.query_params.getlist('inputs'))!=1 or len(request.query_params['inputs'])>20000:
+        raise ApiError(code="PRICE_CASE_WORKSPACE_QUERY_INVALID",message="价格事项查询参数无效。",status_code=400)
+    try:return model.model_validate_json(request.query_params['inputs'])
+    except ValueError as exc:
+        raise ApiError(code="PRICE_CASE_WORKSPACE_QUERY_INVALID",message="价格事项查询参数无效。",status_code=422) from exc
+
+
+def _price_case_workspace_call(operation):
+    try:return operation()
+    except PriceDispositionBlocked as exc:raise _map_price_disposition_error(exc) from exc
+    except PriceResearchBlocked as exc:raise _map_price_research_error(exc) from exc
+    except ProductionContractError as exc:
+        from aos_api.routers.aip_production_contracts import _map
+        raise _map(exc) from exc
+
+
+@router.get("/views/price-governance/analysis/case-sources",response_model=PriceCaseSources,
+    operation_id="ecommerceWorkshopPriceCaseSources",responses=_ERRORS)
+def get_price_case_sources(request: Request,principal: PrincipalDependency,catalog: ReadCatalogDependency,
+    service: PriceCaseWorkspaceDependency) -> PriceCaseSources:
+    body=_price_case_workspace_query(request,ComparePriceCaseRequest)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    return _price_case_workspace_call(lambda:service.sources(principal,body))
+
+
+@router.get("/views/price-governance/analysis/case-save-state",response_model=PriceCaseSaveState,
+    operation_id="ecommerceWorkshopPriceCaseSaveState",responses=_ERRORS)
+def get_price_case_save_state(request: Request,principal: PrincipalDependency,catalog: ReadCatalogDependency,
+    service: PriceCaseWorkspaceDependency) -> PriceCaseSaveState:
+    body=_price_case_workspace_query(request,SavePriceCaseRequest)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    return _price_case_workspace_call(lambda:service.state(principal,body))
+
+
+@router.post("/price-governance/cases/save-analysis",response_model=PriceCaseSaveState,
+    operation_id="ecommerceWorkshopPriceCaseSaveAnalysis",responses=_ERRORS)
+def save_price_case_analysis(body: SavePriceCaseRequest,
+    idempotency_key: Annotated[str,Header(alias="Idempotency-Key")],principal: PrincipalDependency,
+    catalog: CatalogDependency,service: PriceCaseWorkspaceDependency) -> PriceCaseSaveState:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    return _price_case_workspace_call(lambda:service.save(principal,body))
+
+
+@router.post("/price-governance/cases/assess",response_model=PriceCaseAssessment,
+    operation_id="ecommerceWorkshopPriceCaseAssess",status_code=201,responses=_ERRORS)
+def assess_price_case(body: AssessPriceCaseRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,catalog: CatalogDependency,service: PriceDispositionDependency) -> PriceCaseAssessment:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal,catalog=catalog)
+    try:
+        return service.assess_case(TenantScope(principal.org_id,principal.project_id),body,principal.subject)
+    except PriceDispositionBlocked as exc:
+        raise _map_price_disposition_error(exc) from exc
+    except PriceResearchBlocked as exc:
+        raise _map_price_research_error(exc) from exc
 
 
 @router.post(

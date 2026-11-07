@@ -508,8 +508,9 @@ class AipActionStore:
                     actor_id,
                 ),
             )
+            result = self._action_draft_revision(conn, scope, draft_id)
             conn.commit()
-            return self._action_draft_revision(conn, scope, draft_id)
+            return result
 
     def revise_action_draft(
         self,
@@ -753,8 +754,9 @@ class AipActionStore:
                     actor_id,
                 ),
             )
+            result = self._bundle(conn, scope, proposal_id)
             conn.commit()
-            return self._bundle(conn, scope, proposal_id)
+            return result
 
     def create_proposal(
         self,
@@ -1357,8 +1359,9 @@ class AipActionStore:
                  body.decision.value, actor_id, int(row["version"]) + 1, row["proposal_hash"],
                  self._json({"reason": body.reason, "status": next_status})),
             )
+            bundle = self._bundle(conn, scope, proposal_id)
             conn.commit()
-            return self._bundle(conn, scope, proposal_id)
+            return bundle
 
     def withdraw(
         self,
@@ -1425,8 +1428,9 @@ class AipActionStore:
                 (*scope.key, f"action-event-{uuid.uuid4().hex[:20]}", proposal_id,
                  actor_id, next_version, row["proposal_hash"], self._json({"reason": body.reason})),
             )
+            result = self._bundle(conn, scope, proposal_id)
             conn.commit()
-            return self._bundle(conn, scope, proposal_id)
+            return result
 
     def timeline(self, scope: TenantScope, proposal_id: str) -> ActionProposalTimeline:
         with self._connect(scope) as conn:

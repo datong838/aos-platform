@@ -11,6 +11,8 @@ from .live_installation_owner import LiveInstallationLifecycleOwner
 from .live_job_directory import LivePreparedJobDirectory
 from .preparation_consumer import PreparationConsumer
 from .preparation_worker import PreparationWorker
+from .released_recovery_worker import ReleasedPreparationRecoveryWorker
+from .released_recovery_consumer import ReleasedPreparationRecoveryConsumer
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,7 +23,7 @@ class PendingPreparationDescriptor:
 
     def __post_init__(self) -> None:
         if (type(self.scope) is not TenantScope or type(self.installation_id) is not UUID
-                or self.mode not in {"pending", "rehydrate"}):
+                or self.mode not in {"pending", "rehydrate", "recover"}):
             raise TypeError("exact pending preparation descriptor required")
 
 
@@ -30,19 +32,23 @@ class PostgresPendingPreparationDirectory:
 
     LIMIT = 100
 
-    def __init__(self, *, connect, scope: TenantScope, include_rehydrate: bool = True) -> None:
-        if not callable(connect) or type(scope) is not TenantScope or type(include_rehydrate) is not bool:
+    def __init__(self, *, connect, scope: TenantScope, include_rehydrate: bool = True,
+                 include_recovery: bool = False) -> None:
+        if (not callable(connect) or type(scope) is not TenantScope
+                or type(include_rehydrate) is not bool or type(include_recovery) is not bool):
             raise ValueError("trusted pending preparation directory inputs required")
         self.connect = connect
         self.scope = scope
         self.include_rehydrate = include_rehydrate
+        self.include_recovery = include_recovery
 
     def _read_installations(self) -> tuple[object, ...]:
         tenant = {"org_id": self.scope.org_id, "project_id": self.scope.project_id}
         with consumer_connection(self.connect, tenant) as conn:
             rows = conn.execute(
                 """SELECT DISTINCT ON (installation_id) installation_id,mode FROM (
-                   SELECT DISTINCT o.installation_id,'pending'::text AS mode
+                   SELECT DISTINCT o.installation_id,
+                     CASE WHEN o.kind='runtime-recover' THEN 'recover' ELSE 'pending' END AS mode
                      FROM extension_runtime_outbox b
                      JOIN extension_runtime_event e
                        ON (e.org_id,e.project_id,e.event_id)=
@@ -53,7 +59,9 @@ class PostgresPendingPreparationDirectory:
                     WHERE b.org_id=%s AND b.project_id=%s
                       AND b.consumer_id='runtime-reconciler'
                       AND b.delivered_at IS NULL
-                      AND o.kind='runtime-apply'
+                      AND ((o.kind='runtime-apply' AND
+                            (NOT %s OR (o.status='accepted' AND o.phase='accepted')))
+                           OR (%s AND o.kind='runtime-recover'))
                     UNION ALL
                    SELECT b.installation_id,'rehydrate'::text AS mode
                      FROM extension_runtime_binding b
@@ -82,9 +90,9 @@ class PostgresPendingPreparationDirectory:
                              AND (r.observed_release OR r.cleanup_state<>'pending'
                                   OR r.expires_at<=clock_timestamp()))
                     ) candidates
-                    ORDER BY installation_id,CASE mode WHEN 'pending' THEN 0 ELSE 1 END
+                    ORDER BY installation_id,CASE mode WHEN 'recover' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END
                     LIMIT 101""",
-                (*self.scope.key, *self.scope.key),
+                (*self.scope.key, self.include_recovery, self.include_recovery, *self.scope.key),
             ).fetchall()
         return tuple(rows)
 
@@ -102,7 +110,7 @@ class PostgresPendingPreparationDirectory:
             if installation in installations:
                 raise ValueError("duplicate pending preparation installation")
             installations.append(installation)
-            if mode not in {"pending", "rehydrate"}:
+            if mode not in {"pending", "rehydrate", "recover"}:
                 raise ValueError("pending preparation mode differs")
             modes.append(mode)
         if installations != sorted(installations):
@@ -111,6 +119,7 @@ class PostgresPendingPreparationDirectory:
             PendingPreparationDescriptor(self.scope, installation, mode)
             for installation, mode in zip(installations, modes)
             if mode != "rehydrate" or getattr(self, "include_rehydrate", True)
+            if mode != "recover" or getattr(self, "include_recovery", False)
         )
 
 
@@ -125,6 +134,7 @@ class LiveInstallationOwnerFactory:
         worker: PreparationWorker,
         live_directory: LivePreparedJobDirectory,
         enable_allowed: bool = True,
+        recovery_worker: ReleasedPreparationRecoveryWorker | None = None,
     ) -> None:
         if (
             not callable(connect)
@@ -134,11 +144,14 @@ class LiveInstallationOwnerFactory:
             or type(enable_allowed) is not bool
         ):
             raise TypeError("exact live installation owner dependencies required")
+        if recovery_worker is not None and type(recovery_worker) is not ReleasedPreparationRecoveryWorker:
+            raise TypeError('exact recovery worker required')
         self.connect = connect
         self.scope = scope
         self.worker = worker
         self.live_directory = live_directory
         self.enable_allowed = enable_allowed
+        self.recovery_worker = recovery_worker
 
     def __call__(
         self, descriptor: PendingPreparationDescriptor
@@ -150,6 +163,13 @@ class LiveInstallationOwnerFactory:
             raise ValueError("pending preparation descriptor scope mismatch")
         if descriptor.mode == "rehydrate" and not self.enable_allowed:
             raise ValueError("rehydrate forbidden in preparation-only mode")
+        if descriptor.mode == 'recover':
+            if self.recovery_worker is None:
+                raise ValueError('recovery worker is not enabled')
+            consumer=ReleasedPreparationRecoveryConsumer(connect=self.connect,worker=self.recovery_worker,
+                installation_id=descriptor.installation_id,org_id=self.scope.org_id,
+                project_id=self.scope.project_id,live_directory=self.live_directory)
+            return LiveInstallationLifecycleOwner(preparation=consumer,enable_allowed=False)
         consumer = PreparationConsumer(
             connect=self.connect,
             worker=self.worker,

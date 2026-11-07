@@ -1,6 +1,7 @@
 """A settled Provider result may complete one AIP step, never call Provider again."""
 
 from contextlib import contextmanager
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -68,6 +69,67 @@ def test_generation_owner_never_claims_existing_unknown_step():
         owner._complete_transaction(Conn(), SCOPE, PROOF)
 
 
+@pytest.mark.parametrize('status,attempt,lease', [
+    ('queued', 1, None), ('queued', 2, 'other-worker'),
+    ('running', 2, None), ('failed', 2, None), ('unknown', 2, None),
+])
+def test_generation_owner_only_admits_unclaimed_return_queue(status, attempt, lease):
+    class Conn:
+        def execute(self, *_):
+            return SimpleNamespace(fetchone=lambda: dict(step_run_id='repair-step', status=status, attempt=attempt, lease_owner=lease))
+    owner = ContentGenerationStepOwner(store_factory=lambda *_: pytest.fail('unqualified queue must not claim'))
+    with pytest.raises(ContentStepConflict, match='existing'):
+        owner._complete_transaction(Conn(), SCOPE, PROOF)
+
+
+@pytest.mark.parametrize('field,value', [('run_id', 'other-run'), ('step_run_id', 'other-step'), ('attempt', 3)])
+def test_repair_owner_rejects_other_run_step_or_attempt_before_claim(monkeypatch, field, value):
+    from test_ecommerce_content_generate_handoff_lineage import return_command
+    command, _ = return_command()
+    proof = replace(PROOF, task_id=command['authorityRefs']['task']['resourceId'])
+    monkeypatch.setattr(ContentExecutionJournal, 'read', lambda *_: {'command': command})
+    row = dict(run_id=proof.run_id, step_run_id='repair-step', attempt=2)
+    row[field] = value
+    class Conn:
+        def execute(self, query, params):
+            assert params == (*SCOPE.key, command['returnDecisionRef']['resourceId'])
+            return SimpleNamespace(fetchone=lambda: row)
+    owner = ContentGenerationStepOwner()
+    monkeypatch.setattr(owner, '_current_dispatch', lambda *_: pytest.fail('drifted attempt cannot reach dispatch'))
+    with pytest.raises(ContentStepConflict, match='queued attempt drifted'):
+        owner._repair_attempt(Conn(), SCOPE, proof, dict(step_run_id='repair-step', attempt=2))
+
+
+def test_repair_owner_requires_original_host_current_authority(monkeypatch):
+    from test_ecommerce_content_generate_handoff_lineage import return_command
+    from aos_api.ecommerce_growth_runtime_adapters import ContentGenerateHostService
+    command, _ = return_command()
+    proof = replace(PROOF, task_id=command['authorityRefs']['task']['resourceId'])
+    monkeypatch.setattr(ContentExecutionJournal, 'read', lambda *_: {'command': command})
+    class Conn:
+        def execute(self, *_):
+            return SimpleNamespace(fetchone=lambda: dict(run_id=proof.run_id, step_run_id='repair-step', attempt=2))
+    owner = ContentGenerationStepOwner()
+    dispatch = object()
+    monkeypatch.setattr(owner, '_current_dispatch', lambda *_: dispatch)
+    checked = []
+    monkeypatch.setattr(ContentGenerateHostService, '_return_authority', staticmethod(lambda *a, **kw: checked.append((a, kw))))
+    owner._repair_attempt(Conn(), SCOPE, proof, dict(step_run_id='repair-step', attempt=2))
+    assert len(checked) == 1 and checked[0][0][2] == command
+    assert checked[0][1]['dispatch'] is dispatch
+
+
+@pytest.mark.parametrize('error', [ValueError('expired approval'), ContentStepConflict('current input drifted')])
+def test_repair_owner_blocks_current_authority_failure_without_claim(monkeypatch, error):
+    class Conn:
+        def execute(self, *_):
+            return SimpleNamespace(fetchone=lambda: dict(step_run_id='repair-step', status='queued', attempt=2, lease_owner=None))
+    owner = ContentGenerationStepOwner(store_factory=lambda *_: pytest.fail('authority rejected; must not claim'))
+    monkeypatch.setattr(owner, '_repair_attempt', lambda *_: (_ for _ in ()).throw(error))
+    with pytest.raises(ContentStepConflict):
+        owner._complete_transaction(Conn(), SCOPE, PROOF)
+
+
 def test_generation_owner_requires_current_original_installation(monkeypatch):
     command = {"idempotencyKey": "content-1", "requestHash": "sha256:" + "a" * 64}
     monkeypatch.setattr(ContentExecutionJournal, "read", lambda *_: {
@@ -112,6 +174,9 @@ def test_generation_selector_is_bounded_and_only_picks_unmaterialized_settled_re
     assert "ecommerce_content_execution_result" in query
     assert "aip_step_run" in query
     assert "NOT EXISTS" in query
+    assert "decision.decision_id=command.command_payload->'returnDecisionRef'->>'resourceId'" in query
+    assert "decision.attempt_idempotency_key=command.command_payload->>'idempotencyKey'" in query
+    assert "step.status='queued' AND step.attempt>=2" in query
     with pytest.raises(ValueError):
         owner.list_pending(SCOPE, limit=0)
 

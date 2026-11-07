@@ -95,7 +95,8 @@ def test_pending_selector_is_bounded_scoped_and_current_only():
 
     class Conn:
         def execute(self, query, params):
-            assert "ecommerce_growth_content_budget_command_current_a0v_104" in query
+            assert "ecommerce_growth_content_preparation_current_a0v_174" in query
+            assert "review_key,'budget_command'" in query
             assert "state='pending'" in query and "attempt=0" in query
             assert params == (*SCOPE.key, 2)
             return _Cursor([{"review_key": "review-1"}])
@@ -215,7 +216,7 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
             self.calls.append(query)
             if "FROM public.ecommerce_growth_content_budget_command_intent" in query or "FROM public.ecommerce_growth_content_capacity_intent" in query:
                 return _Cursor([intent])
-            if "content_budget_command_current_a0v_104" in query or "content_capacity_current_a0v_103" in query:
+            if "content_preparation_current_a0v_174" in query:
                 return _Cursor([{"current": True}])
             if "FROM public.extension_operation_dispatch_binding" in query:
                 return _Cursor([dispatch_row])
@@ -252,8 +253,13 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
                             capabilities=[SimpleNamespace(resource_id="copy.generate", revision=1,
                                                            content_hash="5" * 64)],
                         )))
+    locked_dispatches = []
+    def lock_current(transaction, scope, dispatch):
+        assert scope == SCOPE
+        locked_dispatches.append(dispatch)
+        return SimpleNamespace(checked_at=NOW)
     monkeypatch.setattr("aos_api.ecommerce_growth_host_ports.LockedEcommerceGrowthHostPort._lock_and_revalidate",
-                        staticmethod(lambda *_: SimpleNamespace(checked_at=NOW)))
+                        staticmethod(lock_current))
     monkeypatch.setattr("aos_api.aip_agent_run_service.AipAgentRunService.get",
                         lambda *_, **__: SimpleNamespace(
                             status=AgentRunStatus.QUEUED if before_capacity else AgentRunStatus.RUNNING,
@@ -328,6 +334,10 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
         monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_bound", classmethod(approve_bound))
     sources = ContentBudgetCommandOwner._prepare_sources(HostTransaction(conn), SCOPE, "review-1",
                                                          before_capacity=before_capacity)
+    assert len(locked_dispatches) == 1
+    assert locked_dispatches[0].operation_id == 'ecommerce_growth_content_generate'
+    assert (locked_dispatches[0].installation_id, locked_dispatches[0].generation,
+            locked_dispatches[0].execution_epoch) == (install, generation, 3)
     if before_capacity:
         assert sources.action_context.capacity is None
         assert "capacity_reservation" not in sources.authorities

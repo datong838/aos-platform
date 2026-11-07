@@ -153,7 +153,7 @@ def test_accepted_stage_envelope_rejects_cross_source_drift(mutation):
         _strict_review_accept_command(value)
 
 
-def test_accepted_stage_envelope_cannot_execute_before_owner_wiring():
+def test_accepted_stage_envelope_cannot_execute_without_current_authority(monkeypatch):
     command = accepted_stage_command()
     host = ReviewAdvanceHostService()
     transaction = HostTransaction(SimpleNamespace())
@@ -161,9 +161,12 @@ def test_accepted_stage_envelope_cannot_execute_before_owner_wiring():
         host.revalidate(transaction=transaction, scope=SCOPE,
                         dispatch=SimpleNamespace(operation_id="other-operation"),
                         command=command)
-    with pytest.raises(ValueError, match="Owner is not wired"):
+    def denied(**kw):
+        raise ValueError("current occurrence authority unavailable")
+    monkeypatch.setattr(host, "_revalidate_current_occurrence_case", denied)
+    with pytest.raises(ValueError, match="current occurrence authority unavailable"):
         host.execute(transaction=transaction, scope=SCOPE, dispatch_ref=None,
-                     command=command, checked_at=NOW, occurred_at=NOW)
+                     command=command, checked_at=CUTOFF + timedelta(hours=1), occurred_at=NOW)
     assert host.verify_receipt(transaction=transaction, scope=SCOPE, dispatch=None,
                                command=command, receipt={}) == {}
 
@@ -219,7 +222,8 @@ def test_accepted_stage_checks_current_occurrence_and_case_before_stage_source(m
     ))
     with pytest.raises(ValueError, match=f"{drift} lineage drifted"):
         host.revalidate(transaction=HostTransaction(SimpleNamespace()), scope=SCOPE,
-                        dispatch=SimpleNamespace(operation_id="ecommerce_growth_review_advance"),
+                        dispatch=SimpleNamespace(operation_id="ecommerce_growth_review_advance",
+                                                 checked_at=CUTOFF + timedelta(hours=1)),
                         command=command)
 
 

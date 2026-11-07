@@ -52,7 +52,6 @@ def test_root_get_uses_scoped_read_admission_before_business_reader(module):
 
 @pytest.mark.parametrize('path', [
     '/views/creator-growth/workflow/drafts/fixture/history',
-    '/modules/ecommerce.operations/readiness',
 ])
 def test_unreviewed_get_still_uses_legacy_admission(path):
     client, legacy, reader = client_with_catalogs()
@@ -60,6 +59,29 @@ def test_unreviewed_get_still_uses_legacy_admission(path):
     assert response.status_code == 404
     assert legacy.calls
     assert not reader.calls
+
+
+def test_module_readiness_get_uses_scoped_read_admission():
+    client,legacy,reader=client_with_catalogs()
+    response=client.get('/v1/ecommerce-workshop/modules/ecommerce.operations/readiness')
+    assert response.status_code==404
+    assert not legacy.calls
+    assert reader.calls==[dict(module_id='ecommerce.operations',org_id='org-org',
+        project_id='dev-project',roles=['admin'],markings=[])]
+
+
+def test_installed_module_readiness_get_returns_original_disabled_state():
+    from test_ecommerce_workshop_read_catalog import make,ARGS
+    catalog,_=make()
+    client,_,_=client_with_catalogs()
+    client.app.dependency_overrides[routes.get_ecommerce_workshop_read_catalog]=lambda:catalog
+    client.app.dependency_overrides[require_principal]=lambda:Principal(subject='scope-test',
+        org_id=ARGS['org_id'],project_id=ARGS['project_id'],roles=ARGS['roles'],markings=ARGS['markings'])
+    response=client.get('/v1/ecommerce-workshop/modules/'+ARGS['module_id']+'/readiness')
+    assert response.status_code==200
+    item=response.json()['item']
+    assert item['moduleId']==ARGS['module_id'] and item['readiness']=='disabled'
+    assert any(b['reasonCode']=='INSTALLED_ASSET_READONLY' for b in item['blockers'])
 
 
 def test_read_dependency_only_reaches_explicit_audited_routes():
@@ -70,6 +92,7 @@ def test_read_dependency_only_reaches_explicit_audited_routes():
         if uses_read:
             actual.add((route.path, frozenset(route.methods)))
     get_paths = {f'/v1/ecommerce-workshop/views/{m}' for m in ROOTS} | {
+        '/v1/ecommerce-workshop/modules/{module_id}/readiness',
         '/v1/ecommerce-workshop/source-readiness',
         '/v1/ecommerce-workshop/background-processing',
         '/v1/ecommerce-workshop/background-processing/configuration-preview',

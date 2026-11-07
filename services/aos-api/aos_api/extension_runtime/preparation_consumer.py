@@ -20,6 +20,8 @@ class PreparationDeliveryResult:
 
 
 class PreparationConsumer:
+    _operation_kind='runtime-apply'
+
     def __init__(self,*,connect,worker,installation_id,org_id,project_id,live_directory=None,
                  rehydrate=False,host_lease=None):
         self.tenant_scope=TenantScope(org_id,project_id)
@@ -53,14 +55,14 @@ class PreparationConsumer:
             (self.scope['org_id'],self.scope['project_id'],operation)).fetchone()
         if row is None:raise LookupError('preparation operation missing')
         installation,kind,status,phase,revision=_values(row,('installation_id','kind','status','phase','revision'))
-        if installation!=self.installation or kind!='runtime-apply':
+        if installation!=self.installation or kind!=self._operation_kind:
             raise RuntimeConflict('preparation delivery routing changed')
         return status,phase,revision
 
     def _claim(self):
         fence=self.host_lease.fence_in_transaction if self.host_lease is not None else None
         with consumer_connection(self.connect,self.scope,fence=fence) as conn:
-            return self.outbox.claim(conn,**self.scope,operation_kind='runtime-apply',installation_id=self.installation)
+            return self.outbox.claim(conn,**self.scope,operation_kind=self._operation_kind,installation_id=self.installation)
 
     def _read(self,lease):
         with consumer_connection(self.connect,self.scope) as conn:
@@ -92,6 +94,9 @@ class PreparationConsumer:
                 raise
         return job
 
+    async def _complete_preparation(self,job):
+        await _settled(job.prepared())
+
     async def _run(self):
         if self.rehydrate:
             if self._job is None:
@@ -116,7 +121,7 @@ class PreparationConsumer:
         status,phase,revision=await _settled(asyncio.to_thread(self._read,lease))
         if status=='accepted' and phase=='accepted' and self._job is None:
             job=await _settled(self._start_owned(lease.operation_id,revision))
-            await _settled(job.prepared())
+            await self._complete_preparation(job)
         return await _settled(asyncio.to_thread(self._finish,lease))
 
     async def run_once(self):

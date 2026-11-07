@@ -165,9 +165,18 @@ class AipAgentRunService(AipAgentRegistryStore):
         if to_status not in allowed.get(from_status, set()):
             raise AipAgentRegistryTransitionBlocked("agent run transition is not allowed")
         with self._connect_factory(scope) as conn:
-            current = self._row(conn, scope, agent_run_id)
+            # Serialize state transitions before touching capacity. A stale
+            # queued retry must not reserve/release a running run's live lease.
+            current = conn.execute(
+                """SELECT * FROM aip_agent_run
+                   WHERE org_id=%s AND project_id=%s AND agent_run_id=%s
+                   FOR NO KEY UPDATE""",
+                (*scope.key, agent_run_id),
+            ).fetchone()
             if current is None:
                 raise AipAgentRegistryNotFound("agent run not found")
+            if current['version'] != expected_version or current['status'] != from_status.value:
+                raise AipAgentRegistryConflict("agent run version or status changed")
             if to_status is AgentRunStatus.RUNNING:
                 resolution = self._resolve_start(scope, current)
                 reservation_id = self._capacity_gate.reserve(scope, resolution, agent_run_id)

@@ -53,8 +53,8 @@ class ContentBudgetCommandOwner:
             rows = conn.execute(
                 """SELECT review_key FROM public.ecommerce_growth_content_budget_command_intent
                     WHERE org_id=%s AND project_id=%s AND state='pending' AND attempt=0
-                      AND public.ecommerce_growth_content_budget_command_current_a0v_104(
-                            org_id,project_id,review_key)
+                      AND public.ecommerce_growth_content_preparation_current_a0v_174(
+                            review_key,'budget_command')
                     ORDER BY created_at,review_key LIMIT %s""",
                 (*scope.key, limit),
             ).fetchall()
@@ -69,7 +69,7 @@ class ContentBudgetCommandOwner:
         source_artifact_refs: list[dict[str, Any]],
         fact_source_refs: list[dict[str, Any]],
         approved_fen: int, max_input_tokens: int, max_output_tokens: int,
-        review_key: str,
+        review_key: str, source_kind: str | None = None,
     ) -> dict[str, Any]:
         # The Host cannot import the optional bundle. Its strict parser is
         # authoritative; tests compare this envelope with the bundle contract.
@@ -82,6 +82,8 @@ class ContentBudgetCommandOwner:
             "maxOutputTokens": max_output_tokens,
             "idempotencyKey": review_key,
         }
+        if source_kind is not None:
+            command["sourceKind"] = source_kind
         command["requestHash"] = _analysis_command_hash(command)
         _strict_content_generate_command(command)
         return command
@@ -122,11 +124,9 @@ class ContentBudgetCommandOwner:
         if (intent is None or (intent["state"], intent["attempt"], intent["claim_token"])
                 != expected_claim or not before_capacity and intent["command_key"] != review_key):
             raise ContentBudgetCommandConflict("pending content budget origin unavailable")
-        current_function = ("ecommerce_growth_content_capacity_current_a0v_103" if before_capacity
-                            else "ecommerce_growth_content_budget_command_current_a0v_104")
         current = transaction.execute(
-            f"SELECT public.{current_function}(%s,%s,%s) AS current",
-            (*scope.key, review_key),
+            "SELECT public.ecommerce_growth_content_preparation_current_a0v_174(%s,%s) AS current",
+            (review_key, "capacity" if before_capacity else "budget_command"),
         ).fetchone()
         if current is None or current["current"] is not True:
             raise ContentBudgetCommandConflict("content budget origin no longer current")
@@ -151,7 +151,7 @@ class ContentBudgetCommandOwner:
                       cutover_group_id,cutover_group_revision
                  FROM public.extension_operation_dispatch_binding
                 WHERE org_id=%s AND project_id=%s
-                  AND operation_id='ecommerce_growth_content_generate' FOR SHARE""",
+                  AND operation_id='ecommerce_growth_content_generate'""",
             scope.key,
         ).fetchone()
         if (dispatch_row is None or dispatch_row["handler_kind"] != "extension"
@@ -172,6 +172,8 @@ class ContentBudgetCommandOwner:
             cutover_group_id=origin["cutover_group_id"],
             cutover_group_revision=origin["cutover_group_revision"],
         )
+        # The protected group-lock function owns dispatch locking/revalidation;
+        # discovery must not require UPDATE privileges on the dispatch table.
         snapshot = LockedEcommerceGrowthHostPort._lock_and_revalidate(
             transaction, scope, dispatch
         )
@@ -278,10 +280,15 @@ class ContentBudgetCommandOwner:
                 pricing_ref=budget_exact(price_ref),
                 provider_ref=budget_exact(resolution.selected_provider),
                 provider_model_id=model.provider_model_id)
-        approved_plan = ReviewAdvanceHostService._revalidate_growth_plan(
-            transaction=transaction, scope=scope,
-            command={"growthPlanRef": response["growthPlanRef"]},
-        )
+        if response.get("sourceKind") == "accepted-stage-v1":
+            approved_plan, source_artifacts, _source_context = ContentTaskRunOwner._accepted_stage_sources(
+                transaction, scope, response)
+        else:
+            approved_plan = ReviewAdvanceHostService._revalidate_growth_plan(
+                transaction=transaction, scope=scope,
+                command={"growthPlanRef": response["growthPlanRef"]},
+            )
+            source_artifacts = [item["artifactRef"] for item in response["artifactBindings"]]
         method = approved_plan.sales_weapon_method
         if method is None:
             raise ContentBudgetCommandConflict("approved content method unavailable")
@@ -326,7 +333,8 @@ class ContentBudgetCommandOwner:
             action_context=SimpleNamespace(request=request, response=response,
                 agent_run_id=intent["agent_run_id"], resolution=resolution,
                 runtime_policy=policy, budget_policy=budget_policy, capacity=capacity),
-            source_artifact_refs=[item["artifactRef"] for item in response["artifactBindings"]],
+            source_artifact_refs=source_artifacts,
+            source_kind=response.get("sourceKind"),
             fact_source_refs=[exact(
                 "EvidenceBundleRevision", item.resource_id, item.revision,
                 item.content_hash,
@@ -380,6 +388,7 @@ class ContentBudgetCommandOwner:
             max_input_tokens=sources.quota.max_input_tokens,
             max_output_tokens=sources.quota.max_output_tokens,
             review_key=review_key,
+            source_kind=getattr(sources, "source_kind", None),
         )
         ContentGenerateHostService().revalidate(
             transaction=transaction, scope=scope, dispatch=sources.snapshot, command=command

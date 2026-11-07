@@ -19,7 +19,7 @@ def _harness(monkeypatch, *, original_run='run-1', original_plan='plan-1',
              unknown_commit=False, task_selection='source-selection-1',
              original_selection='source-selection-1', task_selection_revision='1',
              reject_selection=False, mismatched_packet=False,
-             selection_changes_after_first=False):
+             selection_changes_after_first=False, selection_extra=None):
     calls = []
     class Connection:
         def commit(self):
@@ -66,7 +66,7 @@ def _harness(monkeypatch, *, original_run='run-1', original_plan='plan-1',
         return execute({'context': {'source': {'policy': {
             'sourceSelectionRef': {'resourceType': 'SourceSelectionRevision',
                 'resourceId': original_selection, 'revision': 1,
-                'contentHash': 'sha256:' + HASH}}}}, 'analysisReceipt': {
+                'contentHash': 'sha256:' + HASH, **(selection_extra or {})}}}}, 'analysisReceipt': {
             'receiptRef': receipt_ref,
             'taskRunRef': {'resourceType': 'TaskRun', 'resourceId': original_run},
             'planRef': {'resourceType': 'PlanRevision', 'resourceId': original_plan},
@@ -191,3 +191,20 @@ def test_missing_independent_owner_receipt_readback_never_commits(monkeypatch):
         coordinator.issue(SCOPE, 'run-1', _request(), _packet(),
                           receipt_ref=RECEIPT, actor='analyst-owner', occurred_at=NOW)
     assert calls.count('owner') == 1 and 'commit' not in calls
+
+
+@pytest.mark.parametrize('extra',[{}, {'receiptId':None}, {'receiptId':'existing-source-receipt'}])
+def test_policy_optional_receipt_representation_preserves_original_snapshot(monkeypatch,extra):
+    from copy import deepcopy
+    before=deepcopy(extra)
+    coordinator,calls=_harness(monkeypatch,selection_extra=extra)
+    coordinator.issue(SCOPE,'run-1',_request(),_packet(),receipt_ref=RECEIPT,actor='analyst-owner',occurred_at=NOW)
+    assert extra==before and calls.count('owner')==calls.count('commit')==1
+
+
+@pytest.mark.parametrize('extra',[{'receiptId':None,'unexpected':None}, {'receiptId':None,'revision':None}, {'receiptId':None,'resourceType':'Other'}, {'receiptId':None,'contentHash':'bad'}])
+def test_null_optional_receipt_never_removes_other_validation(monkeypatch,extra):
+    coordinator,calls=_harness(monkeypatch,selection_extra=extra)
+    with pytest.raises(ValueError):
+        coordinator.issue(SCOPE,'run-1',_request(),_packet(),receipt_ref=RECEIPT,actor='analyst-owner',occurred_at=NOW)
+    assert 'owner' not in calls and 'commit' not in calls

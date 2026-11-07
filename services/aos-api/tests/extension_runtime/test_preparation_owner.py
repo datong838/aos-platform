@@ -297,9 +297,11 @@ def test_database_health_anchor_brackets_probe_for_verify_and_control():
     asyncio.run(run())
 
 
-def test_renew_reprobes_twice_after_stale_transaction_entry():
+@pytest.mark.parametrize("timing", ["stale", "future"])
+def test_renew_reprobes_twice_after_stale_transaction_entry(timing):
     from datetime import datetime,timezone,timedelta
-    from aos_api.extension_runtime.verification_commit import HealthObservationStale
+    from aos_api.extension_runtime.verification_commit import HealthObservationStale, HealthObservationFuture
+    HealthObservationStale = HealthObservationFuture if timing == "future" else HealthObservationStale
     async def run():
         checked=[];commits=[]
         anchor=datetime(2001,1,1,tzinfo=timezone.utc)
@@ -328,9 +330,11 @@ def test_renew_reprobes_twice_after_stale_transaction_entry():
     asyncio.run(run())
 
 
-def test_renew_stale_reprobe_limit_remains_fail_closed():
+@pytest.mark.parametrize("timing", ["stale", "future"])
+def test_renew_stale_reprobe_limit_remains_fail_closed(timing):
     from datetime import datetime,timezone,timedelta
-    from aos_api.extension_runtime.verification_commit import HealthObservationStale
+    from aos_api.extension_runtime.verification_commit import HealthObservationStale, HealthObservationFuture
+    HealthObservationStale = HealthObservationFuture if timing == "future" else HealthObservationStale
     async def run():
         checked=[];commits=[]
         anchor=datetime(2001,1,1,tzinfo=timezone.utc)
@@ -365,7 +369,7 @@ def test_database_health_clock_cannot_move_backwards_after_probe():
     from datetime import datetime,timezone,timedelta
     async def run():
         values=iter((datetime(2001,1,1,tzinfo=timezone.utc),
-            datetime(2001,1,1,tzinfo=timezone.utc)-timedelta(seconds=1)))
+            datetime(2001,1,1,tzinfo=timezone.utc)-timedelta(seconds=1))*4)
         seen=[]
         @asynccontextmanager
         async def resource():
@@ -380,7 +384,72 @@ def test_database_health_clock_cannot_move_backwards_after_probe():
         with pytest.raises(ValueError,match='monotonic'):await owner.verify(lambda _:None)
         try:await owner.wait_closed()
         except ValueError:pass
-        assert seen==['health']
+        assert seen==['health']*4
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('backwards_probes', [1, 3])
+def test_transient_backwards_clock_reprobes_all_resources_before_commit(backwards_probes):
+    from datetime import datetime, timezone, timedelta
+    async def run():
+        anchor = datetime(2001, 1, 1, tzinfo=timezone.utc)
+        offsets = (0, -1) * backwards_probes + (1, 2)
+        values = iter(anchor + timedelta(seconds=i) for i in offsets)
+        seen = []
+        def resource(index):
+            @asynccontextmanager
+            async def context():
+                class Session:
+                    process = Process()
+                    async def check_health(self): seen.append(index)
+                yield Session()
+            return context
+        async def prepared(): return 'ready'
+        async def clock(): return next(values)
+        async def commit(observed):
+            assert observed == anchor + timedelta(seconds=2)
+            assert seen == [0, 1] * (backwards_probes + 1)
+            return 'verified'
+        owner = PreparationOwner([resource(0), resource(1)], prepared,
+                                 lease_seconds=5, health_clock=clock)
+        await owner.prepared()
+        try:
+            assert await owner.verify(commit) == 'verified'
+        finally:
+            await owner.stop()
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('failure', ['resource', 'cancel'])
+def test_clock_reprobe_never_commits_after_health_failure_or_cancellation(failure):
+    from datetime import datetime, timezone, timedelta
+    async def run():
+        anchor = datetime(2001, 1, 1, tzinfo=timezone.utc)
+        values = iter(anchor + timedelta(seconds=i) for i in (0, -1, 1))
+        seen = []
+        @asynccontextmanager
+        async def resource():
+            class Session:
+                process = Process()
+                async def check_health(self):
+                    seen.append('health')
+                    if len(seen) == 2:
+                        if failure == 'cancel': raise asyncio.CancelledError
+                        raise RuntimeError('resource unhealthy')
+            try: yield Session()
+            finally: seen.append('closed')
+        async def prepared(): return 'ready'
+        async def clock(): return next(values)
+        async def commit(observed): seen.append('commit')
+        owner = PreparationOwner([resource], prepared, lease_seconds=5, health_clock=clock)
+        await owner.prepared()
+        expected = asyncio.CancelledError if failure == 'cancel' else RuntimeError
+        try:
+            with pytest.raises(expected): await owner.verify(commit)
+        finally:
+            try: await owner.stop()
+            except (RuntimeError, asyncio.CancelledError): pass
+        assert seen == ['health', 'health', 'closed']
     asyncio.run(run())
 
 
@@ -407,3 +476,18 @@ def test_bad_authority_clock_never_probes_or_commits(mode):
         except (ValueError,RuntimeError):pass
         assert not seen
     asyncio.run(run())
+
+
+def test_future_health_requires_explicit_recovery_reprobe_without_accepting_probe():
+    from datetime import datetime,timezone,timedelta
+    from types import SimpleNamespace
+    from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+    from aos_api.extension_runtime.verification_commit import _fresh_health,HealthObservationFuture
+    now=datetime.now(timezone.utc)
+    class Connection:
+        def execute(self,query):return SimpleNamespace(fetchone=lambda:{'now':now})
+    with pytest.raises(RuntimeConflict) as original:
+        _fresh_health(Connection(),now+timedelta(seconds=1))
+    assert type(original.value) is RuntimeConflict
+    with pytest.raises(HealthObservationFuture):
+        _fresh_health(Connection(),now+timedelta(seconds=1),retry_clock_regression=True)

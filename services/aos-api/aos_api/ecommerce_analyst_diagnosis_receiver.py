@@ -22,8 +22,11 @@ from aos_api.tenant_scope import TenantScope
 
 
 def read_diagnosis_inputs(*, conn, scope, insight_ref, source_requests, run, actor, markings,
-                          now, max_source_age, max_bytes):
+                          now, max_source_age, max_bytes, source_store=None):
     """Current complete source snapshot shared by generation and publication."""
+    if source_store is not None:
+        from aos_api.aip_metric_query_evidence import _production
+        _production(conn, scope, source_store)
     insight = require_current_revision(conn, scope, insight_ref)
     if (insight.cutoff_at.utcoffset() is None or insight.cutoff_at > now
             or now - insight.cutoff_at > max_source_age):
@@ -47,7 +50,8 @@ def read_diagnosis_inputs(*, conn, scope, insight_ref, source_requests, run, act
     for ref in insight.evidence_refs:
         materials.append(read_analysis_bundle(conn=conn, scope=scope, task_id=run.task_id, actor=actor,
             request=indexed[ref_key(ref)], markings=markings, now=now,
-            max_source_age=max_source_age, max_bytes=max_bytes))
+            max_source_age=max_source_age, max_bytes=max_bytes,
+            **({'source_store': source_store} if source_store is not None else {})))
         if len(json.dumps(materials, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
                           allow_nan=False, default=str).encode("utf-8")) > max_bytes:
             raise ValueError("complete diagnosis material exceeds byte limit")
@@ -60,9 +64,28 @@ class DiagnosisReceiver:
             raise ValueError("explicit scoped connection factory required")
         self._connect_factory = connect_factory
 
+    def recover_with_formal_source(
+            self, scope: TenantScope, *, source_service, parent_request, source_ref,
+            installation_id, installation_revision, installation_etag, **recovery):
+        """Publish original retained output while original Source locks remain held."""
+        from aos_api.aip_formal_source_disclosure import FormalSourceDisclosureService
+        if type(source_service) is not FormalSourceDisclosureService:
+            raise TypeError('original formal Source service required')
+        with source_service.source_transaction(
+                scope, recovery.get('actor'), parent_request, source_ref=source_ref,
+                installation_id=installation_id,
+                installation_revision=installation_revision,
+                installation_etag=installation_etag) as (conn, store):
+            @contextmanager
+            def bound(requested_scope):
+                if requested_scope != scope:
+                    raise ValueError('diagnosis formal Source transaction scope mismatch')
+                yield conn
+            return DiagnosisReceiver(bound).recover(scope, source_store=store, **recovery)
+
     def recover(self, scope: TenantScope, *, attempt_id: str, insight_ref: AnalystExactRef,
                 source_requests: list[AnalysisBundleSourceRequest], actor: str, markings: list[str],
-                now: datetime, max_source_age: timedelta, max_bytes: int) -> AnalystExactRef:
+                now: datetime, max_source_age: timedelta, max_bytes: int, source_store=None) -> AnalystExactRef:
         if (not actor.strip() or not attempt_id.strip() or insight_ref.resource_type != "InsightRevision"
                 or now.utcoffset() is None or max_source_age <= timedelta(0)
                 or type(max_bytes) is not int or max_bytes <= 0):
@@ -71,6 +94,9 @@ class DiagnosisReceiver:
                                    "attemptId": attempt_id})
         key = "diagnosis-receive:" + identity
         with self._connect_factory(scope) as conn:
+            if source_store is not None:
+                from aos_api.aip_metric_query_evidence import _production
+                _production(conn, scope, source_store)
             conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", (key,))
 
             @contextmanager
@@ -117,7 +143,12 @@ class DiagnosisReceiver:
                 return replay
             insight, materials = read_diagnosis_inputs(conn=conn, scope=scope, insight_ref=insight_ref,
                 source_requests=source_requests, run=run, actor=actor, markings=markings, now=now,
-                max_source_age=max_source_age, max_bytes=max_bytes)
+                max_source_age=max_source_age, max_bytes=max_bytes,
+                **({'source_store': source_store} if source_store is not None else {}))
             decision = decision_from_completed_generation(insight=insight, materials=materials,
                                                          attempt=attempt, answer=answer, actor=actor)
-            return owner.publish_decision(scope, actor, key, decision, expected_version=0)
+            ref = owner.publish_decision(scope, actor, key, decision, expected_version=0)
+            if source_store is not None:
+                source_store._formal_source_authority.validate_commit(conn, scope)
+                conn.commit()
+            return ref

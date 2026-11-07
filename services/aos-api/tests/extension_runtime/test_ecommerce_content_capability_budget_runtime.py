@@ -99,7 +99,7 @@ def capability_request(*, key="capability-1", **overrides):
     return ContentCapabilityRequest(**values)
 
 
-def test_accepted_stage_content_source_is_distinct_and_host_remains_closed():
+def test_accepted_stage_content_source_is_distinct_and_delegates_pending_to_host():
     original = (ref("Artifact", "original-stage-text"),)
     legacy = capability_request().command_payload()
     assert "sourceKind" not in legacy
@@ -124,10 +124,10 @@ def test_accepted_stage_content_source_is_distinct_and_host_remains_closed():
     )
     assert parsed["sourceKind"] == "accepted-stage-v1"
     assert [item.resource_type for item in parsed["sourceRefs"]] == ["Artifact"]
-    port = CapabilityPort()
-    with pytest.raises(ValueError, match="Host is not wired"):
-        execute_content_capability(port, dispatch_ref=dispatch(), request=stage)
-    assert port.commands == []
+    port = CapabilityPort(pending_receipt)
+    receipt = execute_content_capability(port, dispatch_ref=dispatch(), request=stage)
+    assert receipt.state == "PENDING" and receipt.artifact is None
+    assert len(port.commands) == 1
     assert port.provider_calls == 0
 
 

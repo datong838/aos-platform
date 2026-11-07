@@ -143,6 +143,15 @@ describe("operation command observation strict parser", () => {
 });
 
 describe("operations view strict parser", () => {
+  it("区分全量来源与读取窗口，同时保留旧响应兼容", () => {
+    const value = { ...operations, slices: operations.slices.map((slice, index) => index === 0
+      ? { ...slice, countLedger: { ...slice.countLedger, populationTotal: 167 } } : slice) };
+    expect(parseOperationsView(value).slices[0]?.countLedger.populationTotal).toBe(167);
+    const invalid = { ...value, slices: value.slices.map((slice, index) => index === 0
+      ? { ...slice, countLedger: { ...slice.countLedger, populationTotal: 0 } } : slice) };
+    expect(() => parseOperationsView(invalid)).toThrow("populationTotal");
+    expect(parseOperationsView(operations).slices[0]?.countLedger.populationTotal).toBeUndefined();
+  });
   it("保留 ordered 七切片、exact authority 与数量守恒", () => {
     const parsed = parseOperationsView(operations);
     expect(parsed).toMatchObject({ page: { count: 7 } });

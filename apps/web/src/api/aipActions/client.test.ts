@@ -101,4 +101,15 @@ describe("AipActionsSdk", () => {
     await expect(sdk.withdraw(bundle, "  ")).rejects.toThrow("撤回原因不能为空");
     expect(request).not.toHaveBeenCalled();
   });
+  it("修改内部处理时发送新业务载荷，保留原提案内容", async () => {
+    const replacement = {...bundle,proposal:{...proposal,id:"proposal-replacement"},draft:{...bundle.draft,proposalId:"proposal-replacement"}};
+    const request=vi.fn().mockResolvedValueOnce(draftRevision).mockResolvedValueOnce(replacement);
+    const sdk=new AipActionsSdk({request} as unknown as AipClient);
+    const payload={...bundle.proposal.payload,priority:"high",summary:"【自测样例】新的处置说明"};
+    const old=JSON.stringify(bundle.proposal.payload);
+    await sdk.createReplacementProposal(bundle,{purpose:"修改样例",diff:{summary:{from:"旧",to:"新"}},payload,expiresAt:"2099-01-01T00:00:00Z"});
+    expect(request).toHaveBeenNthCalledWith(1,"createActionDraft",expect.objectContaining({body:expect.objectContaining({payload,objectRef:bundle.proposal.objectRef})}));
+    expect(JSON.stringify(bundle.proposal.payload)).toBe(old);
+  });
+
 });

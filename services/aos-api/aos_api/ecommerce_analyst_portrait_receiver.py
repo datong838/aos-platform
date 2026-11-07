@@ -25,9 +25,28 @@ class PortraitReceiver:
             raise ValueError("explicit scoped connection factory required")
         self._connect_factory = connect_factory
 
+    def recover_with_formal_source(
+            self, scope: TenantScope, *, source_service, parent_request, source_ref,
+            installation_id, installation_revision, installation_etag, **recovery):
+        """Publish original retained output while original Source locks remain held."""
+        from aos_api.aip_formal_source_disclosure import FormalSourceDisclosureService
+        if type(source_service) is not FormalSourceDisclosureService:
+            raise TypeError('original formal Source service required')
+        with source_service.source_transaction(
+                scope, recovery.get('actor'), parent_request, source_ref=source_ref,
+                installation_id=installation_id,
+                installation_revision=installation_revision,
+                installation_etag=installation_etag) as (conn, store):
+            @contextmanager
+            def bound(requested_scope):
+                if requested_scope != scope:
+                    raise ValueError('portrait formal Source transaction scope mismatch')
+                yield conn
+            return PortraitReceiver(bound).recover(scope, source_store=store, **recovery)
+
     def recover(self, scope: TenantScope, *, attempt_id: str, method_ref: AnalystExactRef, eval_ref: AnalystExactRef, cutoff_at: datetime,
                 metric_sources: list, actor: str, markings: list[str],
-                now: datetime, max_source_age: timedelta, max_bytes: int) -> AnalystExactRef:
+                now: datetime, max_source_age: timedelta, max_bytes: int, source_store=None) -> AnalystExactRef:
         if (any(type(value) is not str or not value or value.strip()!=value or len(value)>200 for value in (actor,attempt_id))
                 or method_ref.resource_type != "MethodRevision" or eval_ref.resource_type != "EvalContractRevision"
                 or any(not isinstance(value,datetime) or value.utcoffset() is None for value in (now,cutoff_at))
@@ -38,6 +57,9 @@ class PortraitReceiver:
                                    "attemptId": attempt_id})
         key = "portrait-receive:" + identity
         with self._connect_factory(scope) as conn:
+            if source_store is not None:
+                from aos_api.aip_metric_query_evidence import _production
+                _production(conn, scope, source_store)
             conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", (key,))
 
             @contextmanager
@@ -84,6 +106,13 @@ class PortraitReceiver:
                 return replay
             inputs = read_portrait_inputs(conn=conn, scope=scope, run=run, actor=actor,
                 method_ref=method_ref, eval_ref=eval_ref, metric_sources=metric_sources, cutoff_at=cutoff_at,
-                markings=markings, now=now, max_source_age=max_source_age, max_bytes=max_bytes)
+                markings=markings, now=now, max_source_age=max_source_age, max_bytes=max_bytes,
+                **({'source_store': source_store} if source_store is not None else {}))
             insight = insight_from_completed_generation(attempt=attempt, answer=answer, actor=actor, **inputs)
-            return owner.publish_insight(scope, actor, key, insight, expected_version=0)
+            ref = owner.publish_insight(scope, actor, key, insight, expected_version=0)
+            if source_store is not None:
+                # The transaction-bound Owner cannot commit. Validate the live
+                # Source before this native commit; unknown outcomes propagate.
+                source_store._formal_source_authority.validate_commit(conn, scope)
+                conn.commit()
+            return ref

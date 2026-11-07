@@ -19,16 +19,25 @@ _TOPIC = 'data.requirement.request'
 
 
 class AnalysisDataRequirementWorker:
-    def __init__(self, factory, directory, *, lease_seconds=300):
+    def __init__(self, factory, directory, *, lease_seconds=300, host_lease=None):
         if type(factory) is not PipelineControlServiceFactory or type(directory) is not LivePreparedJobDirectory:
             raise TypeError('exact lifecycle analysis worker dependencies required')
         if type(lease_seconds) is not int or not 1 <= lease_seconds <= 3600:
             raise ValueError('bounded analysis worker lease required')
+        self._host_lease = None
+        if host_lease is not None:self.bind_host_lease(host_lease)
         self.factory, self.directory = factory, directory
         self.lease_seconds = lease_seconds
         self._worker_id = 'analysis-data-' + uuid4().hex
         self._scope_offset = 0
         self._outbox = DataRequirementOutboxStore(connect_serializable)
+
+    def bind_host_lease(self, lease):
+        """Bind the original lifecycle holder; never acquire or replace a lease."""
+        from aos_api.extension_runtime.host_lease import OptInHostLease
+        if type(lease) is not OptInHostLease or self._host_lease is not None:
+            raise TypeError('one original Host lease holder required')
+        self._host_lease = lease
 
     def _scopes(self):
         targets = self.directory.current_targets()
@@ -129,9 +138,14 @@ class AnalysisDataRequirementWorker:
             raise TypeError('exact analysis worker tenant required')
         ambiguous = self._outbox.read_ambiguous_next(scope, topic=_TOPIC)
         if ambiguous is not None:
-            log.warning('analysis_data_requirement_ambiguous_frozen scope=%s outbox=%s',
-                        scope.key, ambiguous.outbox_id)
-            return 'unknown'
+            from aos_api.ecommerce_analysis_delivery_reconcile import reconcile_committed_delivery
+            try:
+                return reconcile_committed_delivery(scope, ambiguous,
+                    connect_factory=connect_serializable, directory=self.directory, host_lease=self._host_lease)
+            except Exception:
+                log.warning('analysis_data_requirement_reconcile_unresolved scope=%s outbox=%s',
+                            scope.key, ambiguous.outbox_id)
+                return 'unknown'
         claim = self._outbox.claim_pending_next(
             scope, topic=_TOPIC, worker_id=self._worker_id,
             lease_token='analysis-data-lease-' + uuid4().hex,
@@ -188,12 +202,12 @@ class AnalysisDataRequirementWorker:
                 continue
 
 
-def build_analysis_data_requirement_worker(control_plane):
+def build_analysis_data_requirement_worker(control_plane, *, host_lease=None):
     factory = getattr(control_plane, 'pipeline_control_factory', None)
     directory = getattr(control_plane, 'live_job_directory', None)
     if factory is None or directory is None:
         return None
-    return AnalysisDataRequirementWorker(factory, directory)
+    return AnalysisDataRequirementWorker(factory, directory, host_lease=host_lease)
 
 
 __all__ = ['AnalysisDataRequirementWorker', 'build_analysis_data_requirement_worker']

@@ -47,14 +47,14 @@ function CustomerPlanWorkspace({ view, customer, actions }: { view: CustomerView
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const source = customer?.customerRef ?? view.authorityRefs[0] ?? view.readinessAxes.find((axis) => axis.exactRef)?.exactRef ?? null;
-  useEffect(() => { setProposal(null); setTimeline(null); setEditing(false); setRecovering(false); setShowImpact(false); setNotice(""); }, [view.viewId]);
+  useEffect(() => { setProposal(null); setTimeline(null); setEditing(false); setRecovering(false); setShowImpact(false); setNotice(""); }, [view.viewId, source?.resourceType, source?.resourceId, source?.revision, source?.contentHash]);
   const submit = async () => {
     if (!source || !title.trim() || !purpose.trim() || !segmentRule.trim() || !journeyStage.trim() || !contentDraft.trim()) { setNotice("缺少 exact 客户来源或计划必要字段，保存失败关闭。"); return; }
     setBusy(true); setNotice("");
     try {
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       if (proposal && proposal.proposal.status !== "withdrawn") {
-        const next = await actions.createReplacementProposal(proposal, { purpose: title.trim(), diff: { planType: { from: proposal.proposal.payload.planType ?? null, to: planType }, journeyStage: { from: proposal.proposal.payload.journeyStage ?? null, to: journeyStage.trim() }, contentDraft: { from: proposal.proposal.payload.contentDraft ?? null, to: contentDraft.trim() } }, expiresAt });
+        const next = await actions.createReplacementProposal(proposal, { purpose: title.trim(), payload: { ...proposal.proposal.payload, planType, purpose: purpose.trim(), segmentRule: segmentRule.trim(), journeyStage: journeyStage.trim(), contentDraft: contentDraft.trim() }, diff: { planType: { from: proposal.proposal.payload.planType ?? null, to: planType }, journeyStage: { from: proposal.proposal.payload.journeyStage ?? null, to: journeyStage.trim() }, contentDraft: { from: proposal.proposal.payload.contentDraft ?? null, to: contentDraft.trim() } }, expiresAt });
         setProposal(next); setEditing(false); setNotice(`计划修改已形成替代提案 ${next.proposal.id}，旧版本保持可追溯。`);
       } else {
         const objectRef = { resourceType: source.resourceType, resourceId: source.resourceId, revision: String(source.revision), authority: "ecommerce-workshop.customer-view" };

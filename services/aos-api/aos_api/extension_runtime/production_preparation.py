@@ -25,6 +25,7 @@ from .pending_preparation_directory import (
     PostgresPendingPreparationDirectory,
 )
 from .preparation_worker import PreparationWorker
+from .released_recovery_worker import ReleasedPreparationRecoveryWorker
 from .release_revalidation import RuntimeReleaseRevalidator
 from .runtime_release_artifacts import CurrentRuntimeReleaseArtifacts
 from .schema_conditions import CurrentSchemaConditions
@@ -89,8 +90,8 @@ class ProductionPreparationDependencies:
         if self.platform not in ("linux/arm64", "linux/amd64"):
             raise ValueError("explicit supported runtime platform required")
 
-    def build_scheduler(self, scope: TenantScope, *, preparation_only: bool = False) -> LiveInstallationScheduler:
-        if type(scope) is not TenantScope or type(preparation_only) is not bool:
+    def _build_worker(self,scope: TenantScope,*,recovery: bool=False):
+        if type(scope) is not TenantScope or type(recovery) is not bool:
             raise TypeError("exact tenant scope required")
         artifacts = CurrentRuntimeReleaseArtifacts(
             connect=self.connect,
@@ -102,7 +103,8 @@ class ProductionPreparationDependencies:
             read_artifact=artifacts.read_artifact,
             policy=self.policy,
         )
-        worker = PreparationWorker(
+        worker_type=ReleasedPreparationRecoveryWorker if recovery else PreparationWorker
+        return worker_type(
             connect=self.connect,
             driver=self.driver,
             installation_store=self.installation_store,
@@ -118,10 +120,18 @@ class ProductionPreparationDependencies:
             check_current_conditions=conditions,
             configuration_authorize=self.configuration_authorize,
         )
+    def build_scheduler(self, scope: TenantScope, *, preparation_only: bool = False,
+                        recovery_enabled: bool = False) -> LiveInstallationScheduler:
+        if (type(scope) is not TenantScope or type(preparation_only) is not bool
+                or type(recovery_enabled) is not bool):
+            raise TypeError('exact tenant scope and recovery mode required')
+        worker=self._build_worker(scope)
+        recovery_worker=self._build_worker(scope,recovery=True) if recovery_enabled else None
         directory = PostgresPendingPreparationDirectory(
             connect=self.connect,
             scope=scope,
             include_rehydrate=not preparation_only,
+            include_recovery=recovery_enabled,
         )
         factory = LiveInstallationOwnerFactory(
             connect=self.connect,
@@ -129,5 +139,6 @@ class ProductionPreparationDependencies:
             worker=worker,
             live_directory=self.live_directory,
             enable_allowed=not preparation_only,
+            recovery_worker=recovery_worker,
         )
         return LiveInstallationScheduler(directory=directory, factory=factory)

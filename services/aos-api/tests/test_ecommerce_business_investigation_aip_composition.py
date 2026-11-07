@@ -188,6 +188,42 @@ def test_complete_exact_composition_is_ready() -> None:
     assert connection.tenant_params and set(connection.tenant_params) == {SCOPE.key}
 
 
+def test_exact_ready_context_selects_its_profile_without_cross_profile_ambiguity() -> None:
+    data = rows()
+    other = deepcopy(data['stages'][0])
+    other.update(template_id='readonly-stages', profile='ecommerce.business-investigation.readonly', content_hash=h('6'))
+    data['stages'].append(other)
+    data['contexts'][0]['profile'] = other['profile']
+    resolver, _ = source(data)
+    actual = resolver.read(SCOPE, 'initial_store_analysis', observed_at=NOW, production_context_ref=context_ref())
+    assert actual.ready and not actual.blockers
+    assert actual.stage_template_ref.resource_id == 'readonly-stages'
+    assert actual.stage_template_ref.content_hash == 'sha256:' + h('6')
+
+
+def test_same_profile_frozen_duplicates_remain_ambiguous() -> None:
+    data = rows()
+    other = deepcopy(data['stages'][0]); other['template_id'] = 'second-same-profile'
+    data['stages'].append(other)
+    resolver, _ = source(data)
+    actual = resolver.read(SCOPE, 'initial_store_analysis', observed_at=NOW, production_context_ref=context_ref())
+    assert not actual.ready and 'AIP_INVESTIGATION_STAGE_TEMPLATE_AMBIGUOUS' in actual.blockers
+
+
+def test_missing_or_invalid_context_cannot_use_profile_to_remove_ambiguity() -> None:
+    for invalid in ('missing', 'hash', 'draft', 'not-ready'):
+        data = rows()
+        other = deepcopy(data['stages'][0]); other.update(template_id='readonly-stages', profile='ecommerce.business-investigation.readonly')
+        data['stages'].append(other)
+        if invalid == 'hash': data['contexts'][0]['content_hash'] = h('8')
+        if invalid == 'draft': data['contexts'][0]['lifecycle'] = 'draft'
+        if invalid == 'not-ready': data['contexts'][0]['readiness'] = 'blocked'
+        resolver, _ = source(data)
+        actual = resolver.read(SCOPE, 'initial_store_analysis', observed_at=NOW,
+            production_context_ref=None if invalid == 'missing' else context_ref())
+        assert not actual.ready and 'AIP_INVESTIGATION_STAGE_TEMPLATE_AMBIGUOUS' in actual.blockers
+
+
 def test_explicit_skill_ref_is_selected_without_using_latest_revision() -> None:
     data = rows()
     duplicate = deepcopy(data["skills"][-1])

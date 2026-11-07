@@ -16,6 +16,36 @@ from aos_api.tenant_scope import TenantScope
 SCOPE = TenantScope("org-org", "dev-project")
 
 
+@pytest.mark.parametrize('case', ['legacy', 'orphan', 'ambiguous', 'unsettled', 'running_readback', 'released'])
+def test_agent_terminal_requires_modern_settled_lineage_and_never_replays(case, monkeypatch):
+    import aos_api.ecommerce_content_review_step_owner as module
+    def forbidden(*args, **kwargs):
+        pytest.fail('transition must not be constructed for missing/drifted or already terminal authority')
+    monkeypatch.setattr(module, 'AipAgentRunService', forbidden)
+    class Conn:
+        def execute(self, query, params):
+            assert params[:2] == SCOPE.key
+            if 'FROM public.ecommerce_growth_content_agentrun_intent' in query:
+                rows = [] if case in {'legacy', 'orphan'} else [dict(agent_run_id='agent-1', state='accepted', attempt=1)]
+                if case == 'ambiguous': rows *= 2
+            elif 'SELECT agent_run_id FROM public.aip_agent_run' in query:
+                rows = [] if case == 'legacy' else [dict(agent_run_id='orphan')]
+            else:
+                assert 'b.state=\'settled\'' in query and "r.status='succeeded'" in query
+                rows = [] if case == 'unsettled' else [dict(agent_status='succeeded' if case == 'released' else 'running',
+                    capacity_status='released' if case == 'released' else 'reserved')]
+            return SimpleNamespace(fetchall=lambda: rows)
+    proof = SimpleNamespace(run_id='run-1', task_id='task-1', command=dict(artifactRef=dict(resourceId='artifact-1', contentHash='sha256:'+'a'*64)))
+    if case in {'legacy', 'released'}:
+        assert ContentReviewStepOwner._reconcile_agent_run(Conn(), SCOPE, proof) is None
+    elif case == 'running_readback':
+        with pytest.raises(ContentReviewStepUnknown):
+            ContentReviewStepOwner._reconcile_agent_run(Conn(), SCOPE, proof)
+    else:
+        with pytest.raises(ContentReviewStepConflict):
+            ContentReviewStepOwner._reconcile_agent_run(Conn(), SCOPE, proof, complete=True)
+
+
 class Cursor:
     def __init__(self, rows):
         self.rows = rows

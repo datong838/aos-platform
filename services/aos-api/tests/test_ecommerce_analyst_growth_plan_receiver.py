@@ -69,6 +69,7 @@ def setup_receiver(monkeypatch):
     monkeypatch.setattr(module, "AipAgentRunService", Runs)
     monkeypatch.setattr(module, "EcommerceAnalystAuthorityStore", Owner)
     monkeypatch.setattr(module, "require_growth_plan_sources", sources)
+    monkeypatch.setattr(module, "require_current_revision", lambda conn, scope, ref: SimpleNamespace(cutoff_at=decision.created_at))
     receiver = module.GrowthPlanDraftReceiver(connect)
     kwargs = dict(attempt_id=attempt.attempt_id, decision_ref=decision_ref, answer=raw,
         budget="100", task_type="analysis", actor="compiler", markings=["internal"],
@@ -82,6 +83,45 @@ def test_received_draft_uses_owner_once_and_replays_without_new_source_work(monk
     assert receiver.receive(SCOPE, **kwargs) == first
     assert len(state["published"]) == 1 and state["source_calls"] == 1
     assert state["saved"].lifecycle.value == "draft"
+
+
+def test_v2_method_survives_receiver_replay_and_plan_approval(monkeypatch):
+    from test_ecommerce_analyst_authority_contracts import NOW
+    from test_ecommerce_analyst_growth_plan_approval import FakeStore
+    from aos_api.ecommerce_analyst_growth_plan_approval import EcommerceAnalystGrowthPlanApprovalService, ApproveGrowthPlanRequest
+    receiver, state, kwargs = setup_receiver(monkeypatch)
+    decision, attempt, raw = generation(source_cutoff_at=NOW, with_method=True)
+    state['attempt'] = attempt
+    state['artifact'].update(content_hash=attempt.output_artifact_ref.content_hash,
+        content_ref='sha256://'+attempt.output_artifact_ref.content_hash)
+    kwargs['answer'] = raw
+    ref = receiver.receive(SCOPE, **kwargs)
+    assert receiver.receive(SCOPE, **kwargs) == ref and len(state['published']) == 1
+    draft = state['saved']
+    assert draft.sales_weapon_method.evidence_refs == decision.evidence_refs
+    assert draft.sales_weapon_method.source_cutoff_at == NOW
+    store = FakeStore(draft)
+    approved_ref = EcommerceAnalystGrowthPlanApprovalService(store, clock=lambda: NOW).approve(
+        SCOPE, draft.plan_id, ApproveGrowthPlanRequest(draftRef=ref), expected_version=draft.version,
+        idempotency_key='approve-v2-sample', actor='sample-reviewer')
+    approved = store.get_plan_exact(SCOPE, approved_ref.approved_ref)
+    assert approved.sales_weapon_method == draft.sales_weapon_method
+    assert approved.generation_artifact_ref == draft.generation_artifact_ref
+    assert approved_ref.external_effects_allowed is False
+
+
+def test_receiver_rejects_v2_cutoff_drift_before_publishing(monkeypatch):
+    from test_ecommerce_analyst_authority_contracts import NOW
+    receiver, state, kwargs = setup_receiver(monkeypatch)
+    _, attempt, raw = generation(source_cutoff_at=NOW, with_method=True)
+    state['attempt'] = attempt
+    state['artifact'].update(content_hash=attempt.output_artifact_ref.content_hash,
+        content_ref='sha256://'+attempt.output_artifact_ref.content_hash)
+    kwargs['answer'] = raw
+    monkeypatch.setattr(module, 'require_current_revision', lambda *args: SimpleNamespace(cutoff_at=NOW-timedelta(seconds=1)))
+    with pytest.raises(ValueError, match='request does not match'):
+        receiver.receive(SCOPE, **kwargs)
+    assert state['published'] == []
 
 
 @pytest.mark.parametrize("change", ["unknown", "skill", "input", "route", "artifact_run", "artifact_source", "artifact_missing", "scope"])

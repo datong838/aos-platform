@@ -24,7 +24,7 @@ def install_skill_finisher_permissions(conn, *, expected_database, expected_clus
              and isinstance(expected_database,str) and bool(expected_database)
              and isinstance(expected_cluster,str) and bool(expected_cluster)
              and type(expected_schema_head) is str
-             and expected_schema_head in ('a0v_161','a0v_163'))
+             and expected_schema_head in ('a0v_161','a0v_163','a0v_172'))
     context=conn.execute("""SELECT current_user AS role,session_user AS login,
         current_database() AS database,
         current_setting('transaction_isolation') AS isolation""").fetchone()

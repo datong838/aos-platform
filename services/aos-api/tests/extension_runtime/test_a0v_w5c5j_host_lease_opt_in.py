@@ -93,8 +93,7 @@ def test_default_off_does_not_construct_or_connect(monkeypatch):
 
 def _inputs(tmp_path):
     credential = tmp_path / "identities.json"
-    credential.write_text(json.dumps({plane: {"role": role, "password": "x", "dsn": plane}
-                                      for plane, role in HOST.EXPECTED_ROLES.items()}))
+    credential.write_text('{}')  # The lifecycle tests explicitly mock credential configuration.
     credential.chmod(0o600)
     bundle = tmp_path / "bundles"
     bundle.mkdir()
@@ -109,6 +108,9 @@ def _workers(events):
     class Worker:
         last_status = {"checked": 0}
 
+        def bind_host_lease(self, lease):
+            events.append(("bound",lease))
+
         async def serve(self, stop_event, *, host_ready):
             events.append(("worker", host_ready()))
             await stop_event.wait()
@@ -118,6 +120,7 @@ def _workers(events):
 
 def test_acquire_failure_never_starts_host_or_publishes_active(tmp_path, monkeypatch):
     args = _inputs(tmp_path)
+    monkeypatch.setattr(HOST,"_configure_environment",lambda *args,**kwargs:None)
     events = []
 
     class Lease:
@@ -129,13 +132,14 @@ def test_acquire_failure_never_starts_host_or_publishes_active(tmp_path, monkeyp
     monkeypatch.setattr(HOST, "_build_business_workers", lambda _plane: _workers(events))
     monkeypatch.setattr(HOST, "_opt_in_host_lease", lambda _args: Lease())
     with pytest.raises(HostLeaseBlocked, match="ACQUIRE_REJECTED"):
-        asyncio.run(HOST._serve(args))
+        asyncio.run(HOST._serve(args,current_host_id="fixture-host"))
     assert events == []
     assert not args.status_file.exists()
 
 
 def test_renew_failure_stops_workers_and_attempts_release(tmp_path, monkeypatch):
     args = _inputs(tmp_path)
+    monkeypatch.setattr(HOST,"_configure_environment",lambda *args,**kwargs:None)
     events = []
 
     class Lease:
@@ -158,7 +162,9 @@ def test_renew_failure_stops_workers_and_attempts_release(tmp_path, monkeypatch)
     monkeypatch.setattr(HOST, "_build_business_workers", lambda _plane: _workers(events))
     monkeypatch.setattr(HOST, "_opt_in_host_lease", lambda _args: Lease())
     with pytest.raises(HostLeaseBlocked, match="RENEW_REJECTED"):
-        asyncio.run(HOST._serve(args))
+        asyncio.run(HOST._serve(args,current_host_id="fixture-host"))
     assert events[0] == "acquire"
+    assert events[1][0] == "bound" and isinstance(events[1][1], Lease)
+    assert sum(isinstance(event,tuple) and event[0]=="bound" for event in events)==1
     assert events[-1] == "release"
     assert json.loads(args.status_file.read_text())["outcome"] == "RUNTIME_HOST_STOPPED"

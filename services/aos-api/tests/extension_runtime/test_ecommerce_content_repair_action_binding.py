@@ -17,6 +17,18 @@ ACTION = {"id": "ecommerce_growth_content_generate", "name": "content generate",
           "submissionCriteria": [], "revisionHash": "a" * 64}
 
 
+def test_accepted_stage_return_command_keeps_exact_source_and_return_contract():
+    from test_ecommerce_content_generate_handoff_lineage import accepted_stage_content_command
+    from aos_api.ecommerce_growth_runtime_adapters import _strict_content_generate_command, _analysis_command_hash
+    command = accepted_stage_content_command()
+    command['returnDecisionRef'] = dict(resourceType='ReturnDecision', resourceId='return-native', revision=1, contentHash='sha256:' + 'b' * 64)
+    command['requestHash'] = _analysis_command_hash({k: v for k, v in command.items() if k != 'requestHash'})
+    parsed = _strict_content_generate_command(command)
+    assert parsed['sourceKind'] == 'accepted-stage-v1'
+    assert parsed['returnRef'].resource_id == 'return-native'
+    assert len(parsed['sourceRefs']) == 1
+
+
 def _request(*, risk_hint: ActionRiskLevel | None, payload: dict):
     return CreateActionProposalRequest(
         actionTypeId=ACTION["id"], taskId="task-1", runId="run-1",

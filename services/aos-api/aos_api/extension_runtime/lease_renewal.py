@@ -127,12 +127,28 @@ def _configuration_transition_owned(conn, *, target, generation, binding):
     return matches == 1
 
 
+def _require_recovery_renewal_proof(*, conn, target, operation_id, generation, current_revision, binding, handle):
+    if binding['enabled'] is not False or binding['operation_fence'] is not True or binding['config_ref'] is not None:
+        raise RuntimeConflict('recovery resource renewal cannot enable business work')
+    rows=conn.execute('''SELECT payload,payload_hash FROM extension_runtime_event WHERE org_id=%s
+        AND project_id=%s AND operation_id=%s AND type='recovery_committed' ''',
+        (*target[:2],operation_id)).fetchall()
+    if len(rows)!=1:raise RuntimeConflict('unique recovery commit proof required for renewal')
+    payload,digest=_values(rows[0],('payload','payload_hash'))
+    if (digest!=_digest(payload) or payload.get('installationId')!=str(target[2])
+            or payload.get('installationRevision')!=current_revision or payload.get('generation')!=str(generation)
+            or payload.get('executionEpoch')!=binding['execution_epoch'] or payload.get('enabled') is not False
+            or payload.get('resources')!=handle.get('resources')):
+        raise RuntimeConflict('current recovery commit proof differs')
+
+
 def renew_verified_lease(conn, *, installation_store, revalidator, check_current_permission,
                          check_current_conditions, org_id, project_id, installation_id,
-                         operation_id, generation, health_checked_at):
+                         operation_id, generation, health_checked_at, recovery_only=False):
     _require_transaction(conn)
+    if type(recovery_only) is not bool:raise TypeError('exact recovery renewal mode required')
     installation_id, operation_id, generation = map(UUID, map(str, (installation_id, operation_id, generation)))
-    inflight=_renew_live_recoverable_store(conn,org_id=org_id,project_id=project_id,
+    inflight=None if recovery_only else _renew_live_recoverable_store(conn,org_id=org_id,project_id=project_id,
         installation_id=installation_id,operation_id=operation_id,generation=generation,
         health_checked_at=health_checked_at)
     if inflight is not None:return inflight
@@ -150,14 +166,14 @@ def renew_verified_lease(conn, *, installation_store, revalidator, check_current
         AND installation_id=%s AND operation_id=%s FOR UPDATE''', (*target, operation_id)).fetchone()
     if operation is None: raise LookupError('preparation operation not found')
     kind, status, phase, actor, revision = _values(operation, ('kind','status','phase','requested_by','revision'))
-    if (kind, status, phase) != ('runtime-apply', 'succeeded', 'succeeded'):
+    if (kind, status, phase) != ('runtime-recover' if recovery_only else 'runtime-apply', 'succeeded', 'succeeded'):
         raise RuntimeConflict('lease renewal requires committed preparation')
     permission = check_current_permission(conn=conn, locked=locked, actor=actor)
     _reject_deferred(permission)
     if permission is not True: raise RuntimeConflict('current lease permission required')
     lock = _load_current_lock(conn, locked=locked, org_id=org_id, project_id=project_id)
     binding = conn.execute('''SELECT installation_revision,package_lock_ref,observed_state,
-        desired_state,resource_handle_ref,enabled,operation_fence,revision,config_ref FROM extension_runtime_binding
+        desired_state,resource_handle_ref,enabled,operation_fence,revision,config_ref,execution_epoch FROM extension_runtime_binding
         WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s FOR UPDATE''',
         (*target, generation)).fetchone()
     if binding is None: raise LookupError('verified binding not found')
@@ -170,11 +186,18 @@ def renew_verified_lease(conn, *, installation_store, revalidator, check_current
     if observed != 'ready' and not _configuration_transition_owned(
             conn, target=target, generation=generation, binding=binding):
         raise RuntimeConflict('verified binding cannot renew')
+    if recovery_only:
+        if observed!='ready' or desired!='disabled':raise RuntimeConflict('recovery binding is not ready and disabled')
+        _require_recovery_renewal_proof(conn=conn,target=target,operation_id=operation_id,generation=generation,
+            current_revision=locked.record.current_revision,binding=binding,handle=handle)
     # Freshness is an admission gate after current identity locks.  Deterministic
     # lock-scoped revalidation below may exceed the three-second probe window on
     # a remote control database; it must not retroactively stale a probe that was
     # fresh when this exact generation entered its atomic renewal transaction.
-    _fresh_health(conn, health_checked_at)
+    if recovery_only:
+        _fresh_health(conn, health_checked_at, retry_clock_regression=True)
+    else:
+        _fresh_health(conn, health_checked_at)
     checked = revalidator.revalidate_in_transaction(conn, lock=lock)
     expected = _expected_backend_claims(lock, checked)
     now = _values(conn.execute('SELECT clock_timestamp() AS now').fetchone(), ('now',))[0]

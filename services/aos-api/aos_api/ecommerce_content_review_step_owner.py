@@ -12,6 +12,8 @@ from types import SimpleNamespace
 from uuid import UUID
 
 from aos_api.aip_task_store import AipTaskStore
+from aos_api.aip_agent_run_service import AipAgentRunService
+from aos_api.aip_agent_registry_contracts import AgentRunStatus
 from aos_api.ecommerce_growth_host_ports import (
     EcommerceGrowthHostError, HostTransaction, LockedEcommerceGrowthHostPort,
 )
@@ -174,6 +176,8 @@ class ContentReviewStepSource:
                 "idempotencyKey": row["idempotency_key"],
                 "requestHash": response["requestHash"],
             }
+            if projection.get("sourceKind") is not None:
+                command["sourceKind"] = projection["sourceKind"]
             _strict_content_review_command(command)
         except (KeyError, TypeError, ValueError) as exc:
             raise ContentReviewStepConflict("review command cannot be reconstructed exactly") from exc
@@ -321,7 +325,75 @@ class ContentReviewStepOwner:
         checkpoint_id = store.complete_step(scope, lease.step_run_id, self.actor,
             lease.fence, self.actor)
         store.complete_run(scope, proof.run_id)
+        self._reconcile_agent_run(conn, scope, proof, complete=True)
         return checkpoint_id
+
+    @staticmethod
+    def _reconcile_agent_run(conn, scope: TenantScope, proof: ContentReviewStepProof,
+                             *, complete: bool = False) -> None:
+        """Finish only the modern run backed by this settled, accepted output."""
+        intents = conn.execute(
+            """SELECT agent_run_id,state,attempt FROM public.ecommerce_growth_content_agentrun_intent
+                WHERE org_id=%s AND project_id=%s AND task_run_id=%s""",
+            (*scope.key, proof.run_id),
+        ).fetchall()
+        if not intents:
+            agents = conn.execute(
+                """SELECT agent_run_id FROM public.aip_agent_run
+                    WHERE org_id=%s AND project_id=%s AND task_run_id=%s LIMIT 1""",
+                (*scope.key, proof.run_id),
+            ).fetchall()
+            if agents:
+                raise ContentReviewStepConflict("content terminal AgentRun origin unavailable")
+            return  # Legacy content runs predate the AgentRun handoff.
+        if (len(intents) != 1 or intents[0]["state"] != "accepted"
+                or intents[0]["attempt"] != 1 or not intents[0]["agent_run_id"]):
+            raise ContentReviewStepConflict("content terminal AgentRun origin drifted")
+        agent_id = intents[0]["agent_run_id"]
+        artifact = proof.command["artifactRef"]
+        rows = conn.execute(
+            """SELECT a.status AS agent_status,c.status AS capacity_status
+                FROM public.aip_agent_run a
+                JOIN public.aip_task_run r ON r.org_id=a.org_id AND r.project_id=a.project_id
+                  AND r.run_id=a.task_run_id AND r.task_id=a.task_id
+                JOIN public.aip_task t ON t.org_id=r.org_id AND t.project_id=r.project_id AND t.task_id=r.task_id
+                JOIN public.aip_model_capacity_reservation c ON c.org_id=a.org_id AND c.project_id=a.project_id AND c.agent_run_id=a.agent_run_id
+                JOIN public.ecommerce_content_execution_command j ON j.org_id=c.org_id AND j.project_id=c.project_id
+                  AND j.command_payload->'authorityRefs'->'capacity_reservation'->>'resourceId'=c.reservation_id
+                  AND j.command_payload->'authorityRefs'->'capacity_reservation'->>'resourceType'='CapacityReservation'
+                  AND j.command_payload->'authorityRefs'->'capacity_reservation'->>'revision'='1'
+                  AND j.command_payload->'authorityRefs'->'capacity_reservation'->>'contentHash'='sha256:'||c.request_hash
+                JOIN public.aip_budget_reservation b ON b.org_id=j.org_id AND b.project_id=j.project_id
+                  AND b.reservation_id=j.reservation_id AND b.state='settled'
+                  AND b.operation_id='ecommerce_growth_content_generate'
+                  AND b.invocation_key=j.command_payload->>'idempotencyKey'
+                  AND b.request_hash=j.budget_request_hash
+                  AND b.task_ref=j.command_payload->'authorityRefs'->'task'
+                JOIN public.aip_artifact artifact ON artifact.org_id=b.org_id AND artifact.project_id=b.project_id
+                  AND artifact.source->>'invocationId'=b.invocation_id::text AND artifact.run_id=r.run_id
+                  AND artifact.artifact_type='ecommerce_content'
+                WHERE a.org_id=%s AND a.project_id=%s AND a.agent_run_id=%s
+                  AND a.task_run_id=%s AND a.task_id=%s AND r.status='succeeded' AND t.status='completed'
+                  AND artifact.artifact_id=%s AND artifact.content_hash=%s
+                LIMIT 2""",
+            (*scope.key, agent_id, proof.run_id, proof.task_id, artifact["resourceId"],
+             artifact["contentHash"].removeprefix("sha256:")),
+        ).fetchall()
+        if len(rows) != 1:
+            raise ContentReviewStepConflict("content terminal settled Artifact/capacity lineage unavailable")
+        state = rows[0]
+        if state["agent_status"] == "succeeded" and state["capacity_status"] in {"released", "expired"}:
+            return
+        if (state["agent_status"] != "running" or state["capacity_status"] not in {"reserved", "consumed", "released", "expired"}):
+            raise ContentReviewStepConflict("content terminal AgentRun/capacity state drifted")
+        if not complete:
+            raise ContentReviewStepUnknown("content terminal AgentRun/capacity readback unknown")
+        service = AipAgentRunService(TransactionBoundConnectFactory(HostTransaction(conn), scope))
+        current = service.get(scope, agent_id)
+        clock = conn.execute("SELECT clock_timestamp() AS checked_at").fetchone()["checked_at"]
+        service.transition(scope, agent_id, expected_version=current.version,
+            from_status=AgentRunStatus.RUNNING, to_status=AgentRunStatus.SUCCEEDED,
+            actor=ContentReviewStepOwner.actor, occurred_at=clock)
 
     @staticmethod
     def _readback(conn, scope: TenantScope, proof: ContentReviewStepProof,
@@ -384,6 +456,10 @@ class ContentReviewStepOwner:
             or observation["payload"].get("payload", {}).get("feedbackCommandId")
                 != proof.feedback_command_id):
             raise ContentReviewStepUnknown("content review checkpoint/lineage readback unknown")
+        try:
+            ContentReviewStepOwner._reconcile_agent_run(conn, scope, proof)
+        except ContentReviewStepConflict as exc:
+            raise ContentReviewStepUnknown("content terminal AgentRun lineage readback unknown") from exc
         return {"status": "CONTENT_REVIEW_RUN_SUCCEEDED", "runId": proof.run_id,
             "stepRunId": row["step_run_id"], "checkpointId": checkpoint["checkpoint_id"]}
 

@@ -27,6 +27,7 @@ def effective_ready(facts: AdmissionFacts) -> bool:
 
 
 _PATHS = {
+    "runtime-recover": ("accepted", "validating", "preparing", "registered", "committing", "succeeded"),
     "runtime-apply": ("accepted", "validating", "preparing", "registered", "committing", "succeeded"),
     "runtime-verify": ("accepted", "validating", "committing", "succeeded"),
     "configure": ("accepted", "validating", "fencing", "committing", "succeeded"),

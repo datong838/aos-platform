@@ -20,6 +20,8 @@ from .disable_consumer import ClaimedDisableDelivery, DisableDeliveryResult, Run
 from .generation_attempts import ExpiredSignedReadAttemptRecovery
 from .owned_control_consumer import _settled
 from .preparation_owner import _observe
+from .preparation_consumer import PreparationDeliveryResult
+from .released_recovery_consumer import ReleasedPreparationRecoveryConsumer
 from .resource_recovery import ExpiredResourceRecovery, RecoveryPage
 from .live_installation_scheduler import (
     LiveInstallationScheduler,
@@ -28,8 +30,8 @@ from .live_installation_scheduler import (
 
 
 _SYNC_CONSUMERS = (ConfigurationConsumer, RuntimeDisableConsumer, ConfigurationStageConsumer)
-_CONSUMERS = _SYNC_CONSUMERS + (RuntimeUiReadConsumer,)
-_CONSUMER_KINDS = {ConfigurationStageConsumer:'stage-configuration',ConfigurationConsumer:'configure',RuntimeDisableConsumer:'disable',RuntimeUiReadConsumer:'ui-read'}
+_CONSUMERS = (ReleasedPreparationRecoveryConsumer,) + _SYNC_CONSUMERS + (RuntimeUiReadConsumer,)
+_CONSUMER_KINDS = {ReleasedPreparationRecoveryConsumer:'runtime-recover',ConfigurationStageConsumer:'stage-configuration',ConfigurationConsumer:'configure',RuntimeDisableConsumer:'disable',RuntimeUiReadConsumer:'ui-read'}
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +63,12 @@ class RuntimeTenantAssignment:
             raise TypeError("runtime assignment requires concrete consumers")
         if any(type(consumer) is RuntimeUiReadConsumer and consumer.scope!=self.scope for consumer in self.consumers):
             raise TypeError('UI read consumer must share assignment scope')
+        recoveries=tuple(consumer for consumer in self.consumers
+            if type(consumer) is ReleasedPreparationRecoveryConsumer)
+        if any(consumer.tenant_scope!=self.scope for consumer in recoveries):
+            raise TypeError('recovery consumer must share assignment scope')
+        if recoveries and self.lifecycle is not None:
+            raise ValueError('recovery and preparation scheduler cannot own one assignment')
         kinds = tuple(_CONSUMER_KINDS[type(consumer)] for consumer in self.consumers)
         if len(kinds) != len(set(kinds)):
             raise ValueError("duplicate runtime consumer kind")
@@ -106,6 +114,7 @@ class RuntimeHost:
         self._recovery_page_size = recovery_page_size
         self._recovery_cursors: dict[tuple[str, str], UUID | None] = {}
         self._lifecycles: dict[int, tuple[RuntimeTenantAssignment, LiveInstallationScheduler]] = {}
+        self._recovery_consumers: dict[int, tuple[RuntimeTenantAssignment, ReleasedPreparationRecoveryConsumer]] = {}
         self._current_tick: asyncio.Task[RuntimeHostTick] | None = None
         self._close_task: asyncio.Task[None] | None = None
         self._closing = False
@@ -142,6 +151,26 @@ class RuntimeHost:
             for assignment in self._current_assignments()
         )
 
+    def recovery_engine_context(self, scope: TenantScope, *, installation_id: UUID) -> str | None:
+        """Observe server-assembled recovery capability, never a request permit."""
+        if type(scope) is not TenantScope or type(installation_id) is not UUID or self._closing:
+            return None
+        from .pending_preparation_directory import LiveInstallationOwnerFactory
+        from .released_recovery_worker import ReleasedPreparationRecoveryWorker
+        from .oci_driver import OciDriver
+        for assignment in self._current_assignments():
+            scheduler=assignment.lifecycle
+            if assignment.scope!=scope or scheduler is None:
+                continue
+            factory=scheduler.factory
+            worker=getattr(factory,'recovery_worker',None)
+            if (getattr(scheduler.directory,'include_recovery',False) is True
+                    and type(factory) is LiveInstallationOwnerFactory and factory.scope==scope
+                    and type(worker) is ReleasedPreparationRecoveryWorker
+                    and type(worker.driver) is OciDriver):
+                return worker.driver.context
+        return None
+
     async def _recover(self, assignment: RuntimeTenantAssignment) -> RecoveryPage | None:
         if assignment.recovery is None:
             return None
@@ -167,9 +196,15 @@ class RuntimeHost:
         return any(item is assignment for item in self._current_assignments())
 
     async def _retire_assignment(self, assignment: RuntimeTenantAssignment) -> None:
+        recovery=self._recovery_consumers.pop(id(assignment),None)
         owned=self._lifecycles.pop(id(assignment),None)
-        if owned is not None:
-            await _settled(owned[1].stop())
+        original=None
+        for entry in (recovery,owned):
+            if entry is not None:
+                try:await _settled(entry[1].stop())
+                except BaseException as exc:
+                    if original is None:original=exc
+        if original is not None:raise original
 
     async def _still_current(self, assignment: RuntimeTenantAssignment) -> bool:
         if self._contains_assignment(assignment):return True
@@ -180,14 +215,30 @@ class RuntimeHost:
         self, assignments: tuple[RuntimeTenantAssignment, ...]
     ) -> None:
         current={id(item) for item in assignments}
-        stale=tuple(value for key,value in self._lifecycles.items() if key not in current)
+        tracked=dict(self._lifecycles)
+        tracked.update(self._recovery_consumers)
+        stale=tuple(value for key,value in tracked.items() if key not in current)
+        original=None
         for assignment,_ in stale:
-            await self._retire_assignment(assignment)
+            try:await self._retire_assignment(assignment)
+            except BaseException as exc:
+                if original is None:original=exc
+        if original is not None:raise original
+        for assignment in assignments:
+            for consumer in assignment.consumers:
+                if type(consumer) is ReleasedPreparationRecoveryConsumer:
+                    self._recovery_consumers[id(assignment)]=(assignment,consumer)
         for assignment in assignments:
             if assignment.lifecycle is not None:
                 self._lifecycles[id(assignment)]=(assignment,assignment.lifecycle)
 
     async def _consume(self, assignment: RuntimeTenantAssignment, consumer: object):
+        if type(consumer) is ReleasedPreparationRecoveryConsumer:
+            result=await _settled(consumer.run_once())
+            if result is not None and type(result) is not PreparationDeliveryResult:
+                raise TypeError('recovery consumer returned invalid delivery')
+            await self._still_current(assignment)
+            return result
         if type(consumer) is RuntimeUiReadConsumer:
             prepared=await _settled(asyncio.to_thread(consumer.prepare_once,
                 org_id=assignment.scope.org_id,project_id=assignment.scope.project_id))
@@ -292,7 +343,8 @@ class RuntimeHost:
             if self._current_tick is not None:
                 await asyncio.shield(self._current_tick)
         except BaseException as exc:original=exc
-        owned=tuple(self._lifecycles.values())
+        owned=tuple(self._recovery_consumers.values())+tuple(self._lifecycles.values())
+        self._recovery_consumers.clear()
         self._lifecycles.clear()
         for _,scheduler in owned:
             try:await _settled(scheduler.stop())

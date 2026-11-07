@@ -56,10 +56,13 @@ class RuntimeWorkerDependencies:
     ui_read_catalog: RuntimeWorkshopCatalog | None = None
     ui_read_markings: tuple[str, ...] = ()
     configuration_stage_enabled: bool = False
+    recovery_enabled: bool = False
 
     def __post_init__(self) -> None:
         if type(self.configuration_stage_enabled) is not bool:
             raise TypeError("exact configuration staging flag required")
+        if type(self.recovery_enabled) is not bool:
+            raise TypeError('exact recovery flag required')
         if type(self.installation_store) is not PostgresInstallationStore:
             raise TypeError("production runtime requires the PostgreSQL installation store")
         if (
@@ -198,11 +201,14 @@ def select_production_runtime_host(
                 consumers+=(RuntimeUiReadConsumer(scope=scope,connect=runtime_connect,catalog=dependencies.ui_read_catalog,
                     installation_store=dependencies.installation_store,live_directory=dependencies.preparation.live_directory,
                     markings=dependencies.ui_read_markings),)
+        scheduler_options=dict(preparation_only=preparation_only)
+        if dependencies.recovery_enabled:
+            scheduler_options['recovery_enabled']=True
         return RuntimeTenantAssignment(
             scope=scope,
             recovery=recovery,
             attempt_recovery=ExpiredSignedReadAttemptRecovery(connect=runtime_connect),
-            lifecycle=dependencies.preparation.build_scheduler(scope, preparation_only=preparation_only),
+            lifecycle=dependencies.preparation.build_scheduler(scope, **scheduler_options),
             consumers=consumers,
         )
 

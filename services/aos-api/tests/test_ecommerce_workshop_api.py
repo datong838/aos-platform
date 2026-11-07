@@ -507,6 +507,7 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/operations",
             "get",
         ),
+        "ecommerceWorkshopOperationsObjectsGet": ("/v1/ecommerce-workshop/views/operations/objects", "get"),
         "ecommerceWorkshopOperationCaseWorkspaceGet": (
             "/v1/ecommerce-workshop/views/operations/cases",
             "get",

@@ -358,8 +358,6 @@ def execute_content_capability(
 ) -> ContentCapabilityReceipt:
     if dispatch_ref.operation_id != CONTENT_GENERATE_OPERATION or dispatch_ref.handler_kind != "extension":
         raise PermissionError("dispatch does not authorize content capability")
-    if request.source_kind == "accepted-stage-v1":
-        raise ValueError("accepted stage content Host is not wired")
     command = request.command_payload()
     request_hash = canonical_command_hash(command)
     result = commit_with_dispatch(port, dispatch_ref, {**command, "requestHash": request_hash})

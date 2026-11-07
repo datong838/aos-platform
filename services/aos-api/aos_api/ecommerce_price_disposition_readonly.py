@@ -188,7 +188,8 @@ class EcommercePriceDispositionReadonlyReader:
             if (item.revision != 1 or item.receipt_ref.resource_type != receipt_type or item.outcome not in outcomes
                     or item.content_hash != digest or item.observation_id != 'price-disposition-observation-' + digest[:24]): _deny('AUTHORITY_DRIFT')
 
-    def read(self, scope):
+    def read_records(self, scope):
+        """Same bounded, validated snapshot for original contribution and workspace."""
         started = monotonic()
         def deadline():
             if monotonic() - started > 10: _deny('LIMIT_EXCEEDED')
@@ -221,15 +222,24 @@ class EcommercePriceDispositionReadonlyReader:
                 deadline()
                 cases, contracts, dispositions, observations = decoded
                 self._validate(cases, contracts, dispositions, observations)
-                result = EcommerceWorkshopPriceDispositionService(
-                    _ValidatedStore(cases, dispositions, observations), None).contribution_view(scope, now=cutoff)
-                result = result.model_copy(update={'allowed_commands': [], 'repricing_enabled': False, 'external_effects_allowed': False})
-                if len(result.model_dump_json(by_alias=True).encode()) > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
                 deadline()
-                return result
+                return cutoff, cases, dispositions, observations
         except PriceDispositionReadonlyError:
             raise
         except psycopg.Error:
             _deny('AUTHORITY_UNAVAILABLE')
+        except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+            _deny('AUTHORITY_DRIFT')
+
+    def read(self, scope):
+        started = monotonic()
+        cutoff, cases, dispositions, observations = self.read_records(scope)
+        try:
+            result = EcommerceWorkshopPriceDispositionService(
+                _ValidatedStore(cases, dispositions, observations), None).contribution_view(scope, now=cutoff)
+            result = result.model_copy(update={'allowed_commands': [], 'repricing_enabled': False, 'external_effects_allowed': False})
+            if len(result.model_dump_json(by_alias=True).encode()) > MAX_ROW_BYTES: _deny('LIMIT_EXCEEDED')
+            if monotonic() - started > 10: _deny('LIMIT_EXCEEDED')
+            return result
         except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
             _deny('AUTHORITY_DRIFT')

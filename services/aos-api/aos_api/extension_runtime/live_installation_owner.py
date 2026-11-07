@@ -8,6 +8,7 @@ from .lifecycle_store import RuntimeConflict
 from .oci_driver import CleanupUncertainError
 from .owned_control_consumer import OwnedControlConsumer, _settled
 from .preparation_consumer import PreparationConsumer
+from .released_recovery_consumer import ReleasedPreparationRecoveryConsumer
 from .preparation_owner import _observe
 
 
@@ -22,8 +23,10 @@ class LiveInstallationLifecycleOwner:
     """Retains the sole PreparedJob while delivering its ordered controls."""
 
     def __init__(self, *, preparation: PreparationConsumer, enable_allowed: bool = True) -> None:
-        if type(preparation) is not PreparationConsumer or type(enable_allowed) is not bool:
+        if type(preparation) not in (PreparationConsumer,ReleasedPreparationRecoveryConsumer) or type(enable_allowed) is not bool:
             raise TypeError("exact preparation consumer required")
+        if type(preparation) is ReleasedPreparationRecoveryConsumer and enable_allowed:
+            raise ValueError('recovery lifecycle cannot enable runtime')
         self.preparation = preparation
         self.enable_allowed = enable_allowed
         self._current_tick: asyncio.Task[LiveInstallationTick] | None = None
@@ -40,6 +43,8 @@ class LiveInstallationLifecycleOwner:
 
     async def _run(self) -> LiveInstallationTick:
         preparation = await _settled(self.preparation.run_once())
+        if type(self.preparation) is ReleasedPreparationRecoveryConsumer:
+            return LiveInstallationTick(preparation,None,None)
         job = self.preparation.job
         if job is None:
             return LiveInstallationTick(preparation, None, None)

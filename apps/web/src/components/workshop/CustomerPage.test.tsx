@@ -44,8 +44,22 @@ describe("CustomerPage", () => {
     await click("新建经营计划"); await click("采纳合规建议"); await act(async () => host.querySelector<HTMLFormElement>('.customer-plan-workspace form')!.requestSubmit());
     expect(actions.createProposal).toHaveBeenCalledWith(expect.objectContaining({ actionTypeId: "ecommerce.customer.prepare-outreach-draft", riskHint: "R2", payload: expect.objectContaining({ contactResolutionAllowed: false, providerDispatchAllowed: false, sendAllowed: false, externalEffectAllowed: false }) }));
     expect(JSON.stringify(actions.createProposal.mock.calls[0])).not.toMatch(/mobile|openid|address|contactValue/i);
-    await click("影响预览"); expect(host.textContent).toContain("protected contact 0"); await click("修改计划"); await act(async () => host.querySelector<HTMLFormElement>('.customer-plan-workspace form')!.requestSubmit()); expect(actions.createReplacementProposal).toHaveBeenCalled();
+    await click("影响预览"); expect(host.textContent).toContain("protected contact 0"); await click("修改计划");
+    await act(async()=>{const field=host.querySelector<HTMLTextAreaElement>('[aria-label="客户内容草稿"]')!;Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,"value")!.set!.call(field,"【功能自测样例】新的关怀说明");field.dispatchEvent(new Event("input",{bubbles:true}));});
+    await act(async () => host.querySelector<HTMLFormElement>('.customer-plan-workspace form')!.requestSubmit());
+    expect(actions.createReplacementProposal).toHaveBeenCalledWith(proposalBundle,expect.objectContaining({payload:expect.objectContaining({contentDraft:"【功能自测样例】新的关怀说明",sendAllowed:false,externalEffectAllowed:false})}));
     await click("执行记录"); expect(host.textContent).toContain("submitted"); await click("审批预览"); expect(host.textContent).toContain("Consent、留存、频控"); await click("导入客户预检"); expect(host.textContent).toContain("导入 0，客户状态变更 0"); await click("发送预检"); expect(host.textContent).toContain("发送 0，外部效果 0");
     await click("撤回计划"); expect(actions.withdraw).toHaveBeenCalled(); await click("恢复为新草稿"); await act(async () => host.querySelector<HTMLFormElement>('.customer-plan-workspace form')!.requestSubmit()); expect(actions.createProposal).toHaveBeenCalledTimes(2); expect(host.textContent).toContain("customer-recovery-v1"); expect([...host.querySelectorAll("button")].map((item) => item.textContent).join(" ")).not.toContain("开始发送");
   });
+ it("同页签换客户最小投影时清除旧提案和预览",async()=>{
+  const actions={createProposal:vi.fn().mockResolvedValue(proposalBundle),createReplacementProposal:vi.fn(),withdraw:vi.fn(),timeline:vi.fn()};
+  await act(async()=>root.render(<CustomerPage client={{...client(),getCustomerView:vi.fn().mockResolvedValue(rich)}} actions={actions}/>));
+  const click=async(label:string)=>act(async()=>{Array.from(host.querySelectorAll<HTMLButtonElement>(".customer-plan-workspace button")).find(x=>x.textContent===label)!.click();});
+  await click("新建经营计划");await act(async()=>host.querySelector<HTMLFormElement>(".customer-plan-workspace form")!.requestSubmit());
+  expect(host.querySelector(".customer-plan-workspace")?.textContent).toContain("customer-proposal-v1");
+  await act(async()=>{Array.from(host.querySelectorAll<HTMLButtonElement>(".customer-items button")).filter(x=>x.textContent==="选择此最小投影")[1]!.click();});
+  expect(host.querySelector(".customer-plan-workspace")?.textContent).not.toContain("customer-proposal-v1");
+  expect(host.querySelector(".customer-plan-workspace")?.textContent).toContain("尚未提交");
+ });
+
 });

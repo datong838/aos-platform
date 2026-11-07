@@ -38,16 +38,18 @@ def _values(row, names):
     return tuple(row[name] for name in names) if isinstance(row,Mapping) else row
 
 
-def _request_hash(*, kind, actor, etag, deadline, configuration_target=None, binding_target=None):
+def _request_hash(*, kind, actor, etag, deadline, configuration_target=None, binding_target=None, recovery_target=None):
     # PostgreSQL stores timestamptz as an instant. Only the new configuration
     # contract normalizes offsets; existing command hash semantics stay intact.
-    if configuration_target is not None or binding_target is not None:
+    if configuration_target is not None or binding_target is not None or recovery_target is not None:
         deadline = deadline.astimezone(timezone.utc)
     request = {'kind':kind, 'actor':actor, 'expectedEtag':etag, 'deadline':deadline.isoformat()}
     if configuration_target is not None:
         request['configurationTarget'] = configuration_target
     if binding_target is not None:
         request['bindingTarget'] = binding_target
+    if recovery_target is not None:
+        request['recoveryTarget'] = recovery_target
     return _digest(request)
 
 
@@ -64,8 +66,11 @@ def _deadline_valid(conn, deadline):
 
 
 class RuntimeOperationStore:
-    def fail_uncommitted_preparation(self,conn,*,org_id,project_id,operation_id,expected_revision,failure_code):
+    def fail_uncommitted_preparation(self,conn,*,org_id,project_id,operation_id,expected_revision,failure_code,
+                                    operation_kind='runtime-apply'):
         """Trusted worker terminal failure, only before preparation was committed."""
+        if operation_kind not in {'runtime-apply','runtime-recover'}:
+            raise ValueError('unsupported preparation failure kind')
         _require_transaction(conn)
         if failure_code not in {'PREPARATION_VALIDATION_FAILED','PREPARATION_EXECUTION_FAILED',
                                 'PREPARATION_STOPPED','PREPARATION_EXPIRED'}:
@@ -82,7 +87,7 @@ class RuntimeOperationStore:
         kind,phase,status,revision,existing_code=_values(row,('kind','phase','status','revision','failure_code'))
         if type(expected_revision) is not int or expected_revision!=revision:
             raise RuntimeRevisionConflict('operation version changed')
-        if kind!='runtime-apply' or phase not in {'accepted','validating','preparing','registered'}:
+        if kind!=operation_kind or phase not in {'accepted','validating','preparing','registered'}:
             raise RuntimeConflict('operation is not an uncommitted preparation')
         if status=='failed' and existing_code==failure_code:
             return OperationResult(target[2],phase,status,revision,replayed=True)
@@ -129,7 +134,7 @@ class RuntimeOperationStore:
 
     def accept(self, conn, *, org_id, project_id, installation_id, kind,
                idempotency_key, requested_by, expected_installation_etag, deadline,
-               configuration_target=None, binding_target=None):
+               configuration_target=None, binding_target=None, recovery_target=None):
         _require_transaction(conn)
         from aos_api.extension_runtime.lifecycle import _PATHS
         if kind not in _PATHS or not isinstance(deadline,datetime) or deadline.utcoffset() is None:
@@ -140,6 +145,19 @@ class RuntimeOperationStore:
             raise ValueError("invalid idempotency key")
         snapshot = None
         snapshot_key = 'configurationTarget'
+        if kind == 'runtime-recover' or recovery_target is not None:
+            if kind != 'runtime-recover' or recovery_target is None or configuration_target is not None or binding_target is not None:
+                raise ValueError('recovery requires its own exact source target')
+            from .recovery_contracts import ReleasedRecoveryTarget
+            recovery = ReleasedRecoveryTarget.model_validate(recovery_target)
+            if (recovery.sourceRef.installation_id != str(UUID(str(installation_id)))
+                    or recovery.sourceRef.revision != expected_installation_etag):
+                raise ValueError('recovery target differs from installation CAS')
+            snapshot=recovery.model_dump(mode='json',by_alias=True)
+            snapshot_key='recoveryTarget'
+            scope=conn.execute("SELECT current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id").fetchone()
+            if not org_id or not project_id or _values(scope,('org_id','project_id'))!=(org_id,project_id):
+                raise PermissionError('recovery tenant scope mismatch')
         if binding_target is not None and (kind!='disable' or configuration_target is not None):
             raise ValueError('binding target only belongs to disable')
         if kind == 'configure' or (kind == 'enable' and configuration_target is not None):
@@ -168,7 +186,8 @@ class RuntimeOperationStore:
         request_hash=_request_hash(kind=kind,actor=requested_by,etag=expected_installation_etag,
                                   deadline=deadline,
                                   configuration_target=snapshot if snapshot_key=='configurationTarget' else None,
-                                  binding_target=snapshot if snapshot_key=='bindingTarget' else None)
+                                  binding_target=snapshot if snapshot_key=='bindingTarget' else None,
+                                  recovery_target=snapshot if snapshot_key=='recoveryTarget' else None)
         existing=conn.execute("""SELECT operation_id,phase,status,revision,request_hash
             FROM extension_runtime_operation WHERE org_id=%s AND project_id=%s AND installation_id=%s
             AND kind=%s AND idempotency_key=%s""",(*target,kind,idempotency_key)).fetchone()
@@ -181,7 +200,8 @@ class RuntimeOperationStore:
             raise RuntimeRevisionConflict("installation version changed")
         binding_revision = None
         if snapshot is not None:
-            binding = conn.execute('''SELECT revision FROM extension_runtime_binding
+            columns='revision,execution_epoch' if snapshot_key=='recoveryTarget' else 'revision'
+            binding = conn.execute(f'''SELECT {columns} FROM extension_runtime_binding
                 WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s FOR UPDATE''',
                 (*target, UUID(snapshot['generation']))).fetchone()
             if binding is None:
@@ -189,7 +209,9 @@ class RuntimeOperationStore:
             binding_revision = snapshot['bindingRevision']
             if _values(binding,('revision',))[0] != binding_revision:
                 raise RuntimeRevisionConflict('configuration binding version changed')
-            if snapshot_key=='configurationTarget' and not _deadline_valid(conn,deadline):
+            if snapshot_key=='recoveryTarget' and _values(binding,('execution_epoch',))[0] != snapshot['executionEpoch']:
+                raise RuntimeRevisionConflict('recovery source execution epoch changed')
+            if snapshot_key in {'configurationTarget','recoveryTarget'} and not _deadline_valid(conn,deadline):
                 raise RuntimeConflict('configuration request deadline expired')
         operation_id=uuid4()
         conn.execute("""INSERT INTO extension_runtime_operation
@@ -222,7 +244,7 @@ class RuntimeOperationStore:
             raise RuntimeRevisionConflict("operation version changed")
         if row[2] not in {"accepted","running"}:
             raise RuntimeConflict("operation does not accept progress")
-        if row[0] in {"runtime-apply","runtime-verify","configure","enable"} and not _deadline_valid(conn,row[4]):
+        if row[0] in {"runtime-apply","runtime-verify","runtime-recover","configure","enable"} and not _deadline_valid(conn,row[4]):
             raise RuntimeConflict("operation deadline expired")
         next_phase(row[0],row[1],phase)
         status=phase if phase in {"succeeded","cancelled"} else "running"

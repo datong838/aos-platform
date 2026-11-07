@@ -1,5 +1,6 @@
 """Internal sourced D01 composition over the governed retained-output executor."""
 from datetime import datetime, timedelta
+from contextlib import ExitStack
 from typing import Literal
 
 from pydantic import Field
@@ -44,6 +45,29 @@ class PortraitGenerationService:
 
     def generate(self, scope: TenantScope, agent_run_id: str, command: PortraitGenerationCommand, *,
                  actor: str, markings: list[str], clock, max_source_age: timedelta, max_bytes: int) -> AnalystExactRef:
+        return self._generate(scope, agent_run_id, command, actor=actor, markings=markings,
+            clock=clock, max_source_age=max_source_age, max_bytes=max_bytes)
+
+    def generate_with_formal_source(
+            self, scope: TenantScope, agent_run_id: str, command: PortraitGenerationCommand, *,
+            source_service, parent_request, source_ref, installation_id,
+            installation_revision, installation_etag, **generation) -> AnalystExactRef:
+        """Use fresh Source authority before generation and again for recovery."""
+        from aos_api.aip_formal_source_disclosure import FormalSourceDisclosureService
+        from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
+        from aos_api.aip_production_contracts import ResolveEvidenceDisclosureRequest
+        if type(source_service) is not FormalSourceDisclosureService:
+            raise TypeError('original formal Source service required')
+        formal_source = dict(source_service=source_service,
+            parent_request=ResolveEvidenceDisclosureRequest.model_validate(parent_request.model_dump()),
+            source_ref=FormalExactRef.model_validate(source_ref.model_dump()),
+            installation_id=installation_id, installation_revision=installation_revision,
+            installation_etag=installation_etag)
+        return self._generate(scope, agent_run_id, command, formal_source=formal_source, **generation)
+
+    def _generate(self, scope: TenantScope, agent_run_id: str, command: PortraitGenerationCommand, *,
+                  actor: str, markings: list[str], clock, max_source_age: timedelta,
+                  max_bytes: int, formal_source=None) -> AnalystExactRef:
         command = PortraitGenerationCommand.model_validate(command.model_dump(mode="python"))
         markings = list(markings)
         if (not actor.strip() or command.data_classification not in markings or not callable(clock)
@@ -58,6 +82,11 @@ class PortraitGenerationService:
         recovery = dict(attempt_id=command.attempt_id, method_ref=command.method_ref, eval_ref=command.eval_ref, cutoff_at=command.cutoff_at,
             metric_sources=command.metric_sources, actor=actor, markings=markings,
             max_source_age=max_source_age, max_bytes=max_bytes)
+        def recover():
+            if formal_source is None:
+                return self._receiver.recover(scope, **recovery, now=current_time())
+            return self._receiver.recover_with_formal_source(
+                scope, **formal_source, **recovery, now=current_time())
         try:
             existing = self._attempts.get(scope, command.attempt_id)
         except AipAgentRegistryNotFound:
@@ -72,18 +101,28 @@ class PortraitGenerationService:
                 raise ValueError("portrait generation attempt command drifted")
             if existing.status != "succeeded":
                 raise ValueError("existing portrait generation cannot be automatically reinvoked")
-            return self._receiver.recover(scope, **recovery, now=current_time())
+            return recover()
         run = self._runs.get(scope, agent_run_id)
         if ((run.tenant.org_id, run.tenant.project_id) != scope.key or run.agent_run_id != agent_run_id
                 or run.status != "running" or run.version != command.expected_agent_run_version
                 or run.request.skill.asset_type != "SkillTemplate" or run.request.skill.asset_id != "ecommerce.skill.D01"):
             raise ValueError("current running D01 AgentRun required")
-        with self._connect(scope) as conn:
+        with ExitStack() as stack:
+            source_store = None
+            if formal_source is None:
+                conn = stack.enter_context(self._connect(scope))
+            else:
+                source_args = {key: value for key, value in formal_source.items()
+                               if key not in {'source_service', 'parent_request'}}
+                conn, source_store = stack.enter_context(
+                    formal_source['source_service'].source_transaction(
+                        scope, actor, formal_source['parent_request'], **source_args))
             if not conn.execute("SELECT to_regclass('public.aip_agent_text_output') AS storage").fetchone()["storage"]:
                 raise ValueError("retained output storage migration is not deployed")
             inputs = read_portrait_inputs(conn=conn, scope=scope, method_ref=command.method_ref, eval_ref=command.eval_ref,
                 metric_sources=command.metric_sources, cutoff_at=command.cutoff_at, run=run, actor=actor, markings=markings,
-                now=current_time(), max_source_age=max_source_age, max_bytes=max_bytes)
+                now=current_time(), max_source_age=max_source_age, max_bytes=max_bytes,
+                **({'source_store': source_store} if source_store is not None else {}))
             require_source_classification(inputs['materials'], command.data_classification)
             query, system = portrait_prompt(**inputs)
         request = ExecuteAgentRunRequest(expectedAgentRunVersion=command.expected_agent_run_version,
@@ -94,4 +133,4 @@ class PortraitGenerationService:
         result = self._executor.execute(scope, agent_run_id, request, idempotency_key=key, actor=actor, occurred_at=current_time())
         if result.attempt.status != "succeeded":
             raise ValueError("portrait generation did not produce a recoverable successful output")
-        return self._receiver.recover(scope, **recovery, now=current_time())
+        return recover()

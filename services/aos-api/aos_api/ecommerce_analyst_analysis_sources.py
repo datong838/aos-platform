@@ -30,15 +30,19 @@ def _ref_key(ref):
 
 
 def read_analysis_bundle(*, conn, scope, task_id, actor, request: AnalysisBundleSourceRequest,
-                         markings, now, max_source_age: timedelta, max_bytes: int) -> dict:
+                         markings, now, max_source_age: timedelta, max_bytes: int, source_store=None) -> dict:
     if (conn is None or not task_id.strip() or not actor.strip() or now.utcoffset() is None
             or max_source_age <= timedelta(0) or type(max_bytes) is not int or max_bytes < 1
             or not markings or any(not isinstance(x, str) or not x.strip() for x in markings)):
         raise ValueError("explicit transaction, task, actor, source lifetime, markings and byte limit required")
+    if source_store is not None:
+        from aos_api.aip_metric_query_evidence import _production
+        owner = _production(conn,scope,source_store)
+    else:
+        owner = AipProductionContractStore()
     ref = request.bundle_ref
     if ref.resource_type != "EvidenceBundleRevision":
         raise ValueError("analysis source must reference an exact evidence bundle")
-    owner = AipProductionContractStore()
     bundle = owner.get_evidence_bundle(scope, ref.resource_id, ref.revision, conn=conn, markings=markings)
     if ((bundle.tenant.org_id, bundle.tenant.project_id) != scope.key
             or (bundle.bundle_id, bundle.revision, bundle.content_hash) != (ref.resource_id, ref.revision, ref.content_hash)

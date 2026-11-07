@@ -227,6 +227,10 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
         from aos_api.extension_runtime.production_runtime import RuntimeHostSelection
         return RuntimeHostSelection(None, "INACTIVE", "INVALID_ADMISSION_MODE")
     preparation_only = enabled and admission_flag == "1"
+    recovery_flag = os.getenv('AOS_EXTENSION_RUNTIME_RECOVERY_ENABLED','0').strip()
+    if enabled and recovery_flag not in {'0','1'}:
+        from aos_api.extension_runtime.production_runtime import RuntimeHostSelection
+        return RuntimeHostSelection(None,'INACTIVE','INVALID_RECOVERY_MODE')
     if enabled:
         signed_receipt = os.getenv("AOS_CURRENT_SIGNED_RECEIPT", "").strip()
         restored_route = any(name in os.environ for name in (
@@ -304,6 +308,7 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
                 ui_read_catalog=ui_catalog,
                 ui_read_markings=ui_markings,
                 configuration_stage_enabled=stage_flag == '1' and not preparation_only,
+                recovery_enabled=recovery_flag == '1',
             )
         except (TypeError, ValueError):
             dependencies = None

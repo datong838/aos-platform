@@ -158,3 +158,45 @@ def test_analysis_dispatch_cancellation_propagates(monkeypatch):
     async def cancel(target):raise asyncio.CancelledError()
     monkeypatch.setattr(worker,'_dispatch',cancel)
     with pytest.raises(asyncio.CancelledError):asyncio.run(worker.tick())
+
+
+def test_discovery_failure_still_dispatches_saved_occurrence_without_advancing_cursor(monkeypatch):
+    worker,directory,_,created=setup(monkeypatch)
+    target=directory.current_targets()[0]
+    worker._cursors[target]=('previous-policy','previous-run')
+    def unavailable(target,after):
+        assert after==('previous-policy','previous-run')
+        raise ValueError('discovery temporarily unavailable')
+    monkeypatch.setattr(worker,'_discover',unavailable)
+    dispatched=[]
+    async def existing(target):dispatched.append(target);return True
+    monkeypatch.setattr(worker,'_dispatch',existing)
+    result=asyncio.run(worker.tick())
+    assert result==dict(targetsChecked=1,candidates=0,occurrences=0,analysesAccepted=1,failed=1)
+    assert dispatched==[target] and created==[]
+    assert worker._cursors[target]==('previous-policy','previous-run')
+
+
+def test_discovery_and_dispatch_failures_do_not_starve_other_targets(monkeypatch):
+    worker,directory,_,created=setup(monkeypatch)
+    directory.register(_job());targets=list(directory.current_targets())
+    def unavailable(*args):raise ValueError('discovery unavailable')
+    monkeypatch.setattr(worker,'_discover',unavailable)
+    dispatched=[]
+    async def existing(target):
+        dispatched.append(target)
+        if target==targets[0]:raise PermissionError('original source no longer qualified')
+        return True
+    monkeypatch.setattr(worker,'_dispatch',existing)
+    result=asyncio.run(worker.tick())
+    assert dispatched==targets and created==[]
+    assert result==dict(targetsChecked=2,candidates=0,occurrences=0,analysesAccepted=1,failed=3)
+
+
+def test_discovery_failure_does_not_swallow_dispatch_cancellation(monkeypatch):
+    worker,_,_,_=setup(monkeypatch)
+    def unavailable(*args):raise ValueError('discovery unavailable')
+    monkeypatch.setattr(worker,'_discover',unavailable)
+    async def cancel(target):raise asyncio.CancelledError()
+    monkeypatch.setattr(worker,'_dispatch',cancel)
+    with pytest.raises(asyncio.CancelledError):asyncio.run(worker.tick())

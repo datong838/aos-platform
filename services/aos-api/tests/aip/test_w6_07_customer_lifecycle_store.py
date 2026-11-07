@@ -26,7 +26,7 @@ def policy() -> CustomerConsentPolicyRevision:
 
 def test_production_store_never_trusts_caller_shaped_external_policy_refs():
     store = EcommerceWorkshopCustomerLifecycleStore(connect_factory=lambda _scope: None)
-    with pytest.raises(CustomerLifecycleBlocked, match="EXTERNAL_POLICY_AUTHORITY_RESOLVER_UNAVAILABLE"):
+    with pytest.raises(CustomerLifecycleBlocked, match="CONTEXT_REQUIRED"):
         store.require_external_policy_authorities(SCOPE, ref("FrequencyPolicyRevision", "frequency"), ref("CapabilityBindingRevision", "capability"))
 
 

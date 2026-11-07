@@ -2,6 +2,10 @@ import { getApiBase } from "../apiBase";
 import { tenantAuthHeaders } from "../tenant";
 import type { InvestigationCaseSelection } from "./contracts";
 import { parseInvestigationCaseSelection } from "./parser";
+import type { InvestigationInternalArtifact, InvestigationInternalTasks, InvestigationInternalMemo } from "./contracts";
+import { parseInvestigationInternalTasks, parseInvestigationInternalMemo } from "./parser";
+import type { InvestigationTaskMaterialization, InvestigationTaskMaterializationInput, InvestigationTenant } from "./contracts";
+import { parseInvestigationTaskMaterialization } from "./parser";
 import type { InvestigationCaseListResponse, InvestigationCommandClient, InvestigationControlCommand, InvestigationDataCommandResult, InvestigationHandoffCompileInput, InvestigationHandoffCompileResponse, InvestigationMissingDataInput, InvestigationRunCommandResult, InvestigationRunListResponse, InvestigationStageReviewProjection, InvestigationStageReviewResult, InvestigationWorkbenchView } from "./contracts";
 import { parseInvestigationCaseList, parseInvestigationDataCommandResponse, parseInvestigationHandoffCompile, parseInvestigationRunList, parseInvestigationRunStateCommandResponse, parseInvestigationStageReviewProjection, parseInvestigationStageReviewResponse, parseInvestigationWorkbenchView } from "./parser";
 
@@ -34,6 +38,38 @@ export class EcommerceInvestigationClient implements InvestigationCommandClient 
   }
   async listRuns(caseId: string, signal?: AbortSignal): Promise<InvestigationRunListResponse> { if (!RESOURCE_ID.test(caseId)) throw new TypeError("caseId 无效"); return parseInvestigationRunList(await this.get(`/v1/ecommerce/investigations/cases/${encodeURIComponent(caseId)}/runs?limit=200`, signal), caseId); }
   async getRunView(runId: string, signal?: AbortSignal): Promise<InvestigationWorkbenchView> { if (!RESOURCE_ID.test(runId)) throw new TypeError("runId 无效"); return parseInvestigationWorkbenchView(await this.get(`/v1/ecommerce/investigations/runs/${encodeURIComponent(runId)}/view`, signal), runId); }
+  private scopedHeaders() {
+    const headers = this.authHeaders(); const request = new Headers(headers);
+    const orgId = request.get("X-Org-Id"); const projectId = request.get("X-Project-Id");
+    if (!orgId || !projectId) throw new TypeError("内部任务请求必须绑定租户");
+    return { headers, tenant: { orgId, projectId } };
+  }
+  async materializeTasks(runId: string, input: InvestigationTaskMaterializationInput, expectedTenant: InvestigationTenant, signal?: AbortSignal): Promise<InvestigationTaskMaterialization> {
+    const scope = this.scopedHeaders();
+    if (scope.tenant.orgId !== expectedTenant.orgId || scope.tenant.projectId !== expectedTenant.projectId) throw new TypeError("任务确认租户已切换，请重新读取");
+    if (!RESOURCE_ID.test(runId) || !RESOURCE_ID.test(input.handoffId)) throw new TypeError("任务确认来源编号无效");
+    for (const [ref, type] of [[input.approvedPlanRef, "GrowthPlanRevision"], [input.acceptedDecisionRef, "HandoffDecisionRevision"]] as const) {
+      if (ref.resourceType !== type || !RESOURCE_ID.test(ref.resourceId) || !Number.isSafeInteger(ref.revision) || ref.revision < 1 || !/^[0-9a-f]{64}$/.test(ref.contentHash)) throw new TypeError("任务确认必须绑定精确方案与接收决定");
+    }
+    const body = { approvedPlanRef: input.approvedPlanRef, handoffId: input.handoffId, acceptedDecisionRef: input.acceptedDecisionRef };
+    let response: Response;
+    try { response = await this.fetchImpl(`${this.baseUrl().replace(/\/$/, "")}/v1/ecommerce/investigations/runs/${encodeURIComponent(runId)}/tasks:materialize`, { method: "POST", headers: { ...scope.headers, Accept: "application/json", "Content-Type": "application/json", "Idempotency-Key": `bi-confirm-${input.approvedPlanRef.contentHash}-${input.acceptedDecisionRef.contentHash}` }, body: JSON.stringify(body), signal }); }
+    catch (cause) { throw new EcommerceInvestigationClientError(cause instanceof Error ? cause.message : String(cause), 0, "COMMAND_OUTCOME_UNKNOWN"); }
+    const payload: unknown = await response.json().catch(() => undefined);
+    if (!response.ok) { const raw = typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : {}; throw new EcommerceInvestigationClientError(typeof raw.message === "string" ? raw.message : `HTTP ${response.status}`, response.status, typeof raw.code === "string" ? raw.code : "HTTP_ERROR"); }
+    try { return parseInvestigationTaskMaterialization(payload, runId, input, scope.tenant); }
+    catch (cause) { throw new EcommerceInvestigationClientError(cause instanceof Error ? cause.message : String(cause), 0, "COMMAND_OUTCOME_UNKNOWN"); }
+  }
+  async getInternalTasks(runId: string, signal?: AbortSignal): Promise<InvestigationInternalTasks> {
+    if (!RESOURCE_ID.test(runId)) throw new TypeError("runId 无效");
+    const scope = this.scopedHeaders();
+    return parseInvestigationInternalTasks(await this.get(`/v1/ecommerce/investigations/runs/${encodeURIComponent(runId)}/internal-tasks`, signal, scope.headers), runId, scope.tenant);
+  }
+  async getInternalMemo(runId: string, taskId: string, artifact: InvestigationInternalArtifact, signal?: AbortSignal): Promise<InvestigationInternalMemo> {
+    if (![runId, taskId, artifact.artifactId].every((id) => RESOURCE_ID.test(id)) || !/^[0-9a-f]{64}$/.test(artifact.contentHash) || !artifact.canPreview) throw new TypeError("研究备忘引用或预览配置无效");
+    const scope = this.scopedHeaders();
+    return parseInvestigationInternalMemo(await this.get(`/v1/ecommerce/investigations/runs/${encodeURIComponent(runId)}/internal-tasks/${encodeURIComponent(taskId)}/artifacts/${encodeURIComponent(artifact.artifactId)}`, signal, scope.headers), runId, taskId, artifact, scope.tenant);
+  }
   async getStageReview(runId: string, signal?: AbortSignal): Promise<InvestigationStageReviewProjection> { if (!RESOURCE_ID.test(runId)) throw new TypeError("runId 无效"); return parseInvestigationStageReviewProjection(await this.get(`/v1/ecommerce/investigations/runs/${encodeURIComponent(runId)}/stage-review`, signal), runId); }
   async compileHandoff(runId: string, input: InvestigationHandoffCompileInput, signal?: AbortSignal): Promise<InvestigationHandoffCompileResponse> {
     if (!RESOURCE_ID.test(runId) || !RESOURCE_ID.test(input.handoffId)) throw new TypeError("handoff identity 无效");

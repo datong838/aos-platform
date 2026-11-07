@@ -145,11 +145,13 @@ class EcommerceWorkshopCustomerLifecycleStore:
         except psycopg.Error as exc:
             raise CustomerLifecycleBlocked("CUSTOMER_LIFECYCLE_AUTHORITY_UNAVAILABLE") from exc
 
-    def require_external_policy_authorities(self, scope: TenantScope, frequency_policy_ref: CustomerExactRef, channel_capability_ref: CustomerExactRef) -> None:
-        del scope, frequency_policy_ref, channel_capability_ref
-        # Caller-shaped refs are never treated as authority. A production resolver
-        # must bind both refs at one cutoff before prepare can proceed.
-        raise CustomerLifecycleBlocked("CUSTOMER_BATCH_EXTERNAL_POLICY_AUTHORITY_RESOLVER_UNAVAILABLE")
+    def require_external_policy_authorities(self, scope: TenantScope, frequency_policy_ref: CustomerExactRef,
+                                          channel_capability_ref: CustomerExactRef, *, purpose=None,
+                                          allowed_channels=None) -> None:
+        from aos_api.ecommerce_customer_batch_policy import CustomerBatchPolicyResolver
+        CustomerBatchPolicyResolver(self._read_connect).require(
+            scope, frequency_policy_ref, channel_capability_ref,
+            purpose=purpose, allowed_channels=allowed_channels)
 
 
 __all__ = ["EcommerceWorkshopCustomerLifecycleStore"]

@@ -48,9 +48,10 @@ class MemoryStore:
     def require_disposition(self, _scope, exact): return self.dispositions[exact.resource_id][-1]
     def latest_disposition(self, _scope, identity): return self.dispositions[identity][-1]
     def latest_disposition_or_none(self, _scope, identity): return self.dispositions.get(identity, [None])[-1]
-    def require_gate_authorities(self, _scope, contract, gates):
+    def require_gate_authorities(self, _scope, contract, gates, *, case_ref):
+        assert case_ref.resource_type == "PriceCaseRevision"
         assert set(gates) == set(contract.required_gate_types)
-    def require_outcome_receipt(self, scope, exact, binding_hash):
+    def require_outcome_receipt(self, scope, exact, binding_hash, **context):
         if self.receipts.get((*scope.key, exact.resource_id)) != (exact.content_hash, binding_hash):
             raise PriceDispositionBlocked("PRICE_DISPOSITION_RECEIPT_MISSING_OR_BINDING_DRIFTED")
     def list_cases(self, _scope): return list(self.cases.values())

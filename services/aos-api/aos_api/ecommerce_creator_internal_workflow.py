@@ -63,9 +63,15 @@ class EcommerceCreatorInternalWorkflow:
                 task_id = task.id
             else:
                 assert body.draft_ref is not None and body.expected_version is not None
-                current = self._briefs.get_brief(scope, body.draft_ref.resource_id)
+                current = self._briefs.get_brief(
+                    scope, body.draft_ref.resource_id,
+                    body.draft_ref.revision if replay else None,
+                )
                 self._require_creator_brief(current)
-                self._require_exact(current, body.draft_ref, body.expected_version)
+                if replay:
+                    self._require_replay_exact(current, body.draft_ref, body.expected_version)
+                else:
+                    self._require_exact(current, body.draft_ref, body.expected_version)
                 self._require_transition(current.spec.get("status", "draft"), body.command)
                 if current.spec["purpose"] != body.purpose:
                     raise CreatorInternalWorkflowConflict("creator workflow purpose is immutable")
@@ -96,7 +102,10 @@ class EcommerceCreatorInternalWorkflow:
             raise CreatorInternalWorkflowError("canonical Brief Receipt is unavailable")
         return CreatorInternalWorkflowCommandResponse(
             tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id), command=body.command,
-            task_id=task_id, draft=self._draft(draft),
+            task_id=task_id, draft=self._draft(
+                draft, version=(1 if body.command == "create" else body.expected_version + 1)
+                if replay else None,
+            ),
             receipt=CreatorInternalWorkflowReceipt(receipt_id=receipt_id, operation=operation, idempotency_key=receipt_key, replay=replay),
             side_effects=CreatorInternalWorkflowSideEffects(),
             message={"create":"内部业务草稿已创建。","save":"修改已保存为新版本。","submit_review":"已提交内部审核。","approve":"内部审核已批准。","reject":"内部审核已驳回。","restore":"历史版本已恢复为新草稿。"}[body.command],
@@ -166,6 +175,15 @@ class EcommerceCreatorInternalWorkflow:
     @staticmethod
     def _require_exact(current, exact, expected_version: int) -> None:
         if current.brief_id != exact.resource_id or current.revision != exact.revision or current.content_hash != exact.content_hash or current.version != expected_version:
+            raise CreatorInternalWorkflowConflict("draft exact ref or expectedVersion is stale")
+
+    @staticmethod
+    def _require_replay_exact(current, exact, expected_version: int) -> None:
+        # get_brief pins the old revision but reports the current head version.
+        # Original revise Receipt still verifies the complete command hash.
+        if (current.brief_id != exact.resource_id or current.revision != exact.revision
+                or current.content_hash != exact.content_hash
+                or expected_version != exact.revision):
             raise CreatorInternalWorkflowConflict("draft exact ref or expectedVersion is stale")
 
     @staticmethod

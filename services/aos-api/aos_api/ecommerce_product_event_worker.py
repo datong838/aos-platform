@@ -89,11 +89,13 @@ class ProductEventConsumptionWorker:
             except Exception as exc:
                 stats['failed']+=1
                 log.warning('product_event_discovery_failed target=%s error=%s',target,type(exc).__name__)
-                continue
-            if not rows:
+                # Existing occurrences still use the original dispatch/claim and
+                # current-source guards; discovery only supplies new candidates.
+                rows=None
+            if rows is not None and not rows:
                 self._cursors.pop(target,None)
             scope,installation,generation=target
-            for row in rows:
+            for row in rows or ():
                 stats['candidates']+=1
                 try:
                     markings=self._markings(scope,row['actor'])
@@ -109,7 +111,7 @@ class ProductEventConsumptionWorker:
                         scope.key,row['policyId'],row['runId'],type(exc).__name__,_safe_failure_detail(exc))
                 finally:
                     self._cursors[target]=(row['policyId'],row['runId'])
-            if len(rows)<5:self._cursors.pop(target,None)
+            if rows is not None and len(rows)<5:self._cursors.pop(target,None)
             try:
                 stats['analysesAccepted']+=int(await self._dispatch(target))
             except Exception as exc:

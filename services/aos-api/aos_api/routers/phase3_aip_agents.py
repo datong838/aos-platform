@@ -4,7 +4,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 import hashlib
 import json
+import os
 from typing import Any
+
+import psycopg
 
 from fastapi import APIRouter, Depends, Header, Query, status
 
@@ -59,6 +62,12 @@ from aos_api.aip_marketplace_import_contracts import (
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
+from aos_api.aip_solution_definition_service import ExactSolutionDefinitionService, require_definition_publisher
+from aos_api.aip_solution_pack_publisher import AipSolutionPackInvalid
+from aos_api.aip_solution_pack_signed_preflight import CurrentDefinitionSourceBlocked
+from aos_api.aip_network_issuer_attempt import AttemptBlocked
+from aos_api.aip_budget_activation_store import BudgetActivationDenied
+from aos_api.asset_registry.errors import AssetRegistryError
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/v1/aip", tags=["aip-agents"])
@@ -75,6 +84,53 @@ class PromptBody(BaseModel):
     expected_revision: int | None = Field(default=None, ge=0, alias="expectedRevision")
 
 
+class DefinitionPublicationRequest(BaseModel):
+    model_config = {'extra': 'forbid', 'strict': True}
+    expected_content_hash: str = Field(alias='expectedContentHash', pattern=r'^sha256:[0-9a-f]{64}$')
+
+
+def _definition_call(principal, operation):
+    try:
+        require_definition_publisher(principal)
+        return operation()
+    except (PermissionError, BudgetActivationDenied) as exc:
+        raise ApiError(code='AIP_DEFINITION_ACTOR_DENIED', message='current authenticated publisher required', status_code=403) from exc
+    except AssetRegistryError as exc:
+        raise ApiError(code=exc.code.value, message=str(exc), status_code=exc.http_status) from exc
+    except (AipSolutionPackInvalid, CurrentDefinitionSourceBlocked, AttemptBlocked, ValueError) as exc:
+        raise ApiError(code='AIP_DEFINITION_PUBLICATION_CONFLICT', message='exact source or attempt conflicts; reconcile the original receipt before retrying', status_code=409) from exc
+    except (psycopg.Error, AipAgentRegistryPersistenceError) as exc:
+        raise ApiError(code='AIP_DEFINITION_RECONCILE_REQUIRED', message='publication outcome requires original receipt reconciliation; do not resend', status_code=503) from exc
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+
+
+def get_solution_definition_service(principal: Principal = Depends(require_principal)):
+    _definition_call(principal, lambda: None)
+    try:
+        return ExactSolutionDefinitionService.from_environment()
+    except (ValueError, OSError, AttemptBlocked) as exc:
+        raise ApiError(code='AIP_DEFINITION_ENTRY_UNAVAILABLE', message='native definition entry is not configured', status_code=503) from exc
+
+
+@router.get('/solution-definitions/preview')
+def preview_solution_definitions(principal: Principal = Depends(require_principal),
+                                service=Depends(get_solution_definition_service)):
+    return _definition_call(principal, lambda: service.preview(principal))
+
+
+@router.post('/solution-definitions', status_code=201)
+def publish_solution_definitions(body: DefinitionPublicationRequest,
+    idempotency_key: str = Header(alias='Idempotency-Key', min_length=1, max_length=120),
+    principal: Principal = Depends(require_principal), service=Depends(get_solution_definition_service)):
+    return _definition_call(principal, lambda: service.publish(principal,
+        expected_content_hash=body.expected_content_hash, idempotency_key=idempotency_key))
+
+
+@router.get('/solution-definitions/receipts/{idempotency_key}')
+def read_solution_definition_receipt(idempotency_key: str,
+    principal: Principal = Depends(require_principal), service=Depends(get_solution_definition_service)):
+    return _definition_call(principal, lambda: service.receipt(principal, idempotency_key))
 class ToolsBody(BaseModel):
     items: list[dict] = Field(default_factory=list)
     expected_revision: int | None = Field(default=None, ge=0, alias="expectedRevision")
@@ -90,7 +146,17 @@ def get_agent_store() -> AipAgentRegistryStore:
 
 
 def get_ecommerce_agent_installer() -> AipEcommerceAgentInstaller:
-    return _INSTALLER
+    source_revision = os.getenv("AOS_ECOMMERCE_DEFINITION_SOURCE_REVISION")
+    if source_revision is None:
+        return _INSTALLER
+    try:
+        return AipEcommerceAgentInstaller(agents=_STORE, source_revision=source_revision)
+    except ValueError as exc:
+        raise ApiError(
+            code="AIP_ECOMMERCE_DEFINITION_SOURCE_INVALID",
+            message="server ecommerce definition source must be an exact version",
+            status_code=503,
+        ) from exc
 
 
 def get_agent_activation_service() -> AipAgentInstanceActivationService:
@@ -102,7 +168,10 @@ def get_agent_overlay_store() -> AipAgentOverlayStore:
 
 
 def get_marketplace_catalog() -> AipMarketplaceCatalog:
-    return _MARKETPLACE
+    installer = get_ecommerce_agent_installer()
+    if installer is _INSTALLER:
+        return _MARKETPLACE
+    return AipMarketplaceCatalog(installer=installer)
 
 
 def get_import_job_service() -> AipImportJobService:

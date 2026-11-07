@@ -15,8 +15,12 @@ from aos_api.ecommerce_content_execution_composition import (
 )
 from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal, ContentExecutionConflict
 from aos_api.aip_task_store import AipTaskStore
+from aos_api.aip_action_store import AipActionTransitionBlocked
 from aos_api.ecommerce_growth_host_ports import HostTransaction, EcommerceGrowthHostError
-from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory, _request_hash
+from aos_api.ecommerce_growth_runtime_adapters import (
+    TransactionBoundConnectFactory, _request_hash, _strict_content_generate_command,
+    ContentGenerateHostService,
+)
 from aos_api.ecommerce_growth_runtime_connection import connect_read_only, connect_serializable
 from aos_api.tenant_scope import TenantScope
 
@@ -146,7 +150,7 @@ class ContentGenerationStepOwner:
         self.store_factory = store_factory
 
     @staticmethod
-    def _current_dispatch(conn, scope: TenantScope, reservation_id: str) -> None:
+    def _current_dispatch(conn, scope: TenantScope, reservation_id: str):
         evidence = ContentExecutionJournal().read(conn, scope, reservation_id)
         command = None if evidence is None else evidence["command"]
         if type(command) is not dict or type(command.get("idempotencyKey")) is not str:
@@ -161,12 +165,35 @@ class ContentGenerationStepOwner:
         snapshot = CurrentContentPreparation._lock_dispatch(conn, scope, row)
         if snapshot.runtime_revision != row["runtime_revision"]:
             raise ContentStepConflict("content installation revision drifted")
+        return snapshot
+
+    def _repair_attempt(self, conn, scope, proof, existing):
+        evidence = ContentExecutionJournal().read(conn, scope, proof.reservation_id)
+        command = None if evidence is None else evidence['command']
+        if type(command) is not dict:
+            raise ContentStepConflict('repair original command unavailable')
+        parsed = _strict_content_generate_command(command)
+        returned = parsed['returnRef']
+        if returned is None or parsed['authorities']['task'].resource_id != proof.task_id:
+            raise ContentStepConflict('repair current ReturnDecision required')
+        decision = conn.execute(
+            '''SELECT run_id,step_run_id,attempt FROM public.aip_return_decision
+                WHERE org_id=%s AND project_id=%s AND decision_id=%s''',
+            (*scope.key, returned.resource_id),
+        ).fetchone()
+        if (decision is None or decision['run_id'] != proof.run_id
+                or decision['step_run_id'] != existing['step_run_id']
+                or decision['attempt'] != existing['attempt']):
+            raise ContentStepConflict('repair queued attempt drifted')
+        dispatch = self._current_dispatch(conn, scope, proof.reservation_id)
+        ContentGenerateHostService._return_authority(
+            HostTransaction(conn), scope, command, parsed, dispatch=dispatch)
 
     def _complete_transaction(
         self, conn, scope: TenantScope, proof: ContentGenerationStepProof,
     ) -> str | None:
         existing = conn.execute(
-            """SELECT step_run_id,status FROM public.aip_step_run
+            """SELECT step_run_id,status,attempt,lease_owner FROM public.aip_step_run
                 WHERE org_id=%s AND project_id=%s AND run_id=%s
                   AND step_key='content_generate'
                 ORDER BY attempt DESC LIMIT 1 FOR UPDATE""",
@@ -175,7 +202,13 @@ class ContentGenerationStepOwner:
         if existing is not None:
             if existing["status"] == "succeeded":
                 return None  # independent readback still required
-            raise ContentStepConflict("existing content generation attempt needs reconciliation")
+            if (existing['status'] != 'queued' or type(existing.get('attempt')) is not int
+                    or existing['attempt'] < 2 or existing.get('lease_owner') is not None):
+                raise ContentStepConflict("existing content generation attempt needs reconciliation")
+            try:
+                self._repair_attempt(conn, scope, proof, existing)
+            except (ValueError, AipActionTransitionBlocked) as exc:
+                raise ContentStepConflict('repair current authority unavailable') from exc
         store = self.store_factory(
             TransactionBoundConnectFactory(HostTransaction(conn), scope)
         )
@@ -277,6 +310,9 @@ class ContentGenerationStepOwner:
                      JOIN public.ecommerce_content_execution_result result
                        ON result.org_id=b.org_id AND result.project_id=b.project_id
                       AND result.reservation_id=b.reservation_id
+                     JOIN public.ecommerce_content_execution_command command
+                       ON command.org_id=b.org_id AND command.project_id=b.project_id
+                      AND command.reservation_id=b.reservation_id
                      JOIN public.aip_artifact a
                        ON a.org_id=b.org_id AND a.project_id=b.project_id
                       AND a.artifact_type='ecommerce_content'
@@ -287,10 +323,25 @@ class ContentGenerationStepOwner:
                     WHERE b.org_id=%s AND b.project_id=%s AND b.state='settled'
                       AND b.operation_id='ecommerce_growth_content_generate'
                       AND r.status='running'
-                      AND NOT EXISTS(
+                      AND (NOT EXISTS(
                           SELECT 1 FROM public.aip_step_run step
                            WHERE step.org_id=r.org_id AND step.project_id=r.project_id
                              AND step.run_id=r.run_id AND step.step_key='content_generate')
+                        OR EXISTS(
+                          SELECT 1 FROM public.aip_step_run step
+                          JOIN public.aip_return_decision decision
+                            ON decision.org_id=step.org_id AND decision.project_id=step.project_id
+                           AND decision.run_id=step.run_id AND decision.step_run_id=step.step_run_id
+                           AND decision.attempt=step.attempt
+                           AND decision.decision_id=command.command_payload->'returnDecisionRef'->>'resourceId'
+                           AND decision.attempt_idempotency_key=command.command_payload->>'idempotencyKey'
+                          WHERE step.org_id=r.org_id AND step.project_id=r.project_id
+                            AND step.run_id=r.run_id AND step.step_key='content_generate'
+                            AND step.status='queued' AND step.attempt>=2
+                            AND NOT EXISTS(SELECT 1 FROM public.aip_step_run later
+                              WHERE later.org_id=step.org_id AND later.project_id=step.project_id
+                                AND later.run_id=step.run_id AND later.step_key=step.step_key
+                                AND later.attempt>step.attempt)))
                     ORDER BY result.recorded_at,b.reservation_id LIMIT %s""",
                 (*scope.key, limit),
             ).fetchall()

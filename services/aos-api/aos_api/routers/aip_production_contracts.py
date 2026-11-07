@@ -399,8 +399,15 @@ def freeze_eval_contract(contract_id: str, body: FreezeContractRequest, idempote
 
 
 @router.post("/responsibility-plans", response_model=ResponsibilityPlanRevision, status_code=201)
-def create_responsibility_plan(body: CreateResponsibilityPlanRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
-    try: return store.create_responsibility_plan(_scope(principal), principal.subject, _key(idempotency_key), body)
+def create_responsibility_plan(body: CreateResponsibilityPlanRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store), prepare_only: bool = Query(False, alias="prepareOnly")):
+    options = {}
+    if prepare_only:
+        from aos_api.oidc import allow_dev
+        if principal.token_kind != "dev" or not allow_dev():
+            raise ApiError(code="AIP_DRAFT_PREPARATION_DEV_REQUIRED",
+                           message="draft preparation requires enabled development identity", status_code=403)
+        options["prepare_only"] = True
+    try: return store.create_responsibility_plan(_scope(principal), principal.subject, _key(idempotency_key), body, **options)
     except ProductionContractError as exc: raise _map(exc) from exc
 
 

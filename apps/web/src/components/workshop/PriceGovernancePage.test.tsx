@@ -49,8 +49,13 @@ describe("PriceGovernancePage", () => {
     await click("对比预览");
     expect(host.querySelector('[aria-label="价格策略对比预览"]')?.textContent).toContain("ResearchJob 0 · Provider 0 · 调价 0");
     await click("修改策略");
+    await act(async()=>{
+      const set=(field:HTMLInputElement,value:string)=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value")!.set!.call(field,value);field.dispatchEvent(new Event("input",{bubbles:true}));};
+      set(host.querySelector<HTMLInputElement>('[aria-label="价格容差"]')!,"0.12");
+      set(host.querySelector<HTMLInputElement>('[aria-label="价格新鲜度小时"]')!,"48");
+    });
     await act(async () => host.querySelector<HTMLFormElement>('.price-strategy-workspace form')!.requestSubmit());
-    expect(actions.createReplacementProposal).toHaveBeenCalled();
+    expect(actions.createReplacementProposal).toHaveBeenCalledWith(proposalBundle,expect.objectContaining({payload:expect.objectContaining({toleranceRatio:0.12,freshnessHours:48,externalEffectAllowed:false,repricingAllowed:false})}));
     await click("执行结果");
     expect(host.textContent).toContain("submitted");
     await click("批准预览");
@@ -62,4 +67,15 @@ describe("PriceGovernancePage", () => {
     expect(host.textContent).toContain("调价与外部效果仍为 0");
     expect([...host.querySelectorAll("button")].map((item) => item.textContent).join(" ")).not.toContain("执行调价");
   });
+ it("同页签换报价对象时清除旧提案和预览",async()=>{
+  const actions={createProposal:vi.fn().mockResolvedValue(proposalBundle),createReplacementProposal:vi.fn(),withdraw:vi.fn(),timeline:vi.fn()};
+  await act(async()=>root.render(<PriceGovernancePage client={{getPriceGovernanceView:vi.fn().mockResolvedValue(rich)}} actions={actions}/>));
+  const click=async(label:string)=>act(async()=>{Array.from(host.querySelectorAll<HTMLButtonElement>(".price-strategy-workspace button")).find(x=>x.textContent===label)!.click();});
+  await click("新建监测策略");await act(async()=>host.querySelector<HTMLFormElement>(".price-strategy-workspace form")!.requestSubmit());
+  expect(host.querySelector(".price-strategy-workspace")?.textContent).toContain("price-proposal-v1");
+  await act(async()=>{Array.from(host.querySelectorAll<HTMLButtonElement>(".price-observations button")).filter(x=>x.textContent==="选择此观察")[1]!.click();});
+  expect(host.querySelector(".price-strategy-workspace")?.textContent).not.toContain("price-proposal-v1");
+  expect(host.querySelector(".price-strategy-workspace")?.textContent).toContain("尚未提交");
+ });
+
 });

@@ -311,7 +311,37 @@ export type InvestigationStageReviewResult = {
   response: InvestigationStageReviewResponse;
   projection: InvestigationStageReviewProjection;
 };
+export type InvestigationInternalArtifact = { artifactId: string; contentHash: string; canPreview: boolean };
+export type InvestigationInternalTask = {
+  graphRef: InvestigationAipExactRef; taskRef: InvestigationAipExactRef;
+  title: string; taskType: string; status: string; taskVersion: number;
+  runId: string | null; runStatus: string | null; completedSteps: number; totalSteps: number;
+  artifacts: InvestigationInternalArtifact[];
+  reviews: { issueId: string; status: string; version: number }[];
+  effectMaturity: string | null;
+  memoryCandidates: { candidateId: string; status: string }[];
+  sampleOnly: boolean | null; dataLabel: string | null;
+};
+export type InvestigationInternalTasks = {
+  schemaVersion: "aos.investigation-internal-tasks/v1"; tenant: InvestigationTenant;
+  runRef: InvestigationExactRef; items: InvestigationInternalTask[]; externalEffectsAllowed: false;
+};
+export type InvestigationInternalMemo = {
+  tenant: InvestigationTenant; runId: string; taskId: string;
+  artifactRef: { artifactId: string; artifactType: "internal_research_memo"; revision: "1"; contentHash: string };
+  body: string; sampleOnly: boolean | null;
+};
+export type InvestigationTaskMaterializationInput = {
+  approvedPlanRef: InvestigationAnalystExactRef; handoffId: string; acceptedDecisionRef: InvestigationAipExactRef;
+};
+export type InvestigationTaskMaterialization = {
+  tenant: InvestigationTenant; runRef: InvestigationExactRef; approvedPlanRef: InvestigationAnalystExactRef;
+  handoffId: string; taskGraphRef: InvestigationAipExactRef; taskRefs: InvestigationAipExactRef[];
+  replayed: boolean; externalEffectsAllowed: false;
+};
 export type InvestigationReadClient = {
+  getInternalTasks?(runId: string, signal?: AbortSignal): Promise<InvestigationInternalTasks>;
+  getInternalMemo?(runId: string, taskId: string, artifact: InvestigationInternalArtifact, signal?: AbortSignal): Promise<InvestigationInternalMemo>;
   getCaseSelection?(signal?: AbortSignal): Promise<InvestigationCaseSelection>;
   listCases(signal?: AbortSignal): Promise<InvestigationCaseListResponse>;
   listRuns(caseId: string, signal?: AbortSignal): Promise<InvestigationRunListResponse>;
@@ -325,6 +355,7 @@ export type InvestigationRunCommandResult = {
   view: InvestigationWorkbenchView;
 };
 export type InvestigationCommandClient = InvestigationReadClient & {
+  materializeTasks(runId: string, input: InvestigationTaskMaterializationInput, expectedTenant: InvestigationTenant, signal?: AbortSignal): Promise<InvestigationTaskMaterialization>;
   compileHandoff(runId: string, input: InvestigationHandoffCompileInput, signal?: AbortSignal): Promise<InvestigationHandoffCompileResponse>;
   executeRunCommand(input: {
     runId: string;

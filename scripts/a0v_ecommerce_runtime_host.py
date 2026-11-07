@@ -243,6 +243,7 @@ async def _serve(args: argparse.Namespace, *, current_host_id: str) -> None:
     lease = _opt_in_host_lease(args)
     if lease is not None:
         await asyncio.to_thread(lease.acquire)
+        analysis_data_worker.bind_host_lease(lease)
     stop_event = asyncio.Event()
     loop = asyncio.get_running_loop()
     for signum in (signal.SIGINT, signal.SIGTERM):

@@ -85,6 +85,28 @@ _SENSITIVE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
 )
 
 
+def inspect_internal_document_text(text: str) -> list[str]:
+    """Original ordered pattern checks; no universal PII or approval claim."""
+    return [reason for reason, pattern in _SENSITIVE_PATTERNS if pattern.search(text)]
+
+
+def internal_document_sensitivity_policy() -> dict[str, Any]:
+    return {"schemaVersion": "aos.internal-document-sensitive-patterns/v1",
+        "algorithm": "ordered-regex-search-and-substitution/v1",
+        "patterns": [{"code": code, "pattern": pattern.pattern, "flags": pattern.flags}
+            for code, pattern in _SENSITIVE_PATTERNS]}
+
+
+def redact_internal_document_text(text: str) -> tuple[str, dict[str, int]]:
+    """Mask original policy matches; return counts, never matched values."""
+    counts = {}
+    for code, pattern in _SENSITIVE_PATTERNS:
+        text, count = pattern.subn(f"[REDACTED:{code}]", text)
+        if count:
+            counts[code] = count
+    return text, counts
+
+
 class InternalKnowledgeSeedIds(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -794,9 +816,7 @@ def plan_internal_knowledge_seed(
         except UnicodeDecodeError:
             text = ""
             blockers.append("source_not_utf8")
-        for reason, pattern in _SENSITIVE_PATTERNS:
-            if pattern.search(text):
-                blockers.append(reason)
+        blockers.extend(inspect_internal_document_text(text))
     if expected_hash is not None and expected_hash != content_hash:
         blockers.append("source_hash_drift")
     if observed_at.utcoffset() is not None and now.utcoffset() is not None:
