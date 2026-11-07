@@ -214,8 +214,20 @@ describe("BusinessInvestigationTab", () => {
     ] };
     const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [run], count: 1 }), getRunView: vi.fn().mockResolvedValue(canonical) };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
-    expect(host.textContent).toContain("Evidence / Artifact / Timeline"); expect(host.textContent).toContain("evidence-exact-1"); expect(host.textContent).toContain("仅定位 refs · 非 exact"); expect(host.textContent).toContain("dossier-1 · r1"); expect(host.textContent).toContain("Run state revision"); expect(host.textContent).not.toContain("推理链");
+    expect(host.textContent).toContain("Evidence / Artifact / Timeline"); expect(host.textContent).toContain("evidence-exact-1"); expect(host.textContent).toContain("仅定位 refs · 非 exact"); expect(host.textContent).toContain("dossier-1 · r1"); expect(host.textContent).toContain("Run state revision"); expect(host.textContent).not.toContain("推理链"); expect(host.textContent).not.toContain("四类领域产物均未绑定");
   });
+  it("四类领域产物全 missing 时标明不展示演示纵向结论且链未闭合", async () => {
+    const run = { authority: { schemaVersion: "aos.ecommerce.business-investigation-run/v1" as const, tenant, runId: "run-a", version: 1 as const, contentHash: hash, caseRef: ref("BusinessInvestigationCaseRevision", "case-a"), analysisType: "initial_store_analysis" as const, triggerKind: "manual" as const, triggerKey: "manual:run-a", lifecycle: "PREPARING" as const, control: "CANCELLED" as const, createdBy: "user-1", createdAt: "2026-08-26T08:01:00Z" }, state: { schemaVersion: "aos.ecommerce.business-investigation-run-state/v1" as const, tenant, runId: "run-a", version: 1, priorRef: null, lifecycle: "PREPARING" as const, control: "CANCELLED" as const, eventSequence: 1, contentHash: hash, pendingRequirementRef: null, uncertainCommand: null, createdBy: "user-1", createdAt: "2026-08-26T08:02:00Z" } };
+    const base = workbenchView();
+    const allMissing: InvestigationWorkbenchView = { ...base, schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v4", drilldownVersion: "canonical-v4", lifecycle: "PREPARING", control: "CANCELLED", artifacts: (["BusinessDossierRevision", "ProblemMapRevision", "OpportunityMapRevision", "SolutionPortfolioRevision"] as const).map((artifactType) => ({ artifactType, status: "missing" as const, artifactRef: null, bindingId: null, bindingHash: null, selectionRevision: null, dataCutoff: null, lineageRef: null })), evidence: { status: "missing", exactRefs: [], locatorRefs: [] } };
+    const client: InvestigationReadClient = { getCaseSelection: vi.fn().mockResolvedValue(defaultSelection()), listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [run], count: 1 }), getRunView: vi.fn().mockResolvedValue(allMissing) };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
+    expect(host.textContent).toContain("四类领域产物均未绑定");
+    expect(host.textContent).toContain("不展示演示画像、问题图、机会图或方案正文");
+    expect(host.textContent).toContain("纵向链与 R6");
+    expect(host.textContent).not.toContain("dossier-1");
+  });
+
   it("只按同版 readiness 区分 stale/partial，并用 GET-only 重核", async () => {
     const pendingRequirementRef = { ...ref("DataRequirementRevision", "requirement-1"), revision: 2 };
     const stale = sourceReadinessSnapshot(); stale.reload = vi.fn(); stale.response = { ...stale.response!, status: "stale", investigation: { ...stale.response!.investigation!, status: "stale" } };
