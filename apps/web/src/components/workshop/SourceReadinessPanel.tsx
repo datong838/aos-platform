@@ -149,7 +149,7 @@ function SourceReadinessPanelView() {
         <div><dt>数据对象</dt><dd>{response.sources.length}</dd></div>
         <div><dt>待处理对象</dt><dd>{pendingSources.length}</dd></div>
         <div><dt>检查时间</dt><dd>{response.checkedAt}</dd></div>
-        <div><dt>数据截止</dt><dd>{response.cutoffAt}</dd></div>
+        <div><dt>数据截止</dt><dd>{response.status === "ready" ? response.cutoffAt : "待核对"}</dd></div>
       </dl>
       {pendingSources.length > 0 ? <p className="source-readiness-blockers"><strong>当前有 {pendingSources.length} 个数据对象待处理：</strong>未知、过期或失败的数据不会显示为可用。</p> : null}
       <div className="source-readiness-table-wrap">
