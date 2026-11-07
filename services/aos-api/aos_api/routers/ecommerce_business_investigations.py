@@ -10,6 +10,11 @@ from fastapi import APIRouter, Depends, Header, Path, Query, Request, Security, 
 from fastapi.security import HTTPBearer
 
 from aos_api.auth import Principal, require_principal
+from aos_api.ecommerce_investigation_internal_tasks import (
+    InvestigationInternalTaskReader,
+    InvestigationInternalTasksResponse,
+    InvestigationInternalMemoResponse,
+)
 from aos_api.ecommerce_business_investigation_application import (
     BusinessInvestigationCaseCommandResponse,
     BusinessInvestigationCaseListResponse,
@@ -824,3 +829,47 @@ def cancel_run(
 
 
 __all__ = ["get_business_investigation_application", "router"]
+
+
+@lru_cache
+def get_internal_task_reader() -> InvestigationInternalTaskReader:
+    from aos_api.aip_research_artifact_storage import configured_memo_resolver
+
+    resolver = configured_memo_resolver()
+    if resolver is None:
+        return InvestigationInternalTaskReader()
+    return InvestigationInternalTaskReader(artifact_resolver=resolver)
+
+
+@router.get(
+    "/runs/{run_id}/internal-tasks",
+    response_model=InvestigationInternalTasksResponse,
+    operation_id="ecommerceInvestigationInternalTasksGet",
+)
+def get_internal_tasks(
+    run_id: ResourceIdPath,
+    principal: PrincipalDependency,
+    reader: InvestigationInternalTaskReader = Depends(get_internal_task_reader),
+):
+    try:
+        return reader.list(_scope(principal), run_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/runs/{run_id}/internal-tasks/{task_id}/artifacts/{artifact_id}",
+    response_model=InvestigationInternalMemoResponse,
+    operation_id="ecommerceInvestigationInternalMemoGet",
+)
+def get_internal_memo(
+    run_id: ResourceIdPath,
+    task_id: ResourceIdPath,
+    artifact_id: ResourceIdPath,
+    principal: PrincipalDependency,
+    reader: InvestigationInternalTaskReader = Depends(get_internal_task_reader),
+):
+    try:
+        return reader.memo(_scope(principal), run_id, task_id, artifact_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
