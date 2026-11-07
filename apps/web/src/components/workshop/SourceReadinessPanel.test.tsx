@@ -57,7 +57,25 @@ describe("SourceReadinessPanel", () => {
     expect(client.getSourceReadiness).toHaveBeenCalledTimes(1);
   });
 
-  it("首层展示中文失败诊断和下一步，审计详情保留稳定码", async () => {
+  
+  it("SCHEDULE_DISABLED 时标明不等于源系统无数据且只读不启用计划", async () => {
+    const base = envelope();
+    const withSchedule = {
+      ...base,
+      sources: base.sources.map((source) => ({
+        ...source,
+        blockers: ["SCHEDULE_DISABLED", "QUERY_CAPABILITY_REF_MISSING"],
+        reasons: ["SCHEDULE_DISABLED", "QUERY_CAPABILITY_REF_MISSING"],
+      })),
+    };
+    await act(async () => root.render(<SourceReadinessPanel client={{ getSourceReadiness: vi.fn().mockResolvedValue(withSchedule) }} />));
+    await act(async () => undefined);
+    expect(host.textContent).toContain("计划读取尚未启用");
+    expect(host.textContent).toContain("不等于源系统无数据");
+    expect(host.textContent).toContain("只读模式下不启用计划读取");
+    expect(host.textContent).not.toMatch(/已启用 Schedule|打开定时|启动计划读取/);
+  });
+it("首层展示中文失败诊断和下一步，审计详情保留稳定码", async () => {
     await act(async () => root.render(<SourceReadinessPanel client={{ getSourceReadiness: vi.fn().mockResolvedValue(diagnosedEnvelope()) }} />));
     await act(async () => undefined);
     const firstRow = host.querySelectorAll("tbody tr")[0];
