@@ -138,20 +138,15 @@ class PreparationOwner:
         # Refuse resource probing when the trusted clock is unavailable, then
         # timestamp the completed probe so multi-resource latency isn't
         # mistaken for a stale observation by the atomic commit.
-        for attempt in range(_MAX_HEALTH_STALE_REPROBES + 1):
-            started = await self._health_clock()
-            if not isinstance(started, datetime) or started.utcoffset() is None:
-                raise ValueError('trusted database health clock required')
-            await self._check_health()
-            observed = await self._health_clock()
-            if not isinstance(observed, datetime) or observed.utcoffset() is None:
-                raise ValueError('monotonic database health clock required')
-            if observed >= started:
-                return observed
-            # A wall-clock adjustment invalidates this whole observation. A
-            # fresh bounded probe may recover; never clamp or reuse its time.
-            if attempt == _MAX_HEALTH_STALE_REPROBES:
-                raise ValueError('monotonic database health clock required')
+        started = await self._health_clock()
+        if not isinstance(started, datetime) or started.utcoffset() is None:
+            raise ValueError('trusted database health clock required')
+        await self._check_health()
+        observed = await self._health_clock()
+        if (not isinstance(observed, datetime) or observed.utcoffset() is None
+                or observed<started):
+            raise ValueError('monotonic database health clock required')
+        return observed
 
     async def verify(self, commit):
         """Trusted callback must settle DB work before propagating cancellation."""
@@ -220,14 +215,13 @@ class PreparationOwner:
         if not callable(commit):
             raise TypeError('trusted lease commit required')
         async def execute(observed):
-            from .verification_commit import HealthObservationStale, HealthObservationFuture
+            from .verification_commit import HealthObservationStale
             for stale_reprobes in range(_MAX_HEALTH_STALE_REPROBES + 1):
                 try:
                     expires = await commit(observed)
                     break
-                except (HealthObservationStale, HealthObservationFuture):
+                except HealthObservationStale:
                     # Lock acquisition may span several three-second windows.
-                    # A DB clock rollback also invalidates the whole observation.
                     # Each failed transaction is settled before this callback
                     # raises. Re-probe only while the exact owner remains live,
                     # and preserve a hard bound so persistent contention closes.

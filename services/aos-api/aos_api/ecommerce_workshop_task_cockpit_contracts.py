@@ -414,7 +414,7 @@ class TaskCockpitProductionContextEnvelope(AipContractModel):
     plan_ref: ExactRevisionRef
     stage_template_ref: ExactRevisionRef
     responsibility_plan_ref: ExactRevisionRef
-    compiler_version: Literal["w2c.v1", "w7c.v1"]
+    compiler_version: Literal["w2c.v1"]
     stages: list[TaskCockpitStageCompilationItem] = Field(min_length=1, max_length=200)
     applicable_stage_ids: list[str] = Field(default_factory=list, max_length=200)
     not_applicable_stage_ids: list[str] = Field(default_factory=list, max_length=200)

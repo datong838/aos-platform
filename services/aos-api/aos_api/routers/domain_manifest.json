@@ -3306,12 +3306,6 @@
       "module": "aos_api.routers.ecommerce_analyst_methods",
       "attribute": "router",
       "order": 550
-    },
-    {
-      "domain": "workshop",
-      "module": "aos_api.routers.ecommerce_analyst_d01_sources",
-      "attribute": "router",
-      "order": 551
     }
   ]
 }

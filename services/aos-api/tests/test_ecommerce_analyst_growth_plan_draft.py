@@ -23,79 +23,6 @@ def test_valid_answer_retains_readable_text_and_source_indices():
     assert parsed.items[0].source_indices == [0]
 
 
-def method_answer():
-    from test_ecommerce_analyst_authority_contracts import sales_weapon_method
-    method = sales_weapon_method()
-    method.pop('sourceCutoffAt')
-    method.pop('evidenceRefs')
-    statements = [method['audienceHypothesis'], method['scenario'], *method['fitFor'],
-                  *method['notFitFor'], *method['proposedValueClaims']]
-    for statement in statements:
-        statement.pop('evidenceRefs')
-        statement['sourceIndices'] = [0]
-    return dict(answer(), salesWeaponMethod=method)
-
-
-def test_method_proposal_accepts_only_indexed_candidate_content():
-    parsed = parse_growth_plan_answer(json.dumps(method_answer()), source_count=1)
-    assert parsed.sales_weapon_method.audience_hypothesis.source_indices == [0]
-
-
-@pytest.mark.parametrize('change', ['out_of_range', 'duplicate', 'bool', 'ref', 'cutoff'])
-def test_method_proposal_rejects_unbound_or_model_supplied_authority(change):
-    payload = method_answer()
-    statement = payload['salesWeaponMethod']['scenario']
-    if change == 'ref': statement['evidenceRefs'] = [ref('EvidenceBundleRevision', 'invented')]
-    elif change == 'cutoff': payload['salesWeaponMethod']['sourceCutoffAt'] = '2026-11-05T00:00:00Z'
-    else: statement['sourceIndices'] = {'out_of_range': [1], 'duplicate': [0, 0], 'bool': [True]}[change]
-    with pytest.raises(ValueError): parse_growth_plan_answer(json.dumps(payload), source_count=1)
-
-
-def test_v2_method_compiles_with_trusted_cutoff_and_exact_decision_evidence():
-    from hashlib import sha256
-    from aos_api.ecommerce_analyst_growth_plan_draft import growth_plan_prompt, draft_from_completed_generation
-    from aos_api.aip_agent_run_execution_contracts import ExecuteAgentRunRequest
-    from aos_api.aip_agent_run_executor import AipAgentRunExecutor
-    from aos_api.ecommerce_analyst_authority_store import canonical_hash
-    decision, attempt, _ = generation()
-    raw = json.dumps(method_answer(), ensure_ascii=False)
-    cutoff = decision.created_at
-    query, system = growth_plan_prompt(decision, budget='100', task_type='analysis', source_cutoff_at=cutoff)
-    assert json.loads(query)['protocol'] == 'aos.growth-plan-proposal/v2'
-    assert json.loads(query)['sourceCutoffAt'] == cutoff.isoformat()
-    request = ExecuteAgentRunRequest(expectedAgentRunVersion=attempt.agent_run_version, attemptId=attempt.attempt_id,
-        attemptNo=attempt.attempt_no, budgetRef=attempt.budget_ref, capacityReservationRef=attempt.capacity_reservation_ref,
-        query=query, systemPrompt=system, dataClassification=attempt.data_classification)
-    attempt = attempt.model_copy(update={'request_hash': AipAgentRunExecutor._request_hash(attempt.agent_run_id, request),
-        'output_artifact_ref': attempt.output_artifact_ref.model_copy(update={'content_hash': sha256(raw.encode()).hexdigest()})})
-    compiled = draft_from_completed_generation(decision=decision, attempt=attempt, answer=raw, budget='100',
-        task_type='analysis', actor='compiler', source_cutoff_at=cutoff)
-    method = compiled.sales_weapon_method
-    assert method.source_cutoff_at == cutoff and method.evidence_refs == decision.evidence_refs
-    assert method.scenario.evidence_refs == decision.evidence_refs
-    assert compiled.lifecycle.value == 'draft' and compiled.approved_at is None
-    assert canonical_hash(compiled.model_dump(mode='json', by_alias=True, exclude={'content_hash'})) == compiled.content_hash
-    assert GrowthPlanRevision.model_validate(compiled.model_dump(mode='json', by_alias=True)) == compiled
-
-
-def test_v1_recovery_with_current_cutoff_preserves_original_plan_hash():
-    from aos_api.ecommerce_analyst_growth_plan_draft import draft_from_completed_generation
-    decision, attempt, raw = generation()
-    kwargs = dict(decision=decision, attempt=attempt, answer=raw, budget='100', task_type='analysis', actor='compiler')
-    assert draft_from_completed_generation(**kwargs, source_cutoff_at=decision.created_at) == draft_from_completed_generation(**kwargs)
-
-
-def test_v1_request_cannot_acquire_new_method_fields():
-    from hashlib import sha256
-    from aos_api.ecommerce_analyst_growth_plan_draft import draft_from_completed_generation
-    decision, attempt, _ = generation()
-    raw = json.dumps(method_answer(), ensure_ascii=False)
-    attempt = attempt.model_copy(update={'output_artifact_ref': attempt.output_artifact_ref.model_copy(update={'content_hash': sha256(raw.encode()).hexdigest()})})
-    with pytest.raises(ValueError, match='v2'):
-        draft_from_completed_generation(decision=decision, attempt=attempt, answer=raw, budget='100',
-            task_type='analysis', actor='compiler', source_cutoff_at=decision.created_at)
-
-
 @pytest.mark.parametrize("key,value", [("lifecycle", "approved"), ("budget", "0"),
     ("tenant", {}), ("approvedAt", "2026-09-11"), ("contentHash", "a" * 64)])
 def test_model_cannot_supply_authority(key, value):
@@ -162,7 +89,7 @@ def test_new_provenance_roundtrips_and_enforces_reference_types():
         GrowthPlanRevision.model_validate(payload)
 
 
-def generation(*, source_cutoff_at=None, with_method=False):
+def generation():
     from hashlib import sha256
     from aos_api.aip_agent_run_execution_contracts import AgentRunExecutionAttempt, ExecuteAgentRunRequest
     from aos_api.aip_agent_run_executor import AipAgentRunExecutor
@@ -175,12 +102,12 @@ def generation(*, source_cutoff_at=None, with_method=False):
         evidenceRefs=[ref("EvidenceBundleRevision", "bundle-1")], attributionPath=["同口径趋势"],
         uncertainty="未证实因果", contentHash="0" * 64, createdBy="analyst", createdAt=NOW)
     decision = decision.model_copy(update={"content_hash": canonical_hash(decision.model_dump(mode="json", by_alias=True, exclude={"content_hash"}))})
-    query, system = growth_plan_prompt(decision, budget="100", task_type="analysis", source_cutoff_at=source_cutoff_at)
+    query, system = growth_plan_prompt(decision, budget="100", task_type="analysis")
     asset = lambda kind: dict(assetType=kind, assetId=kind.lower(), revision=1, contentHash="a" * 64)
     request = ExecuteAgentRunRequest(expectedAgentRunVersion=2, attemptId="attempt-draft", attemptNo=1,
         budgetRef=asset("BudgetRevision"), capacityReservationRef=dict(resourceType="CapacityReservation", resourceId="capacity-1", authority="postgresql", revision="1"),
         query=query, systemPrompt=system, dataClassification="internal")
-    raw = json.dumps(method_answer() if with_method else answer(), ensure_ascii=False)
+    raw = json.dumps(answer(), ensure_ascii=False)
     attempt = AgentRunExecutionAttempt(tenant=TENANT, attemptId=request.attempt_id, agentRunId="run-draft", agentRunVersion=2, attemptNo=1,
         routeRef=asset("ModelRouteRevision"), policyRef=asset("RuntimePolicyRevision"), modelRef=asset("RegisteredModelRevision"),
         providerRef=asset("ProviderInstanceRevision"), priceSnapshotRef=asset("ModelPriceSnapshotRevision"),

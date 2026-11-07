@@ -145,44 +145,9 @@ class AipRuntimeGuardPolicyStore:
                 raise GuardPolicyDependencyBlocked("egress policy is outside approved boundary")
         return item
 
-    def _draft_provider_guard(self, scope, ref, kind):
-        if ref.asset_type != self._SPECS[kind][2]:
-            raise GuardPolicyDependencyBlocked('draft provider guard kind differs')
-        try:
-            item = self._get(kind, scope, ref.asset_id, ref.revision)
-        except GuardPolicyNotFound:
-            raise GuardPolicyDependencyBlocked('exact draft provider guard unavailable') from None
-        if item.lifecycle is not GuardPolicyLifecycle.DRAFT:
-            return self.require_exact_active(scope, ref)
-        if (not isinstance(item, self._SPECS[kind][1])
-                or (item.tenant.org_id, item.tenant.project_id) != scope.key
-                or (item.policy_id, item.revision, item.content_hash)
-                != (ref.asset_id, ref.revision, ref.content_hash)):
-            raise GuardPolicyDependencyBlocked('draft provider guard exact ref or tenant differs')
-        return item
-
-    def require_runtime_policy_dependencies(self, scope: TenantScope, policy: Any, *, draft_storage_only: bool = False) -> None:
-        if draft_storage_only is True:
-            if policy.lifecycle.value != "draft":
-                raise GuardPolicyDependencyBlocked("draft dependency is storage only")
-            for ref, kind in ((policy.egress_policy_ref, "egress"),
-                              (policy.data_classification_policy_ref, "data_classification")):
-                item = self._draft_provider_guard(scope, ref, kind)
-                if not (item.effective_from <= datetime.now(UTC) < item.effective_until):
-                    raise GuardPolicyDependencyBlocked("draft runtime guard outside effective window")
-        else:
-            self.require_exact_active(scope, policy.egress_policy_ref)
-            self.require_exact_active(scope, policy.data_classification_policy_ref)
-
-    def require_provider_dependencies(self, scope: TenantScope, provider: Any, *, draft_storage_only: bool = False) -> None:
-        if draft_storage_only is True:
-            if provider.lifecycle.value != 'draft':
-                raise GuardPolicyDependencyBlocked('draft provider dependencies are storage only')
-            egress = self._draft_provider_guard(scope, provider.egress_policy_ref, 'egress')
-            self._draft_provider_guard(scope, provider.data_classification_policy_ref, 'data_classification')
-        else:
-            egress = self.require_exact_active(scope, provider.egress_policy_ref)
-            self.require_exact_active(scope, provider.data_classification_policy_ref)
+    def require_provider_dependencies(self, scope: TenantScope, provider: Any) -> None:
+        egress = self.require_exact_active(scope, provider.egress_policy_ref)
+        self.require_exact_active(scope, provider.data_classification_policy_ref)
         if not isinstance(egress, EgressPolicyRevision):
             raise GuardPolicyDependencyBlocked("provider egress ref resolved to wrong policy kind")
         endpoint = urlparse(str(provider.endpoint_profile.base_url))
@@ -193,11 +158,7 @@ class AipRuntimeGuardPolicyStore:
             or port not in egress.allowed_ports
         ):
             raise GuardPolicyDependencyBlocked("provider endpoint is outside exact egress policy")
-        unknown_draft_region = (draft_storage_only is True
-            and egress.lifecycle is GuardPolicyLifecycle.DRAFT
-            and egress.region_state is RegionState.UNKNOWN and egress.region is None
-            and provider.endpoint_profile.region == 'unknown')
-        if not unknown_draft_region and provider.endpoint_profile.region != egress.region:
+        if provider.endpoint_profile.region != egress.region:
             raise GuardPolicyDependencyBlocked("provider region does not match exact egress policy")
 
     def _publish(self, kind: str, scope: TenantScope, actor: str, key: str, item: CreateT, expected_version: int) -> RevisionT:

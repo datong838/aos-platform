@@ -1,5 +1,3 @@
-import { PriceAdviceWorkspace } from "./PriceAdviceWorkspace";
-import { PriceAnalysisWorkspace } from "./PriceAnalysisWorkspace";
 import { useEffect, useRef, useState } from "react";
 
 import { aipActionsSdk, type AipActionsSdk } from "../../api/aipActions/client";
@@ -9,7 +7,7 @@ import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 import { ThreeModuleClosureCard, unavailableThreeModuleClosure } from "./ThreeModuleClosureCard";
 
-type Client = Pick<typeof ecommerceWorkshopClient, "getPriceGovernanceView"> & Partial<Pick<typeof ecommerceWorkshopClient, "getPriceResearchContributionView" | "getPriceDispositionContributionView" | "getThreeModuleClosureContributionView" | "getPriceAnalysisInputs" | "comparePriceCase" | "getPriceCaseSources" | "savePriceCase" | "getPriceCaseSaveState" | "getPriceAdviceWorkspace" | "preparePriceAdvice" | "freezePriceAdvice" | "getPriceAdviceCommandState" | "getPendingPriceAdviceCommands" | "getPriceAdviceStateById" | "resumePriceAdviceCommand" | "getPriceAdoptionContext" | "proposePriceAdoption" | "decidePriceAdoption" | "recordPriceAdoption">>;
+type Client = Pick<typeof ecommerceWorkshopClient, "getPriceGovernanceView"> & Partial<Pick<typeof ecommerceWorkshopClient, "getPriceResearchContributionView" | "getPriceDispositionContributionView" | "getThreeModuleClosureContributionView">>;
 type PriceActions = Pick<AipActionsSdk, "createProposal" | "createReplacementProposal" | "withdraw" | "timeline">;
 type Phase = AsyncState;
 type ObservationFilter = "all" | "comparable" | "review" | "excluded";
@@ -36,7 +34,7 @@ function PriceStrategyWorkspace({ view, observation, actions }: { view: PriceGov
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const source = observation?.observationRef ?? view.authorityRefs[0] ?? view.readinessAxes.find((axis) => axis.exactRef)?.exactRef ?? null;
-  useEffect(() => { setProposal(null); setTimeline(null); setEditing(false); setShowComparison(false); setNotice(""); }, [view.viewId, source?.resourceType, source?.resourceId, source?.revision, source?.contentHash]);
+  useEffect(() => { setProposal(null); setTimeline(null); setEditing(false); setShowComparison(false); setNotice(""); }, [view.viewId]);
   const submit = async () => {
     if (!source || !title.trim() || !summary.trim()) { setNotice("缺少当前视图的 exact 价格来源或策略说明，保存失败关闭。"); return; }
     const ratio = Number(tolerance); const hours = Number(freshnessHours);
@@ -45,7 +43,7 @@ function PriceStrategyWorkspace({ view, observation, actions }: { view: PriceGov
     try {
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       if (proposal) {
-        const next = await actions.createReplacementProposal(proposal, { purpose: title.trim(), payload: { ...proposal.proposal.payload, toleranceRatio: ratio, freshnessHours: hours, summary: summary.trim() }, diff: { toleranceRatio: { from: proposal.proposal.payload.toleranceRatio ?? null, to: ratio }, freshnessHours: { from: proposal.proposal.payload.freshnessHours ?? null, to: hours }, summary: { from: proposal.proposal.payload.summary ?? null, to: summary.trim() } }, expiresAt });
+        const next = await actions.createReplacementProposal(proposal, { purpose: title.trim(), diff: { toleranceRatio: { from: proposal.proposal.payload.toleranceRatio ?? null, to: ratio }, freshnessHours: { from: proposal.proposal.payload.freshnessHours ?? null, to: hours }, summary: { from: proposal.proposal.payload.summary ?? null, to: summary.trim() } }, expiresAt });
         setProposal(next); setEditing(false); setNotice(`策略修改已形成替代提案 ${next.proposal.id}，旧版本未被覆盖。`);
       } else {
         const objectRef = { resourceType: source.resourceType, resourceId: source.resourceId, revision: String(source.revision), authority: "ecommerce-workshop.price-governance-view" };
@@ -101,8 +99,6 @@ export function PriceGovernancePage({ client = ecommerceWorkshopClient, actions 
   const comparable = response?.views.reduce((sum, item) => sum + item.countLedger.eligible, 0) ?? 0;
   const total = response?.views.reduce((sum, item) => sum + item.countLedger.input, 0) ?? 0;
   const content = response && view ? <div className="price-governance-read-model">
-    <PriceAnalysisWorkspace client={client} />
-    <PriceAdviceWorkspace client={client} />
     <details className="price-governance-audit-context">
       <summary>价格治理全过程与累计审计</summary>
       <div className="price-governance-audit-stack">

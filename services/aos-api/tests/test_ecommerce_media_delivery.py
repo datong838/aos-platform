@@ -3,7 +3,6 @@ from copy import deepcopy
 from types import SimpleNamespace
 
 import pytest
-from aos_api.aip_production_contracts import ExactRevisionRef
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -76,7 +75,7 @@ class Production:
             current_revision=4,
             topology_status=SimpleNamespace(value="current"),
             members=[SimpleNamespace(artifact_ref=SimpleNamespace(artifact_id="variant-1", content_hash=HASH), family_revision=4)],
-            candidate_groups=[SimpleNamespace(role=SimpleNamespace(value="variant"), selected_ref=SimpleNamespace(artifact_id="variant-1", content_hash=HASH))],
+            candidate_groups=[SimpleNamespace(selected_ref=SimpleNamespace(artifact_id="variant-1", content_hash=HASH))],
         )
         self.gate = SimpleNamespace(
             gate_set_id="gate-1",
@@ -112,7 +111,7 @@ class Production:
     def _result(items):
         return SimpleNamespace(items=items)
 
-    def list_artifact_families(self, scope, *, task_id=None): return self._result([self.family] if scope == SCOPE and task_id in (None, "task-1") else [])
+    def list_artifact_families(self, scope): return self._result([self.family] if scope == SCOPE else [])
     def list_media_gate_sets(self, scope): return self._result([self.gate] if scope == SCOPE else [])
     def list_review_issues(self, scope): return self._result([self.issue] if scope == SCOPE else [])
     def list_return_decisions(self, scope): return self._result([self.decision] if scope == SCOPE else [])
@@ -122,33 +121,16 @@ class Production:
 class Actions:
     def __init__(self) -> None:
         self.calls = []
-        self.submissions = []
         self.bundle = None
-        self.current_draft = None
 
-    def create_proposal(self, *_args):
-        raise ValueError("EXTERNAL_ACTION_EXPLICIT_DRAFT_REQUIRED")
-
-    def create_draft(self, principal, key, body):
-        if self.current_draft is not None:
-            return self.current_draft
+    def create_proposal(self, principal, key, body):
         self.calls.append((principal, key, body))
-        self.current_draft = SimpleNamespace(draft_id="action-draft-1", revision=1,
-            content_hash="f" * 64, lifecycle="editable", submitted_proposal_id=None)
-        return self.current_draft
-
-    def submit_draft(self, principal, draft_id, key, body):
-        assert draft_id == "action-draft-1" and body.expected_revision == 1
-        self.submissions.append((principal, draft_id, key, body))
-        request = self.calls[0][2]
-        source = ExactRevisionRef(resourceType="ActionDraftRevision", resourceId=draft_id,
-                                  revision=2, contentHash="b" * 64)
-        proposal = SimpleNamespace(id="proposal-1", version=1, proposal_hash="e" * 64,
-            status=SimpleNamespace(value="pending"), task_id="task-1", payload=request.payload,
-            impact_preview_ref=request.impact_preview_ref, source_draft_ref=source)
+        proposal = SimpleNamespace(
+            id="proposal-1", version=1, proposal_hash="e" * 64,
+            status=SimpleNamespace(value="pending"), payload=body.payload,
+            impact_preview_ref=body.impact_preview_ref,
+        )
         self.bundle = SimpleNamespace(proposal=proposal, approvals=[])
-        self.current_draft = SimpleNamespace(draft_id=draft_id, revision=2,
-            content_hash=source.content_hash, lifecycle="submitted", submitted_proposal_id=proposal.id)
         return self.bundle
 
     def get_proposal(self, scope, proposal_id):
@@ -291,54 +273,3 @@ def test_http_routes_take_tenant_from_principal_and_reject_query_or_path_injecti
     assert injected.status_code == 400
     assert exported.status_code == 200 and exported.json()["sideEffects"]["publicationCount"] == 0
     assert mismatched.status_code == 409
-
-
-def test_delivery_excludes_other_task_families_and_selected_masters() -> None:
-    delivery, _ = service()
-    original = delivery._production.family.candidate_groups[0]
-    delivery._production.family.candidate_groups = [
-        SimpleNamespace(role=SimpleNamespace(value="master"), selected_ref=original.selected_ref),
-        original,
-    ]
-    assert len(delivery.workspace(SCOPE, "brief-1").candidates) == 1
-    delivery._production.family.candidate_groups = [
-        SimpleNamespace(role=SimpleNamespace(value="master"), selected_ref=original.selected_ref)
-    ]
-    assert delivery.workspace(SCOPE, "brief-1").candidates == []
-    delivery._production.family.candidate_groups = [original]
-    delivery._briefs.items[1].task_id = "another-task"
-    assert delivery.workspace(SCOPE, "brief-1").candidates == []
-
-
-def test_publish_proposal_replay_reads_submitted_draft_without_resubmit() -> None:
-    delivery, actions = service()
-    principal = Principal(subject="operator", org_id="org-org", project_id="dev-project")
-    body = MediaDeliveryPublishProposalRequest(draftRef=draft_ref(), expectedVersion=1,
-        selection=selection(), purpose="内部发布提案")
-    first = delivery.create_publish_proposal(principal, "x" * 120, body)
-    assert delivery.create_publish_proposal(principal, "x" * 120, body) == first
-    assert len(actions.calls) == 1 and len(actions.submissions) == 1
-    assert all(len(key) <= 120 for key in (actions.calls[0][1], actions.submissions[0][2]))
-    actions.bundle.proposal.source_draft_ref = ExactRevisionRef(resourceType="ActionDraftRevision",
-        resourceId="another-draft", revision=2, contentHash="b" * 64)
-    with pytest.raises(MediaDeliveryConflict, match="readback drifted"):
-        delivery.create_publish_proposal(principal, "x" * 120, body)
-
-
-def test_publish_submit_unknown_reconciles_without_submitting_again() -> None:
-    delivery, actions = service()
-    principal = Principal(subject="operator", org_id="org-org", project_id="dev-project")
-    body = MediaDeliveryPublishProposalRequest(draftRef=draft_ref(), expectedVersion=1,
-        selection=selection(), purpose="内部发布提案")
-    submit = actions.submit_draft
-
-    def submitted_but_response_lost(*args):
-        submit(*args)
-        raise OSError("submitted response unavailable")
-
-    actions.submit_draft = submitted_but_response_lost
-    with pytest.raises(MediaDeliveryConflict, match="submitted response unavailable"):
-        delivery.create_publish_proposal(principal, "unknown-submit", body)
-    result = delivery.create_publish_proposal(principal, "unknown-submit", body)
-    assert result.proposal.proposal_id == "proposal-1"
-    assert len(actions.calls) == 1 and len(actions.submissions) == 1

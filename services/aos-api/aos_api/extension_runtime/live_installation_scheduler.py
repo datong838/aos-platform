@@ -16,7 +16,6 @@ from .pending_preparation_directory import (
     PostgresPendingPreparationDirectory,
 )
 from .preparation_owner import _observe
-from .released_recovery_consumer import ReleasedPreparationRecoveryConsumer
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,13 +74,6 @@ class LiveInstallationScheduler:
                                 if item.installation_id == selected_installation)
         for descriptor in descriptors:
             installation = descriptor.installation_id
-            existing=self._owners.get(installation)
-            if existing is not None:
-                recovering=type(getattr(existing,'preparation',None)) is ReleasedPreparationRecoveryConsumer
-                if recovering != (descriptor.mode=='recover'):
-                    # Never install a replacement until original cleanup settles.
-                    await _settled(existing.stop())
-                    self._owners.pop(installation)
             if installation not in self._owners:
                 if len(self._owners) >= self.LIMIT:
                     raise RuntimeError("live installation owner limit exceeded")

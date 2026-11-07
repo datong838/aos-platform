@@ -13,7 +13,6 @@ import {
 
 export type ReplacementProposalInput = {
   purpose: string;
-  payload?: Record<string, unknown>;
   diff: Record<string, unknown>;
   expiresAt: string;
 };
@@ -87,7 +86,7 @@ export class AipActionsSdk {
         objectRef: bundle.proposal.objectRef,
         purpose,
         riskHint: bundle.proposal.clientRiskHint || bundle.proposal.riskLevel,
-        payload: input.payload ?? bundle.proposal.payload,
+        payload: bundle.proposal.payload,
         diff: input.diff,
         evidenceRefs: bundle.proposal.evidenceRefs || bundle.draft.evidenceRefs,
         impactPreviewRef: bundle.proposal.impactPreviewRef,

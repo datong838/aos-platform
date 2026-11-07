@@ -52,16 +52,6 @@ export function clearWebDevSession(): void {
 
 /** Restore in-memory session from sessionStorage; returns whether a usable access token is active. */
 export async function restoreWebDevSession(): Promise<boolean> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
-  try {
-    return await restoreStoredWebDevSession(controller.signal);
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-async function restoreStoredWebDevSession(signal: AbortSignal): Promise<boolean> {
   if (!isLoginGateSkipped()) return false;
   const stored = parseStored(sessionStorage.getItem(STORAGE_KEY));
   if (!stored) return false;
@@ -70,7 +60,6 @@ async function restoreStoredWebDevSession(signal: AbortSignal): Promise<boolean>
   async function verify(accessToken: string): Promise<MeResponse | null> {
     const meResponse = await fetch(`${getApiBase()}/v1/me`, {
       cache: "no-store",
-      signal,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "X-Org-Id": DEFAULT_TENANT.orgId,
@@ -90,7 +79,6 @@ async function restoreStoredWebDevSession(signal: AbortSignal): Promise<boolean>
       const response = await fetch(`${getApiBase()}/v1/auth/token`, {
         method: "POST",
         cache: "no-store",
-        signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ grantType: "refresh_token", refreshToken: stored.refreshToken }),
       });
@@ -125,13 +113,6 @@ export async function prepareWebDevelopmentContext(): Promise<void> {
     await bootstrapTenantFromMe();
     return;
   }
-  try {
-    if (await restoreWebDevSession()) return;
-  } catch {
-    // Development preview must still mount when session verification is
-    // unavailable. Only a verified session may populate the access identity.
-    stopSessionRefresh();
-    clearAccessToken();
-  }
+  if (await restoreWebDevSession()) return;
   resetTenantToDefault();
 }

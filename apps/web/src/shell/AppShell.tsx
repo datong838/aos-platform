@@ -342,9 +342,8 @@ function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
 function AnalystChannelSelection() {
   const selection = useAnalystSelection();
   return <label><span>渠道视角</span><select aria-label="当前渠道视角" value={selection?.channelId ?? ""} disabled>
-    {selection
-      ? <option value={selection.channelId}>{selection.channelLabel}</option>
-      : <option value="">渠道未知</option>}
+    <option value="">渠道未知</option>
+    {selection && <option value={selection.channelId}>{selection.channelLabel}</option>}
   </select></label>;
 }
 
@@ -614,7 +613,7 @@ export function AppShell() {
           {onAnalystVisualRoute ? <>
             <div className="analyst-exact-header-left">
               <h1>经营参谋 · 增长指挥中心</h1>
-              <span>栖月汇微商城 · 工作台 › 增长指挥域 › 经营参谋</span>
+              <span>工作台 › 增长指挥域 › 经营参谋</span>
             </div>
             <div className="analyst-exact-header-right">
               <AnalystChannelSelection />

@@ -13,7 +13,6 @@ from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.ecommerce_workshop_price_governance_contracts import PriceExactRef
 from aos_api.ecommerce_workshop_price_research import PriceBatchDisposition, PriceResearchBatchRevision
 from aos_api.tenant_scope import TenantScope
-from aos_api.ecommerce_price_anomaly import PriceComparison, PriceComparisonBlocked, compare_prices
 
 
 PRICE_DISPOSITION_SCHEMA_VERSION = "aos.ecommerce-workshop.price-disposition/v1"
@@ -168,35 +167,6 @@ class CreatePriceCaseRequest(AipContractModel):
         return self
 
 
-class ComparePriceCaseRequest(AipContractModel):
-    batch_ref: PriceExactRef
-    policy_ref: PriceExactRef
-    observation_ref: PriceExactRef
-    baseline_ref: PriceExactRef
-    detected_at: datetime
-
-    @model_validator(mode="after")
-    def _comparison_inputs(self):
-        expected = ((self.batch_ref,"PriceResearchBatchRevision"),(self.policy_ref,"MonitoringPolicyRevision"),
-            (self.observation_ref,"PriceObservationRevision"),(self.baseline_ref,"PriceObservationRevision"))
-        if any(ref.resource_type != kind for ref,kind in expected) or self.detected_at.utcoffset() is None:
-            raise ValueError("price comparison requires typed exact refs and aware cutoff")
-        return self
-
-
-class AssessPriceCaseRequest(ComparePriceCaseRequest):
-    case_id: str = Field(min_length=1, max_length=200)
-    evidence_bundle_ref: PriceExactRef
-    impact_preview_ref: PriceExactRef
-    severity: str = Field(default="medium", pattern=r"^(low|medium|high|critical)$")
-
-    @model_validator(mode="after")
-    def _case_inputs(self):
-        if self.evidence_bundle_ref.resource_type != "EvidenceBundleRevision" or self.impact_preview_ref.resource_type != "ImpactPreviewRevision":
-            raise ValueError("price assessment requires typed evidence/impact refs")
-        return self
-
-
 class PriceCaseRevision(CreatePriceCaseRequest):
     tenant: TenantContext
     revision: int = Field(default=1, ge=1)
@@ -204,11 +174,6 @@ class PriceCaseRevision(CreatePriceCaseRequest):
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     created_by: str
     created_at: datetime
-
-
-class PriceCaseAssessment(AipContractModel):
-    comparison: PriceComparison
-    case: PriceCaseRevision | None
 
 
 class CreatePriceDispositionContractRequest(AipContractModel):
@@ -394,55 +359,6 @@ class EcommerceWorkshopPriceDispositionService:
         )
         return self.store.append_case(scope, item)
 
-    def _compare_case(self, scope: TenantScope, request: ComparePriceCaseRequest, *, now: datetime | None = None):
-        at = now or datetime.now(UTC)
-        if request.detected_at > at:
-            raise PriceDispositionBlocked("PRICE_COMPARISON_CUTOFF_FUTURE")
-        batch = self.research_store.latest_batch(scope, request.batch_ref.resource_id)
-        policy = self.research_store.require_policy(scope, request.policy_ref)
-        if (batch.lifecycle != "frozen" or self._batch_ref(batch) != request.batch_ref
-                or batch.exact_refs.get("monitoringPolicy") != request.policy_ref
-                or batch.exact_refs.get("eval") != policy.eval_ref):
-            raise PriceDispositionBlocked("PRICE_COMPARISON_BATCH_POLICY_DRIFTED")
-        observations = []
-        for ref in (request.observation_ref, request.baseline_ref):
-            observation = self.research_store.require_observation(scope, ref)
-            members = [item for item in batch.items if item.observation_ref == ref and item.disposition is PriceBatchDisposition.ELIGIBLE]
-            if len(members) != 1 or members[0].sku_ref != observation.quote_basis.sku_ref:
-                raise PriceDispositionBlocked("PRICE_COMPARISON_OBSERVATION_NOT_ELIGIBLE")
-            member = members[0]
-            match = self.research_store.require_match_observation(scope, member.match_observation_ref)
-            decision = self.research_store.require_match_decision(scope, member.match_decision_ref)
-            if (match.observation_ref != ref or match.sku_ref != member.sku_ref
-                    or decision.match_observation_ref != member.match_observation_ref or decision.disposition != "confirmed"):
-                raise PriceDispositionBlocked("PRICE_COMPARISON_MATCH_LINEAGE_DRIFTED")
-            observations.append(observation)
-        try:
-            comparison = compare_prices(scope, *observations, policy, cutoff=request.detected_at)
-        except PriceComparisonBlocked as exc:
-            raise PriceDispositionBlocked(str(exc)) from exc
-        return comparison, policy, observations
-
-    def compare_case(self, scope: TenantScope, request: ComparePriceCaseRequest, *, now: datetime | None = None) -> PriceComparison:
-        return self._compare_case(scope, request, now=now)[0]
-
-    def assess_case(self, scope: TenantScope, request: AssessPriceCaseRequest, actor: str, *, now: datetime | None = None) -> PriceCaseAssessment:
-        at = now or datetime.now(UTC)
-        comparison, policy, observations = self._compare_case(scope, request, now=at)
-        if comparison.anomaly_code is None:
-            return PriceCaseAssessment(comparison=comparison, case=None)
-        case = self.create_case(scope, CreatePriceCaseRequest(caseId=request.case_id,
-            batchRef=request.batch_ref, policyRef=request.policy_ref, evidenceBundleRef=request.evidence_bundle_ref,
-            evalRef=policy.eval_ref, impactPreviewRef=request.impact_preview_ref,
-            targetRefs=[observations[0].quote_basis.sku_ref], calculationInputHash=comparison.calculation_input_hash,
-            anomalyCode=comparison.anomaly_code, severity=request.severity, detectedAt=request.detected_at,
-            keyAssumptions=["同SKU、同报价口径与已确认匹配；仅依据监控策略阈值比较",
-                "计算来源：" + json.dumps({"method":"aos.price-comparison/v1",
-                    "current":{"observationId":observations[0].observation_id,"revision":observations[0].revision},
-                    "baseline":{"observationId":observations[1].observation_id,"revision":observations[1].revision}},ensure_ascii=False,sort_keys=True)],
-            uncertainties=["价格差异不等于违规或因果，处置需人工复核"]), actor, now=at)
-        return PriceCaseAssessment(comparison=comparison, case=case)
-
     def create_contract(self, scope: TenantScope, request: CreatePriceDispositionContractRequest, actor: str, *, now: datetime | None = None) -> PriceDispositionContractRevision:
         at = now or datetime.now(UTC)
         payload = request.model_dump(mode="json", by_alias=True)
@@ -468,7 +384,7 @@ class EcommerceWorkshopPriceDispositionService:
         for key, resource_type in contract.required_gate_types.items():
             if request.gate_refs[key].resource_type != resource_type:
                 raise PriceDispositionBlocked(f"PRICE_DISPOSITION_GATE_TYPE_DRIFTED:{key}")
-        self.store.require_gate_authorities(scope, contract, request.gate_refs, case_ref=request.case_ref)
+        self.store.require_gate_authorities(scope, contract, request.gate_refs)
         payload = request.model_dump(mode="json", by_alias=True)
         binding_hash = canonical_hash({"case": request.case_ref, "contract": request.contract_ref, "targets": request.target_refs, "gates": request.gate_refs, "purpose": request.purpose, "requestedOutcome": request.requested_outcome})
         blockers = price_disposition_operational_blockers(contract.kind)
@@ -495,8 +411,6 @@ class EcommerceWorkshopPriceDispositionService:
         expected_refs = {"case": current.case_ref, "contract": current.contract_ref, **current.gate_refs}
         if request.exact_refs != expected_refs:
             raise PriceDispositionConflict("PRICE_DISPOSITION_EXACT_REFS_DRIFTED")
-        contract = self.store.require_contract(scope, current.contract_ref)
-        self.store.require_gate_authorities(scope, contract, current.gate_refs, case_ref=current.case_ref)
         payload = current.model_dump(
             mode="json",
             by_alias=True,
@@ -518,10 +432,7 @@ class EcommerceWorkshopPriceDispositionService:
             raise PriceDispositionBlocked("PRICE_DISPOSITION_RECEIPT_TYPE_DRIFTED")
         if request.outcome not in allowed_outcomes:
             raise PriceDispositionBlocked("PRICE_DISPOSITION_OUTCOME_KIND_DRIFTED")
-        context = {"disposition_ref": request.disposition_ref} if request.receipt_ref.resource_type == "AdoptionReceipt" else {}
-        receipt_outcome = self.store.require_outcome_receipt(scope, request.receipt_ref, disposition.binding_hash, **context)
-        if receipt_outcome is not None and receipt_outcome != request.outcome:
-            raise PriceDispositionBlocked("PRICE_DISPOSITION_RECEIPT_OUTCOME_DRIFTED")
+        self.store.require_outcome_receipt(scope, request.receipt_ref, disposition.binding_hash)
         payload = request.model_dump(mode="json", by_alias=True)
         item = PriceDispositionObservation(
             tenant=self._tenant(scope), observationId=f"price-disposition-observation-{canonical_hash(payload)[:24]}",
@@ -556,4 +467,4 @@ class EcommerceWorkshopPriceDispositionService:
         )
 
 
-__all__ = [name for name in globals() if name.startswith("Price") or name.startswith("Create") or name.startswith("Assess") or name.startswith("Prepare") or name.startswith("Freeze") or name.startswith("Record") or name in {"EcommerceWorkshopPriceDispositionService", "PRICE_DISPOSITION_SCHEMA_VERSION", "PRICE_DISPOSITION_SKILL_IDS"}]
+__all__ = [name for name in globals() if name.startswith("Price") or name.startswith("Create") or name.startswith("Prepare") or name.startswith("Freeze") or name.startswith("Record") or name in {"EcommerceWorkshopPriceDispositionService", "PRICE_DISPOSITION_SCHEMA_VERSION", "PRICE_DISPOSITION_SKILL_IDS"}]

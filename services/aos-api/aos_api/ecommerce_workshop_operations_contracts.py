@@ -49,7 +49,6 @@ class OperationsBlocker(AipContractModel):
 
 class OperationsCountLedger(AipContractModel):
     source_total: int = Field(ge=0)
-    population_total: int | None = Field(default=None, ge=0)
     attached: int = Field(ge=0)
     unmatched: int = Field(ge=0)
     conflicted: int = Field(ge=0)
@@ -58,8 +57,6 @@ class OperationsCountLedger(AipContractModel):
     def _counts_reconcile(self) -> OperationsCountLedger:
         if self.source_total != self.attached + self.unmatched + self.conflicted:
             raise ValueError("sourceTotal must equal attached + unmatched + conflicted")
-        if self.population_total is not None and self.population_total < self.source_total:
-            raise ValueError("populationTotal cannot be smaller than the read window")
         return self
 
 

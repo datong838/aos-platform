@@ -109,8 +109,6 @@ class BoundContentReturnTarget:
                 "idempotencyKey": row["idempotency_key"],
                 "requestHash": response["requestHash"],
             }
-            if "sourceKind" in artifact:
-                command["sourceKind"] = artifact["sourceKind"]
             _strict_content_review_command(command)
             review_ref = _strict_exact_ref(row["review_receipt_ref"], name="return review Receipt")
             review_body = {name: value for name, value in response.items() if name != "receiptRef"}

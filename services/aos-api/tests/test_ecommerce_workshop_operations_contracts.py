@@ -271,35 +271,3 @@ def test_aftersale_reader_failure_blocks_only_aftersale_slice() -> None:
     )
     assert all(item.status.value == "ready" for item in envelope.slices[:5])
     assert envelope.slices[6].status.value == "ready"
-
-
-def test_population_is_not_the_bounded_window_and_must_cover_it():
-    from aos_api.ecommerce_workshop_operations_contracts import OperationsCountLedger
-    ledger = OperationsCountLedger(sourceTotal=50, attached=50, unmatched=0, conflicted=0, populationTotal=167)
-    assert ledger.population_total == 167 and ledger.source_total == 50
-    with pytest.raises(ValueError):
-        OperationsCountLedger(sourceTotal=50, attached=50, unmatched=0, conflicted=0, populationTotal=49)
-
-
-def test_population_read_failure_never_falls_back_to_legacy_window_reader():
-    from aos_api.ecommerce_inventory_reader import EcommerceInventoryReaderError
-    from aos_api.ecommerce_aftersale_event_reader import EcommerceAftersaleEventReaderError
-    class Reader:
-        def read_page(self, **kwargs):
-            raise OperationsObjectReadError("population unavailable")
-        def read(self, **kwargs):
-            raise AssertionError("failed population read must not use legacy fallback")
-    class Inventory:
-        def read(self, **kwargs):
-            raise EcommerceInventoryReaderError("not in this sample")
-    class Aftersale:
-        def read(self, **kwargs):
-            raise EcommerceAftersaleEventReaderError("not in this sample")
-    class Cases:
-        def list_cases(self, *args, **kwargs):
-            return []
-    view = EcommerceWorkshopOperations(clock=lambda: NOW, object_reader=Reader(),
-        inventory_reader=Inventory(), aftersale_reader=Aftersale(), case_store=Cases()).read(
-            org_id="org-org", project_id="dev-project")
-    orders = next(item for item in view.slices if item.slice_id.value == "orders")
-    assert orders.status.value == "blocked" and orders.count_ledger.population_total is None

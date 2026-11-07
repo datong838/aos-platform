@@ -20,19 +20,18 @@ class PortraitMetricSourceRequest(AipContractModel):
 
 
 def read_portrait_inputs(*,conn,scope,run,actor,method_ref,eval_ref,metric_sources,cutoff_at,
-                         markings,now,max_source_age,max_bytes,source_store=None):
+                         markings,now,max_source_age,max_bytes):
     if ((run.tenant.org_id,run.tenant.project_id)!=scope.key or run.request.skill.asset_type!='SkillTemplate'
         or run.request.skill.asset_id!='ecommerce.skill.D01'):
         raise ValueError('scoped D01 run required')
     return read_portrait_input_packet(conn=conn,scope=scope,task_id=run.task_id,
         input_refs=run.request.input_refs,actor=actor,method_ref=method_ref,eval_ref=eval_ref,
         metric_sources=metric_sources,cutoff_at=cutoff_at,markings=markings,now=now,
-        max_source_age=max_source_age,max_bytes=max_bytes,
-        **({'source_store':source_store} if source_store is not None else {}))
+        max_source_age=max_source_age,max_bytes=max_bytes)
 
 
 def read_portrait_input_packet(*,conn,scope,task_id,input_refs,actor,method_ref,eval_ref,
-                               metric_sources,cutoff_at,markings,now,max_source_age,max_bytes,source_store=None):
+                               metric_sources,cutoff_at,markings,now,max_source_age,max_bytes):
     if (conn is None or type(actor) is not str or not actor or actor.strip()!=actor
         or type(task_id) is not str or not task_id or task_id.strip()!=task_id
         or type(max_bytes) is not int or not 1<=max_bytes<=2_000_000
@@ -55,8 +54,7 @@ def read_portrait_input_packet(*,conn,scope,task_id,input_refs,actor,method_ref,
     for item in items:
         query,result,material=read_portrait_metric_query(conn=conn,scope=scope,task_id=task_id,actor=actor,
             request=item.source_request,markings=markings,now=now,max_source_age=max_source_age,max_bytes=max_bytes,
-            metric_ref=item.metric_ref,result_ref=item.result_ref,window_start=item.window_start,window_end=item.window_end,cutoff_at=cutoff_at,
-            **({'source_store':source_store} if source_store is not None else {}))
+            metric_ref=item.metric_ref,result_ref=item.result_ref,window_start=item.window_start,window_end=item.window_end,cutoff_at=cutoff_at)
         queries.append((query,result))
         key=canonical_hash(item.source_request.bundle_ref.model_dump(mode='json',by_alias=True))
         if key in bundles and canonical_hash(bundles[key])!=canonical_hash(material):

@@ -15,7 +15,6 @@ from aos_api.aip_runtime_guard_policy_contracts import EgressPolicyRevision
 from aos_api.aip_runtime_guard_policy_store import (
     AipRuntimeGuardPolicyStore,
     GuardPolicyDependencyBlocked,
-    GuardPolicyNotFound,
 )
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
@@ -89,7 +88,7 @@ class AipNetworkPolicyStore:
                 return self.get(scope, replay["resourceId"], int(replay["revision"]), conn=conn)
             if item.lifecycle.value == "active":
                 raise NetworkPolicyApprovalRequired("exact approval authority is required for active network policy")
-            self._require_egress(scope, item, draft_storage_only=item.lifecycle.value == 'draft')
+            self._require_egress(scope, item)
             head = conn.execute(
                 "SELECT current_revision,version FROM aip_network_policy_head "
                 "WHERE org_id=%s AND project_id=%s AND policy_id=%s FOR UPDATE",
@@ -182,53 +181,18 @@ class AipNetworkPolicyStore:
         self._require_egress(scope, item, now=instant)
         return item
 
-    def require_runtime_policy_dependency(self, scope: TenantScope, policy: Any, *, draft_storage_only: bool = False) -> NetworkPolicyRevision:
-        if draft_storage_only is True:
-            if policy.lifecycle.value != "draft":
-                raise NetworkPolicyDependencyBlocked("draft dependency is storage only")
-            ref = policy.network_policy_ref
-            if ref.asset_type != "NetworkPolicyRevision":
-                raise NetworkPolicyDependencyBlocked("unsupported network policy ref")
-            try:
-                network = self.get(scope, ref.asset_id, ref.revision)
-            except NetworkPolicyNotFound:
-                raise NetworkPolicyDependencyBlocked("exact draft network policy unavailable") from None
-            if network.lifecycle.value == "draft":
-                if (not isinstance(network, NetworkPolicyRevision)
-                        or (network.tenant.org_id, network.tenant.project_id) != scope.key
-                        or (network.policy_id, network.revision, network.content_hash)
-                        != (ref.asset_id, ref.revision, ref.content_hash)):
-                    raise NetworkPolicyDependencyBlocked("draft network exact ref or tenant drifted")
-                if not (network.effective_from <= datetime.now(UTC) < network.effective_until):
-                    raise NetworkPolicyDependencyBlocked("draft network outside effective window")
-                self._require_egress(scope, network, draft_storage_only=True)
-            else:
-                network = self.require_exact_active(scope, ref)
-        else:
-            network = self.require_exact_active(scope, policy.network_policy_ref)
+    def require_runtime_policy_dependency(self, scope: TenantScope, policy: Any) -> NetworkPolicyRevision:
+        network = self.require_exact_active(scope, policy.network_policy_ref)
         if network.egress_policy_ref != policy.egress_policy_ref:
             raise NetworkPolicyDependencyBlocked("network and runtime policy egress refs do not match")
         return network
 
-    def _require_egress(self, scope: TenantScope, item: NetworkPolicyRevisionCreate | NetworkPolicyRevision, *, now: datetime | None = None, draft_storage_only: bool = False) -> EgressPolicyRevision:
+    def _require_egress(self, scope: TenantScope, item: NetworkPolicyRevisionCreate | NetworkPolicyRevision, *, now: datetime | None = None) -> EgressPolicyRevision:
         try:
-            if draft_storage_only is True:
-                if item.lifecycle.value != 'draft':
-                    raise GuardPolicyDependencyBlocked('draft dependency is storage only')
-                ref = item.egress_policy_ref
-                egress = self._guard_policy_store.get_egress(scope, ref.asset_id, ref.revision)
-                if isinstance(egress, EgressPolicyRevision) and egress.lifecycle.value == 'draft':
-                    if ((egress.tenant.org_id, egress.tenant.project_id) != scope.key
-                            or (egress.policy_id, egress.revision, egress.content_hash)
-                            != (ref.asset_id, ref.revision, ref.content_hash)):
-                        raise GuardPolicyDependencyBlocked('draft egress exact ref or tenant drifted')
-                else:
-                    egress = self._guard_policy_store.require_exact_active(scope, ref, now=now)
-            else:
-                egress = self._guard_policy_store.require_exact_active(
-                    scope, item.egress_policy_ref, now=now
-                )
-        except (GuardPolicyDependencyBlocked, GuardPolicyNotFound) as exc:
+            egress = self._guard_policy_store.require_exact_active(
+                scope, item.egress_policy_ref, now=now
+            )
+        except GuardPolicyDependencyBlocked as exc:
             raise NetworkPolicyDependencyBlocked(str(exc)) from None
         if not isinstance(egress, EgressPolicyRevision):
             raise NetworkPolicyDependencyBlocked("network egress ref resolved to wrong policy kind")

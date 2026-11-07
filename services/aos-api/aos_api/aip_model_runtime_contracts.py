@@ -214,8 +214,7 @@ class ModelPriceSnapshotRevision(AipContractModel):
                 raise ValueError('deferred cost requires bounded timezone-aware window')
             if self.effective_from < authorization.effective_from or self.effective_until > authorization.effective_until:
                 raise ValueError('deferred price exceeds authorization window')
-        elif (self.input_token_price is None and self.output_token_price is None
-              and self.lifecycle is not ModelRuntimeLifecycle.DRAFT):
+        elif self.input_token_price is None and self.output_token_price is None:
             raise ValueError("price snapshot requires an input or output token price")
         if self.effective_until is not None and self.effective_until <= self.effective_from:
             raise ValueError("price snapshot effective range is invalid")

@@ -4,7 +4,6 @@ No public route, AgentRun provisioning, automatic approval or model selection.
 Callers provide scoped factories that open independent per-call connections.
 """
 from datetime import timedelta
-from contextlib import ExitStack
 
 from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.aip_agent_run_execution_service import AipAgentRunExecutionService
@@ -49,8 +48,7 @@ def require_portrait_stage_lineage(scope, timeline, agent_run, command) -> None:
     completed = [x["step_key"] for x in timeline.steps if x.get("status") == "succeeded"]
     if completed:
         raise AipTaskTransitionBlocked("D01 requires no completed predecessor stages")
-    assignees = [ref for ref in plan.steps[0].assignee_refs
-                 if ref.resource_type == "AgentInstance" and ref.resource_id == agent_run.instance_id]
+    assignees = [ref for ref in plan.steps[0].assignee_refs if ref.resource_type == "AgentInstance"]
     instance = request.agent_instance
     if (len(assignees) != 1 or assignees[0].authority != "aip-assignee-directory"
             or (assignees[0].resource_id, assignees[0].revision) != (agent_run.instance_id, str(agent_run.instance_version))
@@ -78,69 +76,32 @@ class PortraitTaorWorker:
 
     def run(self, scope, task_run_id, agent_run_id, command, *, actor, worker_id,
             markings, clock, max_source_age: timedelta, max_bytes: int, lease_seconds=30) -> RunControlResult:
-        return self._run(scope, task_run_id, agent_run_id, command, actor=actor,
-            worker_id=worker_id, markings=markings, clock=clock,
-            max_source_age=max_source_age, max_bytes=max_bytes, lease_seconds=lease_seconds)
-
-    def run_with_formal_source(
-            self, scope, task_run_id, agent_run_id, command, *, source_service,
-            parent_request, source_ref, installation_id, installation_revision,
-            installation_etag, **execution) -> RunControlResult:
-        """Original TAOR with explicit per-invocation formal Source authority."""
-        from aos_api.aip_formal_source_disclosure import FormalSourceDisclosureService
-        from aos_api.aip_binding_formal_evaluator_contracts import FormalExactRef
-        from aos_api.aip_production_contracts import ResolveEvidenceDisclosureRequest
-        if type(source_service) is not FormalSourceDisclosureService:
-            raise TypeError('original formal Source service required')
-        formal_source = dict(source_service=source_service,
-            parent_request=ResolveEvidenceDisclosureRequest.model_validate(parent_request.model_dump()),
-            source_ref=FormalExactRef.model_validate(source_ref.model_dump()),
-            installation_id=installation_id, installation_revision=installation_revision,
-            installation_etag=installation_etag)
-        return self._run(scope, task_run_id, agent_run_id, command,
-                         formal_source=formal_source, **execution)
-
-    def _run(self, scope, task_run_id, agent_run_id, command, *, actor, worker_id,
-             markings, clock, max_source_age: timedelta, max_bytes: int,
-             lease_seconds=30, formal_source=None) -> RunControlResult:
         if not callable(clock) or not actor.strip() or not worker_id.strip():
             raise ValueError("D01 worker requires clock, actor and worker identity")
         command = command.model_copy(deep=True)
         timeline = self._lineage(scope, task_run_id, agent_run_id, command)
         adapter = _PortraitAdapter(self, scope, task_run_id, agent_run_id, command,
-                                    actor, list(markings), clock, max_source_age, max_bytes, timeline.plan.content_hash,
-                                    formal_source=formal_source)
+                                    actor, list(markings), clock, max_source_age, max_bytes, timeline.plan.content_hash)
         return CanonicalTaorRunner(self._tasks).run(scope, task_run_id, actor=actor, worker_id=worker_id,
             adapter=adapter, lease_seconds=lease_seconds, renew_step_lease=True, stop_after_step="portrait")
 
 
 class _PortraitAdapter:
-    def __init__(self, worker, scope, task_run_id, agent_run_id, command, actor, markings, clock, max_source_age, max_bytes, plan_hash, *, formal_source=None):
+    def __init__(self, worker, scope, task_run_id, agent_run_id, command, actor, markings, clock, max_source_age, max_bytes, plan_hash):
         self.worker, self.scope = worker, scope
         self.task_run_id, self.agent_run_id, self.command = task_run_id, agent_run_id, command
         self.actor, self.markings, self.clock = actor, markings, clock
         self.max_source_age, self.plan_hash, self.max_bytes = max_source_age, plan_hash, max_bytes
-        self.formal_source = formal_source
 
     def think(self, step, context):
         try:
             if step["stepKey"] != "portrait" or context["runRef"] != self.task_run_id or context["planContentHash"] != self.plan_hash:
                 raise ValueError("stage context drifted")
             run = self.worker._runs.get(self.scope, self.agent_run_id)
-            with ExitStack() as stack:
-                source_store = None
-                if self.formal_source is None:
-                    conn = stack.enter_context(self.worker._connect(self.scope))
-                else:
-                    source_args = {key: value for key, value in self.formal_source.items()
-                                   if key not in {'source_service', 'parent_request'}}
-                    conn, source_store = stack.enter_context(
-                        self.formal_source['source_service'].source_transaction(
-                            self.scope, self.actor, self.formal_source['parent_request'], **source_args))
+            with self.worker._connect(self.scope) as conn:
                 read_portrait_inputs(conn=conn, scope=self.scope, method_ref=self.command.method_ref, eval_ref=self.command.eval_ref,
                     metric_sources=self.command.metric_sources, cutoff_at=self.command.cutoff_at, run=run, actor=self.actor, markings=self.markings,
-                    now=self.clock(), max_source_age=self.max_source_age, max_bytes=self.max_bytes,
-                    **({'source_store': source_store} if source_store is not None else {}))
+                    now=self.clock(), max_source_age=self.max_source_age, max_bytes=self.max_bytes)
             return {"attemptId": self.command.attempt_id, "generationCommandHash": canonical_hash(self.command.model_dump(mode="json", by_alias=True))}
         except Exception:
             raise AipTaskTransitionBlocked("D01 predecessor evidence or current portrait inputs are not usable") from None
@@ -148,12 +109,8 @@ class _PortraitAdapter:
     def act(self, step, thought):
         try:
             self.worker._lineage(self.scope, self.task_run_id, self.agent_run_id, self.command)
-            generate = (self.worker._generation.generate if self.formal_source is None
-                        else self.worker._generation.generate_with_formal_source)
-            ref = generate(self.scope, self.agent_run_id, self.command,
-                actor=self.actor, markings=self.markings, clock=self.clock,
-                max_source_age=self.max_source_age, max_bytes=self.max_bytes,
-                **(self.formal_source or {}))
+            ref = self.worker._generation.generate(self.scope, self.agent_run_id, self.command,
+                actor=self.actor, markings=self.markings, clock=self.clock, max_source_age=self.max_source_age, max_bytes=self.max_bytes)
             return {"insightRef": ref.model_dump(mode="json", by_alias=True)}
         except Exception:
             # Keep the original attempt for recovery. Do not flatten an unknown

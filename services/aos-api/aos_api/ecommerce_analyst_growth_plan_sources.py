@@ -43,17 +43,12 @@ def require_current_revision(conn: Any, scope: TenantScope, ref: AnalystExactRef
 
 def require_growth_plan_sources(conn: Any, scope: TenantScope, ref: AnalystExactRef, *,
                                 markings: list[str], now: datetime,
-                                max_source_age: timedelta, source_store=None) -> DecisionSummaryRevision:
+                                max_source_age: timedelta) -> DecisionSummaryRevision:
     """Validate current sources in the caller's transaction without writing.
 
     This is a snapshot check. Approval and execution must revalidate evidence;
     reading cannot prevent a subsequent revocation from being committed.
     """
-    if source_store is not None:
-        from aos_api.aip_metric_query_evidence import _production
-        store = _production(conn, scope, source_store)
-    else:
-        store = AipProductionContractStore()
     if (now.utcoffset() is None or max_source_age <= timedelta(0)
             or not markings or any(not isinstance(value, str) or not value.strip() for value in markings)):
         raise ValueError("explicit source lifetime, clock and markings required")
@@ -64,6 +59,7 @@ def require_growth_plan_sources(conn: Any, scope: TenantScope, ref: AnalystExact
     if insight.cutoff_at > now or now - insight.cutoff_at > max_source_age:
         raise ValueError("insight source cutoff is stale or future")
     # No fallback connection is used: every production read receives conn.
+    store = AipProductionContractStore()
     refs = { (source.resource_id, source.revision, source.content_hash): source
              for source in [*decision.evidence_refs, *insight.evidence_refs] }
     for source in refs.values():
@@ -106,13 +102,4 @@ def require_growth_plan_sources(conn: Any, scope: TenantScope, ref: AnalystExact
             if (not isinstance(required, list) or not all(isinstance(value, str) and value.strip() for value in required)
                     or not set(required or ["public"]).issubset(set(markings))):
                 raise ValueError("underlying evidence marking is not allowed")
-            from aos_api.aip_metric_query_evidence import SCHEMA, validate_metric_query_evidence
-            if payload.get('schemaVersion') == SCHEMA:
-                # Recheck the recorded derivation, not just its allowed leaf.
-                # This grants no raw-source or Provider permission to a caller.
-                authority = source_store._formal_source_authority if source_store is not None else None
-                validate_metric_query_evidence(
-                    conn, scope, authority.actor if authority is not None else payload.get('actor'),
-                    authority.body.task_id if authority is not None else payload.get('taskId'),
-                    payload, markings=markings, source_store=source_store)
     return decision

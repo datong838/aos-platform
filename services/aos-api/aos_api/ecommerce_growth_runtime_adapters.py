@@ -174,11 +174,6 @@ from aos_api.source_readiness_receipt_store import (
 from aos_api.tenant_scope import TenantScope
 
 
-@dataclass(frozen=True, slots=True)
-class _TransactionStatusInfo:
-    transaction_status: Any
-
-
 class _TransactionBoundConnection:
     """Compatibility view for existing stores without exposing commit control."""
 
@@ -189,10 +184,6 @@ class _TransactionBoundConnection:
 
     def execute(self, query: str, params: tuple[Any, ...] = ()) -> Any:
         return self._transaction.execute(query, params)
-
-    @property
-    def info(self) -> _TransactionStatusInfo:
-        return _TransactionStatusInfo(self._transaction.transaction_status)
 
     def commit(self) -> None:
         # The surrounding LockedEcommerceGrowthHostPort owns the only commit.
@@ -2252,8 +2243,6 @@ _REVIEW_TASK_SPEC_FIELDS = frozenset(
     }
 )
 _REVIEW_CJK = re.compile(r"[\u3400-\u9fff]")
-# Match package validation while preserving original command text and hashes.
-_REVIEW_BUSINESS_PUNCTUATION = str.maketrans("，：；！？（）［］｛｝．", ",:;!?()[]{}.")
 _REVIEW_TECHNICAL_POLLUTION = re.compile(
     r"(?:(?:AR|W|R|N)\s*[-_]?\s*\d|技术方案|开发任务|波次|API|SQL|DDL|数据库迁移|代码|"
     r"(?:/[\w.-]+){2,}|(?:[\w.-]+/)+[\w.-]+\.(?:py|ts|tsx|js|sql|md|json|ya?ml)|"
@@ -2376,7 +2365,7 @@ def _strict_review_accept_command(command: Mapping[str, Any]) -> tuple[str, Inve
             if unicodedata.category(character) != "Cf"
         )
         if (
-            normalized != value.translate(_REVIEW_BUSINESS_PUNCTUATION)
+            normalized != value
             or value != value.strip()
             or not _REVIEW_CJK.search(normalized)
             or _REVIEW_TECHNICAL_POLLUTION.search(normalized)
@@ -2398,7 +2387,7 @@ def _strict_review_accept_command(command: Mapping[str, Any]) -> tuple[str, Inve
 
 
 def _strict_accepted_stage_accept_command(command: dict[str, Any]) -> tuple[str, InvestigationExactRef, InvestigationExactRef]:
-    """Parse the distinct accepted-stage source shape; authority is read by Host."""
+    """Parse a distinct source shape only; its Owner read is not wired yet."""
     if (set(command) != _REVIEW_STAGE_ACCEPT_FIELDS
             or command["operation"] != "review_handoff.advance"
             or command["decision"] != "ACCEPT"
@@ -2490,8 +2479,7 @@ def _strict_accepted_stage_accept_command(command: dict[str, Any]) -> tuple[str,
                   *task["channels"], *task["constraints"]):
         normalized = "".join(ch for ch in unicodedata.normalize("NFKC", value)
                              if unicodedata.category(ch) != "Cf")
-        if (normalized != value.translate(_REVIEW_BUSINESS_PUNCTUATION)
-                or not _REVIEW_CJK.search(normalized) or _REVIEW_TECHNICAL_POLLUTION.search(normalized)):
+        if normalized != value or not _REVIEW_CJK.search(value) or _REVIEW_TECHNICAL_POLLUTION.search(value):
             raise ValueError("accepted stage Handoff requires Chinese business text")
     return key, occurrence, case
 
@@ -3398,46 +3386,27 @@ class ReviewAdvanceHostService:
             **body,
         }
 
-    def _current_accepted_handoff(self, *, transaction, scope, command, checked_at):
-        cutoff = datetime.fromisoformat(command["cutoffAt"])
-        expires = datetime.fromisoformat(command["expiresAt"])
-        if (type(checked_at) is not datetime or checked_at.utcoffset() is None
-                or not cutoff <= checked_at < expires):
-            raise ValueError("accepted stage Handoff trusted time is outside its lifetime")
-        _key, occurrence_ref, case_ref = _strict_review_accept_command(command)
-        self._revalidate_current_occurrence_case(
-            transaction=transaction, scope=scope, command=command,
-            occurrence_ref=occurrence_ref, case_ref=case_ref,
-        )
-        source = self._revalidate_accepted_stage_source(
-            transaction=transaction, scope=scope, command=command)
-        self._revalidate_analysis_runtime(
-            transaction=transaction, scope=scope, command=command,
-            artifact_task_run_id=source.decision.task_run_id,
-            accepted_stage_task_run_id=source.decision.task_run_id,
-        )
-        self._revalidate_accepted_stage_runtime_sources(
-            transaction=transaction, scope=scope, command=command, stage_source=source)
-        self._require_sales_weapon_method(
-            transaction=transaction, scope=scope, command=command,
-            plan=source.approved, checked_at=checked_at,
-        )
-        return source.approved
-
     def revalidate(self, *, transaction, scope, dispatch, command):
         key, occurrence_ref, case_ref = _strict_review_accept_command(command)
         if dispatch.operation_id != "ecommerce_growth_review_advance":
             raise ValueError("review dispatch operation drifted")
-        if command.get("sourceKind") == "accepted-stage-v1":
-            self._current_accepted_handoff(
-                transaction=transaction, scope=scope, command=command,
-                checked_at=getattr(dispatch, "checked_at", None),
-            )
-            return
         self._revalidate_current_occurrence_case(
             transaction=transaction, scope=scope, command=command,
             occurrence_ref=occurrence_ref, case_ref=case_ref,
         )
+        if command.get("sourceKind") == "accepted-stage-v1":
+            stage_source = self._revalidate_accepted_stage_source(
+                transaction=transaction, scope=scope, command=command)
+            self._revalidate_analysis_runtime(
+                transaction=transaction, scope=scope, command=command,
+                artifact_task_run_id=stage_source.decision.task_run_id,
+                accepted_stage_task_run_id=stage_source.decision.task_run_id,
+            )
+            self._revalidate_accepted_stage_runtime_sources(
+                transaction=transaction, scope=scope, command=command,
+                stage_source=stage_source,
+            )
+            raise ValueError("accepted stage Handoff Task/Brief is not wired")
         plan = self._revalidate_growth_plan(
             transaction=transaction,
             scope=scope,
@@ -3472,28 +3441,22 @@ class ReviewAdvanceHostService:
 
     def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
         key, _occurrence_ref, _case_ref_value = _strict_review_accept_command(command)
-        accepted_stage = command.get("sourceKind") == "accepted-stage-v1"
-        approved_plan = None
-        if accepted_stage:
-            approved_plan = self._current_accepted_handoff(
-                transaction=transaction, scope=scope, command=command, checked_at=checked_at)
+        if command.get("sourceKind") == "accepted-stage-v1":
+            raise ValueError("accepted stage Handoff Owner is not wired")
         _reader, _cases, receipts = self._components(transaction, scope)
         existing = receipts.read(key)
         if existing is not None:
-            if accepted_stage and existing.get("requestHash") != command["requestHash"]:
-                raise ValueError("accepted stage Handoff key belongs to a different command")
             replay = dict(existing)
             replay["replayed"] = True
             return replay
-        if not accepted_stage:
-            approved_plan = self._revalidate_growth_plan(
+        approved_plan = self._revalidate_growth_plan(
+            transaction=transaction, scope=scope, command=command,
+        )
+        if approved_plan is not None:
+            self._require_sales_weapon_method(
                 transaction=transaction, scope=scope, command=command,
+                plan=approved_plan, checked_at=checked_at,
             )
-            if approved_plan is not None:
-                self._require_sales_weapon_method(
-                    transaction=transaction, scope=scope, command=command,
-                    plan=approved_plan, checked_at=checked_at,
-                )
         lineage = self._review_lineage(
             transaction=transaction,
             scope=scope,
@@ -4211,10 +4174,7 @@ def _content_exact_ref(value: Any, expected_type: str) -> InvestigationExactRef:
 
 def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, Any]:
     fields = set(command) if type(command) is dict else set()
-    accepted_stage = fields in (
-        _CONTENT_GENERATE_FIELDS | {"sourceKind"},
-        _CONTENT_GENERATE_FIELDS | {"sourceKind", "returnDecisionRef"},
-    )
+    accepted_stage = fields == _CONTENT_GENERATE_FIELDS | {"sourceKind"}
     if not accepted_stage and fields not in (
         _CONTENT_GENERATE_FIELDS, _CONTENT_GENERATE_FIELDS | {"returnDecisionRef"}
     ):
@@ -4382,8 +4342,7 @@ class ContentGenerateHostService:
             or row["issue_status"] != "returned"
             or row["current_issue_version"] != row["issue_version"] + 1
             or type(row["input_refs"]) is not list
-            or (expected_ref not in row["input_refs"]
-                and {**expected_ref, "contentHash": row["decision_hash"]} not in row["input_refs"])
+            or expected_ref not in row["input_refs"]
             or expected_artifact not in row["input_refs"]
             or row["persisted_artifact_hash"] != row["artifact_hash"]
             or type(row["decision_created_at"]) is not datetime
@@ -4736,7 +4695,7 @@ class ContentGenerateHostService:
 
     @staticmethod
     def _task_brief(transaction, scope, authorities, source_values, *, approved_plan=None,
-                    source_kind="issue-review-v1", source_lineage=None, current_repair_brief=None) -> None:
+                    source_kind="issue-review-v1", source_lineage=None) -> None:
         accepted_stage = source_kind == "accepted-stage-v1"
         if source_kind not in {"issue-review-v1", "accepted-stage-v1"}:
             raise ValueError("content generate Task/Brief source kind drifted")
@@ -4760,15 +4719,6 @@ class ContentGenerateHostService:
             raise ValueError("content generate Task/Brief source kind drifted")
         task_ref = authorities["task"]
         brief_ref = authorities["brief"]
-        expected_head_revision = brief_ref.revision
-        if current_repair_brief is not None:
-            if not accepted_stage:
-                raise ValueError('repair origin projection requires accepted Stage source')
-            from aos_api.ecommerce_content_repair_brief_authority import read_created_brief_origin
-            root = read_created_brief_origin(transaction, scope, current_repair_brief, task_id=task_ref.resource_id)
-            if root != brief_ref.model_dump(mode='json', by_alias=True, exclude_none=True):
-                raise ValueError('repair original Brief authority drifted')
-            expected_head_revision = _content_exact_ref(current_repair_brief, 'TaskBriefRevision').revision
         task = transaction.execute(
             """SELECT task_type,title,description,priority,goal,selection_ref,
                        policy_revision,request_hash
@@ -4880,8 +4830,8 @@ class ContentGenerateHostService:
             task_ref.model_dump(mode="json", by_alias=True, exclude_none=True)
             != expected_task_ref
             or task["request_hash"] != expected_task_ref["contentHash"].removeprefix("sha256:")
-            or int(head["current_revision"]) != expected_head_revision
-            or int(head["version"]) != expected_head_revision
+            or int(head["current_revision"]) != brief_ref.revision
+            or int(head["version"]) != brief_ref.revision
             or head["task_id"] != task_ref.resource_id
             or brief["task_id"] != task_ref.resource_id
             or brief["brief_type"] != "content_campaign"
@@ -5816,63 +5766,34 @@ class ContentGenerateHostService:
                 if revoked is not None:
                     raise ValueError("content generate Binding dependency revoked")
 
-    def _accepted_stage_content_source(self, transaction, scope, parsed):
-        authorities = parsed["authorities"]
-        rows = transaction.execute(
-            """SELECT response FROM public.ecommerce_growth_runtime_command_receipt
-                WHERE org_id=%s AND project_id=%s
-                  AND operation_id='ecommerce_growth_review_advance'
-                  AND response->'handoffRef'->>'resourceId'=%s""",
-            (*scope.key, authorities["handoff"].resource_id),
-        ).fetchall()
-        if len(rows) != 1:
-            raise ValueError("accepted stage Review Receipt is not unique")
-        response = rows[0]["response"]
-        lineage = response.get("sourceLineage") if type(response) is dict else None
-        if (type(lineage) is not dict
-                or set(lineage) != _CONTENT_STAGE_LINEAGE_FIELDS
-                or lineage.get("sourceKind") != "accepted-stage-v1"
-                or response.get("sourceKind") != "accepted-stage-v1"):
-            raise ValueError("accepted stage Review Receipt lineage drifted")
-        artifact = dict(lineage["stageArtifactRef"])
-        artifact["contentHash"] = "sha256:" + artifact["contentHash"]
-        if (lineage["growthPlanRef"] != authorities["growth_plan"].model_dump(
-                mode="json", by_alias=True, exclude_none=True)
-                or response.get("growthPlanRef") != lineage["growthPlanRef"]
-                or [artifact] != [ref.model_dump(mode="json", by_alias=True, exclude_none=True)
-                                  for ref in parsed["sourceRefs"]]):
-            raise ValueError("accepted stage content command source binding drifted")
-        self._accepted_stage_owner_refs(
-            transaction=transaction, scope=scope, candidate=lineage,
-        )
-        review_host = ReviewAdvanceHostService()
-        source = review_host._revalidate_accepted_stage_source(
-            transaction=transaction, scope=scope, command=lineage,
-        )
-        return lineage, source
-
-    @staticmethod
-    def _creation_source_authorities(transaction, scope, authorities, current_repair_brief):
-        if current_repair_brief is None:
-            return authorities
-        from aos_api.ecommerce_content_repair_brief_authority import read_created_brief_origin
-        root = read_created_brief_origin(transaction, scope, current_repair_brief,
-            task_id=authorities['task'].resource_id)
-        return {**authorities, 'brief': _content_exact_ref(root, 'TaskBriefRevision')}
-
     def revalidate(self, *, transaction, scope, dispatch, command):
         parsed = _strict_content_generate_command(command)
         if parsed["sourceKind"] == "accepted-stage-v1":
             if dispatch.operation_id != "ecommerce_growth_content_generate":
                 raise ValueError("content generate dispatch operation drifted")
             authorities = parsed["authorities"]
-            current_repair = None
-            if parsed['returnRef'] is not None:
-                self._return_authority(transaction, scope, command, parsed, dispatch=dispatch)
-                current_repair = authorities['brief'].model_dump(mode='json', by_alias=True, exclude_none=True)
-            source_authorities = self._creation_source_authorities(transaction, scope, authorities, current_repair)
-            lineage, source = self._accepted_stage_content_source(transaction, scope, parsed)
+            rows = transaction.execute(
+                """SELECT response FROM public.ecommerce_growth_runtime_command_receipt
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation_id='ecommerce_growth_review_advance'
+                      AND response->'handoffRef'->>'resourceId'=%s""",
+                (*scope.key, authorities["handoff"].resource_id),
+            ).fetchall()
+            if len(rows) != 1:
+                raise ValueError("accepted stage Review Receipt is not unique")
+            response = rows[0]["response"]
+            lineage = response.get("sourceLineage") if type(response) is dict else None
+            if (type(lineage) is not dict
+                    or set(lineage) != _CONTENT_STAGE_LINEAGE_FIELDS
+                    or lineage.get("sourceKind") != "accepted-stage-v1"):
+                raise ValueError("accepted stage Review Receipt lineage drifted")
+            self._accepted_stage_owner_refs(
+                transaction=transaction, scope=scope, candidate=lineage,
+            )
             review_host = ReviewAdvanceHostService()
+            source = review_host._revalidate_accepted_stage_source(
+                transaction=transaction, scope=scope, command=lineage,
+            )
             review_host._revalidate_current_occurrence_case(
                 transaction=transaction, scope=scope, command=lineage,
                 occurrence_ref=_content_exact_ref(lineage["occurrenceRef"], "AutomationOccurrence"),
@@ -5898,14 +5819,13 @@ class ContentGenerateHostService:
             source_values = [ref.model_dump(mode="json", by_alias=True, exclude_none=True)
                              for ref in parsed["sourceRefs"]]
             self._review_receipt(
-                transaction, scope, source_authorities, source_values,
+                transaction, scope, authorities, source_values,
                 source_kind="accepted-stage-v1", source_lineage=lineage,
             )
             self._task_brief(
-                transaction, scope, source_authorities, source_values,
+                transaction, scope, authorities, source_values,
                 approved_plan=source.approved,
                 source_kind="accepted-stage-v1", source_lineage=lineage,
-                **({} if current_repair is None else {'current_repair_brief': current_repair}),
             )
             _agent, capability = self._agent_capability_authority(
                 transaction, scope, authorities
@@ -5935,7 +5855,7 @@ class ContentGenerateHostService:
                 transaction, scope, capability, dependencies, dependency_row,
                 checked_at=checked_at,
             )
-            return
+            raise ValueError("accepted stage content Host is not wired")
         if dispatch.operation_id != "ecommerce_growth_content_generate":
             raise ValueError("content generate dispatch operation drifted")
         self._return_authority(transaction, scope, command, parsed, dispatch=dispatch)
@@ -6007,20 +5927,8 @@ class ContentGenerateHostService:
         self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at
     ):
         parsed = _strict_content_generate_command(command)
-        approved_plan = None
         if parsed["sourceKind"] == "accepted-stage-v1":
-            if type(transaction) is not HostTransaction:
-                raise TypeError("accepted stage content requires original Host transaction")
-            lineage, source = self._accepted_stage_content_source(transaction, scope, parsed)
-            cutoff = datetime.fromisoformat(lineage["cutoffAt"])
-            expiry = datetime.fromisoformat(lineage["expiresAt"])
-            if (type(checked_at) is not datetime or checked_at.utcoffset() is None
-                    or cutoff.utcoffset() is None or expiry.utcoffset() is None
-                    or not cutoff <= checked_at < expiry):
-                raise ValueError("accepted stage content authority expired")
-            approved_plan = source.approved
-            if approved_plan.sales_weapon_method is None:
-                raise ValueError("accepted stage content method unavailable")
+            raise ValueError("accepted stage content Host is not wired")
         if parsed["returnRef"] is not None:
             raise ValueError("content return generation is not enabled")
         persisted = self._runtime_command_authority(transaction, scope, command)
@@ -6036,12 +5944,11 @@ class ContentGenerateHostService:
                 raise ValueError("content generate persisted Receipt drifted")
             return persisted
         request = self._budget_request(command)
-        if approved_plan is None:
-            approved_plan = ReviewAdvanceHostService._revalidate_growth_plan(
-                transaction=transaction,
-                scope=scope,
-                command={"growthPlanRef": command["authorityRefs"]["growth_plan"]},
-            )
+        approved_plan = ReviewAdvanceHostService._revalidate_growth_plan(
+            transaction=transaction,
+            scope=scope,
+            command={"growthPlanRef": command["authorityRefs"]["growth_plan"]},
+        )
         store = self._budget_store(transaction, scope)
         reservation = store.reserve(scope, request, actor=self.executor_identity)
         if approved_plan.sales_weapon_method is not None:
@@ -6077,8 +5984,7 @@ class ContentGenerateHostService:
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
         if type(command) is dict and command.get("sourceKind") == "accepted-stage-v1":
             _strict_content_generate_command(command)
-            if type(receipt) is not dict or receipt.get("state") != "PENDING":
-                return {}
+            raise ValueError("accepted stage content Host is not wired")
         if type(receipt) is not dict or type(receipt.get("replayed")) is not bool:
             return {}
         request = self._budget_request(command)
@@ -6401,7 +6307,7 @@ class ContentReviewHostService:
             or int(head["version"]) != expected_brief["revision"]
             or brief["task_id"] != task["task_id"]
             or brief["brief_type"] != "content_campaign"
-            or brief["lifecycle"] not in {"draft", "frozen"}
+            or brief["lifecycle"] != "draft"
             or brief["content_hash"] != expected_brief_hash
             or type(spec) is not dict
             or _request_hash(spec.get("taskRef")) != _request_hash(command["taskRef"])
@@ -6410,10 +6316,6 @@ class ContentReviewHostService:
             or spec.get("externalPublicationRequested") is not False
         ):
             raise ValueError("content review TaskBrief exact lineage drifted")
-        if brief['lifecycle'] == 'frozen':
-            from aos_api.ecommerce_content_repair_brief_authority import require_review_repair_brief
-            require_review_repair_brief(transaction, scope, command['briefRef'], spec,
-                command['artifactRef'], task_id=task['task_id'])
         return _content_business_text(task["title"], name="business_task_title", limit=120)
 
     @staticmethod
@@ -6479,18 +6381,14 @@ class ContentReviewHostService:
         source = ReviewAdvanceHostService._revalidate_accepted_stage_source(
             transaction=transaction, scope=scope, command=lineage,
         )
-        current_repair = command['briefRef'] if authorities['brief'].revision > 1 else None
-        source_authorities = ContentGenerateHostService._creation_source_authorities(
-            transaction, scope, authorities, current_repair)
         ContentGenerateHostService._review_receipt(
-            transaction, scope, source_authorities, source_values,
+            transaction, scope, authorities, source_values,
             source_kind="accepted-stage-v1", source_lineage=lineage,
         )
         ContentGenerateHostService._task_brief(
-            transaction, scope, source_authorities, source_values,
+            transaction, scope, authorities, source_values,
             approved_plan=source.approved,
             source_kind="accepted-stage-v1", source_lineage=lineage,
-            **({} if current_repair is None else {'current_repair_brief': current_repair}),
         )
         return title
 
@@ -6914,13 +6812,6 @@ class ContentReviewHostService:
                     for index, row in enumerate(rows, start=1))
         )
 
-    @staticmethod
-    def _review_task_title(transaction, scope, command, checked_at):
-        if command.get("sourceKind") == "accepted-stage-v1":
-            return ContentReviewHostService._accepted_stage_task_brief_authority(
-                transaction, scope, command, checked_at=checked_at)
-        return ContentReviewHostService._task_brief_authority(transaction, scope, command)
-
     def revalidate(self, *, transaction, scope, dispatch, command):
         _strict_content_review_command(command)
         if dispatch.operation_id != "ecommerce_growth_content_review":
@@ -6937,7 +6828,7 @@ class ContentReviewHostService:
             self._reviewer_authority(transaction, scope, command)
             if _request_hash(artifact["growthPlanRef"]) != _request_hash(command["growthPlanRef"]):
                 raise ValueError("content review GrowthPlan lineage drifted")
-            return
+            raise ValueError("accepted stage content review Host is not wired")
         artifact = self._artifact_authority(transaction, scope, command)
         self._task_brief_authority(transaction, scope, command)
         self._issue_authority(transaction, scope, command)
@@ -6948,10 +6839,7 @@ class ContentReviewHostService:
     def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
         parsed = _strict_content_review_command(command)
         if command.get("sourceKind") == "accepted-stage-v1":
-            if type(transaction) is not HostTransaction:
-                raise TypeError("accepted stage review requires original Host transaction")
-            self.revalidate(transaction=transaction, scope=scope,
-                dispatch=dispatch_ref, command=command)
+            raise ValueError("accepted stage content review Host is not wired")
         effective_at = checked_at
         runtime_hash = _request_hash(command)
         row = transaction.execute(
@@ -7005,7 +6893,7 @@ class ContentReviewHostService:
                 occurred_at=effective_at,
             ).response
         artifact = self._artifact_authority(transaction, scope, command)
-        task_title = self._review_task_title(transaction, scope, command, effective_at)
+        task_title = self._task_brief_authority(transaction, scope, command)
         plan = self._feedback_plan(receipt, artifact, task_title)
         port = self._feedback_port(transaction, scope, effective_at)
         enqueue = port.enqueue(review_receipt=receipt, feedback_plan=plan)
@@ -7020,6 +6908,9 @@ class ContentReviewHostService:
         return receipt
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        if type(command) is dict and command.get("sourceKind") == "accepted-stage-v1":
+            _strict_content_review_command(command)
+            raise ValueError("accepted stage content review Host is not wired")
         if type(receipt) is not dict or set(receipt) != _CONTENT_REVIEW_RESPONSE_FIELDS:
             return {}
         parsed = _strict_content_review_command(command)
@@ -7066,7 +6957,7 @@ class ContentReviewHostService:
         if _request_hash(receipt) != _request_hash(expected_receipt):
             return {}
         artifact = self._artifact_authority(transaction, scope, command)
-        task_title = self._review_task_title(transaction, scope, command, dispatch.checked_at)
+        task_title = self._task_brief_authority(transaction, scope, command)
         plan = self._feedback_plan(receipt, artifact, task_title)
         readback = self._feedback_port(transaction, scope, dispatch.checked_at).read(
             command_id=plan["commandId"]

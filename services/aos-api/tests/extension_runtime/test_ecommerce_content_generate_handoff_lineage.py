@@ -589,7 +589,7 @@ def test_content_generate_reads_distinct_persisted_stage_review_receipt():
         read(row, artifacts=[ref("Artifact", "another-artifact")])
 
 
-def test_accepted_stage_content_command_is_strict_and_requires_native_host():
+def test_accepted_stage_content_command_is_strict_and_host_stays_closed():
     command = accepted_stage_content_command()
     parsed = _strict_content_generate_command(command)
     assert parsed["sourceKind"] == "accepted-stage-v1"
@@ -598,7 +598,7 @@ def test_accepted_stage_content_command_is_strict_and_requires_native_host():
         lambda value: value.update(sourceKind="issue-review-v1"),
         lambda value: value["sourceArtifactRefs"].append(ref("Artifact", "another")),
         lambda value: value["sourceArtifactRefs"][0].update(resourceType="ArtifactRevision"),
-        lambda value: value.update(returnDecisionRef={**ref("ReturnDecision", "returned"), "revision": 2}),
+        lambda value: value.update(returnDecisionRef=ref("ReturnDecision", "returned")),
     ):
         drift = deepcopy(command)
         change(drift)
@@ -642,15 +642,16 @@ def test_accepted_stage_content_command_is_strict_and_requires_native_host():
         host.revalidate(transaction=malformed, scope=SCOPE,
                         dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
                         command=command)
-    with pytest.raises(TypeError, match="original Host transaction"):
+    with pytest.raises(ValueError, match="accepted stage content Host is not wired"):
         host.execute(transaction=NoDatabase(), scope=SCOPE, dispatch_ref=None,
                      command=command, checked_at=datetime.now(timezone.utc),
                      occurred_at=datetime.now(timezone.utc))
-    assert host.verify_receipt(transaction=NoDatabase(), scope=SCOPE, dispatch=None,
-                               command=command, receipt={}) == {}
+    with pytest.raises(ValueError, match="accepted stage content Host is not wired"):
+        host.verify_receipt(transaction=NoDatabase(), scope=SCOPE, dispatch=None,
+                            command=command, receipt={})
 
 
-def test_accepted_stage_content_revalidates_all_execution_authorities(monkeypatch):
+def test_accepted_stage_content_revalidates_execution_authorities_before_closed_gate(monkeypatch):
     command = accepted_stage_content_command()
     review_command = accepted_stage_command()
     receipt = ReviewAdvanceHostService()._accept_receipt(
@@ -742,11 +743,13 @@ def test_accepted_stage_content_revalidates_all_execution_authorities(monkeypatc
     monkeypatch.setattr(ContentGenerateHostService, "_binding_dependency_authority",
                         step("dependencies", None))
     calls.clear()
-    assert ContentGenerateHostService().revalidate(
-        transaction=OneReviewReceipt(), scope=SCOPE,
-        dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate",
-                                 checked_at=checked_at), command=command,
-    ) is None
+    with pytest.raises(ValueError, match="accepted stage content Host is not wired"):
+        ContentGenerateHostService().revalidate(
+            transaction=OneReviewReceipt(), scope=SCOPE,
+            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate",
+                                     checked_at=checked_at),
+            command=command,
+        )
     assert calls[-8:] == ["review-receipt", "task-brief", "agent", "route-budget",
                            "facts", "capacity", "binding", "dependencies"]
 

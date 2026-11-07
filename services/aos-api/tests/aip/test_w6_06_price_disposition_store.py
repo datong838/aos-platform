@@ -34,7 +34,7 @@ def contract() -> PriceDispositionContractRevision:
 def test_production_store_never_trusts_caller_shaped_gate_refs():
     store = EcommerceWorkshopPriceDispositionStore(connect_factory=lambda _scope: None)
     gates = {name: ref(kind, name) for name, kind in REQUIRED_GATE_TYPES[PriceDispositionKind.INTERNAL_ADVICE].items()}
-    with pytest.raises(PriceDispositionBlocked, match="CASE_REQUIRED"):
+    with pytest.raises(PriceDispositionBlocked, match="GATE_AUTHORITY_RESOLVER_UNAVAILABLE"):
         store.require_gate_authorities(SCOPE, contract(), gates)
 
 

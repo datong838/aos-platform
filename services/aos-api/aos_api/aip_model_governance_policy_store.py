@@ -147,14 +147,10 @@ class AipModelGovernancePolicyStore:
             self._require_budget_revision(scope, item, now=instant)
         return item
 
-    def require_model_dependencies(self, scope: TenantScope, model: Any, *, price: Any = None, now: datetime | None = None, draft_storage_only: bool = False) -> None:
+    def require_model_dependencies(self, scope: TenantScope, model: Any, *, price: Any = None, now: datetime | None = None) -> None:
         instant = now or datetime.now(UTC)
-        if draft_storage_only is True:
-            self.require_runtime_policy_dependencies(scope, model, draft_storage_only=True)
-            budget = self.get_budget(scope, model.budget_policy_ref.asset_id, model.budget_policy_ref.revision)
-        else:
-            self.require_exact_active(scope, model.quota_policy_ref, now=instant)
-            budget = self.require_exact_active(scope, model.budget_policy_ref, now=instant)
+        self.require_exact_active(scope, model.quota_policy_ref, now=instant)
+        budget = self.require_exact_active(scope, model.budget_policy_ref, now=instant)
         authorization = getattr(budget, 'development_cost_authorization', None)
         price_authorization = getattr(price, 'development_cost_authorization', None)
         if price_authorization is not None and price_authorization != authorization:
@@ -173,34 +169,11 @@ class AipModelGovernancePolicyStore:
                     'development cost authorization does not cover model'
                 ) from None
 
-    def require_runtime_policy_dependencies(self, scope: TenantScope, policy: Any, *, draft_storage_only: bool = False) -> None:
-        if draft_storage_only is True:
-            if policy.lifecycle.value != "draft":
-                raise ModelGovernancePolicyDependencyBlocked("draft dependency is storage only")
-            for ref, kind in ((policy.quota_policy_ref, "quota"), (policy.budget_policy_ref, "budget")):
-                if ref.asset_type != self._SPECS[kind][2]:
-                    raise ModelGovernancePolicyDependencyBlocked("draft governance policy kind differs")
-                try:
-                    item = self._get(kind, scope, ref.asset_id, ref.revision)
-                except ModelGovernancePolicyNotFound:
-                    raise ModelGovernancePolicyDependencyBlocked("exact draft governance policy unavailable") from None
-                if item.lifecycle is not ModelGovernancePolicyLifecycle.DRAFT:
-                    self.require_exact_active(scope, ref)
-                    continue
-                if (not isinstance(item, self._SPECS[kind][1])
-                        or (item.tenant.org_id, item.tenant.project_id) != scope.key
-                        or (item.policy_id, item.revision, item.content_hash)
-                        != (ref.asset_id, ref.revision, ref.content_hash)):
-                    raise ModelGovernancePolicyDependencyBlocked("draft governance exact ref or tenant drifted")
-                if not (item.effective_from <= datetime.now(UTC) < item.effective_until):
-                    raise ModelGovernancePolicyDependencyBlocked("draft governance outside effective window")
-                if kind == "budget":
-                    self._require_budget_revision(scope, item, draft_storage_only=True)
-            return
+    def require_runtime_policy_dependencies(self, scope: TenantScope, policy: Any) -> None:
         self.require_exact_active(scope, policy.quota_policy_ref)
         self.require_exact_active(scope, policy.budget_policy_ref)
 
-    def _require_budget_revision(self, scope: TenantScope, item: BudgetPolicyRevisionCreate | BudgetPolicyRevision, *, now: datetime | None = None, draft_storage_only: bool = False) -> None:
+    def _require_budget_revision(self, scope: TenantScope, item: BudgetPolicyRevisionCreate | BudgetPolicyRevision, *, now: datetime | None = None) -> None:
         ref = item.budget_revision_ref
         try:
             budget = self._budget_store.get(scope, ref.asset_id, ref.revision)
@@ -209,16 +182,7 @@ class AipModelGovernancePolicyStore:
         instant = now or datetime.now(UTC)
         if budget.content_hash != ref.content_hash:
             raise ModelGovernancePolicyDependencyBlocked("BudgetRevision exact ref drifted")
-        draft_parent = False
-        if draft_storage_only is True:
-            if item.lifecycle is not ModelGovernancePolicyLifecycle.DRAFT:
-                raise ModelGovernancePolicyDependencyBlocked('draft budget dependency is storage only')
-            if budget.lifecycle is BudgetLifecycle.DRAFT:
-                if ((budget.tenant.org_id, budget.tenant.project_id) != scope.key
-                        or (budget.budget_id, budget.revision) != (ref.asset_id, ref.revision)):
-                    raise ModelGovernancePolicyDependencyBlocked('draft BudgetRevision exact scope or identity drifted')
-                draft_parent = True
-        if budget.lifecycle is not BudgetLifecycle.ACTIVE and not draft_parent:
+        if budget.lifecycle is not BudgetLifecycle.ACTIVE:
             raise ModelGovernancePolicyDependencyBlocked("BudgetRevision is not active")
         if not (budget.effective_from <= instant < budget.effective_until):
             raise ModelGovernancePolicyDependencyBlocked("BudgetRevision is outside effective window")
@@ -241,8 +205,7 @@ class AipModelGovernancePolicyStore:
             if kind == "budget" and item.lifecycle is ModelGovernancePolicyLifecycle.ACTIVE:
                 raise BudgetPolicyApprovalRequired("exact approval authority is required for active budget policy")
             if kind == "budget":
-                self._require_budget_revision(scope, item,
-                    draft_storage_only=item.lifecycle is ModelGovernancePolicyLifecycle.DRAFT)
+                self._require_budget_revision(scope, item)
             head = conn.execute(
                 "SELECT current_revision,version FROM aip_model_governance_policy_head "
                 "WHERE org_id=%s AND project_id=%s AND policy_kind=%s AND policy_id=%s FOR UPDATE",

@@ -20,7 +20,7 @@ def _json(value):
 
 def read_portrait_metric_query(*, conn, scope, task_id, actor, request, markings,
                                now, max_source_age, max_bytes, metric_ref,
-                               result_ref, window_start, window_end, cutoff_at, source_store=None):
+                               result_ref, window_start, window_end, cutoff_at):
     metric_ref = AnalystExactRef.model_validate(metric_ref.model_dump())
     result_ref = InvestigationExactRef.model_validate(result_ref.model_dump())
     times = (now, window_start, window_end, cutoff_at)
@@ -34,8 +34,7 @@ def read_portrait_metric_query(*, conn, scope, task_id, actor, request, markings
         raise ValueError('exact metric query, aware frozen window and current lifetime required')
     # Authorize the entire source bundle before fetching any extra query body.
     material = read_analysis_bundle(conn=conn, scope=scope, task_id=task_id, actor=actor,
-        request=request, markings=markings, now=now, max_source_age=max_source_age, max_bytes=max_bytes,
-        **({'source_store':source_store} if source_store is not None else {}))
+        request=request, markings=markings, now=now, max_source_age=max_source_age, max_bytes=max_bytes)
     if datetime.fromisoformat(material['cutoffAt']) != cutoff_at:
         raise ValueError('portrait query and evidence must share the frozen cutoff')
 

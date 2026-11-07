@@ -270,33 +270,6 @@ def test_return_impact_uses_explicit_transitive_dag_and_rejects_ambiguous_plan()
         )
 
 
-def test_return_impact_retains_exact_resource_dependencies_alongside_step_edges() -> None:
-    reference = dict(resourceType="TaskBriefRevision", resourceId="brief-current",
-                     revision=2, contentHash="sha256:" + HASH_A)
-    impact = AipProductionContractStore._review_return_impact(
-        [{"stepKey": "draft"}, {"stepKey": "review"}],
-        [reference, {"fromStepKey": "draft", "toStepKey": "review"}], "draft")
-    assert [(item.step_key, item.action.value) for item in impact] == [
-        ("draft", "invalidate"), ("review", "invalidate")]
-    with pytest.raises(ProductionContractDependencyBlocked, match="RETURN_PLAN_DAG_MISSING"):
-        AipProductionContractStore._review_return_impact(
-            [{"stepKey": "draft"}, {"stepKey": "review"}], [reference], "draft")
-
-
-@pytest.mark.parametrize("reference", [
-    dict(resourceType="TaskBriefRevision", resourceId="brief", revision=1, contentHash="bad"),
-    dict(resourceType="TaskBriefRevision", resourceId="", revision=1, contentHash=HASH_A),
-    dict(resourceType="TaskBriefRevision", resourceId="brief", revision=True, contentHash=HASH_A),
-    dict(resourceType="TaskBriefRevision", resourceId="brief", revision=1, contentHash=HASH_A, toStepKey="review"),
-    dict(resourceId="brief", revision=1, contentHash=HASH_A),
-])
-def test_return_impact_rejects_malformed_resource_dependencies(reference) -> None:
-    with pytest.raises(ProductionContractDependencyBlocked, match="RETURN_PLAN_DAG_INVALID"):
-        AipProductionContractStore._review_return_impact(
-            [{"stepKey": "draft"}, {"stepKey": "review"}],
-            [reference, {"fromStepKey": "draft", "toStepKey": "review"}], "draft")
-
-
 def test_review_rule_and_resolution_refs_fail_closed() -> None:
     authority = _seed_review_authorities()
     store = AipProductionContractStore()

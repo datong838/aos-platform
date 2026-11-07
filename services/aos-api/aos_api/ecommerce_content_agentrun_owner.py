@@ -150,26 +150,19 @@ class ContentAgentRunOwner:
                 ("growth_plan", "growthPlanRef", "GrowthPlanRevision"),
             )
         }
-        source_kwargs = {}
-        if response.get("sourceKind") == "accepted-stage-v1":
-            approved, source_values, source_kwargs = ContentTaskRunOwner._accepted_stage_sources(
-                transaction, scope, response)
-        else:
-            source_values = [item["artifactRef"] for item in response["artifactBindings"]]
+        source_values = [item["artifactRef"] for item in response["artifactBindings"]]
         if ContentGenerateHostService._review_receipt(
-            transaction, scope, authorities, source_values, **source_kwargs
+            transaction, scope, authorities, source_values
         ) != response:
             raise ContentAgentRunConflict("content Review changed")
-        if not source_kwargs:
-            approved = ReviewAdvanceHostService._revalidate_growth_plan(
-                transaction=transaction, scope=scope,
-                command={"growthPlanRef": response["growthPlanRef"]},
-            )
+        approved = ReviewAdvanceHostService._revalidate_growth_plan(
+            transaction=transaction, scope=scope,
+            command={"growthPlanRef": response["growthPlanRef"]},
+        )
         if approved.sales_weapon_method is None:
             raise ContentAgentRunConflict("approved content method unavailable")
         ContentGenerateHostService._task_brief(
-            transaction, scope, authorities, source_values,
-            approved_plan=approved, **source_kwargs
+            transaction, scope, authorities, source_values, approved_plan=approved
         )
         checked = transaction.execute("SELECT clock_timestamp() AS checked_at").fetchone()
         if checked is None:

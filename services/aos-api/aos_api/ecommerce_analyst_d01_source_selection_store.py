@@ -15,42 +15,6 @@ from aos_api.tenant_scope import TenantScope
 
 class D01SourceSelectionStore:
     @staticmethod
-    def _checker_matches_plan(transaction, task_run_id, plan_id, maker, checker, plan_checker):
-        if checker == plan_checker:
-            return True
-        row = transaction.execute(
-            'SELECT public.ecommerce_d01_event_initialization_a0v_176(%s,%s,%s) AS eligible',
-            (task_run_id, plan_id, maker)).fetchone()
-        return row is not None and row['eligible'] is True
-
-    def inspect_proposal(self, transaction: HostTransaction, scope: TenantScope,
-                         selection_id: str) -> dict:
-        """Read review/reconciliation metadata, never current execution authority."""
-        if (type(transaction) is not HostTransaction or type(scope) is not TenantScope
-                or type(selection_id) is not str or not selection_id
-                or selection_id != selection_id.strip()):
-            raise ValueError('exact scoped D01 proposal read required')
-        proposal, row = self._proposal_row(transaction, scope, selection_id)
-        if (proposal.tenant.org_id, proposal.tenant.project_id) != scope.key:
-            raise ValueError('D01 proposal tenant differs')
-        approval = transaction.execute(
-            'SELECT receipt_ref FROM public.ecommerce_d01_source_approval '
-            'WHERE org_id=%s AND project_id=%s AND selection_id=%s',
-            (*scope.key, selection_id)).fetchone()
-        revocation = transaction.execute(
-            'SELECT receipt_ref FROM public.ecommerce_d01_source_revocation '
-            'WHERE org_id=%s AND project_id=%s AND selection_id=%s',
-            (*scope.key, selection_id)).fetchone()
-        return dict(proposal=proposal.model_dump(mode='json', by_alias=True),
-            proposalRef=dict(resourceType='D01SourceSelectionProposal',
-                resourceId=selection_id, revision=1,
-                contentHash='sha256:'+row['content_hash'],
-                receiptId='d01-proposal:'+selection_id),
-            recordedApprovalReceipt=None if approval is None else approval['receipt_ref'],
-            recordedRevocationReceipt=None if revocation is None else revocation['receipt_ref'],
-            currentEligibilityEvaluated=False)
-
-    @staticmethod
     def _proposal_row(transaction: HostTransaction, scope: TenantScope,
                       selection_id: str) -> tuple[D01SourceSelectionProposal, dict]:
         row = transaction.execute(
@@ -273,7 +237,7 @@ class D01SourceSelectionStore:
                 or task.selection_ref.authority != 'postgresql'
                 or approval['proposal_hash'] != row['content_hash']
                 or approval['checker'] == proposal.proposed_by
-                or not self._checker_matches_plan(transaction, task_run_id, plan_id, proposal.proposed_by, approval['checker'], getattr(plan, 'approved_by', None))
+                or approval['checker'] != getattr(plan, 'approved_by', None)
                 or not isinstance(approval['approved_at'], datetime)
                 or approval['approved_at'] < proposal.proposed_at
                 or approval['approved_at'] > occurred_at

@@ -1211,7 +1211,6 @@ def _read_uninstall_receipt(facts, *, scope, source, locked_source, source_lock,
                   "runtime_enable_operation_id", "runtime_disable_operation_id")
     masks = {"detached": (True, True, False, False, False), "never_enabled": (False,) * 5,
              "configured_unactivated": (False, False, True, False, False),
-             "unconfigured_disabled": (False, False, True, False, False),
              "enabled_undispatched": (False, False, False, True, True)}
     kind = row["retirement_kind"]
     if kind not in masks or tuple(row[name] is not None for name in references) != masks[kind]:
@@ -1221,7 +1220,6 @@ def _read_uninstall_receipt(facts, *, scope, source, locked_source, source_lock,
     extras = {"detached": {"schemaVersion", "bindingFromRevision", "bindingToRevision", "disableOperationId",
                 "activationOperationId", "cutoverGroupId", "legacyDispatchCount", "claimedOccurrenceCount", "openDispatchAttemptCount", "runningRuntimeAttemptCount"},
         "never_enabled": {"bindingRevision", "retirementKind", "configurationCount", "enableCount", "dispatchCount", "businessExecutionCount"},
-        "unconfigured_disabled": {"bindingRevision", "retirementKind", "configurationCount", "enableCount", "dispatchCount", "businessExecutionCount", "disableOperationId"},
         "configured_unactivated": {"bindingRevision", "retirementKind", "configRef", "disableOperationId", "successfulEnableCount", "dispatchCount", "businessExecutionCount"},
         "enabled_undispatched": {"bindingRevision", "retirementKind", "configRef", "disableOperationId", "enableOperationId", "successfulEnableCount", "dispatchCount", "businessExecutionCount"}}
     ledger._charge(node_count=len(body))
@@ -1254,10 +1252,8 @@ def _read_uninstall_receipt(facts, *, scope, source, locked_source, source_lock,
         if (body["bindingRevision"] != row["binding_revision"] or body["retirementKind"] != kind
                 or body["dispatchCount"] != 0 or body["businessExecutionCount"] != 0):
             _invalid()
-        if kind in {"never_enabled", "unconfigured_disabled"}:
+        if kind == "never_enabled":
             if binding["config_ref"] is not None or body["configurationCount"] != 0 or body["enableCount"] != 0:
-                _invalid()
-            if kind == "unconfigured_disabled" and body["disableOperationId"] != str(row["unactivated_disable_operation_id"]):
                 _invalid()
         else:
             _model_work(body["configRef"], ledger, 4)
@@ -2052,7 +2048,7 @@ class _NondispatchSource:
 
 
 def _nondispatch_runtime_source(facts, *, scope, source, locked_source, source_lock, ledger):
-    """Classify fixed-projection terminal sources; never authorize execution."""
+    """Classify three fixed-projection terminal sources; never authorize execution."""
     if (type(facts) is not _DecodedFacts or any(facts.predecessors.values()) or _NONDISPATCH_EMPTY & _NONDISPATCH_LINKED
             or _NONDISPATCH_EMPTY | _NONDISPATCH_LINKED != set(_RELATIONS)):
         _invalid()
@@ -2074,16 +2070,6 @@ def _nondispatch_runtime_source(facts, *, scope, source, locked_source, source_l
     enables = [commit for commit in history.commits.values() if commit.kind == "enable"]
     if kind == "never_enabled":
         if graph.configurations.current is not None or graph.configurations.versions or history.targets:
-            _invalid()
-    elif kind == "unconfigured_disabled":
-        ledger._charge(rows=len(prepared.operations), node_count=len(prepared.operations))
-        if (graph.configurations.current is not None or graph.configurations.versions
-                or any(operation["kind"] in {"enable", "configure"} for operation in prepared.operations.values())):
-            _invalid()
-        disable = _one([commit for commit in history.commits.values() if commit.kind == "disable"
-            and commit.to_revision == timeline.before_uninstall_revision
-            and commit.execution_epoch == timeline.execution_epoch])
-        if receipt["unactivated_disable_operation_id"] != disable.operation_id:
             _invalid()
     elif kind in {"configured_unactivated", "enabled_undispatched"}:
         if graph.configurations.current is None:

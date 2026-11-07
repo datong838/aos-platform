@@ -230,7 +230,6 @@ def test_claimed_content_run_uses_one_outer_commit_and_fails_closed_without_ack(
             assert len(body.steps[1].gate_refs) == 1
             assert body.steps[1].gate_refs[0].resource_id == "content-eval-1"
             assert body.dependencies[-1]["resourceType"] == "ResponsibilityPlanRevision"
-            assert {"fromStepKey": "content_generate", "toStepKey": "content_review"} in body.dependencies
             return SimpleNamespace(id="plan-1", revision=1, content_hash="a" * 64)
 
         def approve_plan(self, *_args):

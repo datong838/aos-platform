@@ -14,8 +14,7 @@ SCOPE = TenantScope("org-org", "dev-project")
 
 
 def harness(monkeypatch):
-    from test_ecommerce_analyst_authority_contracts import NOW
-    decision, attempt, _ = generation(source_cutoff_at=NOW)
+    decision, attempt, _ = generation()
     ref = AnalystExactRef(resourceType="DecisionSummaryRevision", resourceId=decision.decision_id, revision=1, contentHash=decision.content_hash)
     command = module.GrowthPlanGenerationCommand(expectedAgentRunVersion=attempt.agent_run_version, attemptId=attempt.attempt_id, attemptNo=1,
         budgetRef=attempt.budget_ref, capacityReservationRef=attempt.capacity_reservation_ref, decisionRef=ref,
@@ -58,7 +57,6 @@ def harness(monkeypatch):
     monkeypatch.setattr(module, "AipAgentRunService", Runs)
     monkeypatch.setattr(module, "GrowthPlanDraftReceiver", Receiver)
     monkeypatch.setattr(module, "require_growth_plan_sources", sources)
-    monkeypatch.setattr(module, "require_current_revision", lambda conn, scope, ref: SimpleNamespace(cutoff_at=decision.created_at))
     service = module.GrowthPlanGenerationService(connect, Executor())
     kwargs = dict(actor="compiler", markings=["internal"], now=attempt.completed_at, max_source_age=timedelta(days=1))
     return service, state, command, kwargs, attempt
@@ -68,10 +66,8 @@ def test_generation_uses_fixed_prompt_then_recovers_persisted_result(monkeypatch
     service, state, command, kwargs, attempt = harness(monkeypatch)
     assert service.generate(SCOPE, attempt.agent_run_id, command, **kwargs) == "formal-plan-ref"
     assert len(state["executions"]) == len(state["recoveries"]) == 1
-    import json
-    payload = json.loads(state["executions"][0].query)
-    assert payload['protocol'] == 'aos.growth-plan-proposal/v2'
-    assert payload['sourceCutoffAt'] == attempt.completed_at.isoformat()
+    from aos_api.aip_agent_run_executor import AipAgentRunExecutor
+    assert AipAgentRunExecutor._request_hash(attempt.agent_run_id, state["executions"][0]) == attempt.request_hash
 
 
 @pytest.mark.parametrize("status", ["succeeded", "unknown", "failed", "prepared", "invoking"])

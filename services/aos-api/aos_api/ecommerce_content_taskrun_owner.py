@@ -45,11 +45,7 @@ _PENDING = """SELECT i.review_key
    AND brief.brief_id=i.brief_id AND brief.revision=1 AND brief.task_id=i.task_id
  WHERE i.org_id=%s AND i.project_id=%s AND i.state='pending' AND i.attempt=0
    AND t.status='pending' AND t.version=1 AND t.current_plan_revision_id IS NULL
-   AND ((brief.schema_ref->>'resourceId'='schema://aos/ecommerce/content-campaign-brief/v2'
-         AND r.response->>'sourceKind' IS NULL)
-     OR (brief.schema_ref->>'resourceId'='schema://aos/ecommerce/content-campaign-brief/v3'
-         AND r.response->>'sourceKind'='accepted-stage-v1'
-         AND brief.spec->'sourceLineage'=r.response->'sourceLineage'))
+   AND brief.schema_ref->>'resourceId'='schema://aos/ecommerce/content-campaign-brief/v2'
    AND i.review_receipt_ref=r.target_receipt_ref
    AND i.origin_request_hash=r.request_hash
    AND r.response->'receiptRef'=r.target_receipt_ref
@@ -122,51 +118,6 @@ class ContentTaskRunOwner:
         return token
 
     @staticmethod
-    def _accepted_stage_sources(transaction, scope, response):
-        lineage = response.get("sourceLineage")
-        if (type(lineage) is not dict or lineage.get("sourceKind") != "accepted-stage-v1"
-                or lineage.get("growthPlanRef") != response.get("growthPlanRef")):
-            raise ContentTaskRunConflict("content accepted Stage lineage drifted")
-        checked = transaction.execute("SELECT clock_timestamp() AS checked_at").fetchone()
-        now = None if checked is None else checked["checked_at"]
-        from datetime import datetime
-        cutoff = datetime.fromisoformat(lineage["cutoffAt"])
-        expiry = datetime.fromisoformat(lineage["expiresAt"])
-        if (not isinstance(now, datetime) or now.utcoffset() is None
-                or cutoff.utcoffset() is None or expiry.utcoffset() is None
-                or not cutoff <= now < expiry):
-            raise ContentTaskRunConflict("content accepted Stage lifetime expired")
-        from aos_api.business_investigation_shared_contracts import InvestigationExactRef
-        ReviewAdvanceHostService._revalidate_current_occurrence_case(
-            transaction=transaction, scope=scope, command=lineage,
-            occurrence_ref=InvestigationExactRef.model_validate(lineage["occurrenceRef"]),
-            case_ref=InvestigationExactRef.model_validate(lineage["caseRef"]),
-        )
-        source = ReviewAdvanceHostService._revalidate_accepted_stage_source(
-            transaction=transaction, scope=scope, command=lineage)
-        ReviewAdvanceHostService._revalidate_analysis_runtime(
-            transaction=transaction, scope=scope, command=lineage,
-            artifact_task_run_id=source.decision.task_run_id,
-            accepted_stage_task_run_id=source.decision.task_run_id,
-        )
-        ReviewAdvanceHostService._revalidate_accepted_stage_runtime_sources(
-            transaction=transaction, scope=scope, command=lineage, stage_source=source)
-        if source.approved.sales_weapon_method is None:
-            raise ContentTaskRunConflict("content method is not approved")
-        ReviewAdvanceHostService._require_sales_weapon_method(
-            transaction=transaction, scope=scope,
-            command={**lineage, "taskSpec": ReviewAdvanceHostService._sales_weapon_task_values(
-                source.approved.sales_weapon_method)},
-            plan=source.approved, checked_at=now,
-        )
-        artifact = dict(lineage["stageArtifactRef"])
-        artifact["contentHash"] = "sha256:" + artifact["contentHash"]
-        artifact = _content_exact_ref(artifact, "Artifact").model_dump(
-            mode="json", by_alias=True, exclude_none=True)
-        return source.approved, [artifact], {
-            "source_kind": "accepted-stage-v1", "source_lineage": lineage}
-
-    @staticmethod
     def _origin(transaction: HostTransaction, scope: TenantScope, review_key: str):
         origins = transaction.execute(
             """SELECT request_hash,response,target_receipt_ref,dispatch_revision,
@@ -203,8 +154,6 @@ class ContentTaskRunOwner:
         )
         if snapshot.runtime_revision != origin["runtime_revision"]:
             raise ContentTaskRunConflict("content Review runtime revision drifted")
-        if response.get("sourceKind") == "accepted-stage-v1":
-            ContentTaskRunOwner._accepted_stage_sources(transaction, scope, response)
         return origin, response
 
     @staticmethod
@@ -331,27 +280,20 @@ class ContentTaskRunOwner:
                     ("growth_plan", "growthPlanRef", "GrowthPlanRevision"),
                 )
             }
-            source_kwargs = {}
-            if response.get("sourceKind") == "accepted-stage-v1":
-                approved, source_values, source_kwargs = self._accepted_stage_sources(
-                    transaction, scope, response)
-            else:
-                source_values = [item["artifactRef"] for item in response["artifactBindings"]]
+            source_values = [item["artifactRef"] for item in response["artifactBindings"]]
             exact_review = ContentGenerateHostService._review_receipt(
-                transaction, scope, authorities, source_values, **source_kwargs
+                transaction, scope, authorities, source_values
             )
             if exact_review != response:
                 raise ContentTaskRunConflict("content Review exact response changed")
-            if not source_kwargs:
-                approved = ReviewAdvanceHostService._revalidate_growth_plan(
-                    transaction=transaction, scope=scope,
-                    command={"growthPlanRef": response["growthPlanRef"]},
-                )
+            approved = ReviewAdvanceHostService._revalidate_growth_plan(
+                transaction=transaction, scope=scope,
+                command={"growthPlanRef": response["growthPlanRef"]},
+            )
             if approved.sales_weapon_method is None:
                 raise ContentTaskRunConflict("content method is not approved")
             ContentGenerateHostService._task_brief(
-                transaction, scope, authorities, source_values,
-                approved_plan=approved, **source_kwargs
+                transaction, scope, authorities, source_values, approved_plan=approved
             )
             assignment = self._assignment(transaction, scope)
             content_eval_gate = require_current_content_pre_review_gate(transaction, scope)
@@ -391,7 +333,6 @@ class ContentTaskRunOwner:
                         ),
                     ],
                     dependencies=[
-                        {"fromStepKey": "content_generate", "toStepKey": "content_review"},
                         response["growthPlanRef"], response["briefRef"], assignment["plan_ref"],
                     ],
                     risk={

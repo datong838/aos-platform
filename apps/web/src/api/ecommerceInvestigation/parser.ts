@@ -24,8 +24,6 @@ import type {
 } from "./contracts";
 import type { InvestigationHandoffCompileResponse } from "./contracts";
 import { parseModuleHandoffCompile } from "../ecommerceWorkshop/parser";
-import type { InvestigationInternalTasks, InvestigationInternalMemo, InvestigationInternalArtifact } from "./contracts";
-import type { InvestigationTaskMaterialization, InvestigationTaskMaterializationInput } from "./contracts";
 
 const HASH = /^sha256:[0-9a-f]{64}$/;
 const PURPOSE = /^[a-z][a-z0-9_.-]{1,119}$/;
@@ -41,49 +39,6 @@ const LEGACY_ARTIFACT_TYPES = ["BusinessDossierRevision", "ProblemMapRevision", 
 const ARTIFACT_TYPES = ["BusinessDossierRevision", "ProblemMapRevision", "OpportunityMapRevision", "SolutionPortfolioRevision"] as const;
 const TIMELINE_TYPES = ["case_revision", "run_created", "state_revision", "artifact_bound"] as const;
 const RUN_COMMANDS = ["PAUSE_RUN", "RESUME_RUN", "CANCEL_RUN", "REQUEST_DATA", "CONFIRM_DATA_REQUIREMENT"] as const;
-
-function internalItems(value: unknown): unknown[] {
-  if (!Array.isArray(value)) throw new TypeError("内部任务列表格式无效");
-  return value;
-}
-function sampleFlag(value: unknown): boolean | null {
-  if (value !== null && typeof value !== "boolean") throw new TypeError("样例声明无效");
-  return value;
-}
-export function parseInvestigationTaskMaterialization(value: unknown, runId: string, input: InvestigationTaskMaterializationInput, expectedTenant: InvestigationTenant): InvestigationTaskMaterialization {
-  const raw = record(value, "taskMaterialization"); exact(raw, ["tenant", "runRef", "approvedPlanRef", "handoffId", "taskGraphRef", "taskRefs", "replayed", "externalEffectsAllowed"], "taskMaterialization");
-  const scope = tenant(raw.tenant, expectedTenant); const runRef = ref(raw.runRef, "taskMaterialization.runRef", "BusinessInvestigationRun");
-  const plan = aipRef(raw.approvedPlanRef, "taskMaterialization.approvedPlanRef", "GrowthPlanRevision");
-  if (runRef.resourceId !== runId || raw.handoffId !== input.handoffId || plan.resourceId !== input.approvedPlanRef.resourceId || plan.revision !== input.approvedPlanRef.revision || plan.contentHash !== input.approvedPlanRef.contentHash || typeof raw.replayed !== "boolean" || raw.externalEffectsAllowed !== false) throw new TypeError("内部任务确认来源漂移");
-  const taskGraphRef = aipRef(raw.taskGraphRef, "taskMaterialization.taskGraphRef", "TaskGraphRevision");
-  const taskRefs = internalItems(raw.taskRefs).map((item) => aipRef(item, "taskMaterialization.taskRef", "Task"));
-  if (taskRefs.length > 500 || new Set(taskRefs.map((t) => t.resourceId)).size !== taskRefs.length) throw new TypeError("内部任务引用重复或过量");
-  return { tenant: scope, runRef, approvedPlanRef: { ...plan, resourceType: "GrowthPlanRevision" }, handoffId: input.handoffId, taskGraphRef, taskRefs, replayed: raw.replayed, externalEffectsAllowed: false };
-}
-export function parseInvestigationInternalTasks(value: unknown, runId: string, expectedTenant: InvestigationTenant): InvestigationInternalTasks {
-  const raw = record(value, "internalTasks"); exact(raw, ["schemaVersion", "tenant", "runRef", "items", "externalEffectsAllowed"], "internalTasks");
-  if (raw.schemaVersion !== "aos.investigation-internal-tasks/v1" || raw.externalEffectsAllowed !== false) throw new TypeError("内部任务合同漂移");
-  const scope = tenant(raw.tenant, expectedTenant); const runRef = ref(raw.runRef, "internalTasks.runRef", "BusinessInvestigationRun");
-  if (runRef.resourceId !== runId) throw new TypeError("内部任务分析记录不匹配");
-  const items = internalItems(raw.items).map((value) => {
-    const t = record(value, "internalTask"); exact(t, ["graphRef", "taskRef", "title", "taskType", "status", "taskVersion", "runId", "runStatus", "completedSteps", "totalSteps", "artifacts", "reviews", "effectMaturity", "memoryCandidates", "sampleOnly", "dataLabel"], "internalTask");
-    const completedSteps = integer(t.completedSteps, "completedSteps"); const totalSteps = integer(t.totalSteps, "totalSteps");
-    const currentRun = t.runId === null ? null : text(t.runId, "task.runId", 200);
-    const runStatus = t.runStatus === null ? null : enumValue(t.runStatus, TASK_RUN_STATUSES, "task.runStatus");
-    if (completedSteps > totalSteps || (currentRun === null) !== (runStatus === null) || (currentRun === null && totalSteps !== 0)) throw new TypeError("内部任务步数或运行绑定不自洽");
-    const artifacts = internalItems(t.artifacts).map((v) => { const a = record(v, "memo"); exact(a, ["artifactId", "contentHash", "canPreview"], "memo"); if (typeof a.canPreview !== "boolean") throw new TypeError("正文预览声明无效"); return { artifactId: text(a.artifactId, "artifactId", 200), contentHash: rawHash(a.contentHash, "contentHash"), canPreview: a.canPreview }; });
-    const reviews = internalItems(t.reviews).map((v) => { const r = record(v, "review"); exact(r, ["issueId", "status", "version"], "review"); return { issueId: text(r.issueId, "issueId", 200), status: enumValue(r.status, ["open", "resolved", "returned", "superseded"] as const, "review.status"), version: integer(r.version, "review.version", 1) }; });
-    const memoryCandidates = internalItems(t.memoryCandidates).map((v) => { const c = record(v, "candidate"); exact(c, ["candidateId", "status"], "candidate"); return { candidateId: text(c.candidateId, "candidateId", 200), status: enumValue(c.status, ["pending", "quarantined", "rejected", "approved", "promoted"] as const, "candidate.status") }; });
-    return { graphRef: aipRef(t.graphRef, "graphRef", "TaskGraphRevision"), taskRef: aipRef(t.taskRef, "taskRef", "Task"), title: text(t.title, "task.title", 4000), taskType: text(t.taskType, "task.type", 160), status: enumValue(t.status, ["pending", "planning", "awaiting_approval", "approved", "executing", "paused", "completed", "failed", "cancelled", "rolled_back"] as const, "task.status"), taskVersion: integer(t.taskVersion, "task.version", 1), runId: currentRun, runStatus, completedSteps, totalSteps, artifacts, reviews, effectMaturity: t.effectMaturity === null ? null : enumValue(t.effectMaturity, ["insufficient", "immature", "mature", "unknown"] as const, "effectMaturity"), memoryCandidates, sampleOnly: sampleFlag(t.sampleOnly), dataLabel: t.dataLabel === null ? null : text(t.dataLabel, "dataLabel", 2000) };
-  });
-  return { schemaVersion: "aos.investigation-internal-tasks/v1", tenant: scope, runRef, items, externalEffectsAllowed: false };
-}
-export function parseInvestigationInternalMemo(value: unknown, runId: string, taskId: string, expected: InvestigationInternalArtifact, expectedTenant: InvestigationTenant): InvestigationInternalMemo {
-  const raw = record(value, "internalMemo"); exact(raw, ["tenant", "runId", "taskId", "artifactRef", "body", "sampleOnly"], "internalMemo");
-  const scope = tenant(raw.tenant, expectedTenant); const a = record(raw.artifactRef, "memo.artifactRef"); exact(a, ["artifactId", "artifactType", "revision", "contentHash"], "memo.artifactRef");
-  if (raw.runId !== runId || raw.taskId !== taskId || a.artifactId !== expected.artifactId || a.contentHash !== expected.contentHash || a.artifactType !== "internal_research_memo" || a.revision !== "1" || typeof raw.body !== "string" || !raw.body.trim() || raw.body.length > 2097152) throw new TypeError("研究备忘父链、正文或哈希引用漂移");
-  return { tenant: scope, runId, taskId, artifactRef: { artifactId: expected.artifactId, artifactType: "internal_research_memo", revision: "1", contentHash: rawHash(a.contentHash, "memo.contentHash") }, body: raw.body, sampleOnly: sampleFlag(raw.sampleOnly) };
-}
 
 export function parseInvestigationCaseSelection(value: unknown, expectedTenant?: InvestigationTenant): InvestigationCaseSelection {
   const raw = record(value, "caseSelection");

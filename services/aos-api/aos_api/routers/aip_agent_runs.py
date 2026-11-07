@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from functools import lru_cache
-import os
 
-from fastapi import APIRouter, Depends, Header, Query, Response, status
+from fastapi import APIRouter, Depends, Header, Query, status
 
 from aos_api.aip_agent_registry_contracts import (
     AgentRun,
@@ -33,7 +31,6 @@ from aos_api.aip_agent_run_execution_contracts import (
 from aos_api.aip_agent_run_executor import AipAgentRunExecutor, AipAgentRunExecutorError
 from aos_api.aip_agent_run_execution_service import AipAgentRunExecutionService
 from aos_api.aip_agent_run_service import AipAgentRunService
-from aos_api.aip_agent_run_output_reader import AgentRunOutputReader,AgentRunOutputTextView,AgentRunOutputUnavailable
 from aos_api.aip_contracts import TenantContext
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -50,39 +47,12 @@ def get_agent_run_execution_service() -> AipAgentRunExecutionService:
     return _SERVICE
 
 
-@lru_cache(maxsize=1)
-def _retained_agent_run_executor() -> AipAgentRunExecutor:
-    # Both input query and answer stay in the original private artifact store.
-    # Constructing this dependency does not invoke a model or create a Run.
-    return AipAgentRunExecutor(retain_output_text=True)
-
-
 def get_agent_run_executor() -> AipAgentRunExecutor:
-    flag=os.getenv('AOS_AGENT_RUN_RETAIN_TEXT_ENABLED','0').strip()
-    if flag not in {'0','1'}:
-        raise ApiError(code='AIP_TEXT_RETENTION_CONFIG_INVALID',
-            message='运行正文保留配置无效，请检查服务端配置。',status_code=503)
-    return _retained_agent_run_executor() if flag=='1' else _EXECUTOR
+    return _EXECUTOR
 
 
 def get_agent_run_service() -> AipAgentRunService:
     return _AGENT_RUN_SERVICE
-
-
-def get_agent_run_output_reader() -> AgentRunOutputReader:
-    return AgentRunOutputReader()
-
-
-@router.get('/{agent_run_id}/execution-attempts/{attempt_id}/output-text',response_model=AgentRunOutputTextView)
-def read_agent_run_output_text(agent_run_id: str,attempt_id: str,response: Response,
-        principal: Principal=Depends(require_principal),reader: AgentRunOutputReader=Depends(get_agent_run_output_reader)):
-    response.headers['Cache-Control']='no-store'
-    try:
-        return reader.read(_scope(principal),agent_run_id,attempt_id,markings=list(principal.markings))
-    except AgentRunOutputUnavailable:
-        raise ApiError(code='AIP_OUTPUT_UNAVAILABLE',message='未找到当前权限可读取的结果正文。',status_code=404) from None
-    except Exception:
-        raise ApiError(code='AIP_OUTPUT_READ_UNAVAILABLE',message='结果正文暂时无法读取，请稍后重试。',status_code=503) from None
 
 
 def _scope(principal: Principal) -> TenantScope:

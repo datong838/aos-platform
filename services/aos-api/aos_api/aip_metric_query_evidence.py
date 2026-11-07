@@ -32,21 +32,8 @@ def _factory(conn, scope):
     return bound
 
 
-def _production(conn,scope,source_store):
-    from aos_api.aip_production_contract_store import AipProductionContractStore
-    from aos_api.aip_formal_source_disclosure import _FormalSourceDisclosureAuthority
-    if source_store is None:
-        return AipProductionContractStore(_factory(conn,scope))
-    if (type(source_store) is not AipProductionContractStore
-            or type(source_store._formal_source_authority) is not _FormalSourceDisclosureAuthority):
-        raise TypeError('live original formal Source store required')
-    source_store._formal_source_authority.check_runtime(conn,scope)
-    return source_store
-
-
-def _body(conn, scope, *, run_id, actor, metric_ref, result_ref, source_grants, markings, max_bytes=2_000_000, source_store=None):
+def _body(conn, scope, *, run_id, actor, metric_ref, result_ref, source_grants, markings, max_bytes=2_000_000):
     from aos_api.aip_production_contract_store import AipProductionContractStore, canonical_hash
-    production=_production(conn,scope,source_store)
     if (conn is None or type(actor) is not str or not actor or actor.strip()!=actor
             or type(run_id) is not str or not run_id.strip()
             or not isinstance(source_grants,list) or not 1<=len(source_grants)<=100):
@@ -94,6 +81,7 @@ def _body(conn, scope, *, run_id, actor, metric_ref, result_ref, source_grants, 
         grants[ref.resource_id]=(raw['decisionId'],request)
     if set(grants)!=set(wanted): raise ValueError('every query source requires original disclosure')
     labels={'internal'}
+    production=AipProductionContractStore(bound)
     source_bytes=0
     for source in result.source_refs:
         decision_id,request=grants[source.ref.resource_id]
@@ -104,8 +92,6 @@ def _body(conn, scope, *, run_id, actor, metric_ref, result_ref, source_grants, 
         source_bytes+=row['payload_bytes'] or 0
         if source_bytes>max_bytes: raise ValueError('complete original query sources exceed limit')
         material=production.read_disclosed_evidence_source(conn,scope,actor,decision_id,request,markings=markings)
-        if source_store is not None:
-            labels.update(source_store._formal_source_authority.current_item().required_markings)
         parent_labels=material['payload'].get('marking',['public'])
         if (not isinstance(parent_labels,list) or not parent_labels
                 or any(not isinstance(x,str) or not x.strip() for x in parent_labels)):
@@ -122,8 +108,7 @@ def _body(conn, scope, *, run_id, actor, metric_ref, result_ref, source_grants, 
         factIds=[definition.metric_id],marking=sorted(labels),license=dict(status='allowed',allowedPurposes=['source']))
 
 
-def validate_metric_query_evidence(conn,scope,actor,task_id,payload,*,markings,source_store=None):
-    _production(conn,scope,source_store)
+def validate_metric_query_evidence(conn,scope,actor,task_id,payload,*,markings):
     if (type(payload) is not dict or payload.get('schemaVersion')!=SCHEMA
             or payload.get('actor')!=actor or payload.get('taskId')!=task_id):
         raise ValueError('derived query evidence actor, task or schema drifted')
@@ -147,17 +132,17 @@ def validate_metric_query_evidence(conn,scope,actor,task_id,payload,*,markings,s
     expected=_body(conn,scope,run_id=payload.get('taskRunId'),actor=actor,
         metric_ref=ExactRevisionRef.model_validate(payload.get('metricDefinitionRef')),
         result_ref=InvestigationExactRef.model_validate(payload.get('queryResultRef')),
-        source_grants=grants,markings=markings,source_store=source_store)
+        source_grants=grants,markings=markings)
     if _canonical(expected)!=_canonical(payload):
         raise ValueError('derived query evidence canonical content drifted')
 
 
-def record_metric_query_evidence(*,conn,scope,run_id,actor,metric_ref,result_ref,source_grants,now,max_bytes,markings,source_store=None):
+def record_metric_query_evidence(*,conn,scope,run_id,actor,metric_ref,result_ref,source_grants,now,max_bytes,markings):
     from aos_api.aip_production_contract_store import canonical_hash
     if (not isinstance(now,datetime) or now.utcoffset() is None
             or type(max_bytes) is not int or not 1<=max_bytes<=2_000_000):
         raise ValueError('explicit aware clock and bounded evidence size required')
-    body=_body(conn,scope,run_id=run_id,actor=actor,metric_ref=metric_ref,result_ref=result_ref,source_grants=source_grants,markings=markings,max_bytes=max_bytes,source_store=source_store)
+    body=_body(conn,scope,run_id=run_id,actor=actor,metric_ref=metric_ref,result_ref=result_ref,source_grants=source_grants,markings=markings,max_bytes=max_bytes)
     metric_ref=ExactRevisionRef.model_validate(body['metricDefinitionRef'])
     result_ref=InvestigationExactRef.model_validate(body['queryResultRef'])
     if len(_canonical(body).encode('utf-8'))>max_bytes: raise ValueError('complete query evidence exceeds limit')

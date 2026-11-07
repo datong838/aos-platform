@@ -39,14 +39,7 @@ def factory(conn):
     def connect(scope):yield conn
     return connect
 def row(policy_kind="RuntimePolicyRevision"):
-    return {"agent_run_id":"run-1","status":"queued","version":1,"model_route_ref":ref("ModelRouteRevision","route-1").model_dump(mode="json",by_alias=True),"policy_ref":ref(policy_kind,"policy-1").model_dump(mode="json",by_alias=True)}
-
-def test_stale_queued_retry_never_touches_capacity_owned_by_running_run():
-    conn=Conn({**row(),"status":"running","version":2},updated=False)
-    capacity=Capacity();service=AipAgentRunService(factory(conn),model_resolver=Resolver(resolution()),capacity_gate=capacity)
-    with pytest.raises(AipAgentRegistryConflict):
-        service.transition(SCOPE,"run-1",expected_version=1,from_status=AgentRunStatus.QUEUED,to_status=AgentRunStatus.RUNNING,actor="pytest",occurred_at=NOW)
-    assert capacity.reserved==[] and capacity.released==[]
+    return {"agent_run_id":"run-1","model_route_ref":ref("ModelRouteRevision","route-1").model_dump(mode="json",by_alias=True),"policy_ref":ref(policy_kind,"policy-1").model_dump(mode="json",by_alias=True)}
 
 def test_running_requires_exact_ready_resolution_and_capacity():
     conn=Conn(row());capacity=Capacity();service=AipAgentRunService(factory(conn),model_resolver=Resolver(resolution()),capacity_gate=capacity)

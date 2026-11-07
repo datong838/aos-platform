@@ -183,15 +183,11 @@ class AipEvalRunner:
             assert stage_attempt_ref is not None
             subject_contract = self._resolve_contract(scope, eval_contract_ref)
             subject_kind = subject_contract.gate_policy.get("subjectKind", "media_variant")
-            if subject_kind == "internal_research_memo" and subject_contract.gate_policy.get("subjectInputMode") != "research-memo-envelope/v1":
-                raise AipEvalAuthorityConflict("research memo subject requires explicit research-memo-envelope/v1 input mode")
-            if subject_kind == "business_investigation_artifact" and subject_contract.gate_policy.get("subjectInputMode") != "business-investigation-artifact/v1":
-                raise AipEvalAuthorityConflict("investigation subject requires explicit business-investigation-artifact/v1 input mode")
             if subject_kind == "agent_text_output" and subject_contract.gate_policy.get("subjectInputMode") != "text-envelope-v1":
                 raise AipEvalAuthorityConflict("text subject requires explicit text-envelope-v1 input mode")
             if subject_kind == "ecommerce_content" and subject_contract.gate_policy.get("subjectInputMode") != "ecommerce-readable-content/v1":
                 raise AipEvalAuthorityConflict("content subject requires explicit ecommerce-readable-content/v1 input mode")
-            if subject_kind in ("ecommerce_content", "business_investigation_artifact", "internal_research_memo") and (
+            if subject_kind == "ecommerce_content" and (
                 gate_policy_ref is None
                 or gate_policy_ref.resource_type != "EvalContractRevision"
                 or gate_policy_ref.resource_id != eval_contract_ref.resource_id
@@ -266,11 +262,6 @@ class AipEvalRunner:
                     input_value = self._text_subject_input(resolve_artifact, subject_artifact_ref, input_value)
                 elif subject_kind == "ecommerce_content":
                     input_value = self._content_subject_input(subject_artifact_ref, subject_payload, input_value)
-                elif subject_kind == "business_investigation_artifact":
-                    input_value = self._investigation_subject_input(subject_artifact_ref, subject_payload, input_value)
-                elif subject_kind == "internal_research_memo":
-                    from aos_api.aip_research_memo_eval_subject import subject_input
-                    input_value = subject_input(resolve_artifact, subject_artifact_ref, subject_payload, input_value)
                 expected_value = (
                     self._resolve_exact(resolve_artifact, case.expected_artifact)
                     if case.expected_artifact
@@ -439,24 +430,6 @@ class AipEvalRunner:
         subject_kind: str = "media_variant",
     ) -> None:
         """Resolve the contract-declared subject and canonical latest StepRun."""
-        if subject_kind == "internal_research_memo":
-            from aos_api.aip_research_memo_eval_subject import read_subject
-            try:
-                with self._connect(scope) as conn:
-                    return read_subject(conn, scope, artifact_ref, attempt_ref)
-            except AipEvalAuthorityConflict:
-                raise
-            except Exception as exc:
-                raise AipEvalAuthorityPersistenceError("research memo eval subject resolution failed") from exc
-        if subject_kind == "business_investigation_artifact":
-            from aos_api.aip_investigation_artifact_eval_subject import read_subject
-            try:
-                with self._connect(scope) as conn:
-                    return read_subject(conn, scope, artifact_ref, attempt_ref)
-            except AipEvalAuthorityConflict:
-                raise
-            except Exception as exc:
-                raise AipEvalAuthorityPersistenceError("investigation eval subject resolution failed") from exc
         if type(subject_kind) is not str or subject_kind not in {"media_variant", "agent_text_output", "ecommerce_content"}:
             raise AipEvalAuthorityConflict("unsupported contract eval subject kind")
         try:
@@ -519,15 +492,8 @@ class AipEvalRunner:
             fields = {"artifactRef", "taskRef", "briefRef", "growthPlanRef",
                       "sourceArtifactRefs", "factSourceRefs", "body", "productNames",
                       "channels", "constraintChecks"}
-            accepted_stage = type(payload) is dict and set(payload) == fields | {"sourceKind"}
             if (
-                type(payload) is not dict
-                or (set(payload) != fields and not accepted_stage)
-                or (accepted_stage and (
-                    payload["sourceKind"] != "accepted-stage-v1"
-                    or type(payload["sourceArtifactRefs"]) is not list
-                    or len(payload["sourceArtifactRefs"]) != 1
-                ))
+                type(payload) is not dict or set(payload) != fields
                 or payload["artifactRef"] != {
                     "resourceType": "ArtifactRevision", "resourceId": artifact_ref.resource_id,
                     "revision": 1, "contentHash": "sha256:" + artifact_ref.content_hash,
@@ -588,11 +554,6 @@ class AipEvalRunner:
         return {"schemaVersion": "aos.eval-text-subject-input/v1",
                 "subjectArtifactRef": subject.model_dump(mode="json", by_alias=True),
                 "subjectText": resolved.value, "caseInput": deepcopy(case_input)}
-
-    @staticmethod
-    def _investigation_subject_input(subject, payload, case_input):
-        from aos_api.aip_investigation_artifact_eval_subject import subject_input
-        return subject_input(subject, payload, case_input)
 
     @staticmethod
     def _content_subject_input(subject, payload, case_input):

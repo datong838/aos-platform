@@ -181,7 +181,6 @@ class PreparedJob:
 
 
 class PreparationWorker:
-    _failure_operation_kind='runtime-apply'
     def __init__(self, *, connect, driver, installation_store, revalidator,
                  check_current_permission, load_record, read_artifact, policy, platform,
                  check_current_conditions=None, check_verification_permission=None,
@@ -301,8 +300,7 @@ class PreparationWorker:
                     settle_committed_cleanup(conn,**scope,operation_id=plan.operation_id,expected_revision=revision)
                     return
                 RuntimeOperationStore().fail_uncommitted_preparation(conn,**scope,
-                    operation_id=plan.operation_id,expected_revision=revision,failure_code=code,
-                    operation_kind=self._failure_operation_kind)
+                    operation_id=plan.operation_id,expected_revision=revision,failure_code=code)
 
     async def start(self, *, org_id, project_id, operation_id, expected_revision):
         scope=dict(org_id=org_id,project_id=project_id)

@@ -97,21 +97,6 @@ class OptInHostLease:
         if row is None or row["expires_at"] is None:
             raise HostLeaseBlocked("HOST_LEASE_WORKER_FENCE_READBACK_DIFFERS")
 
-    def confirm_analysis_delivery(self, conn, scope: TenantScope, claim, fulfillment, analysis):
-        """Confirm only through the caller's transaction and this lease's RAM holder."""
-        from psycopg.types.json import Jsonb
-        from aos_api.data_requirement_outbox_store import DataRequirementOutboxTransition
-        if (type(scope) is not TenantScope or scope != self._scope
-                or self._token is None or self._epoch is None):
-            raise HostLeaseBlocked('HOST_LEASE_DELIVERY_CONFIRMATION_INPUT_DIFFERS')
-        row=conn.execute(
-            'SELECT state,replayed FROM public.analysis_delivery_confirm_a0v_175(%s,%s,%s,%s,%s,%s,%s)',
-            (claim.outbox_id,claim.attempt,claim.lease_token,Jsonb(fulfillment),Jsonb(analysis),
-             self._token,self._epoch)).fetchone()
-        if row is None or row['state']!='acked' or type(row['replayed']) is not bool:
-            raise HostLeaseBlocked('HOST_LEASE_DELIVERY_CONFIRMATION_READBACK_DIFFERS')
-        return DataRequirementOutboxTransition(row['state'],row['replayed'])
-
     async def renew_until_stopped(self, stop_event: asyncio.Event) -> None:
         if self._epoch is None:
             raise HostLeaseBlocked("HOST_LEASE_NOT_ACQUIRED")

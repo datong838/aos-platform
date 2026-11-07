@@ -7,7 +7,7 @@ import json
 from datetime import UTC, datetime
 from typing import Callable
 
-from aos_api.aip_action_models import CreateActionDraftRequest, SubmitActionDraftRequest
+from aos_api.aip_action_models import CreateActionProposalRequest
 from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.auth import Principal
@@ -132,7 +132,7 @@ class EcommerceMediaDelivery:
             ):
                 raise MediaDeliveryConflict("ImpactPreview exact binding is stale or not ready")
             selection = body.selection
-            request = CreateActionDraftRequest(
+            request = CreateActionProposalRequest(
                 actionTypeId="content.publish", taskId=current.task_id,
                 objectRef=ResourceRef(resourceType="Artifact", resourceId=selection.variant_ref.resource_id, revision=str(selection.variant_ref.revision), authority="aos://aip/artifacts"),
                 purpose=body.purpose,
@@ -145,32 +145,13 @@ class EcommerceMediaDelivery:
                 impactPreviewRef=ExactRevisionRef.model_validate(selection.impact_preview_ref.model_dump(mode="json", by_alias=True)),
                 expiresAt=preview.expires_at,
             )
-            stable_key = hashlib.sha256(key.encode("utf-8")).hexdigest()
-            draft = self._actions.create_draft(principal, f"media-publish-draft:{stable_key}", request)
-            if draft.lifecycle == "submitted" and draft.submitted_proposal_id:
-                created = self._action_store.get_proposal(scope, draft.submitted_proposal_id)
-                source_revision = draft.revision
-            elif draft.lifecycle == "editable":
-                created = self._actions.submit_draft(
-                    principal, draft.draft_id, f"media-publish-submit:{stable_key}",
-                    SubmitActionDraftRequest(expectedRevision=draft.revision, expectedContentHash=draft.content_hash),
-                )
-                source_revision = draft.revision + 1
-            else:
-                raise MediaDeliveryConflict("publish Action Draft is not editable or submitted")
+            created = self._actions.create_proposal(principal, key, request)
             readback = self._action_store.get_proposal(scope, created.proposal.id)
-            source = readback.proposal.source_draft_ref
             if (
                 readback.proposal.id != created.proposal.id
                 or readback.proposal.version != created.proposal.version
                 or readback.proposal.proposal_hash != created.proposal.proposal_hash
                 or readback.proposal.payload != request.payload
-                or readback.proposal.task_id != current.task_id
-                or readback.proposal.impact_preview_ref != request.impact_preview_ref
-                or source is None or source != created.proposal.source_draft_ref
-                or source.resource_type != "ActionDraftRevision"
-                or source.resource_id != draft.draft_id or source.revision != source_revision
-                or (draft.lifecycle == "submitted" and source.content_hash != draft.content_hash)
             ):
                 raise MediaDeliveryConflict("publish Proposal canonical readback drifted")
         except MediaDeliveryError:
@@ -199,12 +180,10 @@ class EcommerceMediaDelivery:
             and item.brief_ref.content_hash == current.content_hash
         ]
         result = []
-        for family in self._production.list_artifact_families(scope, task_id=current.task_id).items:
+        for family in self._production.list_artifact_families(scope).items:
             if _value(family.topology_status) != "current":
                 continue
             for group in family.candidate_groups:
-                if _value(group.role) != "variant":
-                    continue
                 selected = group.selected_ref
                 if selected is None:
                     continue

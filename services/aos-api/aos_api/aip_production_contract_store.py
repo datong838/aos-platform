@@ -499,13 +499,7 @@ class AipProductionContractStore:
         production_profile_resolver: ProductionProfileResolver | None = None,
         schema_compatibility_resolver: SchemaCompatibilityResolver | None = None,
         task_store: AipTaskStore | None = None,
-        formal_source_authority: Any | None = None,
     ) -> None:
-        if formal_source_authority is not None:
-            from aos_api.aip_formal_source_disclosure import _FormalSourceDisclosureAuthority
-            if type(formal_source_authority) is not _FormalSourceDisclosureAuthority:
-                raise TypeError('live original formal Source authority required')
-        self._formal_source_authority = formal_source_authority
         self._connect_factory = connect_factory or db_connect
         self._plan_connect_factory = (
             plan_connect_factory if plan_connect_factory is not None else self._connect_factory
@@ -632,13 +626,10 @@ class AipProductionContractStore:
             return EvalContractListResponse(tenant=self._tenant(scope), items=items, count=len(items))
 
     def create_responsibility_plan(self, scope: TenantScope, actor: str, key: str,
-                                   body: CreateResponsibilityPlanRequest, *, prepare_only: bool = False) -> ResponsibilityPlanRevision:
-        if type(prepare_only) is not bool:
-            raise TypeError("exact draft preparation mode required")
-        options = {"operation": "responsibility_plan.prepare"} if prepare_only else {}
+                                   body: CreateResponsibilityPlanRequest) -> ResponsibilityPlanRevision:
         with self._plan_connect_factory(scope) as conn:
             result = self.create_responsibility_plan_in_transaction(
-                conn, scope, actor, key, body, **options)
+                conn, scope, actor, key, body)
             conn.commit()
             return result
 
@@ -649,7 +640,7 @@ class AipProductionContractStore:
         request_context: dict[str, Any] | None = None,
     ) -> ResponsibilityPlanRevision:
         """Append a Plan and Receipt in a caller-held authority transaction."""
-        if operation not in {"responsibility_plan.create", "responsibility_plan.prepare", "bi_responsibility_plan.prepare"}:
+        if operation not in {"responsibility_plan.create", "bi_responsibility_plan.prepare"}:
             raise ProductionContractConflict("unsupported Plan creation operation")
         if operation == "bi_responsibility_plan.prepare":
             binding = _require_bi_installation_binding(request_context, actor)
@@ -662,12 +653,7 @@ class AipProductionContractStore:
         if replay:
             return self.get_responsibility_plan(
                 scope, replay["resourceId"], int(replay["revision"]), conn=conn)
-        if operation == "responsibility_plan.prepare":
-            if request_context is not None:
-                raise ProductionContractConflict("draft preparation cannot carry formal installation context")
-            self._require_responsibility_dependencies(conn, scope, body, allow_provisioning_draft=True)
-        else:
-            self._require_responsibility_dependencies(conn, scope, body)
+        self._require_responsibility_dependencies(conn, scope, body)
         plan_id = f"responsibility-plan-{uuid.uuid4().hex[:20]}"
         content_hash = canonical_hash(payload)
         conn.execute("INSERT INTO aip_responsibility_plan_head(org_id,project_id,plan_id,current_revision,version) VALUES(%s,%s,%s,1,1)", (*scope.key, plan_id))
@@ -2016,9 +2002,8 @@ class AipProductionContractStore:
                 {"resourceType": "ArtifactFamily", "resourceId": body.family_id},
                 actor,
             )
-            result = self.get_artifact_family(scope, body.family_id, conn=conn)
             conn.commit()
-            return result
+            return self.get_artifact_family(scope, body.family_id, conn=conn)
 
     def attach_artifact_family_member(
         self,
@@ -2112,9 +2097,8 @@ class AipProductionContractStore:
                 {"resourceType": "ArtifactFamily", "resourceId": family_id},
                 actor,
             )
-            result = self.get_artifact_family(scope, family_id, conn=conn)
             conn.commit()
-            return result
+            return self.get_artifact_family(scope, family_id, conn=conn)
 
     def select_artifact_family_candidate(
         self,
@@ -2213,9 +2197,8 @@ class AipProductionContractStore:
                 {"resourceType": "ArtifactFamily", "resourceId": family_id},
                 actor,
             )
-            result = self.get_artifact_family(scope, family_id, conn=conn)
             conn.commit()
-            return result
+            return self.get_artifact_family(scope, family_id, conn=conn)
 
     def get_artifact_family(
         self, scope: TenantScope, family_id: str, *, conn: Any | None = None
@@ -2229,27 +2212,13 @@ class AipProductionContractStore:
         with self._connect_factory(scope) as connection:
             return read(connection)
 
-    def list_artifact_families(self, scope: TenantScope, *, task_id: str | None = None) -> ArtifactFamilyListResponse:
-        task_filter = ""
-        params = scope.key
-        if task_id is not None:
-            if type(task_id) is not str or not task_id or task_id != task_id.strip():
-                raise ValueError("exact artifact family Task identity required")
-            task_filter = """ AND EXISTS (
-                SELECT 1 FROM aip_artifact manifest
-                JOIN aip_task_run run ON run.org_id=manifest.org_id
-                  AND run.project_id=manifest.project_id AND run.run_id=manifest.run_id
-                WHERE manifest.org_id=family.org_id AND manifest.project_id=family.project_id
-                  AND manifest.artifact_id=family.manifest_artifact_id
-                  AND manifest.content_hash=family.manifest_content_hash
-                  AND run.task_id=%s)"""
-            params = (*scope.key, task_id)
+    def list_artifact_families(self, scope: TenantScope) -> ArtifactFamilyListResponse:
         with self._connect_factory(scope) as conn:
             rows = conn.execute(
-                """SELECT family.* FROM aip_artifact_family_head family
-                WHERE family.org_id=%s AND family.project_id=%s""" + task_filter +
-                " ORDER BY family.updated_at DESC,family.family_id",
-                params,
+                """SELECT * FROM aip_artifact_family_head
+                WHERE org_id=%s AND project_id=%s
+                ORDER BY updated_at DESC,family_id""",
+                scope.key,
             ).fetchall()
             items = [self._artifact_family_view(conn, scope, row) for row in rows]
             return ArtifactFamilyListResponse(
@@ -3375,16 +3344,7 @@ class AipProductionContractStore:
                 )
             if bool(row["revoked"]):
                 raise ProductionContractDependencyBlocked("EVIDENCE_REVOKED")
-            fact_ids = self._evidence_fact_ids(row["payload"])
-            if not fact_ids:
-                from aos_api.aip_metric_evidence_facts import metric_evidence_fact_ids
-                try:
-                    fact_ids = metric_evidence_fact_ids(
-                        scope, row["payload"], content_hash=row["content_hash"],
-                        cutoff_at=cutoff, markings=body.marking)
-                except (ValueError, TypeError) as exc:
-                    raise ProductionContractDependencyBlocked("METRIC_EVIDENCE_DRIFTED") from exc
-            for fact_id in fact_ids:
+            for fact_id in self._evidence_fact_ids(row["payload"]):
                 provided.add(fact_id)
                 providers.setdefault(fact_id, []).append(row["evidence_id"])
             freshness_at = row["freshness_at"]
@@ -3730,8 +3690,6 @@ class AipProductionContractStore:
                 },
                 actor,
             )
-            if self._formal_source_authority is not None:
-                self._formal_source_authority.validate_commit(conn, scope)
             conn.commit()
             return decision
 
@@ -3775,8 +3733,6 @@ class AipProductionContractStore:
                 created_at=row["created_at"],
             )
             if enforce_current_policy and decision.status is DisclosureStatus.ALLOWED:
-                if "formalSourceLicense" in decision.citation and self._formal_source_authority is None:
-                    raise ProductionContractDependencyBlocked("EVIDENCE_DISCLOSURE_NO_LONGER_ALLOWED")
                 if (
                     decision.expires_at is not None
                     and decision.expires_at <= datetime.now(timezone.utc)
@@ -3784,20 +3740,17 @@ class AipProductionContractStore:
                     raise ProductionContractDependencyBlocked(
                         "EVIDENCE_DISCLOSURE_NO_LONGER_ALLOWED"
                     )
-                revalidation_body = (
-                    self._formal_source_authority.request_for(c, scope, decision)
-                    if self._formal_source_authority is not None and "formalSourceLicense" in decision.citation else
-                    ResolveEvidenceDisclosureRequest(
-                        evidence_ref=decision.evidence_ref.model_dump(mode="json", by_alias=True),
-                        purpose=decision.purpose, requested_level=decision.requested_level,
-                        task_id=self._formal_source_authority.body.task_id if self._formal_source_authority is not None else None,
-                    )
-                )
                 current = self._evaluate_disclosure(
                     c,
                     scope,
                     decision.created_by,
-                    revalidation_body,
+                    ResolveEvidenceDisclosureRequest(
+                        evidence_ref=decision.evidence_ref.model_dump(
+                            mode="json", by_alias=True
+                        ),
+                        purpose=decision.purpose,
+                        requested_level=decision.requested_level,
+                    ),
                     markings=markings or [],
                 )
                 if current.status is not DisclosureStatus.ALLOWED:
@@ -3824,8 +3777,6 @@ class AipProductionContractStore:
         """Materialize a current L3 decision; this is not a Provider dispatch grant."""
         decision = self.get_evidence_disclosure(scope, decision_id, conn=conn)
         denied = "EVIDENCE_SOURCE_DISCLOSURE_DENIED"
-        if "formalSourceLicense" in decision.citation and self._formal_source_authority is None:
-            raise ProductionContractDependencyBlocked(denied)
         if (
             decision.created_by != actor
             or decision.status is not DisclosureStatus.ALLOWED
@@ -3856,9 +3807,6 @@ class AipProductionContractStore:
         ).fetchone()
         if receipt is None:
             raise ProductionContractDependencyBlocked(denied)
-
-        if self._formal_source_authority is not None and "formalSourceLicense" in decision.citation:
-            self._formal_source_authority.validate_decision(conn, scope, actor, decision, body)
 
         def check_current() -> None:
             current = self._evaluate_disclosure(conn, scope, actor, body, markings=markings)
@@ -4004,9 +3952,8 @@ class AipProductionContractStore:
                 },
                 actor,
             )
-            result = self.get_production_context(scope, context_id, 1, conn=conn)
             conn.commit()
-            return result
+            return self.get_production_context(scope, context_id, 1, conn=conn)
 
     def get_production_context(
         self,
@@ -4390,15 +4337,10 @@ class AipProductionContractStore:
                 require_evidence_dependencies(conn, scope, payload)
             except (ValueError, RuntimeError):
                 reasons.append("EVIDENCE_DEPENDENCY_UNAVAILABLE")
-        formal_item = None
-        if self._formal_source_authority is not None and (row is None or row["source_type"] != "aip-metric-query"):
-            formal_item = self._formal_source_authority.license_for(conn, scope, actor, body)
-            required_markings = sorted(set(required_markings) | set(formal_item.required_markings))
         if row is not None and row["source_type"] == "aip-metric-query":
             from aos_api.aip_metric_query_evidence import validate_metric_query_evidence
             try:
-                validate_metric_query_evidence(conn, scope, actor, body.task_id, payload, markings=markings,
-                    source_store=self if self._formal_source_authority is not None else None)
+                validate_metric_query_evidence(conn, scope, actor, body.task_id, payload, markings=markings)
             except (ValueError, RuntimeError):
                 reasons.append("QUERY_SOURCE_AUTHORITY_UNAVAILABLE")
         if not set(required_markings).issubset(set(markings or [])):
@@ -4439,8 +4381,6 @@ class AipProductionContractStore:
                 str(value).strip() for value in allowed_purposes
             }:
                 reasons.append("LICENSE_PURPOSE_DENIED")
-        elif license_status == "unknown" and formal_item is not None:
-            license_status = "allowed"
         elif license_status == "unknown":
             reasons.append("LICENSE_UNKNOWN")
 
@@ -4567,10 +4507,6 @@ class AipProductionContractStore:
             and isinstance(display.get("scopedSourceRef"), dict)
         ):
             display["scopedSourceRef"]["resourceId"] = decision_id
-        if formal_item is not None:
-            citation["formalSourceLicense"] = self._formal_source_authority.binding(formal_item)
-            if status is DisclosureStatus.ALLOWED:
-                expires_at = min(expires_at, formal_item.valid_until) if expires_at else formal_item.valid_until
         redaction = {
             "policy": "minimum-disclosure",
             "requestedLevel": body.requested_level.value,
@@ -4786,14 +4722,6 @@ class AipProductionContractStore:
             WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
             (*scope.key, artifact_ref.artifact_id),
         ).fetchone()
-        if artifact["artifact_type"] == "internal_research_memo":
-            from aos_api.aip_research_memo_eval_subject import require_review_subject
-            from aos_api.aip_eval_authority_store import AipEvalAuthorityConflict
-            try:
-                require_review_subject(conn, scope, artifact_ref, report_ref)
-            except (AipEvalAuthorityConflict, ValueError) as exc:
-                raise ProductionContractDependencyBlocked("RESEARCH_MEMO_EVAL_SUBJECT_MISMATCH") from exc
-            return
         if artifact["artifact_type"] != "ecommerce_content":
             return
         report = conn.execute(
@@ -4912,32 +4840,11 @@ class AipProductionContractStore:
             raise ProductionContractDependencyBlocked("RETURN_PLAN_STEPS_INVALID")
         if not isinstance(raw_dependencies, list):
             raise ProductionContractDependencyBlocked("RETURN_PLAN_DAG_INVALID")
-        edges = []
-        for item in raw_dependencies:
-            ref_fields = {"resourceType", "resourceId", "revision", "contentHash"}
-            if isinstance(item, dict) and (
-                set(item) == ref_fields
-                or (set(item) == ref_fields | {"receiptId"} and item["receiptId"] is None)
-            ):
-                # Plan dependencies also preserve exact input authorities. They
-                # are not step edges and never infer an execution order.
-                # Canonical investigation refs serialize an absent Receipt as
-                # null; this metadata is neither an edge nor Receipt authority.
-                reference = {key: item[key] for key in ref_fields}
-                digest = reference["contentHash"]
-                if isinstance(digest, str):
-                    reference["contentHash"] = digest.removeprefix("sha256:")
-                try:
-                    ExactRevisionRef.model_validate(reference, strict=True)
-                except ValueError as exc:
-                    raise ProductionContractDependencyBlocked("RETURN_PLAN_DAG_INVALID") from exc
-            else:
-                edges.append(item)
-        if len(step_keys) > 1 and not edges:
+        if len(step_keys) > 1 and not raw_dependencies:
             raise ProductionContractDependencyBlocked("RETURN_PLAN_DAG_MISSING")
         adjacency: dict[str, set[str]] = {key: set() for key in step_keys}
         indegree = {key: 0 for key in step_keys}
-        for item in edges:
+        for item in raw_dependencies:
             if not isinstance(item, dict) or set(item) != {"fromStepKey", "toStepKey"}:
                 raise ProductionContractDependencyBlocked("RETURN_PLAN_DAG_INVALID")
             source = item["fromStepKey"]
@@ -6120,10 +6027,7 @@ class AipProductionContractStore:
         *,
         expected_merge_base_ref: ExactRevisionRef | None = None,
         existing_plan_id: str | None = None,
-        allow_provisioning_draft: bool = False,
     ) -> None:
-        if type(allow_provisioning_draft) is not bool:
-            raise TypeError("exact draft dependency mode required")
         if self._responsibility_template_resolver is None:
             raise ProductionContractDependencyBlocked("RESPONSIBILITY_TEMPLATE_AUTHORITY_UNAVAILABLE")
         if not self._responsibility_template_resolver(scope, body.template_ref):
@@ -6155,14 +6059,9 @@ class AipProductionContractStore:
                 raise ProductionContractDependencyBlocked(
                     f"ASSIGNEE_RESOLUTION_REQUIRED:{slot.slot_id}"
                 )
-            if allow_provisioning_draft:
-                row = conn.execute("""SELECT version FROM aip_agent_instance
-                    WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status=ANY(%s)""",
-                    (*scope.key, slot.assignee.resource_id, ['active', 'provisioning'])).fetchone()
-            else:
-                row = conn.execute("""SELECT version FROM aip_agent_instance
-                    WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'""",
-                    (*scope.key, slot.assignee.resource_id)).fetchone()
+            row = conn.execute("""SELECT version FROM aip_agent_instance
+                WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'""",
+                (*scope.key, slot.assignee.resource_id)).fetchone()
             if not row:
                 raise ProductionContractDependencyBlocked(f"ASSIGNEE_MISSING_OR_INACTIVE:{slot.slot_id}")
             if int(row["version"]) != slot.assignee.version:

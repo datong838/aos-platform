@@ -12,12 +12,6 @@
 
 **开发登录：** Vite 开发模式默认跳过登录页；OIDC 仍用于 API。若无会话，页顶黄条会提示；或临时 `VITE_AOS_SKIP_LOGIN_GATE=0` 登录一次后改回。
 
-**顶栏「aos-api 不可达 / 无法连接 /api」：** 多半是 **18434 Web 掉线**（API 本机仍可能在 18080/8080）。依次执行：
-
-1. `bash .evidence/qyh-cost-model-route-renewal-20261031/private/maintain-web-18434-restart.sh`
-2. 仍失败：`bash scripts/demo/ensure-api.sh`，浏览器顶栏 **API Base 改回 `/api`** 或清站点数据里的 `aos-api-base-v1`
-3. 日志：`deploy/dev/aos-api.*.log` · Web：`.evidence/.../private/web-18434-restart.log`
-
 ## 顺序（您 mostly 只点「确认」）
 
 0. （若提示候选截止不等于 **2027-03-31 12:00 北京时间**）页顶 **确认写入 draft（推荐默认）**。

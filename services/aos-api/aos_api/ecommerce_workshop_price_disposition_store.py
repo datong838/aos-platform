@@ -25,13 +25,7 @@ class EcommerceWorkshopPriceDispositionStore:
         self,
         connect_factory: Callable[[TenantScope], Any] = connect,
         read_connect_factory: Callable[[TenantScope], Any] | None = None,
-        *, adoption_authority: Any = None,
     ) -> None:
-        if adoption_authority is not None:
-            from aos_api.ecommerce_price_advice_decision import PriceAdviceDecisionAuthority
-            if type(adoption_authority) is not PriceAdviceDecisionAuthority:
-                raise PriceDispositionBlocked("PRICE_ADVICE_DECISION_AUTHORITY_INVALID")
-        self._adoption_authority = adoption_authority
         self._connect = connect_factory
         self._read_connect = read_connect_factory or (
             connect_factory if connect_factory is not connect else connect_read_only
@@ -140,18 +134,17 @@ class EcommerceWorkshopPriceDispositionStore:
         return self._list(scope, "ecommerce_price_disposition_observation", PriceDispositionObservation)
 
     def require_gate_authorities(
-        self, scope: TenantScope, contract: PriceDispositionContractRevision,
-        gate_refs: dict[str, PriceExactRef], *, case_ref: PriceExactRef | None = None,
+        self,
+        scope: TenantScope,
+        contract: PriceDispositionContractRevision,
+        gate_refs: dict[str, PriceExactRef],
     ) -> None:
-        from aos_api.ecommerce_workshop_price_disposition import PriceDispositionKind
-        if contract.kind is not PriceDispositionKind.INTERNAL_ADVICE:
-            raise PriceDispositionBlocked("PRICE_DISPOSITION_GATE_AUTHORITY_RESOLVER_UNAVAILABLE")
-        from aos_api.ecommerce_price_advice_authority import PriceAdviceAuthority
-        PriceAdviceAuthority(self._read_connect).require(scope,contract,gate_refs,case_ref=case_ref)
+        del scope, contract, gate_refs
+        # Caller-shaped exact refs are not authority. Canonical per-gate resolvers
+        # must be wired before the production store may prepare a disposition.
+        raise PriceDispositionBlocked("PRICE_DISPOSITION_GATE_AUTHORITY_RESOLVER_UNAVAILABLE")
 
-    def require_outcome_receipt(self, scope: TenantScope, ref: PriceExactRef, binding_hash: str, *, disposition_ref: PriceExactRef | None = None):
-        if ref.resource_type == "AdoptionReceipt" and self._adoption_authority is not None:
-            return self._adoption_authority.require(scope, ref, binding_hash, disposition_ref=disposition_ref)
+    def require_outcome_receipt(self, scope: TenantScope, ref: PriceExactRef, binding_hash: str) -> None:
         if ref.resource_type != "ActionReceipt":
             raise PriceDispositionBlocked("PRICE_DISPOSITION_RECEIPT_AUTHORITY_RESOLVER_UNAVAILABLE")
         with self._read_connect(scope) as conn:

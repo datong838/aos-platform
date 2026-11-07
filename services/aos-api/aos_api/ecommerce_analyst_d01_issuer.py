@@ -75,14 +75,8 @@ def require_current_d01_sources(scope: TenantScope, request: CreateAgentRunReque
 def require_current_d01_sources_in_transaction(
         transaction: HostTransaction, scope: TenantScope,
         request: CreateAgentRunRequest, packet: D01SourcePacket,
-        actor: str, occurred_at: datetime, *, source_store=None) -> bool:
+        actor: str, occurred_at: datetime) -> bool:
     """Read governed AOS inputs on the caller's tenant transaction; no mall SQL."""
-    if source_store is not None:
-        from aos_api.aip_production_contract_store import AipProductionContractStore
-        from aos_api.aip_formal_source_disclosure import _FormalSourceDisclosureAuthority
-        if (type(source_store) is not AipProductionContractStore
-                or type(source_store._formal_source_authority) is not _FormalSourceDisclosureAuthority):
-            raise TypeError('live original formal Source store required')
     if (type(transaction) is not HostTransaction or type(scope) is not TenantScope
             or type(request) is not CreateAgentRunRequest
             or type(packet) is not D01SourcePacket or type(actor) is not str
@@ -122,8 +116,8 @@ def require_current_d01_sources_in_transaction(
             or any(not label or label != label.strip() for label in granted)
             or not set(packet.markings).issubset(granted)):
         raise PermissionError('current D01 actor membership or bearer markings unavailable')
-    packet_args = dict(
-        scope=scope, task_id=request.run.task_ref.resource_id,
+    read_portrait_input_packet(
+        conn=transaction, scope=scope, task_id=request.run.task_ref.resource_id,
         input_refs=request.run.input_refs, actor=actor,
         method_ref=packet.method_ref, eval_ref=packet.eval_ref,
         metric_sources=packet.metric_sources, cutoff_at=packet.cutoff_at,
@@ -131,19 +125,6 @@ def require_current_d01_sources_in_transaction(
         max_source_age=timedelta(seconds=packet.max_source_age_seconds),
         max_bytes=packet.max_bytes,
     )
-    if source_store is None:
-        read_portrait_input_packet(conn=transaction, **packet_args)
-    else:
-        from aos_api.aip_metric_query_evidence import _production
-        with source_store._contract_connect_factory(scope) as native:
-            _production(native, scope, source_store)
-            original_pid = transaction.execute(
-                'SELECT pg_backend_pid() AS backend_pid').fetchone()['backend_pid']
-            source_pid = native.execute(
-                'SELECT pg_backend_pid() AS backend_pid').fetchone()['backend_pid']
-            if original_pid != source_pid:
-                raise PermissionError('D01 formal source backend differs from issuer transaction')
-            read_portrait_input_packet(conn=native, source_store=source_store, **packet_args)
     return True
 
 
@@ -216,8 +197,7 @@ class NaturalD01Issuer:
                 or refs.policy.asset_type != 'RuntimePolicyRevision'):
             raise ValueError('D01 exact Owner request drifted')
         assignees = [ref for ref in plan.steps[0].assignee_refs
-                     if ref.resource_type == 'AgentInstance'
-                     and ref.resource_id == refs.agent_instance.asset_id]
+                     if ref.resource_type == 'AgentInstance']
         if (len(assignees) != 1 or assignees[0].authority != 'aip-assignee-directory'
                 or (assignees[0].resource_id, assignees[0].revision)
                     != (refs.agent_instance.asset_id, str(refs.agent_instance.revision))):

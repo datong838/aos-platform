@@ -157,11 +157,6 @@ class HostTransaction:
             raise TypeError("host transaction query is required")
         return self.__connection.execute(query, params)
 
-    @property
-    def transaction_status(self):
-        """Actual native state only, without exposing connection credentials."""
-        return self.__connection.info.transaction_status
-
     def read_window_risk_fact(self, *, scope, budget_ref, price_ref):
         """Fixed same-transaction provenance read without exporting the connection."""
         from aos_api.aip_budget_policy_window_risk_authority import read_native_window_risk_fact

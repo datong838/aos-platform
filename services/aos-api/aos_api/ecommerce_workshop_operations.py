@@ -123,17 +123,9 @@ class EcommerceWorkshopOperations:
             )
         }
         transaction_rows: dict[OperationsSliceId, list[OperationsObjectRef]] = {}
-        transaction_totals: dict[OperationsSliceId, int] = {}
         transaction_errors: set[OperationsSliceId] = set()
         for slice_id, object_type in _TRANSACTION_TYPES.items():
             try:
-                read_page = getattr(self._object_reader, "read_page", None)
-                if callable(read_page):
-                    page = read_page(org_id=org_id, project_id=project_id,
-                                     object_type=object_type, cutoff=evaluated_at, limit=50)
-                    transaction_rows[slice_id] = page.items
-                    transaction_totals[slice_id] = page.total_count
-                    continue
                 transaction_rows[slice_id] = self._object_reader.read(
                     org_id=org_id,
                     project_id=project_id,
@@ -188,7 +180,6 @@ class EcommerceWorkshopOperations:
                         evaluated_at=evaluated_at,
                         authority_refs=[self._transaction_authority_ref(slice_id)],
                         count=len(rows),
-                        population_total=transaction_totals.get(slice_id),
                     )
                 )
                 continue
@@ -307,7 +298,6 @@ class EcommerceWorkshopOperations:
         evaluated_at: datetime,
         authority_refs: list[OperationsAuthorityRef],
         count: int,
-        population_total: int | None = None,
     ) -> OperationsSliceReadiness:
         return OperationsSliceReadiness(
             slice_id=slice_id,
@@ -317,7 +307,6 @@ class EcommerceWorkshopOperations:
             blockers=[],
             count_ledger=OperationsCountLedger(
                 source_total=count,
-                population_total=population_total,
                 attached=count,
                 unmatched=0,
                 conflicted=0,

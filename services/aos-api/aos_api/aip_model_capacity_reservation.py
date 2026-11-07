@@ -194,11 +194,7 @@ class AipModelCapacityReservationGate:
                 return
             if row["status"] == target:
                 return
-            if target == "released" and row["status"] == "expired":
-                return  # Expiration already freed the allocation; keep its audit state.
-            if row["status"] != "reserved" and not (
-                target == "released" and row["status"] == "consumed"
-            ):
+            if row["status"] != "reserved":
                 raise AipAgentRegistryConflict(
                     f"capacity reservation cannot become {target} from {row['status']}"
                 )

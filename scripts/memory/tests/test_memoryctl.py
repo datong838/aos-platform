@@ -574,42 +574,6 @@ def test_builtin_schema_validator_rejects_wrong_type() -> None:
         memoryctl.validate_json_schema("not-an-array", {"type": "array"}, source="unit")
 
 
-def test_archived_receipt_revision_schema_accepts_authority_or_exact_git_sha() -> None:
-    schema_root = (
-        MODULE_PATH.parents[3]
-        / "docs/palantier/AOS项目开发上下文/memory/schemas"
-    )
-    task_schema = json.loads((schema_root / "task-receipt.schema.json").read_text())
-    delivery_schema = json.loads((schema_root / "delivery-receipt.schema.json").read_text())
-    git_sha = "8b72e75b4af22d3e2a5d1203129d5e4cd5f81983"
-    for schema, field in (
-        (task_schema, "base_revision"),
-        (delivery_schema, "base_revision"),
-        (delivery_schema, "completed_revision"),
-    ):
-        revision_schema = schema["properties"][field]
-        memoryctl.validate_json_schema("AOS-002055", revision_schema, source=field)
-        memoryctl.validate_json_schema(git_sha, revision_schema, source=field)
-        for invalid in (git_sha[:-1], git_sha.upper(), "main", "AOS-2055"):
-            with pytest.raises(memoryctl.MemoryErrorBase, match="pattern mismatch"):
-                memoryctl.validate_json_schema(invalid, revision_schema, source=field)
-
-
-def test_task_start_still_requires_current_authority_revision(tmp_path: Path) -> None:
-    p = paths(tmp_path, [])
-    with pytest.raises(memoryctl.RevisionConflict):
-        memoryctl.start_task(
-            p,
-            task_id="git-revision-must-not-bypass-authority",
-            owner="codex",
-            expected_revision="8b72e75b4af22d3e2a5d1203129d5e4cd5f81983",
-            scope=["scripts/git-revision-must-not-bypass-authority"],
-            excluded_scope=[],
-            expected_outputs=[],
-            lease_expires_at="2099-01-01T00:00:00+08:00",
-        )
-
-
 @pytest.mark.parametrize('case',['retain','overlap','duplicate'])
 def test_expired_unreleased_lease_is_not_implicitly_reclaimed(tmp_path,case):
     p=paths(tmp_path,[])

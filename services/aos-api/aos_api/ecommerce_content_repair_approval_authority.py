@@ -125,7 +125,3 @@ def require_repair_approval_binding(
         or row["created_at"] > checked_at
     ):
         raise ValueError("formal repair approval exact input or installation drifted")
-    # Exact six-field equality alone cannot grandfather an old/direct-insert
-    # approval. Recheck the dedicated producer and its current source binding.
-    from aos_api.ecommerce_content_repair_action import revalidate_repair_approval
-    revalidate_repair_approval(transaction, scope, row['proposal_id'], row['actor_id'])

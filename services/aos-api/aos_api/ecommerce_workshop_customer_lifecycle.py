@@ -357,11 +357,10 @@ class EcommerceWorkshopCustomerLifecycleService:
         segment = self.store.require_segment(scope, request.segment_ref)
         journey = self.store.require_journey(scope, request.journey_ref)
         dialogue = self.store.require_dialogue(scope, request.dialogue_ref)
-        consent = self.store.require_consent_policy(scope, request.consent_policy_ref)
+        self.store.require_consent_policy(scope, request.consent_policy_ref)
         if journey.segment_ref != request.segment_ref or dialogue.journey_ref != request.journey_ref or segment.consent_policy_ref != request.consent_policy_ref:
             raise CustomerLifecycleBlocked("CUSTOMER_BATCH_LINEAGE_DRIFTED")
-        self.store.require_external_policy_authorities(scope, request.frequency_policy_ref, request.channel_capability_ref,
-            purpose=consent.purpose, allowed_channels=set(consent.allowed_channels) & set(journey.allowed_channels))
+        self.store.require_external_policy_authorities(scope, request.frequency_policy_ref, request.channel_capability_ref)
         counts = {item: 0 for item in CustomerBatchDisposition}
         for item in request.items:
             counts[item.disposition] += 1
@@ -405,10 +404,6 @@ class EcommerceWorkshopCustomerLifecycleService:
         }
         if request.exact_refs != expected_refs or request.item_hashes != current.item_hashes:
             raise CustomerLifecycleConflict("CUSTOMER_BATCH_EXACT_REFS_OR_ITEMS_DRIFTED")
-        consent = self.store.require_consent_policy(scope, current.consent_policy_ref)
-        journey = self.store.require_journey(scope, current.journey_ref)
-        self.store.require_external_policy_authorities(scope, current.frequency_policy_ref, current.channel_capability_ref,
-            purpose=consent.purpose, allowed_channels=set(consent.allowed_channels) & set(journey.allowed_channels))
         payload = current.model_dump(mode="json", by_alias=True, exclude={"revision", "version", "lifecycle", "prior_content_hash", "content_hash", "created_by", "created_at"})
         content_hash = canonical_hash({**payload, "revision": current.revision + 1, "version": current.version + 1, "lifecycle": "frozen", "priorContentHash": current.content_hash})
         frozen = current.model_copy(update={"revision": current.revision + 1, "version": current.version + 1, "lifecycle": "frozen", "prior_content_hash": current.content_hash, "content_hash": content_hash, "created_by": actor, "created_at": at})

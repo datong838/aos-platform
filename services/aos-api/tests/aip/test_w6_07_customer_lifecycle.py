@@ -46,8 +46,7 @@ class MemoryStore:
     def require_segment(self, _scope, exact_ref): return self.segments[exact_ref.resource_id]
     def require_journey(self, _scope, exact_ref): return self.journeys[exact_ref.resource_id]
     def require_dialogue(self, _scope, exact_ref): return self.dialogues[exact_ref.resource_id]
-    def require_external_policy_authorities(self, _scope, frequency, capability, *, purpose, allowed_channels):
-        assert purpose == "retention" and allowed_channels == {"wecom"}
+    def require_external_policy_authorities(self, _scope, frequency, capability):
         assert frequency.resource_type == "FrequencyPolicyRevision"
         assert capability.resource_type == "CapabilityBindingRevision"
     def latest_batch_or_none(self, _scope, identity): return self.batches.get(identity, [None])[-1]

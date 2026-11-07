@@ -234,27 +234,6 @@ class RuntimeViewReader:
             operation=operation,
             runtime_storage_available=runtime_storage_available,
         )
-        if (
-            effective_state == "fenced"
-            and resources_live
-            and installation_state == "active"
-            and binding is not None
-            and binding.installationRevision == installation_revision
-            and not binding.enabled
-            and binding.operationFence
-            and binding.desiredState == "disabled"
-            and binding.observedState == "ready"
-            and binding.configRef is None
-            and operation is not None
-            and (operation.kind, operation.status, operation.phase)
-                == ("runtime-recover", "succeeded", "succeeded")
-        ):
-            # Liveness already verified the exact committed recovery and its
-            # current registered resources. This grants navigation only; the
-            # configure command still validates all current source authorities.
-            effective_state, actions, reasons = "configuration_required", ("configure",), (
-                "运行资源已完成恢复验证，需要选择已批准配置。",
-            )
         if effective_state == "ready" and not resources_live:
             effective_state, actions, reasons = "needs_attention", ("disable",), (
                 "运行资源已释放、租约已过期或存活证据不足；请先禁入并完成恢复对账。",
