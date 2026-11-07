@@ -119,6 +119,9 @@ function nextAction(source: SourceReadinessItem): string {
   if (source.status === "failed" && source.latestRun.errorCode && /^(SSH_|MYSQL_)/.test(source.latestRun.errorCode)) {
     return "检查数据连接后等待下一次计划读取";
   }
+  if (source.blockers.includes("SCHEDULE_DISABLED")) {
+    return "只读模式下不启用计划读取；该阻断不等于源系统无数据";
+  }
   return NEXT_ACTIONS[source.status];
 }
 
@@ -152,6 +155,7 @@ function SourceReadinessPanelView() {
         <div><dt>数据截止</dt><dd>{response.status === "ready" ? response.cutoffAt : "待核对"}</dd></div>
       </dl>
       {pendingSources.length > 0 ? <p className="source-readiness-blockers"><strong>当前有 {pendingSources.length} 个数据对象待处理：</strong>未知、过期或失败的数据不会显示为可用。</p> : null}
+      {response.sources.some((source) => source.blockers.includes("SCHEDULE_DISABLED")) ? <p className="source-readiness-schedule-disabled" role="status">当前阻断含计划读取尚未启用；不等于源系统无数据。只读波次不启用 Schedule。</p> : null}
       <div className="source-readiness-table-wrap">
         <table>
           <thead><tr><th scope="col">数据对象</th><th scope="col">状态</th><th scope="col">源数据 / 页面投影</th><th scope="col">当前原因</th><th scope="col">下一步</th></tr></thead>
